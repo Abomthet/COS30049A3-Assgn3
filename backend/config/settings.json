@@ -516,5 +516,23 @@
     "maxFlaggedShare": 0.2
   },
 
-  "bannedWords": ["fraud", "criminal", "illicit", "guilty", "suspicious"]
+  "bannedWords": ["fraud", "criminal", "illicit", "guilty", "suspicious"],
+
+  "web": {
+    "whatIf": {
+      "minAmountBtc": 0.00000001,
+      "maxAmountBtc": 21000000,
+      "maxGapYears": 5,
+      "curvePoints": 41,
+      "curveMaxPoints": 61,
+      "debounceMs": 250
+    },
+    "lists": { "pageSize": 50, "maxPageSize": 200 },
+    "requests": { "timeoutMs": 10000, "assistantTimeoutMs": 90000, "healthPollSeconds": 15 },
+    "charts": { "webglMinPoints": 1000 },
+    "watchlist": { "maxEntries": 200, "maxLabelChars": 40, "maxNoteChars": 500 },
+    "live": { "defaultMaxTx": 500, "maxTxLimit": 1000, "lookupsPerHour": 6, "cacheDays": 7 },
+    "replay": { "speeds": [1, 5, 20] },
+    "limits": { "maxBodyBytes": 10240, "maxAddressChars": 100 }
+  }
 }

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { mockControls } from './api/mock/mockApi';
 import './styles.css';
+import './styles/shell.css';
 
 // Prototype switches in the page URL (before the #), e.g. /?latency=8000 or /?offline=1,
 // so screenshots of the loading and network-failure states can be taken from a link.

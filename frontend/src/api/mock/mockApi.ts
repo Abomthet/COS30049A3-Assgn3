@@ -4,18 +4,22 @@
 
 import { segwitEncode, validateAddress } from '../../lib/address';
 import { dayKey, isDayKey } from '../../lib/dates';
-import { LIMITATION_LINE, settings, type FeatureId } from '../../lib/settings';
+import { FEATURE_IDS, LIMITATION_LINE, WEB, settings, type FeatureId } from '../../lib/settings';
 import {
   ApiError,
   type AddressSummary,
   type AddressesResponse,
   type ComparisonBasis,
+  type ConfigResponse,
   type DayResponse,
   type ExplorerApi,
   type FeatureDetail,
+  type FeatureInfo,
   type FeatureRole,
+  type HealthResponse,
   type LookupResponse,
   type MethodInfo,
+  type RequestOptions,
   type SnapshotInfo,
   type TimelineResponse,
   type TransactionCore,
@@ -30,7 +34,10 @@ const iso = (unix: number) => new Date(unix * 1000).toISOString();
 /** Mutable so the prototype tools (and tests) can change behaviour at run time. */
 export const mockControls = {
   latencyMs: 600,
+  /** No answer at all, as when the back end is stopped. */
   offline: false,
+  /** Answers 503 "unavailable" to everything, as the back end does while its models load. */
+  starting: false,
 };
 
 interface Entry {
@@ -93,19 +100,37 @@ function snapshotInfo(): SnapshotInfo {
   };
 }
 
-function respond<T>(work: () => T): Promise<T> {
+const cancelled = () => new ApiError(0, { status: 'cancelled', message: 'The request was cancelled.' });
+
+/** Answers after the configured delay, like the real service, and honours cancellation. */
+function respond<T>(work: () => T, opts?: RequestOptions): Promise<T> {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
+    const signal = opts?.signal;
+    if (signal?.aborted) {
+      reject(cancelled());
+      return;
+    }
+    const timer = setTimeout(() => {
       if (mockControls.offline) {
         reject(new ApiError(0, { status: 'network', message: 'The explorer service did not respond.' }));
-        return;
-      }
-      try {
-        resolve(work());
-      } catch (err) {
-        reject(err);
+      } else if (mockControls.starting) {
+        reject(new ApiError(503, { status: 'unavailable', message: 'The service is starting. This page will load by itself.' }));
+      } else {
+        try {
+          resolve(work());
+        } catch (err) {
+          reject(err);
+        }
       }
     }, mockControls.latencyMs);
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(cancelled());
+      },
+      { once: true },
+    );
   });
 }
 
@@ -155,6 +180,12 @@ const FEATURE_TEXT: Record<FeatureId, { name: string; description: string }> = {
   F4: { name: 'Relative size', description: "Amount divided by the address's usual amount in the comparison window" },
 };
 
+const FEATURE_UNIT: Record<FeatureId, string> = { F1: 'BTC', F2: 'count', F3: 'hours', F4: 'ratio' };
+
+function featureInfo(): FeatureInfo[] {
+  return FEATURE_IDS.map((id) => ({ id, ...FEATURE_TEXT[id], unit: FEATURE_UNIT[id] }));
+}
+
 function featureDetails(tx: ScoredTx): FeatureDetail[] {
   const value: Record<FeatureId, number | null> = {
     F1: Math.abs(tx.netSats) / SATS,
@@ -198,21 +229,57 @@ function firstScoredDate(entry: Entry): string | null {
 }
 
 export const mockApi: ExplorerApi = {
-  listAddresses() {
-    return respond<AddressesResponse>(() => ({
-      snapshot: snapshotInfo(),
-      addresses: [...getDb().values()].map((e) => e.summary),
-    }));
+  health(opts) {
+    return respond<HealthResponse>(
+      () => ({
+        status: 'ok',
+        version: '0.1.0',
+        snapshotDate: SNAPSHOT_DATE,
+        addressCount: getDb().size,
+        methodCount: 1,
+        assistant: 'off',
+        liveLookup: false,
+        uptimeSeconds: Math.round(performance.now() / 1000),
+      }),
+      opts,
+    );
   },
 
-  lookup(address) {
+  config(opts) {
+    return respond<ConfigResponse>(
+      () => ({
+        snapshot: snapshotInfo(),
+        limitationLine: LIMITATION_LINE,
+        features: featureInfo(),
+        history: { minTx: settings.features.minHistoryTx, minSpanDays: settings.features.minHistorySpanDays },
+        thresholds: { flagAbsZ: METHOD.flagAbsZ, contributingAbsZ: METHOD.contributingAbsZ },
+        defaultMethod: METHOD.id,
+        web: WEB,
+        whatIf: { defaultTime: `${SNAPSHOT_DATE}T12:00:00Z` },
+        capabilities: { assistant: false, liveLookup: false },
+      }),
+      opts,
+    );
+  },
+
+  listAddresses(opts) {
+    return respond<AddressesResponse>(
+      () => ({
+        snapshot: snapshotInfo(),
+        addresses: [...getDb().values()].map((e) => e.summary),
+      }),
+      opts,
+    );
+  },
+
+  lookup(address, opts) {
     return respond<LookupResponse>(() => {
       const entry = requireAddress(address);
       return { status: 'supported', address: entry.info.address, summary: entry.summary };
-    });
+    }, opts);
   },
 
-  timeline(address) {
+  timeline(address, opts) {
     return respond<TimelineResponse>(() => {
       const entry = requireAddress(address);
       const days = [...entry.byDay.entries()].map(([date, txs]) => ({
@@ -241,10 +308,10 @@ export const mockApi: ExplorerApi = {
           firstScoredDate: firstScoredDate(entry),
         },
       };
-    });
+    }, opts);
   },
 
-  day(address, date) {
+  day(address, date, opts) {
     return respond<DayResponse>(() => {
       const entry = requireAddress(address);
       if (!isDayKey(date)) {
@@ -261,10 +328,10 @@ export const mockApi: ExplorerApi = {
           status: !tx.scored ? 'not-scored' : tx.flagged ? 'flagged' : 'not-flagged',
         })),
       };
-    });
+    }, opts);
   },
 
-  transaction(txid, address) {
+  transaction(txid, address, opts) {
     return respond<TransactionDetail>(() => {
       const entry = requireAddress(address);
       const tx = entry.byTxid.get(txid.toLowerCase());
@@ -294,7 +361,7 @@ export const mockApi: ExplorerApi = {
         comparison: comparisonBases(tx),
         limitation: LIMITATION_LINE,
       };
-    });
+    }, opts);
   },
 };
 

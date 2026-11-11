@@ -18,7 +18,7 @@ import { useRequest } from '../hooks/useRequest';
 
 export function TimelineScreen({ address }: { address: string }) {
   useDocumentTitle(`Activity for ${shortAddress(address)}`);
-  const timeline = useRequest(`timeline:${address}`, () => api.timeline(address));
+  const timeline = useRequest(`timeline:${address}`, (signal) => api.timeline(address, { signal }));
 
   return (
     <div className="page page-timeline">

@@ -5,6 +5,7 @@
 //   #/address/<address>                     Screen 2  daily timeline
 //   #/address/<address>/day/<YYYY-MM-DD>    Screen 3  day's transactions
 //   #/address/<address>/day/<date>/tx/<txid>          ...with one transaction open
+//   #/models   #/watchlist   #/about                  the other sections in the navigation
 
 import { useSyncExternalStore } from 'react';
 
@@ -12,6 +13,9 @@ export type Route =
   | { screen: 'select'; query: string | null }
   | { screen: 'timeline'; address: string }
   | { screen: 'day'; address: string; date: string; txid: string | null }
+  | { screen: 'models' }
+  | { screen: 'watchlist' }
+  | { screen: 'about' }
   | { screen: 'not-found'; path: string };
 
 export function parseRoute(hash: string): Route {
@@ -28,11 +32,17 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'address' && parts[2] === 'day' && (parts.length === 4 || (parts.length === 6 && parts[4] === 'tx'))) {
     return { screen: 'day', address: parts[1], date: parts[3], txid: parts[5] ?? null };
   }
+  if (parts.length === 1 && (parts[0] === 'models' || parts[0] === 'watchlist' || parts[0] === 'about')) {
+    return { screen: parts[0] };
+  }
   return { screen: 'not-found', path };
 }
 
 export const paths = {
   select: () => '#/',
+  models: () => '#/models',
+  watchlist: () => '#/watchlist',
+  about: () => '#/about',
   timeline: (address: string) => `#/address/${encodeURIComponent(address)}`,
   day: (address: string, date: string) => `#/address/${encodeURIComponent(address)}/day/${date}`,
   tx: (address: string, date: string, txid: string) =>

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError } from '../api/types';
+import { useServiceStatus } from './useServiceStatus';
 
 export type RequestState<T> =
   | { status: 'idle' }
@@ -20,42 +21,66 @@ function toApiError(err: unknown): ApiError {
   return new ApiError(0, { status: 'network', message: err instanceof Error ? err.message : 'Unknown error' });
 }
 
+/** Failures that say nothing about the request itself: the service did not answer, or is still starting. */
+function isTransient(error: ApiError): boolean {
+  return error.body.status === 'network' || error.body.status === 'timeout' || error.body.status === 'unavailable';
+}
+
 function initial<T>(key: string | null): RequestState<T> {
   if (key === null) return { status: 'idle' };
   if (cache.has(key)) return { status: 'success', data: cache.get(key) as T };
   return { status: 'loading' };
 }
 
-/** Loads `fetcher()` whenever `key` changes. A null key means "nothing to load" (idle). */
-export function useRequest<T>(key: string | null, fetcher: () => Promise<T>): RequestState<T> & { retry: () => void } {
+/**
+ * Loads `fetcher(signal)` whenever `key` changes. A null key means "nothing to load" (idle).
+ * Leaving the view, or a new key, aborts the request in flight, so an old answer can never overwrite
+ * a newer one. A request that failed because the service was down is repeated by itself when the
+ * service-status poll sees it come back (R4).
+ */
+export function useRequest<T>(
+  key: string | null,
+  fetcher: (signal: AbortSignal) => Promise<T>,
+): RequestState<T> & { retry: () => void } {
   const [attempt, setAttempt] = useState(0);
   // State remembers which key it belongs to, so a new key never shows the previous key's result.
   const [state, setState] = useState<{ key: string | null; value: RequestState<T> }>(() => ({ key, value: initial(key) }));
+  const { recoveries, recheck } = useServiceStatus();
 
   useEffect(() => {
     if (key === null || cache.has(key)) {
       setState({ key, value: initial(key) });
       return;
     }
-    let cancelled = false;
+    const controller = new AbortController();
     setState({ key, value: { status: 'loading' } });
-    fetcher().then(
+    fetcher(controller.signal).then(
       (data) => {
         cache.set(key, data);
-        if (!cancelled) setState({ key, value: { status: 'success', data } });
+        if (!controller.signal.aborted) setState({ key, value: { status: 'success', data } });
       },
       (err: unknown) => {
-        if (!cancelled) setState({ key, value: { status: 'error', error: toApiError(err) } });
+        if (controller.signal.aborted) return;
+        const error = toApiError(err);
+        // Don't wait for the next poll to tell the user the service is down.
+        if (isTransient(error)) recheck();
+        setState({ key, value: { status: 'error', error } });
       },
     );
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
     // fetcher is recreated every render; the key alone identifies the request.
   }, [key, attempt]);
 
-  const retry = useCallback(() => setAttempt((n) => n + 1), []);
   const value = state.key === key ? state.value : initial<T>(key);
+
+  const seenRecoveries = useRef(recoveries);
+  useEffect(() => {
+    if (seenRecoveries.current === recoveries) return;
+    seenRecoveries.current = recoveries;
+    if (value.status === 'error' && isTransient(value.error)) setAttempt((n) => n + 1);
+  }, [recoveries]);
+
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
   return { ...value, retry };
 }
 

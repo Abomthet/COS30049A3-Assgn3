@@ -121,3 +121,42 @@ test('a network failure surfaces as status 0', async () => {
   const r = await failure(mockApi.listAddresses());
   expect(r).toMatchObject({ status: 0, body: { status: 'network' } });
 });
+
+describe('service endpoints (E1 /api/health, E2 /api/config)', () => {
+  test('E1 reports ready with what is loaded', async () => {
+    const health = await mockApi.health();
+    expect(health).toMatchObject({ status: 'ok', addressCount: illustrativeProfiles().length, methodCount: 1, assistant: 'off', liveLookup: false });
+    expect(health.uptimeSeconds).toBeGreaterThanOrEqual(0);
+  });
+
+  test('E2 carries the snapshot, the limitation line, the thresholds and the web block', async () => {
+    const config = await mockApi.config();
+    expect(config.limitationLine).toBe(LIMITATION_LINE);
+    expect(config.snapshot).toMatchObject({ source: settings.source.name, dayTimeZone: 'UTC' });
+    expect(config.thresholds).toEqual({ flagAbsZ: settings.baseline.flagAbsZ, contributingAbsZ: settings.baseline.contributingAbsZ });
+    expect(config.history).toEqual({ minTx: settings.features.minHistoryTx, minSpanDays: settings.features.minHistorySpanDays });
+    expect(config.features.map((f) => f.id)).toEqual(['F1', 'F2', 'F3', 'F4']);
+    expect(config.web.requests.healthPollSeconds).toBeGreaterThan(0);
+    expect(config.whatIf.defaultTime).toBe(`${config.snapshot.snapshotDate}T12:00:00Z`);
+    expect(config.capabilities).toEqual({ assistant: false, liveLookup: false });
+  });
+
+  test('while the service is starting every endpoint answers 503 unavailable', async () => {
+    mockControls.starting = true;
+    for (const call of [mockApi.health(), mockApi.config(), mockApi.listAddresses()]) {
+      expect(await failure(call)).toMatchObject({ status: 503, body: { status: 'unavailable' } });
+    }
+  });
+
+  test('a request can be cancelled, before or after it starts', async () => {
+    const early = new AbortController();
+    early.abort();
+    expect(await failure(mockApi.health({ signal: early.signal }))).toMatchObject({ status: 0, body: { status: 'cancelled' } });
+
+    mockControls.latencyMs = 50;
+    const late = new AbortController();
+    const pending = failure(mockApi.listAddresses({ signal: late.signal }));
+    late.abort();
+    expect(await pending).toMatchObject({ status: 0, body: { status: 'cancelled' } });
+  });
+});

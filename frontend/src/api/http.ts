@@ -1,36 +1,49 @@
-// The real client, used once the FastAPI back end exists (Assignment 3).
-// Every non-2xx answer becomes an ApiError carrying the back end's JSON body, so the
-// screens handle 400 / 404 / 422 exactly as they do with the mock.
+// The one Axios instance (D-A3-4). It owns what every request shares: the base address, the time
+// limit, cancellation, and the rule that every failure leaves as an ApiError, so views switch on
+// `error.body.status` and never see an Axios error.
 
-import { ApiError, type ApiErrorBody, type ExplorerApi } from './types';
+import axios, { AxiosError, type AxiosInstance } from 'axios';
+import { WEB } from '../lib/settings';
+import { ApiError, type ApiErrorBody } from './types';
 
-export function createHttpApi(baseUrl: string): ExplorerApi {
-  const base = baseUrl.replace(/\/$/, '');
+export interface HttpClientOptions {
+  /** Empty means the page's own origin, where Vite (or a reverse proxy) passes /api to the back end. */
+  baseUrl: string;
+  /** Milliseconds before a request ends as a timeout. */
+  timeoutMs?: number;
+}
 
-  async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    let response: Response;
-    try {
-      response = await fetch(`${base}${path}`, {
-        ...init,
-        headers: { Accept: 'application/json', ...(init?.body ? { 'Content-Type': 'application/json' } : {}) },
-      });
-    } catch {
-      throw new ApiError(0, { status: 'network', message: 'The explorer service did not respond.' });
-    }
-    const body = await response.json().catch(() => null);
-    if (!response.ok) {
-      const fallback: ApiErrorBody = { status: 'network', message: `The explorer service answered with error ${response.status}.` };
-      throw new ApiError(response.status, body && typeof body.status === 'string' ? (body as ApiErrorBody) : fallback);
-    }
-    return body as T;
+/** A body is one of ours when it carries a `status` string (plan section 6, "The error body"). */
+function isErrorBody(body: unknown): body is ApiErrorBody {
+  return typeof body === 'object' && body !== null && typeof (body as { status?: unknown }).status === 'string';
+}
+
+/** Turns anything Axios can throw into the ApiError the views handle. */
+function toApiError(error: unknown): unknown {
+  if (axios.isCancel(error)) {
+    return new ApiError(0, { status: 'cancelled', message: 'The request was cancelled.' });
   }
+  if (!(error instanceof AxiosError)) return error;
+  if (error.code === AxiosError.ETIMEDOUT) {
+    return new ApiError(0, { status: 'timeout', message: 'This is taking longer than it should.' });
+  }
+  const { response } = error;
+  // A response without one of our bodies did not come from the service: with the dev proxy and
+  // the back end stopped, Vite itself answers 502 with an empty body. That is "no answer".
+  if (response && isErrorBody(response.data)) return new ApiError(response.status, response.data);
+  return new ApiError(response?.status ?? 0, { status: 'network', message: 'The explorer service did not respond.' });
+}
 
-  const enc = encodeURIComponent;
-  return {
-    listAddresses: () => request('/api/addresses'),
-    lookup: (address) => request('/api/lookup', { method: 'POST', body: JSON.stringify({ address }) }),
-    timeline: (address) => request(`/api/addresses/${enc(address)}/timeline`),
-    day: (address, date) => request(`/api/addresses/${enc(address)}/transactions?date=${enc(date)}`),
-    transaction: (txid, address) => request(`/api/transactions/${enc(txid)}?address=${enc(address)}`),
-  };
+export function createHttpClient({ baseUrl, timeoutMs = WEB.requests.timeoutMs }: HttpClientOptions): AxiosInstance {
+  const client = axios.create({
+    baseURL: baseUrl,
+    timeout: timeoutMs,
+    headers: { Accept: 'application/json' },
+    // Reports a timeout as ETIMEDOUT rather than ECONNABORTED, so it cannot be confused with other aborts.
+    transitional: { clarifyTimeoutError: true },
+  });
+  client.interceptors.response.use(undefined, (error: unknown) => {
+    throw toApiError(error);
+  });
+  return client;
 }

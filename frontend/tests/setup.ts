@@ -13,11 +13,21 @@ class ResizeObserverStub {
 globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
 Element.prototype.scrollIntoView ??= function scrollIntoView() {};
 window.scrollTo = () => {};
+// jsdom has no matchMedia; the theme switch asks whether the system prefers dark.
+window.matchMedia ??= ((query: string) => ({
+  matches: false,
+  media: query,
+  addEventListener() {},
+  removeEventListener() {},
+})) as unknown as typeof window.matchMedia;
 
 beforeEach(() => {
   mockControls.latencyMs = 0;
   mockControls.offline = false;
+  mockControls.starting = false;
   clearRequestCache();
+  localStorage.clear();
+  delete document.documentElement.dataset.theme;
   window.location.hash = '';
 });
 

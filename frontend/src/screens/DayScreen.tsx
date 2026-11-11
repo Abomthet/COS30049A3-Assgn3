@@ -17,8 +17,8 @@ import { TransactionPanel } from './TransactionPanel';
 export function DayScreen({ address, date, txid }: { address: string; date: string; txid: string | null }) {
   const validDate = isDayKey(date);
   useDocumentTitle(validDate ? `${formatDay(date)} · ${shortAddress(address)}` : shortAddress(address));
-  const timeline = useRequest(`timeline:${address}`, () => api.timeline(address));
-  const day = useRequest(`day:${address}:${date}`, () => api.day(address, date));
+  const timeline = useRequest(`timeline:${address}`, (signal) => api.timeline(address, { signal }));
+  const day = useRequest(`day:${address}:${date}`, (signal) => api.day(address, date, { signal }));
 
   return (
     <div className="page page-day">

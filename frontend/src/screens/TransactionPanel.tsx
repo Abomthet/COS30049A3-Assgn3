@@ -17,7 +17,7 @@ import { useRequest } from '../hooks/useRequest';
 // features made it unusual, what they were compared against, and the fixed limitation line.
 
 export function TransactionPanel({ address, date, txid }: { address: string; date: string; txid: string | null }) {
-  const detail = useRequest(txid ? `tx:${address}:${txid}` : null, () => api.transaction(txid!, address));
+  const detail = useRequest(txid ? `tx:${address}:${txid}` : null, (signal) => api.transaction(txid!, address, { signal }));
   const headingRef = useRef<HTMLHeadingElement>(null);
   const settled = detail.status === 'success' || detail.status === 'error';
 

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Icon, type IconName } from './Icon';
 
 // One component for every feedback state (FR-05): it always says what happened and offers
@@ -39,11 +39,21 @@ export function StatePanel({ tone, title, children, actions, icon, live, heading
   );
 }
 
+/** A request that takes longer than this says so (plan section 10, "Responsiveness rules"). */
+const SLOW_AFTER_MS = 5_000;
+
 export function Loading({ label, block = false }: { label: string; block?: boolean }) {
+  const [slow, setSlow] = useState(false);
+  // Loading is mounted for exactly as long as the request is pending, so its own clock is the request's.
+  useEffect(() => {
+    const timer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className={block ? 'loading loading-block' : 'loading'} role="status" aria-live="polite">
       <span className="spinner" aria-hidden="true" />
-      <span>{label}</span>
+      <span>{slow ? `${label} Still working, this is taking a little longer.` : label}</span>
     </div>
   );
 }

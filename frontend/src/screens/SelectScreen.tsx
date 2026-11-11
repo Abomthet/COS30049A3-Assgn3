@@ -23,7 +23,7 @@ type Lookup =
 
 export function SelectScreen({ query }: { query: string | null }) {
   useDocumentTitle('');
-  const list = useRequest('addresses', () => api.listAddresses());
+  const list = useRequest('addresses', (signal) => api.listAddresses({ signal }));
   const [value, setValue] = useState(query ?? '');
   const [lookup, setLookup] = useState<Lookup>({ status: 'idle' });
   const inputRef = useRef<HTMLInputElement>(null);
