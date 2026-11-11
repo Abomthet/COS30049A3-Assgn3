@@ -5,10 +5,10 @@ from explorer.explain import FEATURE_DESCRIPTIONS, FEATURE_NAMES
 
 from .. import __version__
 from ..core.config import Settings
-from ..core.errors import Unavailable
 from ..core.runtime import Runtime
 from ..schemas.system import (AssistantStatus, Capabilities, ConfigResponse, FeatureInfo, HealthResponse, Thresholds,
                               WhatIfDefaults)
+from .model_service import require_ready
 
 # The units people read (types.ts, FeatureDetail.value): the models work in other units, the interface shows these.
 FEATURE_UNITS = {"F1": "BTC", "F2": "count", "F3": "hours", "F4": "ratio"}
@@ -24,24 +24,15 @@ def assistant_status(settings: Settings) -> AssistantStatus:
     return "ready" if settings.assistant_weights.is_file() else "not_installed"
 
 
-def _require_ready(runtime: Runtime) -> None:
-    """Raise `Unavailable` while the models are loading, or after a failed load."""
-    if runtime.load_error:
-        raise Unavailable("The explorer service could not load its models.",
-                          "The server log says why; the README's troubleshooting section lists the usual causes.")
-    if not runtime.ready:
-        raise Unavailable("The explorer service is still starting.", "Try again in a few seconds.")
-
-
 def build_health(runtime: Runtime) -> HealthResponse:
     """E1: ready, and what is loaded.
 
     Raises:
         Unavailable: The models are still loading (503).
     """
-    _require_ready(runtime)
+    require_ready(runtime)
     facts = runtime.facts
-    assert facts is not None  # `_require_ready` passed
+    assert facts is not None  # `require_ready` passed
     return HealthResponse(status="ok", version=__version__, snapshot_date=facts.date, address_count=facts.address_count,
                           method_count=facts.method_count, assistant=assistant_status(runtime.settings),
                           live_lookup=runtime.settings.live_lookup, uptime_seconds=round(runtime.uptime_seconds, 1))
@@ -53,7 +44,7 @@ def build_config(runtime: Runtime) -> ConfigResponse:
     Raises:
         Unavailable: The models are still loading (503); the thresholds come from the loaded methods.
     """
-    _require_ready(runtime)
+    require_ready(runtime)
     predictor, settings, facts = runtime.predictor, runtime.settings, runtime.facts
     assert predictor is not None and facts is not None
     return ConfigResponse(

@@ -69,46 +69,666 @@
           }
         }
       }
+    },
+    "/api/addresses": {
+      "get": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "The addresses that can be opened, with counts",
+        "description": "Each address with its transaction, scored and flagged counts and whether its history is long enough.\nAddresses with enough history come first, busiest first; the short-history ones follow.",
+        "operationId": "list_addresses_api_addresses_get",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "baseline",
+                    "isolation_forest",
+                    "lof",
+                    "kmeans",
+                    "dbscan",
+                    "regression",
+                    "regression_interval",
+                    "fusion",
+                    "txgpt_method"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whose flags and scores decide (S-01); default: the baseline.",
+              "title": "Method"
+            },
+            "description": "Whose flags and scores decide (S-01); default: the baseline."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressesResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "The copy the client holds is still right (the `ETag` matched)."
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/lookup": {
+      "post": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "Whether a typed address is supported",
+        "description": "200 with the normalised address and its summary; 400 with the checker's specific message for a malformed\naddress; 404 with three addresses that can be opened for a valid address outside the snapshot.",
+        "operationId": "lookup_api_lookup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LookupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LookupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is over the size limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The request body is not JSON.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/addresses/{address}/timeline": {
+      "get": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "Per-day counts, totals, range and history status",
+        "description": "Only days with transactions, oldest first. An address with too little history answers 200 with\n`history.status: \"insufficient\"` and no scored transactions, so its transactions can still be listed.",
+        "operationId": "timeline_api_addresses__address__timeline_get",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "A Bitcoin address.",
+              "title": "Address"
+            },
+            "description": "A Bitcoin address."
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "baseline",
+                    "isolation_forest",
+                    "lof",
+                    "kmeans",
+                    "dbscan",
+                    "regression",
+                    "regression_interval",
+                    "fusion",
+                    "txgpt_method"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whose flags and scores decide (S-01); default: the baseline.",
+              "title": "Method"
+            },
+            "description": "Whose flags and scores decide (S-01); default: the baseline."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimelineResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "The copy the client holds is still right (the `ETag` matched)."
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/addresses/{address}/transactions": {
+      "get": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "A filtered, sorted page of transaction rows",
+        "description": "Filter by one day (`date`) or a range (`from`, `to`), by `status` and `direction` (each may repeat), sort by\n`time`, `amount` (net, signed) or `score` (a leading minus reverses), and page with `page` and `pageSize`.\nA filter that matches nothing is a 200 with an empty list.",
+        "operationId": "transactions_api_addresses__address__transactions_get",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "A Bitcoin address.",
+              "title": "Address"
+            },
+            "description": "A Bitcoin address."
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "One UTC day, YYYY-MM-DD.",
+              "title": "Date"
+            },
+            "description": "One UTC day, YYYY-MM-DD."
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "First day of an inclusive range; not with `date`.",
+              "title": "From"
+            },
+            "description": "First day of an inclusive range; not with `date`."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Last day of an inclusive range.",
+              "title": "To"
+            },
+            "description": "Last day of an inclusive range."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "flagged",
+                      "not-flagged",
+                      "not-scored"
+                    ],
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "in",
+                      "out",
+                      "none"
+                    ],
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Direction"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "time",
+                "-time",
+                "amount",
+                "-amount",
+                "score",
+                "-score"
+              ],
+              "type": "string",
+              "default": "time",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "baseline",
+                    "isolation_forest",
+                    "lof",
+                    "kmeans",
+                    "dbscan",
+                    "regression",
+                    "regression_interval",
+                    "fusion",
+                    "txgpt_method"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whose flags and scores decide (S-01); default: the baseline.",
+              "title": "Method"
+            },
+            "description": "Whose flags and scores decide (S-01); default: the baseline."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Defaults to settings web.lists.pageSize.",
+              "title": "Pagesize"
+            },
+            "description": "Defaults to settings web.lists.pageSize."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionsResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "The copy the client holds is still right (the `ETag` matched)."
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions/{txid}": {
+      "get": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "One transaction: facts, features, reason and every method's verdict",
+        "description": "The transaction's facts, its four features with their usual values and z-scores, what each was compared with,\nthe template's explanation and every method's score and flag. 404 `unsupported` for an address outside the\nsnapshot, 404 `not_found` when the transaction is not that address's, and 422 `insufficient_history`, with the\ntransaction's facts, when too little earlier history lay behind it to score it.",
+        "operationId": "transaction_api_transactions__txid__get",
+        "parameters": [
+          {
+            "name": "txid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "A transaction ID: 64 hexadecimal characters.",
+              "title": "Txid"
+            },
+            "description": "A transaction ID: 64 hexadecimal characters."
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "baseline",
+                    "isolation_forest",
+                    "lof",
+                    "kmeans",
+                    "dbscan",
+                    "regression",
+                    "regression_interval",
+                    "fusion",
+                    "txgpt_method"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whose flag and score decide (S-01); default: the baseline.",
+              "title": "Method"
+            },
+            "description": "Whose flag and score decide (S-01); default: the baseline."
+          },
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The address the transaction belongs to.",
+              "title": "Address"
+            },
+            "description": "The address the transaction belongs to."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionDetail"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "The copy the client holds is still right (the `ETag` matched)."
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Too little earlier history to score.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
       "AddressSummary": {
-        "description": "One address in the list, and the summary E4 returns (A1, plus `kind` and `source`).",
         "properties": {
           "address": {
-            "title": "Address",
-            "type": "string"
+            "type": "string",
+            "title": "Address"
           },
           "firstSeen": {
-            "title": "Firstseen",
-            "type": "string"
+            "type": "string",
+            "title": "Firstseen"
           },
           "lastSeen": {
-            "title": "Lastseen",
-            "type": "string"
+            "type": "string",
+            "title": "Lastseen"
           },
           "txCount": {
-            "title": "Txcount",
-            "type": "integer"
+            "type": "integer",
+            "title": "Txcount"
           },
           "scoredCount": {
-            "title": "Scoredcount",
-            "type": "integer"
+            "type": "integer",
+            "title": "Scoredcount"
           },
           "flaggedCount": {
-            "title": "Flaggedcount",
-            "type": "integer"
+            "type": "integer",
+            "title": "Flaggedcount"
           },
           "history": {
+            "type": "string",
             "enum": [
               "sufficient",
               "insufficient"
             ],
-            "title": "History",
-            "type": "string"
+            "title": "History"
           },
           "kind": {
+            "type": "string",
             "enum": [
               "p2pkh",
               "p2sh",
@@ -117,18 +737,18 @@
               "p2tr",
               "segwit"
             ],
-            "title": "Kind",
-            "type": "string"
+            "title": "Kind"
           },
           "source": {
+            "type": "string",
             "enum": [
               "snapshot",
               "live"
             ],
-            "title": "Source",
-            "type": "string"
+            "title": "Source"
           }
         },
+        "type": "object",
         "required": [
           "address",
           "firstSeen",
@@ -141,10 +761,9 @@
           "source"
         ],
         "title": "AddressSummary",
-        "type": "object"
+        "description": "One address in the list, and the summary E4 returns (A1, plus `kind` and `source`)."
       },
       "AddressesResponse": {
-        "description": "E3: the addresses that can be opened.",
         "properties": {
           "snapshot": {
             "$ref": "#/components/schemas/SnapshotInfo"
@@ -153,16 +772,17 @@
             "items": {
               "$ref": "#/components/schemas/AddressSummary"
             },
-            "title": "Addresses",
-            "type": "array"
+            "type": "array",
+            "title": "Addresses"
           }
         },
+        "type": "object",
         "required": [
           "snapshot",
           "addresses"
         ],
         "title": "AddressesResponse",
-        "type": "object"
+        "description": "E3: the addresses that can be opened."
       },
       "Capabilities": {
         "properties": {
@@ -199,42 +819,42 @@
         "description": "When a chart switches to WebGL."
       },
       "ComparisonBasis": {
-        "description": "What a group of features was compared with: how many earlier transactions, from when to when (A1).",
         "properties": {
           "features": {
             "items": {
+              "type": "string",
               "enum": [
                 "F1",
                 "F2",
                 "F3",
                 "F4"
-              ],
-              "type": "string"
+              ]
             },
-            "title": "Features",
-            "type": "array"
+            "type": "array",
+            "title": "Features"
           },
           "label": {
-            "title": "Label",
-            "type": "string"
+            "type": "string",
+            "title": "Label"
           },
           "description": {
-            "title": "Description",
-            "type": "string"
+            "type": "string",
+            "title": "Description"
           },
           "txCount": {
-            "title": "Txcount",
-            "type": "integer"
+            "type": "integer",
+            "title": "Txcount"
           },
           "start": {
-            "title": "Start",
-            "type": "string"
+            "type": "string",
+            "title": "Start"
           },
           "end": {
-            "title": "End",
-            "type": "string"
+            "type": "string",
+            "title": "End"
           }
         },
+        "type": "object",
         "required": [
           "features",
           "label",
@@ -244,7 +864,7 @@
           "end"
         ],
         "title": "ComparisonBasis",
-        "type": "object"
+        "description": "What a group of features was compared with: how many earlier transactions, from when to when (A1)."
       },
       "ConfigResponse": {
         "properties": {
@@ -767,25 +1387,24 @@
         "type": "object"
       },
       "FeatureDetail": {
-        "description": "One of F1 to F4 in the units people read (A1).",
         "properties": {
           "id": {
+            "type": "string",
             "enum": [
               "F1",
               "F2",
               "F3",
               "F4"
             ],
-            "title": "Id",
-            "type": "string"
+            "title": "Id"
           },
           "name": {
-            "title": "Name",
-            "type": "string"
+            "type": "string",
+            "title": "Name"
           },
           "description": {
-            "title": "Description",
-            "type": "string"
+            "type": "string",
+            "title": "Description"
           },
           "value": {
             "anyOf": [
@@ -796,8 +1415,8 @@
                 "type": "null"
               }
             ],
-            "description": "BTC for F1, a count for F2, hours for F3, a ratio for F4.",
-            "title": "Value"
+            "title": "Value",
+            "description": "BTC for F1, a count for F2, hours for F3, a ratio for F4."
           },
           "usual": {
             "anyOf": [
@@ -808,8 +1427,8 @@
                 "type": "null"
               }
             ],
-            "description": "Median of the comparison window, in the same units.",
-            "title": "Usual"
+            "title": "Usual",
+            "description": "Median of the comparison window, in the same units."
           },
           "z": {
             "anyOf": [
@@ -823,16 +1442,17 @@
             "title": "Z"
           },
           "role": {
+            "type": "string",
             "enum": [
               "flag",
               "contributing",
               "within-usual",
               "no-comparison"
             ],
-            "title": "Role",
-            "type": "string"
+            "title": "Role"
           }
         },
+        "type": "object",
         "required": [
           "id",
           "name",
@@ -843,7 +1463,7 @@
           "role"
         ],
         "title": "FeatureDetail",
-        "type": "object"
+        "description": "One of F1 to F4 in the units people read (A1)."
       },
       "FeatureInfo": {
         "properties": {
@@ -1082,44 +1702,44 @@
         "description": "Limits of a live lookup (S-09)."
       },
       "LookupRequest": {
-        "additionalProperties": false,
-        "description": "E4's body. The checker's specific message for a bad address comes from core.validation.",
         "properties": {
           "address": {
-            "title": "Address",
-            "type": "string"
+            "type": "string",
+            "title": "Address"
           }
         },
+        "additionalProperties": false,
+        "type": "object",
         "required": [
           "address"
         ],
         "title": "LookupRequest",
-        "type": "object"
+        "description": "E4's body. The checker's specific message for a bad address comes from core.validation."
       },
       "LookupResponse": {
-        "description": "E4: the typed address is supported.",
         "properties": {
           "status": {
+            "type": "string",
             "const": "supported",
-            "title": "Status",
-            "type": "string"
+            "title": "Status"
           },
           "address": {
-            "description": "The normalised address.",
+            "type": "string",
             "title": "Address",
-            "type": "string"
+            "description": "The normalised address."
           },
           "summary": {
             "$ref": "#/components/schemas/AddressSummary"
           }
         },
+        "type": "object",
         "required": [
           "status",
           "address",
           "summary"
         ],
         "title": "LookupResponse",
-        "type": "object"
+        "description": "E4: the typed address is supported."
       },
       "MethodEntry": {
         "description": "One method.",
@@ -1398,66 +2018,65 @@
         "description": "The two z lines: a feature at or above `flagAbsZ` flags; at or above `contributingAbsZ` contributes."
       },
       "TimeRange": {
-        "description": "The first and last transaction time.",
         "properties": {
           "start": {
-            "title": "Start",
-            "type": "string"
+            "type": "string",
+            "title": "Start"
           },
           "end": {
-            "title": "End",
-            "type": "string"
+            "type": "string",
+            "title": "End"
           }
         },
+        "type": "object",
         "required": [
           "start",
           "end"
         ],
         "title": "TimeRange",
-        "type": "object"
+        "description": "The first and last transaction time."
       },
       "TimelineDay": {
-        "description": "One day that has transactions (A1).",
         "properties": {
           "date": {
-            "title": "Date",
-            "type": "string"
+            "type": "string",
+            "title": "Date"
           },
           "txCount": {
-            "title": "Txcount",
-            "type": "integer"
+            "type": "integer",
+            "title": "Txcount"
           },
           "flaggedCount": {
-            "title": "Flaggedcount",
-            "type": "integer"
+            "type": "integer",
+            "title": "Flaggedcount"
           }
         },
+        "type": "object",
         "required": [
           "date",
           "txCount",
           "flaggedCount"
         ],
         "title": "TimelineDay",
-        "type": "object"
+        "description": "One day that has transactions (A1)."
       },
       "TimelineHistory": {
-        "description": "Whether the history is long enough to score, and from when (A1).",
         "properties": {
           "status": {
+            "type": "string",
             "enum": [
               "sufficient",
               "insufficient"
             ],
-            "title": "Status",
-            "type": "string"
+            "title": "Status"
           },
           "txCount": {
-            "title": "Txcount",
-            "type": "integer"
+            "type": "integer",
+            "title": "Txcount"
           },
           "spanDays": {
-            "title": "Spandays",
-            "type": "number"
+            "type": "number",
+            "title": "Spandays"
           },
           "required": {
             "$ref": "#/components/schemas/HistoryRequirement"
@@ -1474,6 +2093,7 @@
             "title": "Firstscoreddate"
           }
         },
+        "type": "object",
         "required": [
           "status",
           "txCount",
@@ -1482,14 +2102,13 @@
           "firstScoredDate"
         ],
         "title": "TimelineHistory",
-        "type": "object"
+        "description": "Whether the history is long enough to score, and from when (A1)."
       },
       "TimelineResponse": {
-        "description": "E5: per-day counts, totals, range and history status of one address.",
         "properties": {
           "address": {
-            "title": "Address",
-            "type": "string"
+            "type": "string",
+            "title": "Address"
           },
           "snapshot": {
             "$ref": "#/components/schemas/SnapshotInfo"
@@ -1498,12 +2117,12 @@
             "$ref": "#/components/schemas/TimeRange"
           },
           "days": {
-            "description": "Only days with transactions, oldest first.",
             "items": {
               "$ref": "#/components/schemas/TimelineDay"
             },
+            "type": "array",
             "title": "Days",
-            "type": "array"
+            "description": "Only days with transactions, oldest first."
           },
           "totals": {
             "$ref": "#/components/schemas/TimelineTotals"
@@ -1512,6 +2131,7 @@
             "$ref": "#/components/schemas/TimelineHistory"
           }
         },
+        "type": "object",
         "required": [
           "address",
           "snapshot",
@@ -1521,28 +2141,28 @@
           "history"
         ],
         "title": "TimelineResponse",
-        "type": "object"
+        "description": "E5: per-day counts, totals, range and history status of one address."
       },
       "TimelineTotals": {
-        "description": "Counts over the whole history (A1).",
         "properties": {
           "txCount": {
-            "title": "Txcount",
-            "type": "integer"
+            "type": "integer",
+            "title": "Txcount"
           },
           "scoredCount": {
-            "title": "Scoredcount",
-            "type": "integer"
+            "type": "integer",
+            "title": "Scoredcount"
           },
           "flaggedCount": {
-            "title": "Flaggedcount",
-            "type": "integer"
+            "type": "integer",
+            "title": "Flaggedcount"
           },
           "flaggedDays": {
-            "title": "Flaggeddays",
-            "type": "integer"
+            "type": "integer",
+            "title": "Flaggeddays"
           }
         },
+        "type": "object",
         "required": [
           "txCount",
           "scoredCount",
@@ -1550,7 +2170,7 @@
           "flaggedDays"
         ],
         "title": "TimelineTotals",
-        "type": "object"
+        "description": "Counts over the whole history (A1)."
       },
       "TransactionCore": {
         "properties": {
@@ -1621,20 +2241,19 @@
         "description": "A1's `TransactionCore`."
       },
       "TransactionDetail": {
-        "description": "E7: one transaction's facts, features, reason and every method's verdict.",
         "properties": {
           "scored": {
+            "type": "boolean",
             "const": true,
-            "title": "Scored",
-            "type": "boolean"
+            "title": "Scored"
           },
           "flagged": {
-            "title": "Flagged",
-            "type": "boolean"
+            "type": "boolean",
+            "title": "Flagged"
           },
           "score": {
-            "title": "Score",
-            "type": "number"
+            "type": "number",
+            "title": "Score"
           },
           "method": {
             "$ref": "#/components/schemas/MethodInfo"
@@ -1643,24 +2262,24 @@
             "items": {
               "$ref": "#/components/schemas/FeatureDetail"
             },
-            "title": "Features",
-            "type": "array"
+            "type": "array",
+            "title": "Features"
           },
           "comparison": {
             "items": {
               "$ref": "#/components/schemas/ComparisonBasis"
             },
-            "title": "Comparison",
-            "type": "array"
+            "type": "array",
+            "title": "Comparison"
           },
           "limitation": {
-            "title": "Limitation",
-            "type": "string"
+            "type": "string",
+            "title": "Limitation"
           },
           "explanation": {
-            "description": "The template's text; it ends with the limitation line on a flagged item.",
+            "type": "string",
             "title": "Explanation",
-            "type": "string"
+            "description": "The template's text; it ends with the limitation line on a flagged item."
           },
           "scores": {
             "additionalProperties": {
@@ -1673,7 +2292,6 @@
                 }
               ]
             },
-            "description": "Every method's score.",
             "propertyNames": {
               "enum": [
                 "baseline",
@@ -1687,14 +2305,14 @@
                 "txgpt_method"
               ]
             },
+            "type": "object",
             "title": "Scores",
-            "type": "object"
+            "description": "Every method's score."
           },
           "flags": {
             "additionalProperties": {
               "type": "boolean"
             },
-            "description": "Every method's flag.",
             "propertyNames": {
               "enum": [
                 "baseline",
@@ -1708,38 +2326,39 @@
                 "txgpt_method"
               ]
             },
+            "type": "object",
             "title": "Flags",
-            "type": "object"
+            "description": "Every method's flag."
           },
           "address": {
-            "title": "Address",
-            "type": "string"
+            "type": "string",
+            "title": "Address"
           },
           "time": {
-            "description": "ISO 8601, UTC.",
+            "type": "string",
             "title": "Time",
-            "type": "string"
+            "description": "ISO 8601, UTC."
           },
           "direction": {
+            "type": "string",
             "enum": [
               "in",
               "out",
               "none"
             ],
-            "title": "Direction",
-            "type": "string"
+            "title": "Direction"
           },
           "receivedSats": {
-            "title": "Receivedsats",
-            "type": "integer"
+            "type": "integer",
+            "title": "Receivedsats"
           },
           "sentSats": {
-            "title": "Sentsats",
-            "type": "integer"
+            "type": "integer",
+            "title": "Sentsats"
           },
           "netSats": {
-            "title": "Netsats",
-            "type": "integer"
+            "type": "integer",
+            "title": "Netsats"
           },
           "sourceUrl": {
             "anyOf": [
@@ -1750,26 +2369,27 @@
                 "type": "null"
               }
             ],
-            "description": "Public block-explorer page; null for a hypothetical transaction.",
-            "title": "Sourceurl"
+            "title": "Sourceurl",
+            "description": "Public block-explorer page; null for a hypothetical transaction."
           },
           "txid": {
-            "title": "Txid",
-            "type": "string"
+            "type": "string",
+            "title": "Txid"
           },
           "blockHeight": {
-            "title": "Blockheight",
-            "type": "integer"
+            "type": "integer",
+            "title": "Blockheight"
           },
           "source": {
+            "type": "string",
             "enum": [
               "snapshot",
               "live"
             ],
-            "title": "Source",
-            "type": "string"
+            "title": "Source"
           }
         },
+        "type": "object",
         "required": [
           "scored",
           "flagged",
@@ -1793,40 +2413,39 @@
           "source"
         ],
         "title": "TransactionDetail",
-        "type": "object"
+        "description": "E7: one transaction's facts, features, reason and every method's verdict."
       },
       "TransactionRow": {
-        "description": "One row of E6 (A1's `TransactionRow` plus the deciding method's view).",
         "properties": {
           "txid": {
-            "title": "Txid",
-            "type": "string"
+            "type": "string",
+            "title": "Txid"
           },
           "time": {
-            "title": "Time",
-            "type": "string"
+            "type": "string",
+            "title": "Time"
           },
           "direction": {
+            "type": "string",
             "enum": [
               "in",
               "out",
               "none"
             ],
-            "title": "Direction",
-            "type": "string"
+            "title": "Direction"
           },
           "netSats": {
-            "title": "Netsats",
-            "type": "integer"
+            "type": "integer",
+            "title": "Netsats"
           },
           "status": {
+            "type": "string",
             "enum": [
               "flagged",
               "not-flagged",
               "not-scored"
             ],
-            "title": "Status",
-            "type": "string"
+            "title": "Status"
           },
           "score": {
             "anyOf": [
@@ -1837,8 +2456,8 @@
                 "type": "null"
               }
             ],
-            "description": "The deciding method's score; null when not scored.",
-            "title": "Score"
+            "title": "Score",
+            "description": "The deciding method's score; null when not scored."
           },
           "mainReason": {
             "anyOf": [
@@ -1849,8 +2468,8 @@
                 "type": "null"
               }
             ],
-            "description": "The template's strongest reason, such as 'Longer gap than usual'.",
-            "title": "Mainreason"
+            "title": "Mainreason",
+            "description": "The template's strongest reason, such as 'Longer gap than usual'."
           },
           "mainZ": {
             "anyOf": [
@@ -1864,11 +2483,12 @@
             "title": "Mainz"
           },
           "flaggedBy": {
-            "description": "How many methods flag it.",
+            "type": "integer",
             "title": "Flaggedby",
-            "type": "integer"
+            "description": "How many methods flag it."
           }
         },
+        "type": "object",
         "required": [
           "txid",
           "time",
@@ -1881,14 +2501,13 @@
           "flaggedBy"
         ],
         "title": "TransactionRow",
-        "type": "object"
+        "description": "One row of E6 (A1's `TransactionRow` plus the deciding method's view)."
       },
       "TransactionsResponse": {
-        "description": "E6: a filtered, sorted page of rows.",
         "properties": {
           "address": {
-            "title": "Address",
-            "type": "string"
+            "type": "string",
+            "title": "Address"
           },
           "date": {
             "anyOf": [
@@ -1905,22 +2524,23 @@
             "items": {
               "$ref": "#/components/schemas/TransactionRow"
             },
-            "title": "Transactions",
-            "type": "array"
+            "type": "array",
+            "title": "Transactions"
           },
           "page": {
-            "title": "Page",
-            "type": "integer"
+            "type": "integer",
+            "title": "Page"
           },
           "pageSize": {
-            "title": "Pagesize",
-            "type": "integer"
+            "type": "integer",
+            "title": "Pagesize"
           },
           "total": {
-            "title": "Total",
-            "type": "integer"
+            "type": "integer",
+            "title": "Total"
           }
         },
+        "type": "object",
         "required": [
           "address",
           "date",
@@ -1930,7 +2550,7 @@
           "total"
         ],
         "title": "TransactionsResponse",
-        "type": "object"
+        "description": "E6: a filtered, sorted page of rows."
       },
       "WatchlistLimits": {
         "properties": {

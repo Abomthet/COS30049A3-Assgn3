@@ -9,6 +9,8 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import threading
+import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 
@@ -18,14 +20,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from . import __version__
-from .api import system
+from .api import addresses, system, transactions
+from .core.body_limit import BodyLimitMiddleware
 from .core.config import Settings, load_settings
 from .core.errors import register_handlers
 from .core.logging import configure_logging
-from .core.middleware import REQUEST_ID_HEADER, RequestContextMiddleware
+from .core.middleware import REQUEST_ID_HEADER, ETagMiddleware, RequestContextMiddleware
 from .core.openapi import install_openapi
 from .core.runtime import Runtime
+from .services.explorer_service import ExplorerService
 from .services.model_service import load_predictor, snapshot_facts
+from .services.store import SnapshotStore
 
 log = logging.getLogger("app.main")
 
@@ -33,32 +38,48 @@ log = logging.getLogger("app.main")
 GZIP_MIN_BYTES = 1000
 
 
-async def load_models(runtime: Runtime, loader: Callable[[], Predictor]) -> None:
-    """Load the Predictor off the event loop so the service can answer E1 with a 503 meanwhile.
+async def load_models(runtime: Runtime, loader: Callable[[], Predictor], warm: bool = True) -> None:
+    """Load the Predictor off the event loop so the service can answer E1 with a 503 meanwhile, then warm the cache.
 
     A failure is recorded and logged, and E1 keeps answering 503 with its sentence: the service does
-    not pretend to be ready.
+    not pretend to be ready. The cache warm-up (Mod-2) runs after the service is ready and never delays it.
     """
     log.info("Loading the explorer models")
     try:
         predictor = await asyncio.to_thread(loader)
         facts = snapshot_facts(predictor)
+        explorer = ExplorerService(SnapshotStore(predictor), predictor, runtime.settings.web.lists)
     except Exception as error:  # the cause goes to the log; the response says only that the load failed
         runtime.load_error = f"{error.__class__.__name__}: {error}"
         log.error("The explorer models could not be loaded (%s). Check the installation as the README describes.",
                   runtime.load_error)
         return
-    runtime.predictor, runtime.facts = predictor, facts
+    runtime.predictor, runtime.facts, runtime.explorer = predictor, facts, explorer
     log.info("Explorer ready: %d addresses, %d methods (snapshot %s, %.1f s since start)", facts.address_count,
              facts.method_count, facts.date, runtime.uptime_seconds)
+    if warm:
+        await warm_cache(explorer)
 
 
-def create_app(settings: Settings | None = None, loader: Callable[[], Predictor] = load_predictor) -> FastAPI:
+async def warm_cache(explorer: ExplorerService) -> None:
+    """Score every snapshot address once, in a worker thread, so the first view of each is answered from memory."""
+    stop = threading.Event()  # a thread cannot be cancelled: the flag lets a shutdown end the loop at the next address
+    started = time.perf_counter()
+    try:
+        filled = await asyncio.to_thread(explorer.warm, stop)
+    except asyncio.CancelledError:
+        stop.set()
+        raise
+    log.info("Cache warmed: %d addresses in %.1f s", filled, time.perf_counter() - started)
+
+
+def create_app(settings: Settings | None = None, loader: Callable[[], Predictor] = load_predictor, warm: bool = True) -> FastAPI:
     """Build the application.
 
     Args:
         settings: Configuration; read from settings.json and the environment when omitted.
         loader: Returns the Predictor. Tests pass one that returns a shared, already loaded Predictor.
+        warm: Fill the per-address cache in the background once ready. Tests that do not measure it turn it off.
     """
     settings = settings or load_settings()
     configure_logging(settings.log_level)
@@ -66,7 +87,7 @@ def create_app(settings: Settings | None = None, loader: Callable[[], Predictor]
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        task = asyncio.create_task(load_models(runtime, loader))
+        task = asyncio.create_task(load_models(runtime, loader, warm))
         try:
             yield
         finally:
@@ -79,13 +100,19 @@ def create_app(settings: Settings | None = None, loader: Callable[[], Predictor]
                               "A flag means unusual for this address's own history, nothing more.")
     app.state.runtime = runtime
 
-    # Added innermost first: the request context is outermost, so every request is numbered and logged.
+    # Added innermost first: the request context is outermost, so every request is numbered and logged. The ETag
+    # is innermost, so it hashes the body as written and not its compressed form (gzip stamps the time into its
+    # output); the body limit is inside CORS, so a refusal still carries the headers the browser needs to read it.
+    app.add_middleware(ETagMiddleware)
     app.add_middleware(GZipMiddleware, minimum_size=GZIP_MIN_BYTES)
+    app.add_middleware(BodyLimitMiddleware, max_bytes=settings.web.limits.max_body_bytes)
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins), allow_methods=["GET", "POST", "PUT", "DELETE"],
                        allow_headers=["Content-Type", REQUEST_ID_HEADER], expose_headers=[REQUEST_ID_HEADER])
     app.add_middleware(RequestContextMiddleware)
     register_handlers(app)
     app.include_router(system.router)
+    app.include_router(addresses.router)
+    app.include_router(transactions.router)
     install_openapi(app)
     return app
 

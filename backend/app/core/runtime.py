@@ -14,6 +14,8 @@ from .config import Settings
 if TYPE_CHECKING:  # explorer is imported only where it is used: it takes seconds to import
     from explorer.predict import Predictor
 
+    from ..services.explorer_service import ExplorerService
+
 
 @dataclass(frozen=True)
 class SnapshotFacts:
@@ -33,12 +35,13 @@ class Runtime:
     started_at: float = field(default_factory=time.monotonic)
     predictor: Predictor | None = None
     facts: SnapshotFacts | None = None
+    explorer: ExplorerService | None = None
     load_error: str | None = None
 
     @property
     def ready(self) -> bool:
-        """True once the Predictor is loaded."""
-        return self.predictor is not None and self.facts is not None
+        """True once the Predictor is loaded and the explorer service is built on it."""
+        return self.predictor is not None and self.facts is not None and self.explorer is not None
 
     @property
     def uptime_seconds(self) -> float:

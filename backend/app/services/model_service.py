@@ -6,7 +6,8 @@ from __future__ import annotations
 
 from explorer.predict import Predictor
 
-from ..core.runtime import SnapshotFacts
+from ..core.errors import Unavailable
+from ..core.runtime import Runtime, SnapshotFacts
 
 EXAMPLE_COUNT = 3
 
@@ -29,3 +30,12 @@ def snapshot_facts(predictor: Predictor) -> SnapshotFacts:
     busiest = predictor.features.groupby("address").size().sort_values(ascending=False, kind="stable").head(EXAMPLE_COUNT)
     return SnapshotFacts(date=predictor.snapshot_date, address_count=int(predictor.features["address"].nunique()),
                          method_count=len(predictor.methods), examples=tuple(busiest.index))
+
+
+def require_ready(runtime: Runtime) -> None:
+    """Raise `Unavailable` while the models are loading, or after a failed load."""
+    if runtime.load_error:
+        raise Unavailable("The explorer service could not load its models.",
+                          "The server log says why; the README's troubleshooting section lists the usual causes.")
+    if not runtime.ready:
+        raise Unavailable("The explorer service is still starting.", "Try again in a few seconds.")

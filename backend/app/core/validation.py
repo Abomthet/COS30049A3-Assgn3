@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass
+from datetime import date
 
 from ..schemas.common import AddressKind
 from ..schemas.errors import FieldError
@@ -232,6 +233,21 @@ def _check_segwit(value: str) -> AddressCheck:
     if version == 1 and len(program) == 32:
         return _ok(address, "p2tr")
     return _ok(address, "segwit")
+
+
+# ---------------------------------------------------------------- Days
+
+
+def is_day(raw: str) -> bool:
+    """True for a real calendar day written YYYY-MM-DD (plan section 11.2); the shape is checked first
+    because `date.fromisoformat` also accepts other spellings."""
+    if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", raw):
+        return False
+    try:
+        date.fromisoformat(raw)
+    except ValueError:
+        return False
+    return True
 
 
 # ---------------------------------------------------------------- Transaction IDs

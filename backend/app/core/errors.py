@@ -63,6 +63,13 @@ class NotFound(ApiError):
     status = "not_found"
 
 
+class TooLarge(ApiError):
+    """A request body over `web.limits.maxBodyBytes` (413)."""
+
+    status_code = 413
+    status = "too_large"
+
+
 class Unavailable(ApiError):
     """The service cannot answer yet or a file it needs is missing (503)."""
 
@@ -120,10 +127,17 @@ def _describe(error: dict[str, Any]) -> str:
     return "This value is not acceptable."
 
 
+def needs_correcting(count: int) -> str:
+    """'One value needs correcting.', 'Three values need correcting.': the message of a body with `fields`."""
+    noun = "value needs" if count == 1 else "values need"
+    return f"{NUMBER_WORDS[count] if count < len(NUMBER_WORDS) else count} {noun} correcting."
+
+
 def _field_name(location: Sequence[Any]) -> str:
-    """The name a client knows: a query or path parameter by its name, a body field by its dotted path."""
+    """The name a client knows: a query or path parameter by its name (not by the position of a repeated value),
+    a body field by its dotted path."""
     if location[0] in ("query", "path", "header"):
-        return str(location[-1])
+        return str(location[1])
     return ".".join(str(part) for part in location[1:]) or "body"
 
 
@@ -140,11 +154,8 @@ async def handle_validation(request: Request, exc: Exception) -> JSONResponse:
         return error_response(request, 415, "invalid", "The request body must be JSON.",
                               hint="Send the body as JSON with the header Content-Type: application/json.")
     fields = [FieldError(name=_field_name(e["loc"]), message=_describe(e)) for e in errors]
-    count = len(fields)
-    noun = "value needs" if count == 1 else "values need"
-    message = f"{NUMBER_WORDS[count] if count < len(NUMBER_WORDS) else count} {noun} correcting."
-    return error_response(request, 400, "invalid", message, hint="Correct the values named below and send the request again.",
-                          fields=fields)
+    return error_response(request, 400, "invalid", needs_correcting(len(fields)),
+                          hint="Correct the values named below and send the request again.", fields=fields)
 
 
 async def handle_http_exception(request: Request, exc: Exception) -> JSONResponse:

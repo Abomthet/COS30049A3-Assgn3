@@ -59,5 +59,10 @@ class ErrorBody(CamelModel):
 def error_responses(*codes: int) -> dict[int | str, dict[str, Any]]:
     """The `responses=` entry that documents the given error statuses with the one body."""
     meanings = {400: "A value is malformed or out of range.", 404: "The address, transaction or path is unknown.",
+                413: "The request body is over the size limit.", 415: "The request body is not JSON.",
                 422: "Too little earlier history to score.", 503: "The service is starting or a file is missing."}
     return {code: {"model": ErrorBody, "description": meanings[code]} for code in codes}
+
+
+# Every GET of snapshot data carries an ETag; a repeat request with `If-None-Match` costs a 304 with no body.
+SNAPSHOT_GET: dict[int | str, dict[str, Any]] = {304: {"description": "The copy the client holds is still right (the `ETag` matched)."}}
