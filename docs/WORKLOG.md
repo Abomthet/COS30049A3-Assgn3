@@ -362,3 +362,4 @@ from `environment.yml` was checked by the backend-core cook.
   next step is the address's first scored day.
 - **Two checkers, one set of vectors.** pytest and Vitest both run `shared/address_vectors.json`, so the
   browser and the server are shown to accept and reject the same addresses with the same messages.
+**frontend-explore** cook started: T18 (tabs, filter bar, table), T25 (G2), V7, and the two UI fixes (phone table, amount precision). `frontend/` only.

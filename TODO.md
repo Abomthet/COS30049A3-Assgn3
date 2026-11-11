@@ -45,16 +45,16 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 ## 1.4.3 React front end (13–20 Nov)
 - [x] T16 (`271642a`) Shell: navigation, service-status indicator, theme, toasts, error boundary; settings from E2 (M-05, M-10)
 - [x] T17 (`610331d`) V1, V2 and V3 on the real API; fixtures recorded; prototype banner and tools removed (M-05). Also: thresholds only from E2 (D-W-10), E2 `features` into `AppSettings`, Vitest reads `shared/address_vectors.json` (un-skip)
-- [ ] T18 Tabs; filter bar (status, direction, date range); transaction table (M-08)
+- [~] T18 `@frontend-explore` Tabs; filter bar (status, direction, date range); transaction table (M-08)
 - [ ] T19 V4 what-if lab: form, rules, feedback, live request with cancellation (M-06, M-11)
-- [ ] T20 V5 models and limits; V7 about and help (M-13)
+- [~] T20 V5 models and limits; V7 about and help (V7 `@frontend-explore`; V5 waits for E11) (M-13)
 - [ ] T21 State catalogue in every view; time limits; recovery and retry (M-10)
 - [ ] T22 Export menu; PNG export (M-12)
 
 ## 1.4.4 Charts (15–21 Nov), Plotly.js
 - [x] T23 (`eeefa9c`) Chart wrapper: contract, theme, table view, export, lazy loading (M-07)
 - [x] T24 (`eeefa9c`) G1 daily activity (bar), keyboard control, range slider
-- [ ] T25 G2 transactions over time (scatter, log amount), driven by the filters
+- [~] T25 `@frontend-explore` G2 transactions over time (scatter, log amount), driven by the filters
 - [x] T26 (`eeefa9c`) G3 feature deviation (horizontal bar)
 - [ ] T27 G5 what-if response (line, log amount, flag line)
 - [ ] T28 Layouts at 390 / 820 / 1280 px; screenshot script fails on sideways scroll (M-11)
