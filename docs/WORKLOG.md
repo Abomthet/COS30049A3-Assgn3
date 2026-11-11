@@ -363,3 +363,79 @@ from `environment.yml` was checked by the backend-core cook.
 - **Two checkers, one set of vectors.** pytest and Vitest both run `shared/address_vectors.json`, so the
   browser and the server are shown to accept and reject the same addresses with the same messages.
 **frontend-explore** cook started: T18 (tabs, filter bar, table), T25 (G2), V7, and the two UI fixes (phone table, amount precision). `frontend/` only.
+
+## 2026-11-11 — T14 and T15 reviewed and committed (what-if, export, methods)
+
+**Delegated to** the backend-whatif cook (Sonnet 5.5, high effort): 108 tool calls, ~34 min.
+**Lead review and changes** (commit `2bde9b8`):
+- **Limitation line in every CSV row.** The cook followed the plan's E10 note (flagged rows only), which
+  conflicts with the wording rule ("every export"): a CSV filtered to unflagged rows carried no
+  limitation at all. Now every CSV row carries it (the JSON file states it once at the top and in
+  flagged rows). Two tests that encoded the old behaviour were updated, and a test was added for a CSV
+  with no flagged row. **D-W-11.**
+- The what-if vectors moved to `shared/whatif_vectors.json`, where the plan puts them.
+- **Verification in a clean worktree of the commit, before pushing** (the new rule): `vendor_a2.py
+  --check` passes; `pytest` **570 passed** (119.8 s); `npm ci`, `npm test` (244), typecheck and build
+  clean; Uvicorn under `-W error` starts clean; live E8 (0.05 BTC out: flagged, 5.98, limitation
+  present), E9 (41 points, usual 0.000525 BTC, 8 methods), E10 (`text/csv`, `attachment;
+  filename="1Bbcsfxj-2026-10-22.csv"`), E11 (baseline threshold 5.0).
+
+**Parity of the batched curve (the T14 claim that matters).** Batch against single `score_what_if`
+calls over 6 addresses (the running example; the largest; the one with the fewest scored; the oldest;
+a Taproot address; a mid-sized one) × both directions × 3 times (the first scorable moment, the exact
+second of a real transaction, a day after the last) × 41 log-spaced amounts (0.000001–10 BTC).
+- **Flags equal everywhere.**
+- **Scores** exactly equal for baseline, Isolation Forest, LOF, DBSCAN and regression range. Within
+  4.3e-14 (regression), 7.1e-15 (fusion) and 8.9e-16 (k-means): BLAS summation order. Two identical
+  single calls differ at the same level, and the features themselves are bit-identical. Tolerance 1e-12.
+- The full grid (1,517 amounts, 8 min 16 s) runs under `PARITY_FULL=1`. The default run spot-checks it
+  in ~40 s and always checks the running example's full 41-point curve.
+- **Planted bugs:** dropping the newest earlier row failed 15 of 20 parity tests. Three meta-tests stay
+  in the suite and plant bugs (newest earlier row dropped; same-second real row counted as history;
+  hypothetical rows staggered in time) to prove the check fails.
+
+**Measured** (Uvicorn, warm median of 7):
+
+| Request | Running example | Largest (700 tx) | Budget | Plan's measurement |
+|---|---|---|---|---|
+| E8 | 267 ms (cold 339) | 340 ms | 700 ms | 400 ms |
+| E9, 7 amounts | 156 ms | — | — | 160 ms |
+| E9, 41 points (default) | 200 ms | 342 ms | 1.5 s | 180 ms |
+| E9, 61 points | 165 ms | 238 ms | 1.5 s | — |
+| E10 CSV (295 kB) | — | 21 ms (cold, uncached method: 120) | — | — |
+| E11 | 1 ms | | — | — |
+
+The default curve builds twice (a probe build finds the usual amount), which is why 41 default points
+on the largest address cost more than 61 explicit ones.
+
+**Design notes for the technical document.**
+- **Why one batch is valid.** A2's `build_features` never treats rows at the same second as each
+  other's history. All hypothetical rows share one timestamp, so none sees another, and one build
+  scores them all. Staggering their times is exactly the bug the third meta-test plants.
+- **Exact where it can be, bounded where it cannot.** Flags and five methods are exactly equal; three
+  methods differ by BLAS summation order (≤ 4.3e-14), the same noise as between two identical single
+  calls. The test states that tolerance and why.
+- **One 422 for "not enough history".** `score_what_if` returns an unscored row when history exists but
+  is under the minimum, and raises when there is none. E8 and E9 turn both into the same 422 with the
+  counts and the first scorable date.
+- **The export is the screen.** E10 reuses E6's cached view and filters, so the file lists exactly
+  what the table shows. Amounts are formatted from integer satoshis with A2's own `format_btc`. Text
+  cells that start like a formula (`=`, `+`, `-`, `@`, tab, CR) get a leading apostrophe; numbers stay
+  numbers.
+- **Scoring once per batch.** Scoring through `fusion.Cached` instead of a score pass and then a flag
+  pass halved batch scoring (≈0.26 → 0.13 s for 41 rows) without reimplementing A2's flag logic.
+
+**Choices accepted:**
+- Mod numbering follows the plan (batch = Mod-5, 422 = Mod-6).
+- E9 accepts a list, a log range or the default.
+- The default curve answers 400 on `direction` when that direction has no history at that time.
+- `maxGapYears` uses 365.25-day years.
+- JSON export in satoshis.
+- E11's `burst` is A2's per-transaction recall.
+
+**Carried forward:**
+- The back-end suite now takes ~2 min (from 33 s): the wording and parity grids. Consider a `-m "not slow"`
+  marker for inner loops, with the full suite before every commit.
+- A Uvicorn on port 8000 started detached (parent `launchd`) was still running after the cook
+  reported "servers stopped". Owner unclear (it may be the explore cook's test server); cleared once
+  no cook is running.
