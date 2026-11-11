@@ -24,20 +24,20 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 
 ## 1.4.1 Set-up and contract (11–12 Nov)
 - [ ] T01 **[you]** Send the tutor questions and CR-07/CR-08 to the team (Claude drafts them from Appendix A)
-- [~] T02 (repo done; A2 tag waits for you) Tag A2's submitted commit `v1.0` (push needs your OK); `git init` A3 with the plan's layout, `.gitignore`, branch rules
-- [~] T03 `@backend-core` `vendor_a2.py`: copy A2's runtime (`explorer/`, models at `results-v1.1`, settings) into `backend/` with SHA-256 hashes; pinned back-end env; smoke test that loads the `Predictor`
+- [x] T02 (repo `Defaul119/COS30049A3`, private; A2 `v1.0` → `aa56a26`, local tag) Tag A2's submitted commit `v1.0` (push needs your OK); `git init` A3 with the plan's layout, `.gitignore`, branch rules
+- [x] T03 (`5a690f1`) `vendor_a2.py`: copy A2's runtime (`explorer/`, models at `results-v1.1`, settings) into `backend/` with SHA-256 hashes; pinned back-end env; smoke test that loads the `Predictor`
 - [x] T04 (`271642a`, `a4727d0`) Copy the A1 prototype (`asm1_demo/frontend` @ `8375cf0`) → `frontend/`; it builds; its 66 tests pass; the client moves to Axios
-- [~] T05 `@backend-core` Pydantic schemas for E1–E11 and the error body; export `openapi.json`; check it against `src/api/types.ts`
-- [~] T06 `@backend-core` `web` block in settings; E2 `/api/config`
+- [x] T05 (`5a690f1`) Pydantic schemas for E1–E11 and the error body; export `openapi.json`; check it against `src/api/types.ts`
+- [x] T06 (`5a690f1`) `web` block in settings; E2 `/api/config`
 
 ## 1.4.2 FastAPI back end (12–18 Nov) → MS1 on Sun 15 Nov
-- [~] T07 `@backend-core` App factory, lifespan load, E1 `/api/health`, logging, request IDs, CORS (M-01)
-- [~] T08 `@backend-core` Exception classes and handlers; validation errors → 400; Unsupported → 404; InsufficientHistory → 422 (M-10)
-- [~] T09 `@backend-core` Address and txid validation in Python (Base58Check, Bech32, Bech32m); shared test vectors for pytest and Vitest (M-09)
-- [ ] T10 Address store, explorer service, per-address cache (Mod-1 to Mod-4) (M-02)
-- [ ] T11 E3 `/addresses`, E4 `POST /lookup`, E5 `/timeline`
-- [ ] T12 E6 `/transactions` with filters, sorting and paging; E7 `/transactions/{txid}` (M-02, M-08)
-- [ ] T13 Parity tests (API equals `predict.py`) and the wording test over all 28 addresses (M-14)
+- [x] T07 (`5a690f1`) App factory, lifespan load, E1 `/api/health`, logging, request IDs, CORS (M-01)
+- [x] T08 (`5a690f1`) Exception classes and handlers; validation errors → 400; Unsupported → 404; InsufficientHistory → 422 (M-10)
+- [x] T09 (`5a690f1`) Address and txid validation in Python (Base58Check, Bech32, Bech32m); shared test vectors for pytest and Vitest (M-09)
+- [~] T10 `@backend-endpoints` Address store, explorer service, per-address cache (Mod-1 to Mod-4) (M-02)
+- [~] T11 `@backend-endpoints` E3 `/addresses`, E4 `POST /lookup`, E5 `/timeline`
+- [~] T12 `@backend-endpoints` E6 `/transactions` with filters, sorting and paging; E7 `/transactions/{txid}` (M-02, M-08)
+- [~] T13 `@backend-endpoints` Parity tests (API equals `predict.py`) and the wording test over all 28 addresses (M-14)
 - [ ] **MS1** Both tiers start from a fresh clone; E1–E7 answer for all 28 and pass parity; V1–V3 show real data, including the unsupported and short-history states
 - [ ] T14 E8 what-if; E9 curve with the batched feature build plus a parity test against single calls (Mod-5, Mod-6) (M-03, M-04)
 - [ ] T15 E10 export (CSV/JSON); E11 `/methods` with the evaluation tables (M-12, M-13)

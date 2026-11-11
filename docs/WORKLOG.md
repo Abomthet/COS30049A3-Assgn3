@@ -123,3 +123,61 @@ a fourth status `checking` until the first E1 answer; placeholder pages for `#/m
 `useRequest` keeping the previous data while refreshing; the prototype banner and tools (T17).
 **Contract handshake.** The front end's expected E1/E2/error shapes were sent to the backend cook;
 any difference from the plan is resolved in the plan's favour.
+
+## 2026-11-11 — Wave 1, back end: T03, T05–T09 reviewed and committed
+
+**Delegated to** the backend-core cook (Sonnet 5.5, high effort): 80 tool calls, ~23 min.
+**Lead review:** re-ran `pytest` (**135 passed**, warnings are errors) and `tools/vendor_a2.py --check`
+(all hashes match). Started Uvicorn and called E1, E2, an unknown path (404 `not_found`) and a wrong
+method (405 `invalid`): all as specified, request IDs on every body, no warnings in the log, "ready"
+0.7 s after start. Checked the one surprising dependency, `httpx2`: it is the pydantic organisation's
+package, and Starlette 1.10's own test client imports it and warns when it finds `httpx`.
+Checked what would be committed: 89 files, the largest 17 MB (`txgpt_method.joblib`); the 610 MB weights
+are git-ignored. Commit `5a690f1`.
+
+**Lead change.** E1 said `assistant: "ready"` and E2 `capabilities.assistant: true` because the weights
+file exists, but E12 does not exist yet, so the front end would offer a button that returns 404.
+**D-W-09:** `EXPLORER_ASSISTANT` defaults to `off` until S-05 adds E12, then goes back to the plan's
+`auto` (s05, environment table). Two tests updated to match.
+
+**Measured.** Running example `1Bbcsfxj…3dz`: 377 transactions, 367 scored, 3 flagged on 3 days;
+what-if 0.05 BTC out scores 5.98 (both as in the plan). Import 1.3–1.5 s, `Predictor.load()` 0.74 s,
+about 2.3 s in total on a warm run; about 5 s cold.
+
+**Design notes for the technical document.**
+- **Copying with proof.** A2's runtime is copied from a commit (`git cat-file`), never from a working
+  folder. The file list is found by running the entry points (`Predictor.load`, `score_address`,
+  `score_what_if`, `txgpt_surprisal`) in a clean interpreter under an audit hook, so it cannot drift
+  from what the code needs. `A2_VENDOR.json` stores each file's SHA-256, and a test recomputes them.
+  `.gitattributes` marks the folders `-text` so Windows line-ending conversion cannot change a hash.
+- **Models load once, in the background.** The Predictor loads in the lifespan on a worker thread and
+  is shared read-only. While it loads, E1 answers 503 `unavailable`, which lets the front end tell
+  "starting" from "down". A failed load is logged and E1 keeps answering 503.
+- **One error body, one place.** `core/errors.py` alone chooses statuses and builds bodies. Services raise
+  A2's `Unsupported` (404) or `InsufficientHistory` (422), or typed API errors. Validation becomes 400
+  with per-field messages. No trace, path, library text or echoed input reaches a client; the real
+  text is logged under the same request ID.
+- **One address checker, two tiers.** `core/validation.py` ports the prototype's Base58Check, Bech32
+  and Bech32m checker. `shared/address_vectors.json` (53 addresses, 9 transaction IDs: snapshot
+  addresses, BIP 173/350 vectors, and hand-built cases where the checksum is valid but one rule fails)
+  is read by pytest now and by Vitest later. The two checkers agree on every entry except the
+  server-only 100-character limit.
+- **Configuration in one place.** Every web limit is in `settings.json` → `web`, validated by Pydantic
+  models that reject unknown or missing keys. E2 passes the block on unchanged, so the browser checks
+  the same numbers the server enforces. Environment variables only choose what a machine may do (CORS
+  origins, live lookup, Assistant, log level).
+- **Contract first.** camelCase schemas for E1–E11 match A1's `types.ts` field for field (a test
+  parses `types.ts` and compares names, optionality and nullability). `openapi.json` is exported with
+  the contract-only schemas merged in, and a test keeps the committed copy current.
+
+**Deviations accepted.** `httpx2` instead of `httpx` (see above); the exporter is
+`python -m app.core.openapi` rather than `tools/export_openapi.py`; invalid JSON → 400 and a wrong
+Content-Type → 415; E2 feature units (`BTC`, `count`, `hours`, `ratio`) are typed in
+`system_service.py` because A2 records none.
+**Carried forward.** OpenAPI still shows FastAPI's default 422 for parameterised routes (given to the
+endpoints cook); the 413 body limit and ETags are not built yet; Mod-10's fail-fast start is not built.
+
+## 2026-11-11 — Wave 2 started
+- **charts** cook: T23 Plotly wrapper, T24 G1, T26 G3, against the mock (`frontend/` only).
+- **backend-endpoints** cook: T10 store and cache, T11 E3–E5, T12 E6–E7, T13 parity and wording
+  tests over the 28 addresses, the OpenAPI 400 fix, and timings (`backend/` only).
