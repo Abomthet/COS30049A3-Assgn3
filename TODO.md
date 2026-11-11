@@ -76,7 +76,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] T40 Accessibility inspection (Claude runs the automated checks; **[you]** keyboard and screen-reader pass)
 - [ ] T41 Fix every severity 3–4 issue; retest
 - [ ] T42 **MS3 (Fri 27 Nov)**: feature freeze; cut list recorded in the change log
-- [ ] T43 README complete; comment and docstring pass; `MODIFICATIONS.md`; `LICENSES.md` line
+- [~] T43 (README draft `@backend-hardening`) README complete; comment and docstring pass; `MODIFICATIONS.md`; `LICENSES.md` line
 - [ ] T44 Clean install from a trial zip: macOS (Claude); **[you]** Windows PC
 - [ ] T45 Browsers and devices; test log complete; **MS4 (Sun 29 Nov)**: tag `v1.0-rc`
 
@@ -96,13 +96,13 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] Fix the chart owners in `explainers/a3/t05-people-rules.tex` to match the plan (or drop owners from the briefing)
 
 ## Review findings to fix later
-- [ ] Back-end suite ~2 min: add a `slow` marker for the wording/parity grids (full suite still before every commit)
+- [~] `@backend-hardening` Back-end suite ~2 min: add a `slow` marker for the wording/parity grids (full suite still before every commit)
 - [ ] Kill the stray detached Uvicorn on :8000 once no cook is running
 - [ ] Phone: G3 table's Role column clips (T28)
 - [ ] Amount precision differs between explanation and facts (0.0011126 vs 0.00111260)
 - [ ] Verdict table: add each method's threshold once E11 exists; G4 (S-02) explains per-method scales
-- [ ] A2's reason text repeats itself ("…ratio to the usual amount than usual"): fix in the web layer, record in `MODIFICATIONS.md`
-- [ ] A 400 reports only the first validation layer's faults (`pageSize=999&status=bogus` → only `status`)
+- [~] `@backend-hardening` A2's reason text repeats itself ("…ratio to the usual amount than usual"): fix in the web layer, record in `MODIFICATIONS.md`
+- [~] `@backend-hardening` A 400 reports only the first validation layer's faults (`pageSize=999&status=bogus` → only `status`)
 - [ ] Plotly range buttons and legend are under 44 px touch targets (T40)
 - [ ] Phone scroll past a chart not verified on a real device (T38)
 - [ ] Restore `EXPLORER_ASSISTANT` default to `auto` with S-05 (D-W-09)

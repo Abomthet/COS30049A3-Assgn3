@@ -439,3 +439,4 @@ on the largest address cost more than 61 explicit ones.
 - A Uvicorn on port 8000 started detached (parent `launchd`) was still running after the cook
   reported "servers stopped". Owner unclear (it may be the explore cook's test server); cleared once
   no cook is running.
+**backend-hardening** cook started: web-layer rewording of A2 reasons, one 400 for every faulty field, `slow` marker, ETag on E2, README draft (every command run). No Should items before MS2 (risk 6).
