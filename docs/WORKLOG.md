@@ -440,3 +440,13 @@ on the largest address cost more than 61 explicit ones.
   reported "servers stopped". Owner unclear (it may be the explore cook's test server); cleared once
   no cook is running.
 **backend-hardening** cook started: web-layer rewording of A2 reasons, one 400 for every faulty field, `slow` marker, ETag on E2, README draft (every command run). No Should items before MS2 (risk 6).
+
+## 2026-11-12 — Usage limit hit mid-wave; both cooks resumed
+Both running cooks (frontend-explore, backend-hardening) stopped on an API usage limit (HTTP 429, monthly
+spend / 5-hour window) on the night of 11 Nov. Their unfinished work stayed on disk and uncommitted,
+and nothing was half-committed: commits are only made by the lead after review, so an interrupted cook
+leaves the repository consistent at `9715eea`. After the reset both were resumed from where they stopped
+(not restarted), so no work was repeated.
+**Lesson for planning:** high-effort Sonnet cooks cost about 200–300k tokens per package. Two in parallel
+plus the lead's reviews used up a 5-hour window in about 4 hours. Keep at most two cooks at once, and put
+the next wave's most important package first.
