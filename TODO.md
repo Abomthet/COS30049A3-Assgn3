@@ -9,23 +9,31 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 
 ---
 
+## Brigade (who does what)
+- **Lead (Opus 5.5)**: plans, writes the task specs, reviews every package, runs the checks, commits, signs off the API contract (T05), keeps `docs/WORKLOG.md` and `docs/AI_USE_LOG.md`.
+- **Cooks (Sonnet 5.5, high effort)**: build one bounded package each in their own part of the tree; they never commit.
+  - Wave 1 (11 Nov): **backend-core** → T03, T05, T06, T07, T08, T09 · **frontend-port** → T04, T16
+  - Wave 2 (after review): **backend-endpoints** → T10–T13 (MS1) · **frontend-views** → T17 · then the chart wrapper and charts T23–T27
+- Status tag on each line: `@backend-core`, `@frontend-port`, … = handed to that cook.
+
 ## 0. Blockers found on 11 Nov
-- [ ] **Node.js is not installed on the Mac** (no Homebrew, no sudo) → install it per user into `~/.local` (official tarball), versions matching the prototype's lockfile
+- [x] **Node.js is not installed on the Mac** → Node v24.22.2 LTS installed into `~/.local/node` (checksum verified), on PATH via `~/.local/bin`
+- [x] Repository initialised (`main`, local only); baseline commit `0f6e1e3`
 - [ ] **[you]** Which A2 commit was submitted? (no `v1.0` tag; head of `from-scratch` is `aa56a26`) → needed for T02/T03
 - [ ] **[you]** OK to create the **private** GitHub repo `Defaul119/COS30049A3` and push?
 
 ## 1.4.1 Set-up and contract (11–12 Nov)
 - [ ] T01 **[you]** Send the tutor questions and CR-07/CR-08 to the team (Claude drafts them from Appendix A)
-- [ ] T02 Tag A2's submitted commit `v1.0` (push needs your OK); `git init` A3 with the plan's layout, `.gitignore`, branch rules
-- [ ] T03 `vendor_a2.py`: copy A2's runtime (`explorer/`, models at `results-v1.1`, settings) into `backend/` with SHA-256 hashes; pinned back-end env; smoke test that loads the `Predictor`
-- [ ] T04 Copy the A1 prototype (`asm1_demo/frontend` @ `8375cf0`) → `frontend/`; it builds; its 66 tests pass; the client moves to Axios
-- [ ] T05 Pydantic schemas for E1–E11 and the error body; export `openapi.json`; check it against `src/api/types.ts`
-- [ ] T06 `web` block in settings; E2 `/api/config`
+- [~] T02 (repo done; A2 tag waits for you) Tag A2's submitted commit `v1.0` (push needs your OK); `git init` A3 with the plan's layout, `.gitignore`, branch rules
+- [~] T03 `@backend-core` `vendor_a2.py`: copy A2's runtime (`explorer/`, models at `results-v1.1`, settings) into `backend/` with SHA-256 hashes; pinned back-end env; smoke test that loads the `Predictor`
+- [~] T04 `@frontend-port` Copy the A1 prototype (`asm1_demo/frontend` @ `8375cf0`) → `frontend/`; it builds; its 66 tests pass; the client moves to Axios
+- [~] T05 `@backend-core` Pydantic schemas for E1–E11 and the error body; export `openapi.json`; check it against `src/api/types.ts`
+- [~] T06 `@backend-core` `web` block in settings; E2 `/api/config`
 
 ## 1.4.2 FastAPI back end (12–18 Nov) → MS1 on Sun 15 Nov
-- [ ] T07 App factory, lifespan load, E1 `/api/health`, logging, request IDs, CORS (M-01)
-- [ ] T08 Exception classes and handlers; validation errors → 400; Unsupported → 404; InsufficientHistory → 422 (M-10)
-- [ ] T09 Address and txid validation in Python (Base58Check, Bech32, Bech32m); shared test vectors for pytest and Vitest (M-09)
+- [~] T07 `@backend-core` App factory, lifespan load, E1 `/api/health`, logging, request IDs, CORS (M-01)
+- [~] T08 `@backend-core` Exception classes and handlers; validation errors → 400; Unsupported → 404; InsufficientHistory → 422 (M-10)
+- [~] T09 `@backend-core` Address and txid validation in Python (Base58Check, Bech32, Bech32m); shared test vectors for pytest and Vitest (M-09)
 - [ ] T10 Address store, explorer service, per-address cache (Mod-1 to Mod-4) (M-02)
 - [ ] T11 E3 `/addresses`, E4 `POST /lookup`, E5 `/timeline`
 - [ ] T12 E6 `/transactions` with filters, sorting and paging; E7 `/transactions/{txid}` (M-02, M-08)
@@ -35,7 +43,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] T15 E10 export (CSV/JSON); E11 `/methods` with the evaluation tables (M-12, M-13)
 
 ## 1.4.3 React front end (13–20 Nov)
-- [ ] T16 Shell: navigation, service-status indicator, theme, toasts, error boundary; settings from E2 (M-05, M-10)
+- [~] T16 `@frontend-port` Shell: navigation, service-status indicator, theme, toasts, error boundary; settings from E2 (M-05, M-10)
 - [ ] T17 V1, V2 and V3 on the real API; fixtures recorded; prototype banner and tools removed (M-05)
 - [ ] T18 Tabs; filter bar (status, direction, date range); transaction table (M-08)
 - [ ] T19 V4 what-if lab: form, rules, feedback, live request with cancellation (M-06, M-11)

@@ -49,3 +49,33 @@ Entry format: `## YYYY-MM-DD — title`, then **Context / Decisions / Done / Evi
 
 **Open.** A2 submitted commit and `v1.0` tag (user); private remote (user); tutor's answer on
 generative AI (team); CR-07 and CR-08 votes (team).
+
+## 2026-11-11 — Which Assignment 2 build A3 loads (T02)
+
+**Context.** The plan needs the submitted A2 commit tagged so the back end can name the models it
+loads. The repository had no `v1.0` tag. The submission folder was downloaded from the team drive
+(`COS30049A2_submisison-…zip`, 881 MB: code zip, report `main_v2.pdf`, minutes, contribution form).
+
+**Method.** The inner code zip (449 files) was compared with every A2 commit since 6 Nov by git blob
+hash, with CRLF normalised (the zip was built on Windows). Python files were also compared by AST with
+docstrings blanked, and `settings.json` with every `_`-prefixed comment key removed.
+
+**Findings.**
+- Best match: **`aa56a26`**, equal to its three parents from 7 Nov. 431 files are byte-identical.
+- 14 files differ, all **wording only**: comments, docstrings, the `_` comment keys in
+  `settings.json` (every value is identical), a status string in `glossary.jsonl` and `make_glossary.py`,
+  and the README and model/data cards. No code path or number differs.
+- 4 files in the zip are not in git: `SHA256SUMS.txt`, `models/heist_best.joblib` (not used, W-04) and
+  **the Explorer Assistant's weights** `models/assistant/model.pt` (610 MB) and `tokenizer.json`. All
+  three match the zip's own `SHA256SUMS.txt`.
+
+**Decisions.**
+- **D-W-06** A2 tag `v1.0` → `aa56a26` (annotated, local, with the findings in the message). A3
+  vendors from `aa56a26`, which loads the same models and settings values as the submission.
+- **D-W-07** The Assistant's weights are no longer missing: a verified copy is kept at
+  `~/Desktop/COS30049/A2_submitted_artifacts/` (outside git; the 610 MB file is git-ignored in A2 too).
+  S-05 can run with real weights rather than prepared answers only.
+- **D-W-08** Remote: `github.com/Defaul119/COS30049A3`. It already existed (empty, created 10 Nov) but
+  was **public**; it was switched to **private** before the first push (D-A3-1).
+
+**Open.** Pushing A2's `v1.0` tag (local only for now).
