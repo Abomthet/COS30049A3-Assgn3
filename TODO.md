@@ -13,7 +13,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - **Lead (Opus 5.5)**: plans, writes the task specs, reviews every package, runs the checks, commits, signs off the API contract (T05), keeps `docs/WORKLOG.md` and `docs/AI_USE_LOG.md`.
 - **Cooks (Sonnet 5.5, high effort)**: build one bounded package each in their own part of the tree; they never commit.
   - Wave 1 (11 Nov): **backend-core** → T03, T05, T06, T07, T08, T09 · **frontend-port** → T04, T16
-  - Wave 2 (after review): **backend-endpoints** → T10–T13 (MS1) · **frontend-views** → T17 · then the chart wrapper and charts T23–T27
+  - Wave 2: **charts** → T23, T24, T26 (started 11 Nov against the mock) · next: **backend-endpoints** → T10–T13 (MS1) · **frontend-views** → T17, T18
 - Status tag on each line: `@backend-core`, `@frontend-port`, … = handed to that cook.
 
 ## 0. Blockers found on 11 Nov
@@ -52,10 +52,10 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] T22 Export menu; PNG export (M-12)
 
 ## 1.4.4 Charts (15–21 Nov), Plotly.js
-- [ ] T23 Chart wrapper: contract, theme, table view, export, lazy loading (M-07)
-- [ ] T24 G1 daily activity (bar), keyboard control, range slider
+- [~] T23 `@charts` Chart wrapper: contract, theme, table view, export, lazy loading (M-07)
+- [~] T24 `@charts` G1 daily activity (bar), keyboard control, range slider
 - [ ] T25 G2 transactions over time (scatter, log amount), driven by the filters
-- [ ] T26 G3 feature deviation (horizontal bar)
+- [~] T26 `@charts` G3 feature deviation (horizontal bar)
 - [ ] T27 G5 what-if response (line, log amount, flag line)
 - [ ] T28 Layouts at 390 / 820 / 1280 px; screenshot script fails on sideways scroll (M-11)
 - [ ] T29 **MS2 (Sun 22 Nov)**: minimum viable demonstration on all 28 addresses; test log entry
