@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from . import __version__
-from .api import addresses, system, transactions
+from .api import addresses, exports, methods, system, transactions, whatif
 from .core.body_limit import BodyLimitMiddleware
 from .core.config import Settings, load_settings
 from .core.errors import register_handlers
@@ -29,8 +29,11 @@ from .core.middleware import REQUEST_ID_HEADER, ETagMiddleware, RequestContextMi
 from .core.openapi import install_openapi
 from .core.runtime import Runtime
 from .services.explorer_service import ExplorerService
+from .services.export_service import ExportService
+from .services.methods_service import MethodsService
 from .services.model_service import load_predictor, snapshot_facts
 from .services.store import SnapshotStore
+from .services.whatif_service import WhatIfService
 
 log = logging.getLogger("app.main")
 
@@ -48,12 +51,18 @@ async def load_models(runtime: Runtime, loader: Callable[[], Predictor], warm: b
     try:
         predictor = await asyncio.to_thread(loader)
         facts = snapshot_facts(predictor)
-        explorer = ExplorerService(SnapshotStore(predictor), predictor, runtime.settings.web.lists)
+        store = SnapshotStore(predictor)
+        explorer = ExplorerService(store, predictor, runtime.settings.web.lists)
+        whatif = WhatIfService(store, predictor, runtime.settings.web.what_if)
+        exports = ExportService(explorer, predictor.selected, predictor.snapshot_date, runtime.settings.limitation_line)
+        methods = MethodsService(predictor)
     except Exception as error:  # the cause goes to the log; the response says only that the load failed
         runtime.load_error = f"{error.__class__.__name__}: {error}"
         log.error("The explorer models could not be loaded (%s). Check the installation as the README describes.",
                   runtime.load_error)
         return
+    # `explorer` is set last: it is what `Runtime.ready` waits for, so every service exists by then.
+    runtime.whatif, runtime.exports, runtime.methods = whatif, exports, methods
     runtime.predictor, runtime.facts, runtime.explorer = predictor, facts, explorer
     log.info("Explorer ready: %d addresses, %d methods (snapshot %s, %.1f s since start)", facts.address_count,
              facts.method_count, facts.date, runtime.uptime_seconds)
@@ -113,6 +122,9 @@ def create_app(settings: Settings | None = None, loader: Callable[[], Predictor]
     app.include_router(system.router)
     app.include_router(addresses.router)
     app.include_router(transactions.router)
+    app.include_router(whatif.router)
+    app.include_router(exports.router)
+    app.include_router(methods.router)
     install_openapi(app)
     return app
 

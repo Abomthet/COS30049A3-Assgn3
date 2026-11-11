@@ -14,6 +14,7 @@ from __future__ import annotations
 import dataclasses
 import threading
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, cast
@@ -24,8 +25,8 @@ from explorer.predict import InsufficientHistory, Predictor, iso
 from ..core.config import ListLimits
 from ..core.errors import InvalidRequest, NotFound, needs_correcting
 from ..core.validation import is_day, validate_address
-from ..schemas.addresses import (AddressesResponse, AddressSummary, LookupResponse, TimelineResponse, TransactionRow,
-                                 TransactionsQuery, TransactionsResponse)
+from ..schemas.addresses import (AddressesResponse, AddressSummary, LookupResponse, TimelineResponse, TransactionFilters,
+                                 TransactionRow, TransactionsQuery, TransactionsResponse)
 from ..schemas.common import SnapshotInfo
 from ..schemas.errors import FieldError
 from ..schemas.transactions import TransactionDetail
@@ -204,6 +205,18 @@ class ExplorerService:
             raise self._not_scored(self._predictors[method], data, view, txid)
         return TransactionDetail.model_validate({**transaction, "source": data.source})
 
+    def matching(self, address: str, query: TransactionFilters) -> tuple[list[TransactionRow], dict[str, dict[str, Any]]]:
+        """E10's input: every row that matches E6's filters, in the order asked for, and the details to describe them.
+
+        Raises:
+            InvalidRequest: A filter is not acceptable (the rules of E6).
+            Unsupported: The address is not in the store.
+        """
+        self._check_filters(query)
+        self._store.get(address)
+        view = self._view(query.method or self._default, address)
+        return self._select(view.rows, query), view.transactions
+
     @staticmethod
     def _not_scored(predictor: Predictor, data: AddressData, view: AddressView, txid: str) -> InsufficientHistory:
         """The 422 for a transaction with too little earlier history behind it: its facts and how much history it had."""
@@ -217,7 +230,7 @@ class ExplorerService:
     # ---------------------------------------------------------------- E6's query
 
     def _check_query(self, query: TransactionsQuery) -> int:
-        """Apply the rules of plan section 11.2 that Pydantic cannot (days, their order, the page-size limit).
+        """Apply the rules of plan section 11.2 that Pydantic cannot: the filters' (`_check_filters`) and the page-size limit.
 
         Returns:
             The page size to use.
@@ -225,12 +238,26 @@ class ExplorerService:
         Raises:
             InvalidRequest: With every field at fault named.
         """
+        page_size = query.page_size or self._lists.page_size
+        over = [FieldError(name="pageSize", message=f"Must be at most {self._lists.max_page_size}.")] if page_size > self._lists.max_page_size else []
+        self._check_filters(query, over)
+        return page_size
+
+    @staticmethod
+    def _check_filters(query: TransactionFilters, others: Sequence[FieldError] = ()) -> None:
+        """The rules for the filters E6 and E10 share: each day is a real day, `date` is not combined with a range, and
+        the range does not run backwards.
+
+        Args:
+            query: The filters.
+            others: Problems the caller found in its own fields, reported together with the days'.
+
+        Raises:
+            InvalidRequest: With every field at fault named.
+        """
         days = {"date": query.date, "from": query.from_, "to": query.to}
         errors = [FieldError(name=name, message="Use a day such as 2026-10-20.")
-                  for name, value in days.items() if value is not None and not is_day(value)]
-        page_size = query.page_size or self._lists.page_size
-        if page_size > self._lists.max_page_size:
-            errors.append(FieldError(name="pageSize", message=f"Must be at most {self._lists.max_page_size}."))
+                  for name, value in days.items() if value is not None and not is_day(value)] + list(others)
         if errors:
             raise InvalidRequest(needs_correcting(len(errors)), "Correct the values named below and send the request again.", errors)
         if query.date is not None and (query.from_ is not None or query.to is not None):
@@ -241,10 +268,9 @@ class ExplorerService:
             raise InvalidRequest("The first day is after the last day.", "Swap the two days, or change one of them.",
                                  [FieldError(name="from", message="Must not be after the last day."),
                                   FieldError(name="to", message="Must not be before the first day.")])
-        return page_size
 
     @staticmethod
-    def _select(rows: tuple[TransactionRow, ...], query: TransactionsQuery) -> list[TransactionRow]:
+    def _select(rows: tuple[TransactionRow, ...], query: TransactionFilters) -> list[TransactionRow]:
         """The rows that match the filters, in the order asked for. Rows arrive oldest first (time, then transaction ID)."""
         first, last = (query.date, query.date) if query.date is not None else (query.from_, query.to)
         chosen = [r for r in rows

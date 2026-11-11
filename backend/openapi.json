@@ -689,6 +689,495 @@
           }
         }
       }
+    },
+    "/api/addresses/{address}/what-if": {
+      "post": {
+        "tags": [
+          "what-if"
+        ],
+        "summary": "A hypothetical transaction's verdict from every model that can score it",
+        "description": "Scores a transaction of `amountBtc` BTC, `direction` in or out, at `time`, against the address's real history\nstrictly before that time. Nothing is stored. 400 names each field at fault; 404 `unsupported` for an address outside\nthe snapshot; 422 when too little history lay before the time, with the counts and the first day that can be scored.",
+        "operationId": "what_if_api_addresses__address__what_if_post",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "A Bitcoin address.",
+              "title": "Address"
+            },
+            "description": "A Bitcoin address."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatIfRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatIfResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is over the size limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The request body is not JSON.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Too little earlier history to score.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/addresses/{address}/what-if/curve": {
+      "post": {
+        "tags": [
+          "what-if"
+        ],
+        "summary": "Scores over a range of amounts, from one feature build",
+        "description": "The same hypothetical transaction at many amounts: `amountsBtc` (up to `curveMaxPoints`), or `minBtc`, `maxBtc` and\n`points` spaced on a log scale, or neither, for `curvePoints` amounts from a hundredth to a thousand times the\naddress's usual amount in that direction. Each method answers one score and one flag per amount; the scores equal\nwhat E8 gives for each amount alone. Errors as E8.",
+        "operationId": "curve_api_addresses__address__what_if_curve_post",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "A Bitcoin address.",
+              "title": "Address"
+            },
+            "description": "A Bitcoin address."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is over the size limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The request body is not JSON.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Too little earlier history to score.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/addresses/{address}/export": {
+      "get": {
+        "tags": [
+          "export"
+        ],
+        "summary": "The scored transactions as a CSV or JSON file",
+        "description": "The rows E6 would list for the same filters, all of them, in the order asked for. `format` is `csv` (the default;\nUTF-8, a header row, amounts in BTC, text guarded against formulas) or `json`. A flagged row carries the limitation line.",
+        "operationId": "export_api_addresses__address__export_get",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "A Bitcoin address.",
+              "title": "Address"
+            },
+            "description": "A Bitcoin address."
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "One UTC day, YYYY-MM-DD.",
+              "title": "Date"
+            },
+            "description": "One UTC day, YYYY-MM-DD."
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "First day of an inclusive range; not with `date`.",
+              "title": "From"
+            },
+            "description": "First day of an inclusive range; not with `date`."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Last day of an inclusive range.",
+              "title": "To"
+            },
+            "description": "Last day of an inclusive range."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "flagged",
+                      "not-flagged",
+                      "not-scored"
+                    ],
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "in",
+                      "out",
+                      "none"
+                    ],
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Direction"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "time",
+                "-time",
+                "amount",
+                "-amount",
+                "score",
+                "-score"
+              ],
+              "type": "string",
+              "default": "time",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "baseline",
+                    "isolation_forest",
+                    "lof",
+                    "kmeans",
+                    "dbscan",
+                    "regression",
+                    "regression_interval",
+                    "fusion",
+                    "txgpt_method"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whose flags and scores decide (S-01); default: the baseline.",
+              "title": "Method"
+            },
+            "description": "Whose flags and scores decide (S-01); default: the baseline."
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "csv",
+                "json"
+              ],
+              "type": "string",
+              "default": "csv",
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file. `Content-Disposition: attachment` names it from the first eight characters of the address and the snapshot date.",
+            "content": {
+              "text/csv; charset=utf-8": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportDocument"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "description": "attachment; filename=\"1Bbcsfxj-2026-10-22.csv\"",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "The copy the client holds is still right (the `ETag` matched)."
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/methods": {
+      "get": {
+        "tags": [
+          "methods"
+        ],
+        "summary": "The methods, their thresholds and test results",
+        "description": "For each method: its family, what its score measures, the score it flags at, whether it can score a new\ntransaction, and Assignment 2's test results (mean recall and recall per planted pattern, each with its 95%\ninterval, and the flag rate on real transactions). The numbers are read from Assignment 2's evaluation tables.",
+        "operationId": "methods_api_methods_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MethodsResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "The copy the client holds is still right (the `ETag` matched)."
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -986,9 +1475,9 @@
         }
       },
       "CurveMethod": {
-        "description": "One method's scores and flags, one per amount.",
         "properties": {
           "id": {
+            "type": "string",
             "enum": [
               "baseline",
               "isolation_forest",
@@ -1000,16 +1489,15 @@
               "fusion",
               "txgpt_method"
             ],
-            "title": "Id",
-            "type": "string"
+            "title": "Id"
           },
           "name": {
-            "title": "Name",
-            "type": "string"
+            "type": "string",
+            "title": "Name"
           },
           "threshold": {
-            "title": "Threshold",
-            "type": "number"
+            "type": "number",
+            "title": "Threshold"
           },
           "scores": {
             "items": {
@@ -1022,17 +1510,18 @@
                 }
               ]
             },
-            "title": "Scores",
-            "type": "array"
+            "type": "array",
+            "title": "Scores"
           },
           "flags": {
             "items": {
               "type": "boolean"
             },
-            "title": "Flags",
-            "type": "array"
+            "type": "array",
+            "title": "Flags"
           }
         },
+        "type": "object",
         "required": [
           "id",
           "name",
@@ -1041,24 +1530,22 @@
           "flags"
         ],
         "title": "CurveMethod",
-        "type": "object"
+        "description": "One method's scores and flags, one per amount."
       },
       "CurveRequest": {
-        "additionalProperties": false,
-        "description": "E9's body: either a list of amounts, or a range with a point count, or neither (the server chooses).",
         "properties": {
           "direction": {
+            "type": "string",
             "enum": [
               "in",
               "out"
             ],
-            "title": "Direction",
-            "type": "string"
+            "title": "Direction"
           },
           "time": {
+            "type": "string",
             "format": "date-time",
-            "title": "Time",
-            "type": "string"
+            "title": "Time"
           },
           "amountsBtc": {
             "anyOf": [
@@ -1066,8 +1553,8 @@
                 "items": {
                   "anyOf": [
                     {
-                      "exclusiveMinimum": 0.0,
-                      "type": "number"
+                      "type": "number",
+                      "exclusiveMinimum": 0.0
                     },
                     {
                       "type": "string"
@@ -1080,14 +1567,13 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Amountsbtc"
           },
           "minBtc": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
-                "type": "number"
+                "type": "number",
+                "exclusiveMinimum": 0.0
               },
               {
                 "type": "string"
@@ -1096,14 +1582,13 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Minbtc"
           },
           "maxBtc": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
-                "type": "number"
+                "type": "number",
+                "exclusiveMinimum": 0.0
               },
               {
                 "type": "string"
@@ -1112,48 +1597,47 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Maxbtc"
           },
           "points": {
             "anyOf": [
               {
-                "minimum": 2,
-                "type": "integer"
+                "type": "integer",
+                "minimum": 2.0
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Points"
           }
         },
+        "additionalProperties": false,
+        "type": "object",
         "required": [
           "direction",
           "time"
         ],
         "title": "CurveRequest",
-        "type": "object"
+        "description": "E9's body: either a list of amounts, or a range with a point count, or neither (the server chooses)."
       },
       "CurveResponse": {
-        "description": "E9: scores over a range of amounts.",
         "properties": {
           "address": {
-            "title": "Address",
-            "type": "string"
+            "type": "string",
+            "title": "Address"
           },
           "direction": {
+            "type": "string",
             "enum": [
               "in",
               "out"
             ],
-            "title": "Direction",
-            "type": "string"
+            "title": "Direction"
           },
           "time": {
-            "title": "Time",
-            "type": "string"
+            "type": "string",
+            "title": "Time"
           },
           "usualBtc": {
             "anyOf": [
@@ -1164,10 +1648,11 @@
                 "type": "null"
               }
             ],
-            "description": "The address's usual amount in that direction.",
-            "title": "Usualbtc"
+            "title": "Usualbtc",
+            "description": "The address's usual amount in that direction."
           },
           "decidingMethod": {
+            "type": "string",
             "enum": [
               "baseline",
               "isolation_forest",
@@ -1179,25 +1664,25 @@
               "fusion",
               "txgpt_method"
             ],
-            "title": "Decidingmethod",
-            "type": "string"
+            "title": "Decidingmethod"
           },
           "amountsBtc": {
             "items": {
               "type": "number"
             },
-            "title": "Amountsbtc",
-            "type": "array"
+            "type": "array",
+            "title": "Amountsbtc"
           },
           "methods": {
             "items": {
               "$ref": "#/components/schemas/CurveMethod"
             },
-            "title": "Methods",
-            "type": "array"
+            "type": "array",
+            "title": "Methods"
           },
           "notAvailable": {
             "items": {
+              "type": "string",
               "enum": [
                 "baseline",
                 "isolation_forest",
@@ -1208,13 +1693,13 @@
                 "regression_interval",
                 "fusion",
                 "txgpt_method"
-              ],
-              "type": "string"
+              ]
             },
-            "title": "Notavailable",
-            "type": "array"
+            "type": "array",
+            "title": "Notavailable"
           }
         },
+        "type": "object",
         "required": [
           "address",
           "direction",
@@ -1226,7 +1711,7 @@
           "notAvailable"
         ],
         "title": "CurveResponse",
-        "type": "object"
+        "description": "E9: scores over a range of amounts."
       },
       "ErrorBody": {
         "properties": {
@@ -1365,7 +1850,6 @@
         }
       },
       "Evaluation": {
-        "description": "How a method did on Assignment 2's tests.",
         "properties": {
           "meanRecall": {
             "$ref": "#/components/schemas/Interval"
@@ -1374,17 +1858,285 @@
             "$ref": "#/components/schemas/RecallByPattern"
           },
           "flagRate": {
-            "title": "Flagrate",
-            "type": "number"
+            "type": "number",
+            "title": "Flagrate"
           }
         },
+        "type": "object",
         "required": [
           "meanRecall",
           "recallByPattern",
           "flagRate"
         ],
         "title": "Evaluation",
-        "type": "object"
+        "description": "How a method did on Assignment 2's tests."
+      },
+      "ExportDocument": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "snapshotDate": {
+            "type": "string",
+            "title": "Snapshotdate"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "baseline",
+              "isolation_forest",
+              "lof",
+              "kmeans",
+              "dbscan",
+              "regression",
+              "regression_interval",
+              "fusion",
+              "txgpt_method"
+            ],
+            "title": "Method"
+          },
+          "limitation": {
+            "type": "string",
+            "title": "Limitation"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/ExportRow"
+            },
+            "type": "array",
+            "title": "Transactions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "snapshotDate",
+          "method",
+          "limitation",
+          "count",
+          "transactions"
+        ],
+        "title": "ExportDocument",
+        "description": "E10 with `format=json`: the rows that match, with the limitation line stated once for the whole file."
+      },
+      "ExportFeature": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "F1",
+              "F2",
+              "F3",
+              "F4"
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "usual": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usual"
+          },
+          "z": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "value",
+          "usual",
+          "z"
+        ],
+        "title": "ExportFeature",
+        "description": "One of F1 to F4 of an exported transaction, in the units people read (BTC, count, hours, ratio)."
+      },
+      "ExportRow": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "txid": {
+            "type": "string",
+            "title": "Txid"
+          },
+          "time": {
+            "type": "string",
+            "title": "Time",
+            "description": "ISO 8601, UTC."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out",
+              "none"
+            ],
+            "title": "Direction"
+          },
+          "receivedSats": {
+            "type": "integer",
+            "title": "Receivedsats"
+          },
+          "sentSats": {
+            "type": "integer",
+            "title": "Sentsats"
+          },
+          "netSats": {
+            "type": "integer",
+            "title": "Netsats"
+          },
+          "scored": {
+            "type": "boolean",
+            "title": "Scored"
+          },
+          "flagged": {
+            "type": "boolean",
+            "title": "Flagged"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "baseline",
+              "isolation_forest",
+              "lof",
+              "kmeans",
+              "dbscan",
+              "regression",
+              "regression_interval",
+              "fusion",
+              "txgpt_method"
+            ],
+            "title": "Method",
+            "description": "The deciding method: the one `flagged` and `score` belong to."
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/ExportFeature"
+            },
+            "type": "array",
+            "title": "Features",
+            "description": "Empty for a transaction of an address with too little history."
+          },
+          "mainReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mainreason"
+          },
+          "flaggedBy": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "baseline",
+                "isolation_forest",
+                "lof",
+                "kmeans",
+                "dbscan",
+                "regression",
+                "regression_interval",
+                "fusion",
+                "txgpt_method"
+              ]
+            },
+            "type": "array",
+            "title": "Flaggedby",
+            "description": "Every method that flags it."
+          },
+          "sourceUrl": {
+            "type": "string",
+            "title": "Sourceurl"
+          },
+          "snapshotDate": {
+            "type": "string",
+            "title": "Snapshotdate"
+          },
+          "limitation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limitation",
+            "description": "The limitation line, on a flagged row; null otherwise."
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "txid",
+          "time",
+          "direction",
+          "receivedSats",
+          "sentSats",
+          "netSats",
+          "scored",
+          "flagged",
+          "method",
+          "score",
+          "features",
+          "mainReason",
+          "flaggedBy",
+          "sourceUrl",
+          "snapshotDate",
+          "limitation"
+        ],
+        "title": "ExportRow",
+        "description": "One exported transaction."
       },
       "FeatureDetail": {
         "properties": {
@@ -1628,28 +2380,28 @@
         "description": "How much earlier history there was against how much scoring needs."
       },
       "Interval": {
-        "description": "A value with its 95% interval.",
         "properties": {
           "value": {
-            "title": "Value",
-            "type": "number"
+            "type": "number",
+            "title": "Value"
           },
           "ciLow": {
-            "title": "Cilow",
-            "type": "number"
+            "type": "number",
+            "title": "Cilow"
           },
           "ciHigh": {
-            "title": "Cihigh",
-            "type": "number"
+            "type": "number",
+            "title": "Cihigh"
           }
         },
+        "type": "object",
         "required": [
           "value",
           "ciLow",
           "ciHigh"
         ],
         "title": "Interval",
-        "type": "object"
+        "description": "A value with its 95% interval."
       },
       "ListLimits": {
         "properties": {
@@ -1742,9 +2494,9 @@
         "description": "E4: the typed address is supported."
       },
       "MethodEntry": {
-        "description": "One method.",
         "properties": {
           "id": {
+            "type": "string",
             "enum": [
               "baseline",
               "isolation_forest",
@@ -1756,14 +2508,14 @@
               "fusion",
               "txgpt_method"
             ],
-            "title": "Id",
-            "type": "string"
+            "title": "Id"
           },
           "name": {
-            "title": "Name",
-            "type": "string"
+            "type": "string",
+            "title": "Name"
           },
           "family": {
+            "type": "string",
             "enum": [
               "statistics",
               "outlier detection",
@@ -1772,25 +2524,25 @@
               "combination",
               "language model"
             ],
-            "title": "Family",
-            "type": "string"
+            "title": "Family"
           },
           "description": {
-            "title": "Description",
-            "type": "string"
+            "type": "string",
+            "title": "Description"
           },
           "threshold": {
-            "title": "Threshold",
-            "type": "number"
+            "type": "number",
+            "title": "Threshold"
           },
           "scoresNewInput": {
-            "title": "Scoresnewinput",
-            "type": "boolean"
+            "type": "boolean",
+            "title": "Scoresnewinput"
           },
           "evaluation": {
             "$ref": "#/components/schemas/Evaluation"
           }
         },
+        "type": "object",
         "required": [
           "id",
           "name",
@@ -1801,7 +2553,7 @@
           "evaluation"
         ],
         "title": "MethodEntry",
-        "type": "object"
+        "description": "One method."
       },
       "MethodInfo": {
         "properties": {
@@ -1838,9 +2590,9 @@
         "description": "The deciding method and the two z lines the explanation uses (A1)."
       },
       "MethodsResponse": {
-        "description": "E11: the methods, their thresholds and test results.",
         "properties": {
           "defaultMethod": {
+            "type": "string",
             "enum": [
               "baseline",
               "isolation_forest",
@@ -1852,26 +2604,25 @@
               "fusion",
               "txgpt_method"
             ],
-            "title": "Defaultmethod",
-            "type": "string"
+            "title": "Defaultmethod"
           },
           "methods": {
             "items": {
               "$ref": "#/components/schemas/MethodEntry"
             },
-            "title": "Methods",
-            "type": "array"
+            "type": "array",
+            "title": "Methods"
           }
         },
+        "type": "object",
         "required": [
           "defaultMethod",
           "methods"
         ],
         "title": "MethodsResponse",
-        "type": "object"
+        "description": "E11: the methods, their thresholds and test results."
       },
       "RecallByPattern": {
-        "description": "Recall on each planted pattern.",
         "properties": {
           "spike": {
             "$ref": "#/components/schemas/Interval"
@@ -1883,13 +2634,14 @@
             "$ref": "#/components/schemas/Interval"
           }
         },
+        "type": "object",
         "required": [
           "spike",
           "burst",
           "dormant"
         ],
         "title": "RecallByPattern",
-        "type": "object"
+        "description": "Recall on each planted pattern."
       },
       "ReplaySettings": {
         "properties": {
@@ -2675,60 +3427,59 @@
         "description": "Ranges of the what-if form (E8, E9)."
       },
       "WhatIfRequest": {
-        "additionalProperties": false,
-        "description": "E8's body.",
         "properties": {
           "amountBtc": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
-                "type": "number"
+                "type": "number",
+                "exclusiveMinimum": 0.0
               },
               {
                 "type": "string"
               }
             ],
-            "description": "A number or decimal string, in BTC.",
-            "title": "Amountbtc"
+            "title": "Amountbtc",
+            "description": "A number or decimal string, in BTC."
           },
           "direction": {
+            "type": "string",
             "enum": [
               "in",
               "out"
             ],
-            "title": "Direction",
-            "type": "string"
+            "title": "Direction"
           },
           "time": {
-            "description": "ISO 8601 with a zone, such as 2026-10-20T12:00:00Z.",
+            "type": "string",
             "format": "date-time",
             "title": "Time",
-            "type": "string"
+            "description": "ISO 8601 with a zone, such as 2026-10-20T12:00:00Z."
           }
         },
+        "additionalProperties": false,
+        "type": "object",
         "required": [
           "amountBtc",
           "direction",
           "time"
         ],
         "title": "WhatIfRequest",
-        "type": "object"
+        "description": "E8's body."
       },
       "WhatIfResult": {
-        "description": "E8: a transaction detail without an ID or block, from the methods that can score new input.",
         "properties": {
           "scored": {
+            "type": "boolean",
             "const": true,
-            "title": "Scored",
-            "type": "boolean"
+            "title": "Scored"
           },
           "flagged": {
-            "title": "Flagged",
-            "type": "boolean"
+            "type": "boolean",
+            "title": "Flagged"
           },
           "score": {
-            "title": "Score",
-            "type": "number"
+            "type": "number",
+            "title": "Score"
           },
           "method": {
             "$ref": "#/components/schemas/MethodInfo"
@@ -2737,24 +3488,24 @@
             "items": {
               "$ref": "#/components/schemas/FeatureDetail"
             },
-            "title": "Features",
-            "type": "array"
+            "type": "array",
+            "title": "Features"
           },
           "comparison": {
             "items": {
               "$ref": "#/components/schemas/ComparisonBasis"
             },
-            "title": "Comparison",
-            "type": "array"
+            "type": "array",
+            "title": "Comparison"
           },
           "limitation": {
-            "title": "Limitation",
-            "type": "string"
+            "type": "string",
+            "title": "Limitation"
           },
           "explanation": {
-            "description": "The template's text; it ends with the limitation line on a flagged item.",
+            "type": "string",
             "title": "Explanation",
-            "type": "string"
+            "description": "The template's text; it ends with the limitation line on a flagged item."
           },
           "scores": {
             "additionalProperties": {
@@ -2767,7 +3518,6 @@
                 }
               ]
             },
-            "description": "Every method's score.",
             "propertyNames": {
               "enum": [
                 "baseline",
@@ -2781,14 +3531,14 @@
                 "txgpt_method"
               ]
             },
+            "type": "object",
             "title": "Scores",
-            "type": "object"
+            "description": "Every method's score."
           },
           "flags": {
             "additionalProperties": {
               "type": "boolean"
             },
-            "description": "Every method's flag.",
             "propertyNames": {
               "enum": [
                 "baseline",
@@ -2802,38 +3552,39 @@
                 "txgpt_method"
               ]
             },
+            "type": "object",
             "title": "Flags",
-            "type": "object"
+            "description": "Every method's flag."
           },
           "address": {
-            "title": "Address",
-            "type": "string"
+            "type": "string",
+            "title": "Address"
           },
           "time": {
-            "description": "ISO 8601, UTC.",
+            "type": "string",
             "title": "Time",
-            "type": "string"
+            "description": "ISO 8601, UTC."
           },
           "direction": {
+            "type": "string",
             "enum": [
               "in",
               "out",
               "none"
             ],
-            "title": "Direction",
-            "type": "string"
+            "title": "Direction"
           },
           "receivedSats": {
-            "title": "Receivedsats",
-            "type": "integer"
+            "type": "integer",
+            "title": "Receivedsats"
           },
           "sentSats": {
-            "title": "Sentsats",
-            "type": "integer"
+            "type": "integer",
+            "title": "Sentsats"
           },
           "netSats": {
-            "title": "Netsats",
-            "type": "integer"
+            "type": "integer",
+            "title": "Netsats"
           },
           "sourceUrl": {
             "anyOf": [
@@ -2844,17 +3595,17 @@
                 "type": "null"
               }
             ],
-            "description": "Public block-explorer page; null for a hypothetical transaction.",
-            "title": "Sourceurl"
+            "title": "Sourceurl",
+            "description": "Public block-explorer page; null for a hypothetical transaction."
           },
           "txid": {
+            "type": "string",
             "const": "what-if",
-            "title": "Txid",
-            "type": "string"
+            "title": "Txid"
           },
           "notAvailable": {
-            "description": "Methods that cannot score a hypothetical transaction.",
             "items": {
+              "type": "string",
               "enum": [
                 "baseline",
                 "isolation_forest",
@@ -2865,17 +3616,18 @@
                 "regression_interval",
                 "fusion",
                 "txgpt_method"
-              ],
-              "type": "string"
+              ]
             },
+            "type": "array",
             "title": "Notavailable",
-            "type": "array"
+            "description": "Methods that cannot score a hypothetical transaction."
           },
           "note": {
-            "title": "Note",
-            "type": "string"
+            "type": "string",
+            "title": "Note"
           }
         },
+        "type": "object",
         "required": [
           "scored",
           "flagged",
@@ -2899,7 +3651,7 @@
           "note"
         ],
         "title": "WhatIfResult",
-        "type": "object"
+        "description": "E8: a transaction detail without an ID or block, from the methods that can score new input."
       }
     }
   }

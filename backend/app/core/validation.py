@@ -14,10 +14,14 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+
+from explorer.amounts import SATS_PER_BTC
 
 from ..schemas.common import AddressKind
 from ..schemas.errors import FieldError
+from .config import WhatIfLimits
 from .errors import InvalidRequest
 
 FORMAT_HINT = ("Bitcoin addresses start with 1, 3 or bc1. Check for a missing or extra character, "
@@ -248,6 +252,37 @@ def is_day(raw: str) -> bool:
     except ValueError:
         return False
     return True
+
+
+# ---------------------------------------------------------------- What-if amounts and times
+
+DAYS_PER_YEAR = 365.25
+
+
+def amount_problem(amount: Decimal, limits: WhatIfLimits) -> str | None:
+    """The first rule of plan section 11.2 that a what-if amount breaks, as a sentence, or None.
+
+    "Greater than 0" is the schema's (`Amount`); this adds the range and the precision, whose numbers come from
+    settings.json -> web.whatIf. An amount is at most eight decimal places because a satoshi is the smallest unit.
+    """
+    if amount < Decimal(str(limits.min_amount_btc)):
+        return f"Must be at least {limits.min_amount_btc:.8f} BTC (one satoshi)."
+    if amount > Decimal(str(limits.max_amount_btc)):
+        return f"Must be at most {limits.max_amount_btc:,.0f} BTC."
+    if amount * SATS_PER_BTC % 1 != 0:
+        return "Use at most 8 decimal places."
+    return None
+
+
+def gap_problem(time: datetime, last: datetime, limits: WhatIfLimits) -> str | None:
+    """A sentence when `time` is more than `maxGapYears` after the address's last transaction `last`, else None.
+
+    A year is 365.25 days, so the limit does not depend on leap days. A time before the first transaction is not
+    a validation problem: it is a 422, because the address then has no earlier history to compare with.
+    """
+    if time - last > timedelta(days=DAYS_PER_YEAR * limits.max_gap_years):
+        return f"At most {limits.max_gap_years} years after this address's last transaction."
+    return None
 
 
 # ---------------------------------------------------------------- Transaction IDs

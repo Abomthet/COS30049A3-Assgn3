@@ -91,3 +91,37 @@ def test_a_flag_of_any_method_carries_the_limitation_line(shared_client: TestCli
     for row in rows["transactions"]:
         detail = shared_client.get(f"/api/transactions/{row['txid']}", params={"address": LARGEST, "method": method}).json()
         assert detail["explanation"].endswith(SETTINGS["limitationLine"])
+
+
+def test_no_response_of_e8_to_e11_has_a_banned_word_and_every_flagged_what_if_carries_the_limitation_line(
+        shared_client: TestClient, addresses: list[str]) -> None:
+    """A grid of what-ifs over all 28 addresses (E8 and E9, both directions, a tiny and a huge amount; the short-history
+    addresses answer 422), every export of every address in both formats, E11, and the error bodies of E8 to E10."""
+    texts: list[tuple[str, str]] = [("methods", shared_client.get("/api/methods").text)]
+    line, flagged = SETTINGS["limitationLine"], 0
+    for address in addresses:
+        for direction in ("in", "out"):
+            body = {"direction": direction, "time": "2026-10-23T00:00:00Z"}
+            curve = shared_client.post(f"/api/addresses/{address}/what-if/curve", json={**body, "amountsBtc": [0.0001, 1, 50]})
+            texts.append((f"curve {direction} {address}", curve.text))
+            single = shared_client.post(f"/api/addresses/{address}/what-if", json={**body, "amountBtc": 50})
+            texts.append((f"what-if {direction} {address}", single.text))
+            assert curve.status_code == single.status_code == (422 if address in SHORT_HISTORY else 200)
+            if single.status_code == 200:
+                result = single.json()
+                assert result["limitation"] == line
+                if result["flagged"]:
+                    flagged += 1
+                    assert result["explanation"].endswith(line)
+        for suffix in ("csv", "json"):
+            texts.append((f"export {suffix} {address}", shared_client.get(f"/api/addresses/{address}/export", params={"format": suffix}).text))
+    texts += [("what-if 400", shared_client.post(f"/api/addresses/{RUNNING_EXAMPLE}/what-if", json={"amountBtc": 0, "direction": "x", "time": "y"}).text),
+              ("what-if too far", shared_client.post(f"/api/addresses/{RUNNING_EXAMPLE}/what-if", json={"amountBtc": 1, "direction": "in", "time": "2060-01-01T00:00:00Z"}).text),
+              ("what-if 422", shared_client.post(f"/api/addresses/{RUNNING_EXAMPLE}/what-if", json={"amountBtc": 1, "direction": "in", "time": "2024-05-20T00:00:00Z"}).text),
+              ("what-if 404", shared_client.post(f"/api/addresses/{VALID_OUTSIDE_SNAPSHOT}/what-if", json={"amountBtc": 1, "direction": "in", "time": "2026-10-23T00:00:00Z"}).text),
+              ("curve default", shared_client.post(f"/api/addresses/{LARGEST}/what-if/curve", json={"direction": "out", "time": "2026-10-23T00:00:00Z"}).text),
+              ("curve 400", shared_client.post(f"/api/addresses/{RUNNING_EXAMPLE}/what-if/curve", json={"direction": "out", "time": "2026-10-23T00:00:00Z", "minBtc": 2, "maxBtc": 1, "points": 99}).text),
+              ("export 400", shared_client.get(f"/api/addresses/{RUNNING_EXAMPLE}/export?format=xml&from=2026-02-30").text)]
+    assert flagged > 10
+    found = [(request, match.group(0)) for request, text in texts if (match := BANNED.search(text))]
+    assert found == []

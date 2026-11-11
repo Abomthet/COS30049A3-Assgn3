@@ -8,7 +8,10 @@ from fastapi import Depends, Path, Query, Request, Response
 from ..core.runtime import Runtime
 from ..core.validation import require_address, require_txid
 from ..services.explorer_service import ExplorerService
+from ..services.export_service import ExportService
+from ..services.methods_service import MethodsService
 from ..services.model_service import require_ready
+from ..services.whatif_service import WhatIfService
 
 
 def get_runtime(request: Request) -> Runtime:
@@ -25,6 +28,39 @@ def get_explorer(runtime: Annotated[Runtime, Depends(get_runtime)]) -> ExplorerS
     require_ready(runtime)
     assert runtime.explorer is not None  # `require_ready` passed
     return runtime.explorer
+
+
+def get_whatif(runtime: Annotated[Runtime, Depends(get_runtime)]) -> WhatIfService:
+    """The what-if service, once the models are loaded.
+
+    Raises:
+        Unavailable: The models are still loading, or failed to load (503).
+    """
+    require_ready(runtime)
+    assert runtime.whatif is not None  # `require_ready` passed
+    return runtime.whatif
+
+
+def get_exports(runtime: Annotated[Runtime, Depends(get_runtime)]) -> ExportService:
+    """The export service, once the models are loaded.
+
+    Raises:
+        Unavailable: The models are still loading, or failed to load (503).
+    """
+    require_ready(runtime)
+    assert runtime.exports is not None  # `require_ready` passed
+    return runtime.exports
+
+
+def get_methods(runtime: Annotated[Runtime, Depends(get_runtime)]) -> MethodsService:
+    """The methods service, once the models are loaded.
+
+    Raises:
+        Unavailable: The models are still loading, or failed to load (503).
+    """
+    require_ready(runtime)
+    assert runtime.methods is not None  # `require_ready` passed
+    return runtime.methods
 
 
 def snapshot_data(response: Response) -> None:

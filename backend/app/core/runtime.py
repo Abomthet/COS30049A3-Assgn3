@@ -15,6 +15,9 @@ if TYPE_CHECKING:  # explorer is imported only where it is used: it takes second
     from explorer.predict import Predictor
 
     from ..services.explorer_service import ExplorerService
+    from ..services.export_service import ExportService
+    from ..services.methods_service import MethodsService
+    from ..services.whatif_service import WhatIfService
 
 
 @dataclass(frozen=True)
@@ -36,6 +39,9 @@ class Runtime:
     predictor: Predictor | None = None
     facts: SnapshotFacts | None = None
     explorer: ExplorerService | None = None
+    whatif: WhatIfService | None = None
+    exports: ExportService | None = None
+    methods: MethodsService | None = None
     load_error: str | None = None
 
     @property

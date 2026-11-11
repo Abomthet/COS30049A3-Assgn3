@@ -49,6 +49,10 @@ PLANNED_STATUSES = {
     ("get", "/api/addresses/{address}/timeline"): {"304", "400", "404"},
     ("get", "/api/addresses/{address}/transactions"): {"304", "400", "404"},
     ("get", "/api/transactions/{txid}"): {"304", "400", "404", "422"},
+    ("post", "/api/addresses/{address}/what-if"): {"400", "404", "413", "415", "422"},
+    ("post", "/api/addresses/{address}/what-if/curve"): {"400", "404", "413", "415", "422"},
+    ("get", "/api/addresses/{address}/export"): {"304", "400", "404"},
+    ("get", "/api/methods"): {"304"},
 }
 
 
