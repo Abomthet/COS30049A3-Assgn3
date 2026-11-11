@@ -1,0 +1,7 @@
+# Assignment 2's files keep their exact bytes, so A2_VENDOR.json's SHA-256 values hold on Windows and macOS.
+explorer/** -text
+lm/** -text
+config/** -text
+data/** -text
+models/** -text
+reports/** -text

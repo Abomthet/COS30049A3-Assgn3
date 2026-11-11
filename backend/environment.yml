@@ -1,0 +1,44 @@
+# CPU environment for the back end (D-A3-10):  conda env create -f environment.yml  then  conda activate cos30049-a3
+# Same package list as requirements.txt. httpx2 is httpx's successor: Starlette's test client warns when it finds httpx.
+name: cos30049-a3
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      # The libraries the saved models were written with: Assignment 2's exact versions (D-A3-10).
+      - numpy==2.2.6
+      - pandas==2.2.3
+      - scikit-learn==1.6.1
+      - scipy==1.17.1
+      - joblib==1.4.2
+      - threadpoolctl==3.7.0
+      # The web tier, pinned on 11 November 2026.
+      - fastapi==0.162.4
+      - uvicorn==0.54.0
+      - pydantic==2.14.3
+      - httpx2==2.16.0
+      - pytest==9.2.0
+      # What those pull in, pinned so that a rebuild installs the same set.
+      - annotated-doc==0.0.6
+      - annotated-types==0.8.0
+      - anyio==4.16.0
+      - certifi==2026.10.23
+      - click==8.5.1
+      - h11==0.16.0
+      - httpcore2==2.16.0
+      - idna==3.20
+      - iniconfig==2.3.1
+      - opentelemetry-api==1.45.2
+      - packaging==26.3
+      - pluggy==1.7.0
+      - pydantic_core==2.50.4
+      - Pygments==2.21.0
+      - python-dateutil==4.0.0
+      - pytz==2026.6
+      - starlette==1.10.0
+      - truststore==0.10.5
+      - typing-inspection==0.4.5
+      - typing_extensions==4.16.0
+      - tzdata==2026.6

@@ -1,0 +1,4 @@
+# The Assistant's weights (610 MB) are copied in by tools/vendor_a2.py --assistant-weights and never committed.
+models/assistant/
+# Created at start.
+var/

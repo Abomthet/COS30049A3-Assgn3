@@ -1,0 +1,2286 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Bitcoin Address Activity Explorer API",
+    "description": "Unusual-activity scoring for Bitcoin addresses, from Assignment 2's models. A flag means unusual for this address's own history, nothing more.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Is the service ready, and what has it loaded",
+        "description": "Answers 200 once the models are loaded, and 503 while they load. Never cached: the front end polls it.",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Limits, thresholds, names and capabilities",
+        "description": "Everything the front end would otherwise hard-code: the snapshot, the limitation line, the four features,\nthe history rule, the two z lines, the default method, the `web` limits and which optional parts are on.",
+        "operationId": "config_api_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddressSummary": {
+        "description": "One address in the list, and the summary E4 returns (A1, plus `kind` and `source`).",
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "firstSeen": {
+            "title": "Firstseen",
+            "type": "string"
+          },
+          "lastSeen": {
+            "title": "Lastseen",
+            "type": "string"
+          },
+          "txCount": {
+            "title": "Txcount",
+            "type": "integer"
+          },
+          "scoredCount": {
+            "title": "Scoredcount",
+            "type": "integer"
+          },
+          "flaggedCount": {
+            "title": "Flaggedcount",
+            "type": "integer"
+          },
+          "history": {
+            "enum": [
+              "sufficient",
+              "insufficient"
+            ],
+            "title": "History",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "p2pkh",
+              "p2sh",
+              "p2wpkh",
+              "p2wsh",
+              "p2tr",
+              "segwit"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "snapshot",
+              "live"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "firstSeen",
+          "lastSeen",
+          "txCount",
+          "scoredCount",
+          "flaggedCount",
+          "history",
+          "kind",
+          "source"
+        ],
+        "title": "AddressSummary",
+        "type": "object"
+      },
+      "AddressesResponse": {
+        "description": "E3: the addresses that can be opened.",
+        "properties": {
+          "snapshot": {
+            "$ref": "#/components/schemas/SnapshotInfo"
+          },
+          "addresses": {
+            "items": {
+              "$ref": "#/components/schemas/AddressSummary"
+            },
+            "title": "Addresses",
+            "type": "array"
+          }
+        },
+        "required": [
+          "snapshot",
+          "addresses"
+        ],
+        "title": "AddressesResponse",
+        "type": "object"
+      },
+      "Capabilities": {
+        "properties": {
+          "assistant": {
+            "type": "boolean",
+            "title": "Assistant"
+          },
+          "liveLookup": {
+            "type": "boolean",
+            "title": "Livelookup"
+          }
+        },
+        "type": "object",
+        "required": [
+          "assistant",
+          "liveLookup"
+        ],
+        "title": "Capabilities",
+        "description": "Optional parts of the service and whether this server has them on."
+      },
+      "ChartSettings": {
+        "properties": {
+          "webglMinPoints": {
+            "type": "integer",
+            "title": "Webglminpoints"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "webglMinPoints"
+        ],
+        "title": "ChartSettings",
+        "description": "When a chart switches to WebGL."
+      },
+      "ComparisonBasis": {
+        "description": "What a group of features was compared with: how many earlier transactions, from when to when (A1).",
+        "properties": {
+          "features": {
+            "items": {
+              "enum": [
+                "F1",
+                "F2",
+                "F3",
+                "F4"
+              ],
+              "type": "string"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "txCount": {
+            "title": "Txcount",
+            "type": "integer"
+          },
+          "start": {
+            "title": "Start",
+            "type": "string"
+          },
+          "end": {
+            "title": "End",
+            "type": "string"
+          }
+        },
+        "required": [
+          "features",
+          "label",
+          "description",
+          "txCount",
+          "start",
+          "end"
+        ],
+        "title": "ComparisonBasis",
+        "type": "object"
+      },
+      "ConfigResponse": {
+        "properties": {
+          "snapshot": {
+            "$ref": "#/components/schemas/SnapshotInfo"
+          },
+          "limitationLine": {
+            "type": "string",
+            "title": "Limitationline"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/FeatureInfo"
+            },
+            "type": "array",
+            "title": "Features"
+          },
+          "history": {
+            "$ref": "#/components/schemas/HistoryRequirement"
+          },
+          "thresholds": {
+            "$ref": "#/components/schemas/Thresholds"
+          },
+          "defaultMethod": {
+            "type": "string",
+            "enum": [
+              "baseline",
+              "isolation_forest",
+              "lof",
+              "kmeans",
+              "dbscan",
+              "regression",
+              "regression_interval",
+              "fusion",
+              "txgpt_method"
+            ],
+            "title": "Defaultmethod"
+          },
+          "web": {
+            "$ref": "#/components/schemas/WebSettings"
+          },
+          "whatIf": {
+            "$ref": "#/components/schemas/WhatIfDefaults"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/Capabilities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "snapshot",
+          "limitationLine",
+          "features",
+          "history",
+          "thresholds",
+          "defaultMethod",
+          "web",
+          "whatIf",
+          "capabilities"
+        ],
+        "title": "ConfigResponse",
+        "description": "E2: everything the front end would otherwise hard-code.",
+        "example": {
+          "capabilities": {
+            "assistant": false,
+            "liveLookup": false
+          },
+          "defaultMethod": "baseline",
+          "features": [
+            {
+              "description": "How much the address received or sent in this transaction (BTC).",
+              "id": "F1",
+              "name": "Size",
+              "unit": "BTC"
+            }
+          ],
+          "history": {
+            "minSpanDays": 14,
+            "minTx": 10
+          },
+          "limitationLine": "Unusual activity requires investigation; it does not indicate wrongdoing.",
+          "snapshot": {
+            "addressCount": 28,
+            "dayTimeZone": "UTC",
+            "illustrative": false,
+            "method": {
+              "contributingAbsZ": 2.0,
+              "flagAbsZ": 5.0,
+              "id": "baseline",
+              "name": "Robust z baseline (A1)",
+              "note": "Flags mean unusual for this address's own history, nothing more."
+            },
+            "snapshotDate": "2026-10-22",
+            "source": "Blockstream Esplora",
+            "sourceUrl": "https://blockstream.info/api"
+          },
+          "thresholds": {
+            "contributingAbsZ": 2.0,
+            "flagAbsZ": 5.0
+          },
+          "web": {
+            "...": "the other blocks of settings.json -> web",
+            "lists": {
+              "maxPageSize": 200,
+              "pageSize": 50
+            },
+            "whatIf": {
+              "curveMaxPoints": 61,
+              "curvePoints": 41,
+              "debounceMs": 250,
+              "maxAmountBtc": 21000000,
+              "maxGapYears": 5,
+              "minAmountBtc": 1e-08
+            }
+          },
+          "whatIf": {
+            "defaultTime": "2026-10-22T12:00:00Z"
+          }
+        }
+      },
+      "CurveMethod": {
+        "description": "One method's scores and flags, one per amount.",
+        "properties": {
+          "id": {
+            "enum": [
+              "baseline",
+              "isolation_forest",
+              "lof",
+              "kmeans",
+              "dbscan",
+              "regression",
+              "regression_interval",
+              "fusion",
+              "txgpt_method"
+            ],
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "number"
+          },
+          "scores": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Scores",
+            "type": "array"
+          },
+          "flags": {
+            "items": {
+              "type": "boolean"
+            },
+            "title": "Flags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "threshold",
+          "scores",
+          "flags"
+        ],
+        "title": "CurveMethod",
+        "type": "object"
+      },
+      "CurveRequest": {
+        "additionalProperties": false,
+        "description": "E9's body: either a list of amounts, or a range with a point count, or neither (the server chooses).",
+        "properties": {
+          "direction": {
+            "enum": [
+              "in",
+              "out"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "time": {
+            "format": "date-time",
+            "title": "Time",
+            "type": "string"
+          },
+          "amountsBtc": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "exclusiveMinimum": 0.0,
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Amountsbtc"
+          },
+          "minBtc": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Minbtc"
+          },
+          "maxBtc": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Maxbtc"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "minimum": 2,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Points"
+          }
+        },
+        "required": [
+          "direction",
+          "time"
+        ],
+        "title": "CurveRequest",
+        "type": "object"
+      },
+      "CurveResponse": {
+        "description": "E9: scores over a range of amounts.",
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "in",
+              "out"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "time": {
+            "title": "Time",
+            "type": "string"
+          },
+          "usualBtc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The address's usual amount in that direction.",
+            "title": "Usualbtc"
+          },
+          "decidingMethod": {
+            "enum": [
+              "baseline",
+              "isolation_forest",
+              "lof",
+              "kmeans",
+              "dbscan",
+              "regression",
+              "regression_interval",
+              "fusion",
+              "txgpt_method"
+            ],
+            "title": "Decidingmethod",
+            "type": "string"
+          },
+          "amountsBtc": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Amountsbtc",
+            "type": "array"
+          },
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/CurveMethod"
+            },
+            "title": "Methods",
+            "type": "array"
+          },
+          "notAvailable": {
+            "items": {
+              "enum": [
+                "baseline",
+                "isolation_forest",
+                "lof",
+                "kmeans",
+                "dbscan",
+                "regression",
+                "regression_interval",
+                "fusion",
+                "txgpt_method"
+              ],
+              "type": "string"
+            },
+            "title": "Notavailable",
+            "type": "array"
+          }
+        },
+        "required": [
+          "address",
+          "direction",
+          "time",
+          "usualBtc",
+          "decidingMethod",
+          "amountsBtc",
+          "methods",
+          "notAvailable"
+        ],
+        "title": "CurveResponse",
+        "type": "object"
+      },
+      "ErrorBody": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "invalid",
+              "disabled",
+              "unsupported",
+              "not_found",
+              "conflict",
+              "too_large",
+              "insufficient_history",
+              "rate_limited",
+              "server_error",
+              "upstream_error",
+              "unavailable",
+              "upstream_timeout"
+            ],
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FieldError"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields"
+          },
+          "requestId": {
+            "type": "string",
+            "title": "Requestid",
+            "description": "Matches the server's log line for this request."
+          },
+          "examples": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Examples",
+            "description": "With `unsupported`: three addresses that can be opened."
+          },
+          "canLookupLive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canlookuplive",
+            "description": "With `unsupported`: whether a live lookup is on."
+          },
+          "transaction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TransactionCore"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `insufficient_history` on a transaction."
+          },
+          "history": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HistoryShortfall"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "firstScoredDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Firstscoreddate",
+            "description": "The first day that can be scored, or null."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message",
+          "requestId"
+        ],
+        "title": "ErrorBody",
+        "description": "Every failure answers with this body.",
+        "example": {
+          "fields": [
+            {
+              "message": "Checksum does not match.",
+              "name": "address"
+            }
+          ],
+          "hint": "Bitcoin addresses start with 1, 3 or bc1. Check for a missing or extra character, or pick an address from the list.",
+          "message": "This address fails its checksum, so it probably contains a typo.",
+          "requestId": "0f3c9a1e7b2d",
+          "status": "invalid"
+        }
+      },
+      "Evaluation": {
+        "description": "How a method did on Assignment 2's tests.",
+        "properties": {
+          "meanRecall": {
+            "$ref": "#/components/schemas/Interval"
+          },
+          "recallByPattern": {
+            "$ref": "#/components/schemas/RecallByPattern"
+          },
+          "flagRate": {
+            "title": "Flagrate",
+            "type": "number"
+          }
+        },
+        "required": [
+          "meanRecall",
+          "recallByPattern",
+          "flagRate"
+        ],
+        "title": "Evaluation",
+        "type": "object"
+      },
+      "FeatureDetail": {
+        "description": "One of F1 to F4 in the units people read (A1).",
+        "properties": {
+          "id": {
+            "enum": [
+              "F1",
+              "F2",
+              "F3",
+              "F4"
+            ],
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "BTC for F1, a count for F2, hours for F3, a ratio for F4.",
+            "title": "Value"
+          },
+          "usual": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Median of the comparison window, in the same units.",
+            "title": "Usual"
+          },
+          "z": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z"
+          },
+          "role": {
+            "enum": [
+              "flag",
+              "contributing",
+              "within-usual",
+              "no-comparison"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "value",
+          "usual",
+          "z",
+          "role"
+        ],
+        "title": "FeatureDetail",
+        "type": "object"
+      },
+      "FeatureInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "F1",
+              "F2",
+              "F3",
+              "F4"
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "unit"
+        ],
+        "title": "FeatureInfo",
+        "description": "One of the four features, as the interface names it."
+      },
+      "FieldError": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "message"
+        ],
+        "title": "FieldError",
+        "description": "One form field at fault."
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "snapshotDate": {
+            "type": "string",
+            "title": "Snapshotdate"
+          },
+          "addressCount": {
+            "type": "integer",
+            "title": "Addresscount"
+          },
+          "methodCount": {
+            "type": "integer",
+            "title": "Methodcount"
+          },
+          "assistant": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "not_installed",
+              "loading",
+              "off"
+            ],
+            "title": "Assistant"
+          },
+          "liveLookup": {
+            "type": "boolean",
+            "title": "Livelookup"
+          },
+          "uptimeSeconds": {
+            "type": "number",
+            "title": "Uptimeseconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "snapshotDate",
+          "addressCount",
+          "methodCount",
+          "assistant",
+          "liveLookup",
+          "uptimeSeconds"
+        ],
+        "title": "HealthResponse",
+        "description": "E1: the service is up and what it has loaded. While the models load the answer is a 503 error body.",
+        "example": {
+          "addressCount": 28,
+          "assistant": "not_installed",
+          "liveLookup": false,
+          "methodCount": 9,
+          "snapshotDate": "2026-10-22",
+          "status": "ok",
+          "uptimeSeconds": 12.4,
+          "version": "0.1.0"
+        }
+      },
+      "HistoryRequirement": {
+        "properties": {
+          "minTx": {
+            "type": "integer",
+            "title": "Mintx"
+          },
+          "minSpanDays": {
+            "type": "number",
+            "title": "Minspandays"
+          }
+        },
+        "type": "object",
+        "required": [
+          "minTx",
+          "minSpanDays"
+        ],
+        "title": "HistoryRequirement",
+        "description": "The least history a transaction needs to be scored (A1)."
+      },
+      "HistoryShortfall": {
+        "properties": {
+          "earlierTx": {
+            "type": "integer",
+            "title": "Earliertx"
+          },
+          "spanDays": {
+            "type": "number",
+            "title": "Spandays"
+          },
+          "required": {
+            "$ref": "#/components/schemas/HistoryRequirement"
+          }
+        },
+        "type": "object",
+        "required": [
+          "earlierTx",
+          "spanDays",
+          "required"
+        ],
+        "title": "HistoryShortfall",
+        "description": "How much earlier history there was against how much scoring needs."
+      },
+      "Interval": {
+        "description": "A value with its 95% interval.",
+        "properties": {
+          "value": {
+            "title": "Value",
+            "type": "number"
+          },
+          "ciLow": {
+            "title": "Cilow",
+            "type": "number"
+          },
+          "ciHigh": {
+            "title": "Cihigh",
+            "type": "number"
+          }
+        },
+        "required": [
+          "value",
+          "ciLow",
+          "ciHigh"
+        ],
+        "title": "Interval",
+        "type": "object"
+      },
+      "ListLimits": {
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "title": "Pagesize"
+          },
+          "maxPageSize": {
+            "type": "integer",
+            "title": "Maxpagesize"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pageSize",
+          "maxPageSize"
+        ],
+        "title": "ListLimits",
+        "description": "Paging of every list."
+      },
+      "LiveSettings": {
+        "properties": {
+          "defaultMaxTx": {
+            "type": "integer",
+            "title": "Defaultmaxtx"
+          },
+          "maxTxLimit": {
+            "type": "integer",
+            "title": "Maxtxlimit"
+          },
+          "lookupsPerHour": {
+            "type": "integer",
+            "title": "Lookupsperhour"
+          },
+          "cacheDays": {
+            "type": "integer",
+            "title": "Cachedays"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "defaultMaxTx",
+          "maxTxLimit",
+          "lookupsPerHour",
+          "cacheDays"
+        ],
+        "title": "LiveSettings",
+        "description": "Limits of a live lookup (S-09)."
+      },
+      "LookupRequest": {
+        "additionalProperties": false,
+        "description": "E4's body. The checker's specific message for a bad address comes from core.validation.",
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address"
+        ],
+        "title": "LookupRequest",
+        "type": "object"
+      },
+      "LookupResponse": {
+        "description": "E4: the typed address is supported.",
+        "properties": {
+          "status": {
+            "const": "supported",
+            "title": "Status",
+            "type": "string"
+          },
+          "address": {
+            "description": "The normalised address.",
+            "title": "Address",
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/AddressSummary"
+          }
+        },
+        "required": [
+          "status",
+          "address",
+          "summary"
+        ],
+        "title": "LookupResponse",
+        "type": "object"
+      },
+      "MethodEntry": {
+        "description": "One method.",
+        "properties": {
+          "id": {
+            "enum": [
+              "baseline",
+              "isolation_forest",
+              "lof",
+              "kmeans",
+              "dbscan",
+              "regression",
+              "regression_interval",
+              "fusion",
+              "txgpt_method"
+            ],
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "family": {
+            "enum": [
+              "statistics",
+              "outlier detection",
+              "clustering",
+              "regression",
+              "combination",
+              "language model"
+            ],
+            "title": "Family",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "number"
+          },
+          "scoresNewInput": {
+            "title": "Scoresnewinput",
+            "type": "boolean"
+          },
+          "evaluation": {
+            "$ref": "#/components/schemas/Evaluation"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "family",
+          "description",
+          "threshold",
+          "scoresNewInput",
+          "evaluation"
+        ],
+        "title": "MethodEntry",
+        "type": "object"
+      },
+      "MethodInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "flagAbsZ": {
+            "type": "number",
+            "title": "Flagabsz"
+          },
+          "contributingAbsZ": {
+            "type": "number",
+            "title": "Contributingabsz"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "flagAbsZ",
+          "contributingAbsZ",
+          "note"
+        ],
+        "title": "MethodInfo",
+        "description": "The deciding method and the two z lines the explanation uses (A1)."
+      },
+      "MethodsResponse": {
+        "description": "E11: the methods, their thresholds and test results.",
+        "properties": {
+          "defaultMethod": {
+            "enum": [
+              "baseline",
+              "isolation_forest",
+              "lof",
+              "kmeans",
+              "dbscan",
+              "regression",
+              "regression_interval",
+              "fusion",
+              "txgpt_method"
+            ],
+            "title": "Defaultmethod",
+            "type": "string"
+          },
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/MethodEntry"
+            },
+            "title": "Methods",
+            "type": "array"
+          }
+        },
+        "required": [
+          "defaultMethod",
+          "methods"
+        ],
+        "title": "MethodsResponse",
+        "type": "object"
+      },
+      "RecallByPattern": {
+        "description": "Recall on each planted pattern.",
+        "properties": {
+          "spike": {
+            "$ref": "#/components/schemas/Interval"
+          },
+          "burst": {
+            "$ref": "#/components/schemas/Interval"
+          },
+          "dormant": {
+            "$ref": "#/components/schemas/Interval"
+          }
+        },
+        "required": [
+          "spike",
+          "burst",
+          "dormant"
+        ],
+        "title": "RecallByPattern",
+        "type": "object"
+      },
+      "ReplaySettings": {
+        "properties": {
+          "speeds": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Speeds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "speeds"
+        ],
+        "title": "ReplaySettings",
+        "description": "Replay speeds (S-06)."
+      },
+      "RequestLimits": {
+        "properties": {
+          "maxBodyBytes": {
+            "type": "integer",
+            "title": "Maxbodybytes"
+          },
+          "maxAddressChars": {
+            "type": "integer",
+            "title": "Maxaddresschars"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "maxBodyBytes",
+          "maxAddressChars"
+        ],
+        "title": "RequestLimits",
+        "description": "Limits on what a request may carry."
+      },
+      "RequestSettings": {
+        "properties": {
+          "timeoutMs": {
+            "type": "integer",
+            "title": "Timeoutms"
+          },
+          "assistantTimeoutMs": {
+            "type": "integer",
+            "title": "Assistanttimeoutms"
+          },
+          "healthPollSeconds": {
+            "type": "integer",
+            "title": "Healthpollseconds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "timeoutMs",
+          "assistantTimeoutMs",
+          "healthPollSeconds"
+        ],
+        "title": "RequestSettings",
+        "description": "Time limits and polling the front end applies."
+      },
+      "SnapshotInfo": {
+        "properties": {
+          "snapshotDate": {
+            "type": "string",
+            "title": "Snapshotdate"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "sourceUrl": {
+            "type": "string",
+            "title": "Sourceurl"
+          },
+          "illustrative": {
+            "type": "boolean",
+            "title": "Illustrative"
+          },
+          "dayTimeZone": {
+            "type": "string",
+            "const": "UTC",
+            "title": "Daytimezone"
+          },
+          "addressCount": {
+            "type": "integer",
+            "title": "Addresscount"
+          },
+          "method": {
+            "$ref": "#/components/schemas/MethodInfo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "snapshotDate",
+          "source",
+          "sourceUrl",
+          "illustrative",
+          "dayTimeZone",
+          "addressCount",
+          "method"
+        ],
+        "title": "SnapshotInfo",
+        "description": "What the data is and where it came from (A1)."
+      },
+      "Thresholds": {
+        "properties": {
+          "flagAbsZ": {
+            "type": "number",
+            "title": "Flagabsz"
+          },
+          "contributingAbsZ": {
+            "type": "number",
+            "title": "Contributingabsz"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flagAbsZ",
+          "contributingAbsZ"
+        ],
+        "title": "Thresholds",
+        "description": "The two z lines: a feature at or above `flagAbsZ` flags; at or above `contributingAbsZ` contributes."
+      },
+      "TimeRange": {
+        "description": "The first and last transaction time.",
+        "properties": {
+          "start": {
+            "title": "Start",
+            "type": "string"
+          },
+          "end": {
+            "title": "End",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "TimeRange",
+        "type": "object"
+      },
+      "TimelineDay": {
+        "description": "One day that has transactions (A1).",
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "txCount": {
+            "title": "Txcount",
+            "type": "integer"
+          },
+          "flaggedCount": {
+            "title": "Flaggedcount",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "txCount",
+          "flaggedCount"
+        ],
+        "title": "TimelineDay",
+        "type": "object"
+      },
+      "TimelineHistory": {
+        "description": "Whether the history is long enough to score, and from when (A1).",
+        "properties": {
+          "status": {
+            "enum": [
+              "sufficient",
+              "insufficient"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "txCount": {
+            "title": "Txcount",
+            "type": "integer"
+          },
+          "spanDays": {
+            "title": "Spandays",
+            "type": "number"
+          },
+          "required": {
+            "$ref": "#/components/schemas/HistoryRequirement"
+          },
+          "firstScoredDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Firstscoreddate"
+          }
+        },
+        "required": [
+          "status",
+          "txCount",
+          "spanDays",
+          "required",
+          "firstScoredDate"
+        ],
+        "title": "TimelineHistory",
+        "type": "object"
+      },
+      "TimelineResponse": {
+        "description": "E5: per-day counts, totals, range and history status of one address.",
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/SnapshotInfo"
+          },
+          "range": {
+            "$ref": "#/components/schemas/TimeRange"
+          },
+          "days": {
+            "description": "Only days with transactions, oldest first.",
+            "items": {
+              "$ref": "#/components/schemas/TimelineDay"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/TimelineTotals"
+          },
+          "history": {
+            "$ref": "#/components/schemas/TimelineHistory"
+          }
+        },
+        "required": [
+          "address",
+          "snapshot",
+          "range",
+          "days",
+          "totals",
+          "history"
+        ],
+        "title": "TimelineResponse",
+        "type": "object"
+      },
+      "TimelineTotals": {
+        "description": "Counts over the whole history (A1).",
+        "properties": {
+          "txCount": {
+            "title": "Txcount",
+            "type": "integer"
+          },
+          "scoredCount": {
+            "title": "Scoredcount",
+            "type": "integer"
+          },
+          "flaggedCount": {
+            "title": "Flaggedcount",
+            "type": "integer"
+          },
+          "flaggedDays": {
+            "title": "Flaggeddays",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "txCount",
+          "scoredCount",
+          "flaggedCount",
+          "flaggedDays"
+        ],
+        "title": "TimelineTotals",
+        "type": "object"
+      },
+      "TransactionCore": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "time": {
+            "type": "string",
+            "title": "Time",
+            "description": "ISO 8601, UTC."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out",
+              "none"
+            ],
+            "title": "Direction"
+          },
+          "receivedSats": {
+            "type": "integer",
+            "title": "Receivedsats"
+          },
+          "sentSats": {
+            "type": "integer",
+            "title": "Sentsats"
+          },
+          "netSats": {
+            "type": "integer",
+            "title": "Netsats"
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceurl",
+            "description": "Public block-explorer page; null for a hypothetical transaction."
+          },
+          "txid": {
+            "type": "string",
+            "title": "Txid"
+          },
+          "blockHeight": {
+            "type": "integer",
+            "title": "Blockheight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "time",
+          "direction",
+          "receivedSats",
+          "sentSats",
+          "netSats",
+          "sourceUrl",
+          "txid",
+          "blockHeight"
+        ],
+        "title": "TransactionCore",
+        "description": "A1's `TransactionCore`."
+      },
+      "TransactionDetail": {
+        "description": "E7: one transaction's facts, features, reason and every method's verdict.",
+        "properties": {
+          "scored": {
+            "const": true,
+            "title": "Scored",
+            "type": "boolean"
+          },
+          "flagged": {
+            "title": "Flagged",
+            "type": "boolean"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "method": {
+            "$ref": "#/components/schemas/MethodInfo"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/FeatureDetail"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "comparison": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonBasis"
+            },
+            "title": "Comparison",
+            "type": "array"
+          },
+          "limitation": {
+            "title": "Limitation",
+            "type": "string"
+          },
+          "explanation": {
+            "description": "The template's text; it ends with the limitation line on a flagged item.",
+            "title": "Explanation",
+            "type": "string"
+          },
+          "scores": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "Every method's score.",
+            "propertyNames": {
+              "enum": [
+                "baseline",
+                "isolation_forest",
+                "lof",
+                "kmeans",
+                "dbscan",
+                "regression",
+                "regression_interval",
+                "fusion",
+                "txgpt_method"
+              ]
+            },
+            "title": "Scores",
+            "type": "object"
+          },
+          "flags": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "description": "Every method's flag.",
+            "propertyNames": {
+              "enum": [
+                "baseline",
+                "isolation_forest",
+                "lof",
+                "kmeans",
+                "dbscan",
+                "regression",
+                "regression_interval",
+                "fusion",
+                "txgpt_method"
+              ]
+            },
+            "title": "Flags",
+            "type": "object"
+          },
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "time": {
+            "description": "ISO 8601, UTC.",
+            "title": "Time",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "in",
+              "out",
+              "none"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "receivedSats": {
+            "title": "Receivedsats",
+            "type": "integer"
+          },
+          "sentSats": {
+            "title": "Sentsats",
+            "type": "integer"
+          },
+          "netSats": {
+            "title": "Netsats",
+            "type": "integer"
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Public block-explorer page; null for a hypothetical transaction.",
+            "title": "Sourceurl"
+          },
+          "txid": {
+            "title": "Txid",
+            "type": "string"
+          },
+          "blockHeight": {
+            "title": "Blockheight",
+            "type": "integer"
+          },
+          "source": {
+            "enum": [
+              "snapshot",
+              "live"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scored",
+          "flagged",
+          "score",
+          "method",
+          "features",
+          "comparison",
+          "limitation",
+          "explanation",
+          "scores",
+          "flags",
+          "address",
+          "time",
+          "direction",
+          "receivedSats",
+          "sentSats",
+          "netSats",
+          "sourceUrl",
+          "txid",
+          "blockHeight",
+          "source"
+        ],
+        "title": "TransactionDetail",
+        "type": "object"
+      },
+      "TransactionRow": {
+        "description": "One row of E6 (A1's `TransactionRow` plus the deciding method's view).",
+        "properties": {
+          "txid": {
+            "title": "Txid",
+            "type": "string"
+          },
+          "time": {
+            "title": "Time",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "in",
+              "out",
+              "none"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "netSats": {
+            "title": "Netsats",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "flagged",
+              "not-flagged",
+              "not-scored"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The deciding method's score; null when not scored.",
+            "title": "Score"
+          },
+          "mainReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The template's strongest reason, such as 'Longer gap than usual'.",
+            "title": "Mainreason"
+          },
+          "mainZ": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mainz"
+          },
+          "flaggedBy": {
+            "description": "How many methods flag it.",
+            "title": "Flaggedby",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "txid",
+          "time",
+          "direction",
+          "netSats",
+          "status",
+          "score",
+          "mainReason",
+          "mainZ",
+          "flaggedBy"
+        ],
+        "title": "TransactionRow",
+        "type": "object"
+      },
+      "TransactionsResponse": {
+        "description": "E6: a filtered, sorted page of rows.",
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/TransactionRow"
+            },
+            "title": "Transactions",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "pageSize": {
+            "title": "Pagesize",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "address",
+          "date",
+          "transactions",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "title": "TransactionsResponse",
+        "type": "object"
+      },
+      "WatchlistLimits": {
+        "properties": {
+          "maxEntries": {
+            "type": "integer",
+            "title": "Maxentries"
+          },
+          "maxLabelChars": {
+            "type": "integer",
+            "title": "Maxlabelchars"
+          },
+          "maxNoteChars": {
+            "type": "integer",
+            "title": "Maxnotechars"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "maxEntries",
+          "maxLabelChars",
+          "maxNoteChars"
+        ],
+        "title": "WatchlistLimits",
+        "description": "Size limits of the watchlist (S-04)."
+      },
+      "WebSettings": {
+        "properties": {
+          "whatIf": {
+            "$ref": "#/components/schemas/WhatIfLimits"
+          },
+          "lists": {
+            "$ref": "#/components/schemas/ListLimits"
+          },
+          "requests": {
+            "$ref": "#/components/schemas/RequestSettings"
+          },
+          "charts": {
+            "$ref": "#/components/schemas/ChartSettings"
+          },
+          "watchlist": {
+            "$ref": "#/components/schemas/WatchlistLimits"
+          },
+          "live": {
+            "$ref": "#/components/schemas/LiveSettings"
+          },
+          "replay": {
+            "$ref": "#/components/schemas/ReplaySettings"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/RequestLimits"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "whatIf",
+          "lists",
+          "requests",
+          "charts",
+          "watchlist",
+          "live",
+          "replay",
+          "limits"
+        ],
+        "title": "WebSettings",
+        "description": "The `web` block of settings.json (plan section 5.7)."
+      },
+      "WhatIfDefaults": {
+        "properties": {
+          "defaultTime": {
+            "type": "string",
+            "title": "Defaulttime",
+            "description": "Noon UTC on the snapshot date."
+          }
+        },
+        "type": "object",
+        "required": [
+          "defaultTime"
+        ],
+        "title": "WhatIfDefaults",
+        "description": "Defaults for the what-if form."
+      },
+      "WhatIfLimits": {
+        "properties": {
+          "minAmountBtc": {
+            "type": "number",
+            "title": "Minamountbtc"
+          },
+          "maxAmountBtc": {
+            "type": "number",
+            "title": "Maxamountbtc"
+          },
+          "maxGapYears": {
+            "type": "integer",
+            "title": "Maxgapyears"
+          },
+          "curvePoints": {
+            "type": "integer",
+            "title": "Curvepoints"
+          },
+          "curveMaxPoints": {
+            "type": "integer",
+            "title": "Curvemaxpoints"
+          },
+          "debounceMs": {
+            "type": "integer",
+            "title": "Debouncems"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "minAmountBtc",
+          "maxAmountBtc",
+          "maxGapYears",
+          "curvePoints",
+          "curveMaxPoints",
+          "debounceMs"
+        ],
+        "title": "WhatIfLimits",
+        "description": "Ranges of the what-if form (E8, E9)."
+      },
+      "WhatIfRequest": {
+        "additionalProperties": false,
+        "description": "E8's body.",
+        "properties": {
+          "amountBtc": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A number or decimal string, in BTC.",
+            "title": "Amountbtc"
+          },
+          "direction": {
+            "enum": [
+              "in",
+              "out"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "time": {
+            "description": "ISO 8601 with a zone, such as 2026-10-20T12:00:00Z.",
+            "format": "date-time",
+            "title": "Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amountBtc",
+          "direction",
+          "time"
+        ],
+        "title": "WhatIfRequest",
+        "type": "object"
+      },
+      "WhatIfResult": {
+        "description": "E8: a transaction detail without an ID or block, from the methods that can score new input.",
+        "properties": {
+          "scored": {
+            "const": true,
+            "title": "Scored",
+            "type": "boolean"
+          },
+          "flagged": {
+            "title": "Flagged",
+            "type": "boolean"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "method": {
+            "$ref": "#/components/schemas/MethodInfo"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/FeatureDetail"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "comparison": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonBasis"
+            },
+            "title": "Comparison",
+            "type": "array"
+          },
+          "limitation": {
+            "title": "Limitation",
+            "type": "string"
+          },
+          "explanation": {
+            "description": "The template's text; it ends with the limitation line on a flagged item.",
+            "title": "Explanation",
+            "type": "string"
+          },
+          "scores": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "Every method's score.",
+            "propertyNames": {
+              "enum": [
+                "baseline",
+                "isolation_forest",
+                "lof",
+                "kmeans",
+                "dbscan",
+                "regression",
+                "regression_interval",
+                "fusion",
+                "txgpt_method"
+              ]
+            },
+            "title": "Scores",
+            "type": "object"
+          },
+          "flags": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "description": "Every method's flag.",
+            "propertyNames": {
+              "enum": [
+                "baseline",
+                "isolation_forest",
+                "lof",
+                "kmeans",
+                "dbscan",
+                "regression",
+                "regression_interval",
+                "fusion",
+                "txgpt_method"
+              ]
+            },
+            "title": "Flags",
+            "type": "object"
+          },
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "time": {
+            "description": "ISO 8601, UTC.",
+            "title": "Time",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "in",
+              "out",
+              "none"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "receivedSats": {
+            "title": "Receivedsats",
+            "type": "integer"
+          },
+          "sentSats": {
+            "title": "Sentsats",
+            "type": "integer"
+          },
+          "netSats": {
+            "title": "Netsats",
+            "type": "integer"
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Public block-explorer page; null for a hypothetical transaction.",
+            "title": "Sourceurl"
+          },
+          "txid": {
+            "const": "what-if",
+            "title": "Txid",
+            "type": "string"
+          },
+          "notAvailable": {
+            "description": "Methods that cannot score a hypothetical transaction.",
+            "items": {
+              "enum": [
+                "baseline",
+                "isolation_forest",
+                "lof",
+                "kmeans",
+                "dbscan",
+                "regression",
+                "regression_interval",
+                "fusion",
+                "txgpt_method"
+              ],
+              "type": "string"
+            },
+            "title": "Notavailable",
+            "type": "array"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scored",
+          "flagged",
+          "score",
+          "method",
+          "features",
+          "comparison",
+          "limitation",
+          "explanation",
+          "scores",
+          "flags",
+          "address",
+          "time",
+          "direction",
+          "receivedSats",
+          "sentSats",
+          "netSats",
+          "sourceUrl",
+          "txid",
+          "notAvailable",
+          "note"
+        ],
+        "title": "WhatIfResult",
+        "type": "object"
+      }
+    }
+  }
+}
