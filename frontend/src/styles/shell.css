@@ -1,5 +1,5 @@
 /* The application shell: navigation, service status, theme switch and toasts.
-   Colours come from the tokens in ../styles.css; the two status colours below are the only additions. */
+   Colours come from the tokens in base.css; the two status colours below are the only additions. */
 
 :root {
   --status-ok: #1a7f4b;

@@ -7,9 +7,9 @@ import { ServiceStatusProvider } from './hooks/useServiceStatus';
 import { SettingsProvider } from './hooks/useSettings';
 import { ToastProvider } from './hooks/useToasts';
 import { paths, useRoute, type Route } from './lib/router';
-import { DayScreen } from './screens/DayScreen';
-import { SelectScreen } from './screens/SelectScreen';
-import { TimelineScreen } from './screens/TimelineScreen';
+import { DayScreen } from './views/DayScreen';
+import { SelectScreen } from './views/SelectScreen';
+import { TimelineScreen } from './views/TimelineScreen';
 
 // A new screen starts at the top. Selecting a transaction within a day is not a new screen.
 function screenKey(route: Route): string {

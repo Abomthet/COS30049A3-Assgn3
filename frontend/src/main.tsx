@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { mockControls } from './api/mock/mockApi';
-import './styles.css';
+import './styles/base.css';
 import './styles/shell.css';
 
 // Prototype switches in the page URL (before the #), e.g. /?latency=8000 or /?offline=1,
