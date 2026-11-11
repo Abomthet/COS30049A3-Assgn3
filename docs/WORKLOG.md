@@ -296,3 +296,69 @@ adds E2's `features`, records fixtures from the real API in place of the illustr
 Vitest read `shared/address_vectors.json`, puts V1–V3 on the real API and removes the prototype banner.
 **backend-whatif** cook started in parallel: T14 (E8, E9 with the batched feature build and its parity
 test, which must be shown to catch a planted bug) and T15 (E10 export, E11 methods). `backend/` only.
+
+## 2026-11-11 — T17 reviewed; **MS1 passed** (4 days early)
+
+**Delegated to** the frontend-views cook (Sonnet 5.5, high effort): 87 tool calls, ~18 min.
+**Lead review:** `npm test` **244 passed, 0 skipped** (the D1-sample skip is replaced by the shared
+vectors: 52 browser-checkable entries, all agreeing with the server's checker), typecheck and build
+clean, wording clean, index clean. Looked at the cook's screenshots against the real API (desktop
+transaction view, phone transaction view): real data, the flag line at ±5, the nine verdicts, the
+limitation line. Commit `610331d`.
+
+**Cook claim found false: "the mock is not in the production bundle".** The build emitted a 32 kB
+`mockApi` chunk, because `api/client.ts` imported the mock statically. **Lead fix:** both mock imports
+(`client.ts`, `main.tsx`) now sit under a condition written on `import.meta.env.VITE_API_MODE`, which
+Vite replaces with a literal at build time, so production folds it away. Checked: no mock strings and
+no fixture addresses in `dist/`. The first screen downloads the same ~124 kB gzip as before, now in one
+request instead of three; the old chunk was mostly shared code that the static import always loaded.
+
+**Contract drift caught by running live** (by the cook): E5's `range.start`/`end` are timestamps,
+not day keys; G1 and the tiles would have broken on real data. Fractional `spanDays` now prints as
+"under a day" or whole days.
+
+**MS1 gate, run by the lead from a fresh clone of `origin/main`** (scratch folder):
+`vendor_a2.py --check` passes; Uvicorn ready in ~1.3 s with a clean log; E5 answers 200 for all 28
+addresses; `npm ci`, `npm test` (244) and `npm run build` are clean. The first back-end run found
+**1 failure**: `test_schemas.py` parses `frontend/src/api/types.ts` and read the `null` inside
+`Record<MethodId, number | null>` (added by T17) as "this property is nullable". `main` had been red
+since `610331d`, because the lead ran only the front-end suite before committing a front-end package.
+**Fix** (`9adf130`): `top_level_nullable()` strips nested `<…>` and `{…}` before looking for `null`
+(six cases checked). Re-run in the clone: **478 passed**. MS1's conditions (both tiers from a fresh
+clone; E1–E7 for all 28 with parity; V1–V3 on real data, including the unsupported and short-history
+states) are met. The clone reused the existing `cos30049-a3` environment; building a fresh environment
+from `environment.yml` was checked by the backend-core cook.
+
+**Lessons recorded (process).**
+- **Cross-tier tests exist** (the back end reads `types.ts`), so **both suites run before every
+  commit**, whichever tier the package touched.
+- **Lead slip:** while checking a bundle size, the lead ran `git stash` / `git stash pop` for a few
+  seconds while the backend-whatif cook was editing `backend/`. The pop was clean (stash list empty, no
+  conflict markers, the cook's files present), and the cook was told. **Rule from now on:** no
+  working-tree-wide git command (stash, checkout, reset) while a cook is running. Compare builds in a
+  separate clone or worktree instead.
+- Cook reports are verified against the build and `git status`. Two of four reports so far contained a
+  false claim (the index left "clean" while three paths were staged; "mock not bundled").
+
+**UI observations from the screenshots** (to fix later):
+- (a) On a phone, the G3 table's Role column clips ("contribut…").
+- (b) Amounts are printed with different precision in the explanation and the facts ("0.0011126" vs
+  "0.00111260").
+- (c) The verdict table shows K-Means 6.69 and TxGPT 5.57 next to "–" while the baseline's 5.61 says
+  "Flag". Each method has its own scale; G4 (S-02, score against its own threshold) is the plan's
+  answer, and the verdict table could add a threshold column once E11 exists.
+
+**Design notes for the technical document.**
+- **Fixtures are recorded, not invented.** `scripts/record-fixtures.mjs` saves the service's own answers
+  (E1–E3, an E4 404, E5, all E6 pages and selected E7 answers for one normal and one short-history
+  address). The mock only filters, sorts and pages them, so tests and the demo mode use real shapes and
+  numbers, and re-running the script refreshes both after a new snapshot.
+- **The mock cannot ship.** It is reachable only through a condition on `import.meta.env`, which the
+  build replaces with a literal, so production bundles contain neither the mock nor its data.
+- **One flag line, from the model.** The front end draws the threshold that E2 reports (A2's tuned 5.0),
+  echoed in each response's `method`. With the service unreachable it draws none rather than guess.
+- **A transaction can be unscorable on a normal address.** E7's 422 covers early transactions of a
+  well-covered address too. V3 handles it per transaction: the facts stay, the reason is given, and the
+  next step is the address's first scored day.
+- **Two checkers, one set of vectors.** pytest and Vitest both run `shared/address_vectors.json`, so the
+  browser and the server are shown to accept and reject the same addresses with the same messages.

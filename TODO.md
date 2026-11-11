@@ -38,13 +38,13 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T11 (`fd2d796`) E3 `/addresses`, E4 `POST /lookup`, E5 `/timeline`
 - [x] T12 (`fd2d796`) E6 `/transactions` with filters, sorting and paging; E7 `/transactions/{txid}` (M-02, M-08)
 - [x] T13 (`fd2d796`) Parity tests (API equals `predict.py`) and the wording test over all 28 addresses (M-14)
-- [ ] **MS1** Both tiers start from a fresh clone; E1–E7 answer for all 28 and pass parity; V1–V3 show real data, including the unsupported and short-history states
+- [x] **MS1 passed 11 Nov** (fresh clone, `9adf130`) Both tiers start from a fresh clone; E1–E7 answer for all 28 and pass parity; V1–V3 show real data, including the unsupported and short-history states
 - [~] T14 `@backend-whatif` E8 what-if; E9 curve with the batched feature build plus a parity test against single calls (Mod-5, Mod-6) (M-03, M-04)
 - [~] T15 `@backend-whatif` E10 export (CSV/JSON); E11 `/methods` with the evaluation tables (M-12, M-13)
 
 ## 1.4.3 React front end (13–20 Nov)
 - [x] T16 (`271642a`) Shell: navigation, service-status indicator, theme, toasts, error boundary; settings from E2 (M-05, M-10)
-- [~] T17 `@frontend-views` V1, V2 and V3 on the real API; fixtures recorded; prototype banner and tools removed (M-05). Also: thresholds only from E2 (D-W-10), E2 `features` into `AppSettings`, Vitest reads `shared/address_vectors.json` (un-skip)
+- [x] T17 (`610331d`) V1, V2 and V3 on the real API; fixtures recorded; prototype banner and tools removed (M-05). Also: thresholds only from E2 (D-W-10), E2 `features` into `AppSettings`, Vitest reads `shared/address_vectors.json` (un-skip)
 - [ ] T18 Tabs; filter bar (status, direction, date range); transaction table (M-08)
 - [ ] T19 V4 what-if lab: form, rules, feedback, live request with cancellation (M-06, M-11)
 - [ ] T20 V5 models and limits; V7 about and help (M-13)
@@ -96,6 +96,9 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] Fix the chart owners in `explainers/a3/t05-people-rules.tex` to match the plan (or drop owners from the briefing)
 
 ## Review findings to fix later
+- [ ] Phone: G3 table's Role column clips (T28)
+- [ ] Amount precision differs between explanation and facts (0.0011126 vs 0.00111260)
+- [ ] Verdict table: add each method's threshold once E11 exists; G4 (S-02) explains per-method scales
 - [ ] A2's reason text repeats itself ("…ratio to the usual amount than usual"): fix in the web layer, record in `MODIFICATIONS.md`
 - [ ] A 400 reports only the first validation layer's faults (`pageSize=999&status=bogus` → only `status`)
 - [ ] Plotly range buttons and legend are under 44 px touch targets (T40)
