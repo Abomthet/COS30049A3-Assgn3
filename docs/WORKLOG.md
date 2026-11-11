@@ -79,3 +79,47 @@ docstrings blanked, and `settings.json` with every `_`-prefixed comment key remo
   was **public**; it was switched to **private** before the first push (D-A3-1).
 
 **Open.** Pushing A2's `v1.0` tag (local only for now).
+
+## 2026-11-11 — Wave 1, front end: T04 and T16 reviewed and committed
+
+**Delegated to** the frontend-port cook (Sonnet 5.5, high effort): 68 tool calls, ~13 min.
+**Lead review:** re-ran `npm test` (9 files, **106 passed, 1 skipped**), `npm run typecheck` (clean)
+and `npm run build` (clean; JS **366.6 kB, 120.1 kB gzip**; CSS 25.1 kB). Wording check: no banned
+word in `frontend/src`. One comment corrected (the dev proxy answers 502, not 500). Commits `271642a`
+(the work) and `a4727d0` (rename `screens/` → `views/`, `styles.css` → `styles/base.css`, to match
+the plan's layout; flat `views/` for now, one folder per view when V4–V8 arrive).
+
+**Root cause of the baseline failure.** One import: `src/lib/settings.ts` read
+`../../../config/settings.json`. Every test loads `tests/setup.ts` → the mock → `settings.ts`, so all six
+test files failed at load. Fixed by importing `backend/config/settings.json`; no copy, no alias
+(Vite already allowed the repo root).
+
+**Design notes for the technical document.**
+- **One client, one error type.** A single Axios instance (D-A3-4) owns the base URL, the time limit
+  (`web.requests.timeoutMs`, 10 s) and cancellation. A response interceptor turns every failure into an
+  `ApiError`, so views switch on `error.body.status` and never see Axios. A reply without the service's
+  JSON body (such as the dev proxy's empty 502 while Uvicorn is stopped) is treated as "no answer",
+  not as a server error.
+- **Cancellation by signal.** Every API method takes an `AbortSignal`. `useRequest` aborts on unmount
+  or when its key changes, so a stale answer can never overwrite a newer one. The mock honours the
+  same signal, so tests cover cancellation without a server.
+- **Service status drives recovery.** A provider polls E1 every `healthPollSeconds` (15 s), and at once
+  after any network, timeout or 503 failure. It reports checking, ready, starting or unreachable, each
+  with a next action. When the service is back, views that failed for those reasons reload by
+  themselves: recovery without a click, and without a query library.
+- **Settings: the service first, the bundled file as the floor.** The shell reads E2 at start and
+  after each recovery. Until then it uses the bundled `settings.json`, so limits and the limitation
+  line are always present; only the snapshot details need the service.
+- **Fault isolation.** The error boundary sits inside `<main>` and resets on navigation, so a crash in
+  one view leaves the header, the navigation and the status indicator working.
+- **Preferences** live in one versioned local-storage key (`explorer.preferences.v1`), with a session
+  fallback when storage is blocked. The theme follows the system until the user chooses.
+
+**Choices where the plan was silent** (accepted): default API mode `http` with a same-origin base URL;
+a fourth status `checking` until the first E1 answer; placeholder pages for `#/models`, `#/watchlist`,
+`#/about` so navigation never leads to "not found"; toasts only on a status change.
+
+**Carried to the view work.** Offline banner; 429 countdown; per-call time limit (the Assistant's 90 s);
+`useRequest` keeping the previous data while refreshing; the prototype banner and tools (T17).
+**Contract handshake.** The front end's expected E1/E2/error shapes were sent to the backend cook;
+any difference from the plan is resolved in the plan's favour.

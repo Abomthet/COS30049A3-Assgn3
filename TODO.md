@@ -26,7 +26,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] T01 **[you]** Send the tutor questions and CR-07/CR-08 to the team (Claude drafts them from Appendix A)
 - [~] T02 (repo done; A2 tag waits for you) Tag A2's submitted commit `v1.0` (push needs your OK); `git init` A3 with the plan's layout, `.gitignore`, branch rules
 - [~] T03 `@backend-core` `vendor_a2.py`: copy A2's runtime (`explorer/`, models at `results-v1.1`, settings) into `backend/` with SHA-256 hashes; pinned back-end env; smoke test that loads the `Predictor`
-- [~] T04 `@frontend-port` Copy the A1 prototype (`asm1_demo/frontend` @ `8375cf0`) → `frontend/`; it builds; its 66 tests pass; the client moves to Axios
+- [x] T04 (`271642a`, `a4727d0`) Copy the A1 prototype (`asm1_demo/frontend` @ `8375cf0`) → `frontend/`; it builds; its 66 tests pass; the client moves to Axios
 - [~] T05 `@backend-core` Pydantic schemas for E1–E11 and the error body; export `openapi.json`; check it against `src/api/types.ts`
 - [~] T06 `@backend-core` `web` block in settings; E2 `/api/config`
 
@@ -43,7 +43,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] T15 E10 export (CSV/JSON); E11 `/methods` with the evaluation tables (M-12, M-13)
 
 ## 1.4.3 React front end (13–20 Nov)
-- [~] T16 `@frontend-port` Shell: navigation, service-status indicator, theme, toasts, error boundary; settings from E2 (M-05, M-10)
+- [x] T16 (`271642a`) Shell: navigation, service-status indicator, theme, toasts, error boundary; settings from E2 (M-05, M-10)
 - [ ] T17 V1, V2 and V3 on the real API; fixtures recorded; prototype banner and tools removed (M-05)
 - [ ] T18 Tabs; filter bar (status, direction, date range); transaction table (M-08)
 - [ ] T19 V4 what-if lab: form, rules, feedback, live request with cancellation (M-06, M-11)
