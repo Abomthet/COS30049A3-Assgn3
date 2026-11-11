@@ -1,37 +1,33 @@
-// In-browser stand-in for the FastAPI back end. Same endpoints, same response shapes and
-// the same error codes (400 invalid, 404 unsupported, 422 insufficient history), plus a
-// configurable delay and a simulated network failure so every state can be shown.
+// In-browser stand-in for the FastAPI back end, built from answers recorded from the real service
+// (scripts/record-fixtures.mjs). It has the same endpoints, response shapes and error codes, plus a
+// configurable delay and simulated failures so every state can be shown.
+//
+// Its world is what was recorded: E1 to E3 whole, and for two addresses the timeline, every row and a
+// few transaction details. E6 is computed from the recorded rows (filter, sort, page). Any other
+// address in the list, or an unrecorded transaction, answers 404 `not_found`; an address outside the
+// list answers the recorded `unsupported` body. It always decides with the default method.
 
-import { segwitEncode, validateAddress } from '../../lib/address';
+import { validateAddress } from '../../lib/address';
 import { dayKey, isDayKey } from '../../lib/dates';
-import { FEATURE_IDS, LIMITATION_LINE, WEB, settings, type FeatureId } from '../../lib/settings';
+import { WEB } from '../../lib/settings';
 import {
   ApiError,
   type AddressSummary,
   type AddressesResponse,
-  type ComparisonBasis,
   type ConfigResponse,
-  type DayResponse,
   type ExplorerApi,
-  type FeatureDetail,
-  type FeatureInfo,
-  type FeatureRole,
   type HealthResponse,
   type LookupResponse,
-  type MethodInfo,
   type RequestOptions,
-  type SnapshotInfo,
   type TimelineResponse,
-  type TransactionCore,
   type TransactionDetail,
+  type TransactionQuery,
+  type TransactionRow,
+  type TransactionsResponse,
 } from '../types';
-import { SNAPSHOT_DATE, generateIllustrativeData, type IllustrativeAddress } from './generate';
-import { scoreAddress, type ComparisonWindow, type ScoredTx } from './scoring';
+import { ADDRESSES, CONFIG, HEALTH, RECORDED, UNSUPPORTED, type RecordedAddress } from './fixtures';
 
-const SATS = 100_000_000;
-const iso = (unix: number) => new Date(unix * 1000).toISOString();
-
-/** Mutable so the prototype tools (and tests) can change behaviour at run time. */
+/** Mutable so the tests and the screenshot script can change behaviour at run time. */
 export const mockControls = {
   latencyMs: 600,
   /** No answer at all, as when the back end is stopped. */
@@ -39,66 +35,6 @@ export const mockControls = {
   /** Answers 503 "unavailable" to everything, as the back end does while its models load. */
   starting: false,
 };
-
-interface Entry {
-  info: IllustrativeAddress;
-  txs: ScoredTx[];
-  byTxid: Map<string, ScoredTx>;
-  byDay: Map<string, ScoredTx[]>;
-  summary: AddressSummary;
-}
-
-const METHOD: MethodInfo = {
-  id: 'baseline-robust-z',
-  name: 'Robust z-score baseline',
-  flagAbsZ: settings.baseline.flagAbsZ,
-  contributingAbsZ: settings.baseline.contributingAbsZ,
-  note: 'Prototype placeholder. Assignment 2 compares this baseline with a trained model and fixes the final method and thresholds.',
-};
-
-let db: Map<string, Entry> | null = null;
-
-function getDb(): Map<string, Entry> {
-  if (db) return db;
-  db = new Map();
-  for (const info of generateIllustrativeData()) {
-    const txs = scoreAddress(info.txs);
-    const byDay = new Map<string, ScoredTx[]>();
-    for (const tx of txs) {
-      const key = dayKey(iso(tx.time));
-      byDay.set(key, [...(byDay.get(key) ?? []), tx]);
-    }
-    const history = txs.some((t) => t.scored) ? 'sufficient' : 'insufficient';
-    db.set(info.address, {
-      info,
-      txs,
-      byTxid: new Map(txs.map((t) => [t.txid, t])),
-      byDay,
-      summary: {
-        address: info.address,
-        firstSeen: iso(txs[0].time),
-        lastSeen: iso(txs[txs.length - 1].time),
-        txCount: txs.length,
-        scoredCount: txs.filter((t) => t.scored).length,
-        flaggedCount: txs.filter((t) => t.flagged).length,
-        history,
-      },
-    });
-  }
-  return db;
-}
-
-function snapshotInfo(): SnapshotInfo {
-  return {
-    snapshotDate: SNAPSHOT_DATE,
-    source: settings.source.name,
-    sourceUrl: settings.source.apiDocs,
-    illustrative: true,
-    dayTimeZone: 'UTC',
-    addressCount: getDb().size,
-    method: METHOD,
-  };
-}
 
 const cancelled = () => new ApiError(0, { status: 'cancelled', message: 'The request was cancelled.' });
 
@@ -134,261 +70,89 @@ function respond<T>(work: () => T, opts?: RequestOptions): Promise<T> {
   });
 }
 
-/** Valid and in the snapshot, or throws the matching 400 / 404. */
-function requireAddress(input: string): Entry {
+const invalid = (message: string, hint: string, field: string) =>
+  new ApiError(400, { status: 'invalid', message, hint, fields: [{ name: field, message }] });
+
+/** The normalised address if it is valid and in the list, or throws the matching 400 / 404. */
+function listed(input: string): AddressSummary {
   const check = validateAddress(input);
-  if (!check.ok) throw new ApiError(400, { status: 'invalid', message: check.message, hint: check.hint });
-  const entry = getDb().get(check.address);
-  if (!entry) {
-    throw new ApiError(404, {
-      status: 'unsupported',
-      message: "This is a valid Bitcoin address, but it isn't in the snapshot, so there is no history to show.",
-      examples: [...getDb().values()]
-        .filter((e) => e.summary.history === 'sufficient')
-        .slice(0, 3)
-        .map((e) => e.info.address),
-    });
-  }
-  return entry;
+  if (!check.ok) throw invalid(check.message, check.hint, 'address');
+  const summary = ADDRESSES.addresses.find((a) => a.address === check.address);
+  if (!summary) throw new ApiError(404, UNSUPPORTED);
+  return summary;
 }
 
-function core(entry: Entry, tx: ScoredTx): TransactionCore {
-  return {
-    txid: tx.txid,
-    address: entry.info.address,
-    time: iso(tx.time),
-    blockHeight: tx.blockHeight,
-    direction: tx.netSats > 0 ? 'in' : tx.netSats < 0 ? 'out' : 'none',
-    receivedSats: tx.receivedSats,
-    sentSats: tx.sentSats,
-    netSats: tx.netSats,
-    sourceUrl: null, // illustrative transactions have no public record to link to
+/** Listed, and recorded: the only addresses with a timeline and rows. */
+function requireAddress(input: string): RecordedAddress {
+  const { address } = listed(input);
+  const recorded = RECORDED.find((r) => r.address === address);
+  if (!recorded) throw new ApiError(404, { status: 'not_found', message: 'The mock has no recorded data for this address.' });
+  return recorded;
+}
+
+function checkDay(value: string | undefined, field: string): void {
+  if (value !== undefined && !isDayKey(value)) throw invalid('Dates use the form YYYY-MM-DD.', 'Pick a day from the timeline instead.', field);
+}
+
+/** Unscored rows have no score and sort last whichever way the list is sorted. */
+function compare(sort: NonNullable<TransactionQuery['sort']>): (a: TransactionRow, b: TransactionRow) => number {
+  const key = sort.replace('-', '') as 'time' | 'amount' | 'score';
+  const sign = sort.startsWith('-') ? -1 : 1;
+  const value = (r: TransactionRow) => (key === 'time' ? Date.parse(r.time) : key === 'amount' ? r.netSats : r.score);
+  return (a, b) => {
+    const [x, y] = [value(a), value(b)];
+    if (x === null || y === null) return x === y ? 0 : x === null ? 1 : -1;
+    return sign * (x - y);
   };
 }
 
-function role(z: number | null): FeatureRole {
-  if (z === null) return 'no-comparison';
-  if (Math.abs(z) >= METHOD.flagAbsZ) return 'flag';
-  if (Math.abs(z) >= METHOD.contributingAbsZ) return 'contributing';
-  return 'within-usual';
-}
+function page(recorded: RecordedAddress, query: TransactionQuery): TransactionsResponse {
+  const { date, from, to, status, direction, sort = 'time', page: n = 1, pageSize = WEB.lists.pageSize } = query;
+  checkDay(date, 'date');
+  checkDay(from, 'from');
+  checkDay(to, 'to');
+  if (date !== undefined && (from !== undefined || to !== undefined)) throw invalid('Use either one day or a range of days, not both.', 'Remove date, or remove from and to.', 'date');
+  if (from !== undefined && to !== undefined && from > to) throw invalid('The first day is after the last day.', 'Swap the two dates.', 'from');
+  if (pageSize < 1 || pageSize > WEB.lists.maxPageSize) throw invalid(`The page size must be from 1 to ${WEB.lists.maxPageSize}.`, 'Choose a smaller page.', 'pageSize');
 
-const FEATURE_TEXT: Record<FeatureId, { name: string; description: string }> = {
-  F1: { name: 'Size', description: 'Amount this address moved in the transaction' },
-  F2: { name: 'Burst', description: "The address's transactions in the 7 days before this one" },
-  F3: { name: 'Gap', description: "Time since the address's previous transaction" },
-  F4: { name: 'Relative size', description: "Amount divided by the address's usual amount in the comparison window" },
-};
-
-const FEATURE_UNIT: Record<FeatureId, string> = { F1: 'BTC', F2: 'count', F3: 'hours', F4: 'ratio' };
-
-function featureInfo(): FeatureInfo[] {
-  return FEATURE_IDS.map((id) => ({ id, ...FEATURE_TEXT[id], unit: FEATURE_UNIT[id] }));
-}
-
-function featureDetails(tx: ScoredTx): FeatureDetail[] {
-  const value: Record<FeatureId, number | null> = {
-    F1: Math.abs(tx.netSats) / SATS,
-    F2: tx.features.F2,
-    F3: tx.features.F3,
-    F4: tx.features.F4,
-  };
-  return (['F1', 'F2', 'F3', 'F4'] as FeatureId[]).map((id) => ({
-    id,
-    ...FEATURE_TEXT[id],
-    value: value[id],
-    usual: id === 'F1' && tx.usual.F1 !== null ? tx.usual.F1 / SATS : tx.usual[id],
-    z: tx.z[id],
-    role: role(tx.z[id]),
-  }));
-}
-
-function windowText(w: ComparisonWindow): string {
-  const days = settings.features.comparisonWindowDays;
-  const kind = w.direction === 'in' ? 'incoming ' : w.direction === 'out' ? 'outgoing ' : '';
-  const plural = (n: number) => `${n} ${kind}transaction${n === 1 ? '' : 's'}`;
-  if (w.extended) {
-    return `This address's last ${plural(w.count)} before this one. The ${days} days before it held only ${w.countInWindowDays}, so the comparison reaches further back.`;
-  }
-  return `This address's ${plural(w.count)} in the ${days} days before this one.`;
-}
-
-function comparisonBases(tx: ScoredTx): ComparisonBasis[] {
-  const bases: ComparisonBasis[] = [];
-  const add = (features: FeatureId[], label: string, w: ComparisonWindow | null) => {
-    if (w) bases.push({ features, label, description: windowText(w), txCount: w.count, start: iso(w.start), end: iso(w.end) });
-  };
-  add(['F1', 'F4'], 'Size and relative size', tx.sizeWindow);
-  add(['F2', 'F3'], 'Burst and gap', tx.timingWindow);
-  return bases;
-}
-
-function firstScoredDate(entry: Entry): string | null {
-  const first = entry.txs.find((t) => t.scored);
-  return first ? dayKey(iso(first.time)) : null;
+  const rows = recorded.transactionPages
+    .flatMap((p) => p.transactions)
+    .filter((r) => {
+      const day = dayKey(r.time);
+      return (
+        (date === undefined || day === date) &&
+        (from === undefined || day >= from) &&
+        (to === undefined || day <= to) &&
+        (!status || status.includes(r.status)) &&
+        (!direction || direction.includes(r.direction))
+      );
+    })
+    .sort(compare(sort));
+  return { address: recorded.address, date: date ?? null, transactions: rows.slice((n - 1) * pageSize, n * pageSize), page: n, pageSize, total: rows.length };
 }
 
 export const mockApi: ExplorerApi = {
-  health(opts) {
-    return respond<HealthResponse>(
-      () => ({
-        status: 'ok',
-        version: '0.1.0',
-        snapshotDate: SNAPSHOT_DATE,
-        addressCount: getDb().size,
-        methodCount: 1,
-        assistant: 'off',
-        liveLookup: false,
-        uptimeSeconds: Math.round(performance.now() / 1000),
-      }),
-      opts,
-    );
-  },
+  health: (opts) => respond<HealthResponse>(() => HEALTH, opts),
 
-  config(opts) {
-    return respond<ConfigResponse>(
-      () => ({
-        snapshot: snapshotInfo(),
-        limitationLine: LIMITATION_LINE,
-        features: featureInfo(),
-        history: { minTx: settings.features.minHistoryTx, minSpanDays: settings.features.minHistorySpanDays },
-        thresholds: { flagAbsZ: METHOD.flagAbsZ, contributingAbsZ: METHOD.contributingAbsZ },
-        defaultMethod: METHOD.id,
-        web: WEB,
-        whatIf: { defaultTime: `${SNAPSHOT_DATE}T12:00:00Z` },
-        capabilities: { assistant: false, liveLookup: false },
-      }),
-      opts,
-    );
-  },
+  config: (opts) => respond<ConfigResponse>(() => CONFIG, opts),
 
-  listAddresses(opts) {
-    return respond<AddressesResponse>(
-      () => ({
-        snapshot: snapshotInfo(),
-        addresses: [...getDb().values()].map((e) => e.summary),
-      }),
-      opts,
-    );
-  },
+  listAddresses: (opts) => respond<AddressesResponse>(() => ADDRESSES, opts),
 
-  lookup(address, opts) {
-    return respond<LookupResponse>(() => {
-      const entry = requireAddress(address);
-      return { status: 'supported', address: entry.info.address, summary: entry.summary };
-    }, opts);
-  },
+  lookup: (address, opts) =>
+    respond<LookupResponse>(() => {
+      const summary = listed(address);
+      return { status: 'supported', address: summary.address, summary };
+    }, opts),
 
-  timeline(address, opts) {
-    return respond<TimelineResponse>(() => {
-      const entry = requireAddress(address);
-      const days = [...entry.byDay.entries()].map(([date, txs]) => ({
-        date,
-        txCount: txs.length,
-        flaggedCount: txs.filter((t) => t.flagged).length,
-      }));
-      const first = entry.txs[0];
-      const last = entry.txs[entry.txs.length - 1];
-      return {
-        address: entry.info.address,
-        snapshot: snapshotInfo(),
-        range: { start: days[0].date, end: days[days.length - 1].date },
-        days,
-        totals: {
-          txCount: entry.summary.txCount,
-          scoredCount: entry.summary.scoredCount,
-          flaggedCount: entry.summary.flaggedCount,
-          flaggedDays: days.filter((d) => d.flaggedCount > 0).length,
-        },
-        history: {
-          status: entry.summary.history,
-          txCount: entry.txs.length,
-          spanDays: Math.round((last.time - first.time) / 86_400),
-          required: { minTx: settings.features.minHistoryTx, minSpanDays: settings.features.minHistorySpanDays },
-          firstScoredDate: firstScoredDate(entry),
-        },
-      };
-    }, opts);
-  },
+  timeline: (address, opts) => respond<TimelineResponse>(() => requireAddress(address).timeline, opts),
 
-  day(address, date, opts) {
-    return respond<DayResponse>(() => {
-      const entry = requireAddress(address);
-      if (!isDayKey(date)) {
-        throw new ApiError(400, { status: 'invalid', message: 'Dates use the form YYYY-MM-DD.', hint: 'Pick a day from the timeline instead.' });
-      }
-      return {
-        address: entry.info.address,
-        date,
-        transactions: (entry.byDay.get(date) ?? []).map((tx) => ({
-          txid: tx.txid,
-          time: iso(tx.time),
-          direction: tx.netSats > 0 ? 'in' : tx.netSats < 0 ? 'out' : 'none',
-          netSats: tx.netSats,
-          status: !tx.scored ? 'not-scored' : tx.flagged ? 'flagged' : 'not-flagged',
-        })),
-      };
-    }, opts);
-  },
+  transactions: (address, query, opts) => respond<TransactionsResponse>(() => page(requireAddress(address), query), opts),
 
-  transaction(txid, address, opts) {
-    return respond<TransactionDetail>(() => {
-      const entry = requireAddress(address);
-      const tx = entry.byTxid.get(txid.toLowerCase());
-      if (!tx) {
-        throw new ApiError(404, { status: 'not_found', message: 'This transaction is not in the snapshot for this address.' });
-      }
-      if (!tx.scored) {
-        throw new ApiError(422, {
-          status: 'insufficient_history',
-          message: 'Not enough earlier history to score this transaction.',
-          transaction: core(entry, tx),
-          history: {
-            earlierTx: tx.earlierCount,
-            spanDays: Math.floor(tx.historySpanDays),
-            required: { minTx: settings.features.minHistoryTx, minSpanDays: settings.features.minHistorySpanDays },
-          },
-          firstScoredDate: firstScoredDate(entry),
-        });
-      }
-      return {
-        ...core(entry, tx),
-        scored: true,
-        flagged: tx.flagged,
-        score: tx.score,
-        method: METHOD,
-        features: featureDetails(tx),
-        comparison: comparisonBases(tx),
-        limitation: LIMITATION_LINE,
-      };
-    }, opts);
-  },
+  transaction: (txid, address, opts) =>
+    respond<TransactionDetail>(() => {
+      const recorded = requireAddress(address).details[txid.toLowerCase()];
+      if (recorded?.status === 200) return recorded.body;
+      if (recorded?.status === 422) throw new ApiError(422, recorded.body);
+      throw new ApiError(404, { status: 'not_found', message: "This transaction is not one of this address's transactions in the snapshot." });
+    }, opts),
 };
-
-/** Profiles of the illustrative addresses, for the prototype tools panel and the tests. */
-export function illustrativeProfiles(): Array<{ address: string; profile: string; history: 'sufficient' | 'insufficient' }> {
-  return [...getDb().values()].map((e) => ({ address: e.info.address, profile: e.info.profile, history: e.summary.history }));
-}
-
-/** Ready-made inputs for walkthroughs and screenshots: each one triggers a specific state. */
-export function prototypeExamples() {
-  const entries = [...getDb().values()];
-  const main = entries.find((e) => e.summary.history === 'sufficient')!;
-  const short = entries.find((e) => e.summary.history === 'insufficient')!;
-  const last = main.info.address.slice(-1);
-  const flaggedTx = main.txs.filter((t) => t.flagged).sort((a, b) => b.score - a.score)[0];
-  const shortTx = short.txs[short.txs.length - 1];
-  const ref = (e: Entry, t: ScoredTx) => ({ address: e.info.address, date: dayKey(iso(t.time)), txid: t.txid });
-  return {
-    /** A supported address with its last character changed: fails the checksum (invalid). */
-    typo: main.info.address.slice(0, -1) + (last === 'q' ? 'p' : 'q'),
-    /** A valid, correctly checksummed address that is not in the snapshot (unsupported). */
-    unsupported: segwitEncode(0, Uint8Array.from({ length: 20 }, (_, i) => (i * 73 + 29) % 256)),
-    mainAddress: main.info.address,
-    shortHistory: short.info.address,
-    /** The most unusual transaction of the first address. */
-    flagged: ref(main, flaggedTx),
-    /** A transaction of a short-history address (422 insufficient history). */
-    notScored: ref(short, shortTx),
-  };
-}

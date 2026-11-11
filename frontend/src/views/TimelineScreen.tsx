@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { api } from '../api/client';
-import type { TimelineResponse } from '../api/types';
+import type { TimelineDay, TimelineResponse } from '../api/types';
 import { G1DailyActivity } from '../charts/G1DailyActivity';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { CopyButton } from '../components/CopyButton';
@@ -8,13 +9,18 @@ import { Icon } from '../components/Icon';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Loading, StatePanel } from '../components/StatePanel';
 import { KIND_LABEL, validateAddress } from '../lib/address';
-import { dayCount, formatDay, formatDayRange } from '../lib/dates';
-import { formatCount, plural, shortAddress } from '../lib/format';
+import { dayCount, dayKey, formatDay, formatDayRange } from '../lib/dates';
+import { formatCount, formatSpanDays, plural, shortAddress } from '../lib/format';
 import { navigate, paths } from '../lib/router';
 import { useRequest } from '../hooks/useRequest';
+import { useSettings } from '../hooks/useSettings';
 
 // Screen 2 — the address's daily timeline (FR-02, AC-01): date range, source and snapshot,
 // counts per day with flagged days marked, and a keyboard path to every flagged day.
+// E5 supplies the days and totals; E6 supplies the strongest reason on each flagged day.
+
+/** Flagged days listed before "Show all" (plan section 8, V2). */
+const DAYS_SHOWN = 8;
 
 export function TimelineScreen({ address }: { address: string }) {
   useDocumentTitle(`Activity for ${shortAddress(address)}`);
@@ -44,7 +50,8 @@ function Timeline({ data }: { data: TimelineResponse }) {
   const kind = validateAddress(data.address);
   const flaggedDays = data.days.filter((d) => d.flaggedCount > 0);
   const insufficient = data.history.status === 'insufficient';
-  const spanDays = dayCount(data.range.start, data.range.end);
+  const [first, last] = [dayKey(data.range.start), dayKey(data.range.end)];
+  const spanDays = dayCount(first, last);
   const open = (date: string) => navigate(paths.day(data.address, date));
 
   return (
@@ -69,7 +76,7 @@ function Timeline({ data }: { data: TimelineResponse }) {
         <div className="stat">
           <dt>Active</dt>
           <dd>
-            {formatDayRange(data.range.start, data.range.end)}
+            {formatDayRange(first, last)}
             <span className="stat-sub">{plural(spanDays, 'calendar day')}</span>
           </dd>
         </div>
@@ -114,7 +121,7 @@ function Timeline({ data }: { data: TimelineResponse }) {
           <p>
             A transaction is only scored once the address has at least {data.history.required.minTx} earlier transactions
             over at least {data.history.required.minSpanDays} days. This address has{' '}
-            {plural(data.history.txCount, 'transaction')} over {plural(data.history.spanDays, 'day')}, so there is nothing
+            {plural(data.history.txCount, 'transaction')} spanning {formatSpanDays(data.history.spanDays)}, so there is nothing
             reliable to compare against yet. Its transactions are listed but none is marked unusual.
           </p>
         </StatePanel>
@@ -125,37 +132,62 @@ function Timeline({ data }: { data: TimelineResponse }) {
           <G1DailyActivity timeline={data} onOpenDay={open} />
         </div>
 
-        <section className="card flagged-card" aria-labelledby="flagged-title">
-          <h2 id="flagged-title">Days with unusual transactions</h2>
-          {flaggedDays.length > 0 ? (
-            <>
-              <p className="card-sub">
-                {plural(flaggedDays.length, 'day')}, newest first. Open one to see which transactions stand out and why.
-              </p>
-              <ul className="day-list">
-                {[...flaggedDays].reverse().map((d) => (
-                  <li key={d.date}>
-                    <a className="day-link" href={paths.day(data.address, d.date)}>
-                      <Icon name="flag" className="flag-icon" />
-                      <span className="day-link-date">{formatDay(d.date)}</span>
-                      <span className="day-link-count">
-                        {d.flaggedCount} of {plural(d.txCount, 'transaction')}
-                      </span>
-                      <Icon name="chevron-right" className="day-link-arrow" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <p className="card-sub">
-              {insufficient
-                ? 'None: this address has too little history to score.'
-                : 'None: no transaction on this address reached the flag level.'}
-            </p>
-          )}
-        </section>
+        <FlaggedDays address={data.address} days={flaggedDays} insufficient={insufficient} />
       </div>
     </>
+  );
+}
+
+function FlaggedDays({ address, days, insufficient }: { address: string; days: TimelineDay[]; insufficient: boolean }) {
+  const { settings } = useSettings();
+  const [showAll, setShowAll] = useState(false);
+  // The strongest flagged transactions first, so the first row met for a day gives its reason.
+  const flagged = useRequest(days.length > 0 ? `flagged:${address}` : null, (signal) =>
+    api.transactions(address, { status: ['flagged'], sort: '-score', pageSize: settings.web.lists.maxPageSize }, { signal }),
+  );
+  const reasons = new Map<string, string>();
+  if (flagged.status === 'success') {
+    for (const row of flagged.data.transactions) {
+      if (row.mainReason && !reasons.has(dayKey(row.time))) reasons.set(dayKey(row.time), row.mainReason);
+    }
+  }
+  const newestFirst = [...days].reverse();
+  const shown = showAll ? newestFirst : newestFirst.slice(0, DAYS_SHOWN);
+
+  return (
+    <section className="card flagged-card" aria-labelledby="flagged-title">
+      <h2 id="flagged-title">Days with unusual transactions</h2>
+      {days.length > 0 ? (
+        <>
+          <p className="card-sub">
+            {plural(days.length, 'day')}, newest first. Open one to see which transactions stand out and why.
+          </p>
+          <ul className="day-list">
+            {shown.map((d) => (
+              <li key={d.date}>
+                <a className="day-link" href={paths.day(address, d.date)}>
+                  <Icon name="flag" className="flag-icon" />
+                  <span className="day-link-date">{formatDay(d.date)}</span>
+                  <span className="day-link-count">
+                    {d.flaggedCount} of {plural(d.txCount, 'transaction')}
+                    {reasons.has(d.date) ? ` · ${reasons.get(d.date)}` : ''}
+                  </span>
+                  <Icon name="chevron-right" className="day-link-arrow" />
+                </a>
+              </li>
+            ))}
+          </ul>
+          {days.length > DAYS_SHOWN ? (
+            <button type="button" className="btn btn-secondary show-all" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>
+              {showAll ? 'Show fewer days' : `Show all ${days.length} days`}
+            </button>
+          ) : null}
+        </>
+      ) : (
+        <p className="card-sub">
+          {insufficient ? 'None: this address has too little history to score.' : 'None: no transaction on this address reached the flag level.'}
+        </p>
+      )}
+    </section>
   );
 }

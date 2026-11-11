@@ -1,19 +1,36 @@
-// The API contract (report §2.6). The prototype's mock and the future FastAPI back end
-// both return exactly these shapes, so switching from one to the other changes no screen code.
+// The API contract (plan section 6). The FastAPI back end (backend/openapi.json is the authority)
+// and the mock built from its recorded answers return exactly these shapes, so switching from one
+// to the other changes no screen code.
 //
-//   GET  /api/health                                     -> HealthResponse | 503 ServiceBody (unavailable)
-//   GET  /api/config                                     -> ConfigResponse
-//   GET  /api/addresses                                  -> AddressesResponse
-//   POST /api/lookup            {address}                -> LookupResponse | 400 InvalidBody | 404 UnsupportedBody
-//   GET  /api/addresses/{address}/timeline               -> TimelineResponse | 404
-//   GET  /api/addresses/{address}/transactions?date=     -> DayResponse | 400 | 404
-//   GET  /api/transactions/{txid}?address=               -> TransactionDetail | 404 | 422 InsufficientHistoryBody
+//   GET  /api/health                                  -> HealthResponse | 503 ServiceBody (unavailable)
+//   GET  /api/config                                  -> ConfigResponse
+//   GET  /api/addresses                               -> AddressesResponse
+//   POST /api/lookup            {address}             -> LookupResponse | 400 InvalidBody | 404 UnsupportedBody
+//   GET  /api/addresses/{address}/timeline            -> TimelineResponse | 400 | 404 UnsupportedBody
+//   GET  /api/addresses/{address}/transactions?...    -> TransactionsResponse | 400 | 404 UnsupportedBody
+//   GET  /api/transactions/{txid}?address=            -> TransactionDetail | 400 | 404 UnsupportedBody or NotFoundBody
+//                                                        | 422 InsufficientHistoryBody
 //
 // Times are ISO 8601 in UTC; days are 'YYYY-MM-DD' in UTC; amounts are integer satoshis.
 
+import type { AddressKind } from '../lib/address';
 import type { FeatureId } from '../lib/settings';
 
 export type Direction = 'in' | 'out' | 'none';
+
+/** The nine methods; the deciding one (default `baseline`) sets the flags and scores of E3 to E6. */
+export type MethodId =
+  | 'baseline'
+  | 'isolation_forest'
+  | 'lof'
+  | 'kmeans'
+  | 'dbscan'
+  | 'regression'
+  | 'regression_interval'
+  | 'fusion'
+  | 'txgpt_method';
+
+export type DataSource = 'snapshot' | 'live';
 
 export interface SnapshotInfo {
   snapshotDate: string;
@@ -26,7 +43,7 @@ export interface SnapshotInfo {
 }
 
 export interface MethodInfo {
-  id: string;
+  id: MethodId;
   name: string;
   flagAbsZ: number;
   contributingAbsZ: number;
@@ -46,6 +63,9 @@ export interface AddressSummary {
   scoredCount: number;
   flaggedCount: number;
   history: 'sufficient' | 'insufficient';
+  /** The address type; `segwit` is a witness version the checker does not name. */
+  kind: AddressKind;
+  source: DataSource;
 }
 
 export interface AddressesResponse {
@@ -68,6 +88,7 @@ export interface TimelineDay {
 export interface TimelineResponse {
   address: string;
   snapshot: SnapshotInfo;
+  /** The first and last transaction time (ISO 8601), not day keys. */
   range: { start: string; end: string };
   /** Only days with at least one transaction, oldest first. */
   days: TimelineDay[];
@@ -75,6 +96,7 @@ export interface TimelineResponse {
   history: {
     status: 'sufficient' | 'insufficient';
     txCount: number;
+    /** Fractional: 0.4 means under a day. */
     spanDays: number;
     required: HistoryRequirement;
     firstScoredDate: string | null;
@@ -89,12 +111,41 @@ export interface TransactionRow {
   direction: Direction;
   netSats: number;
   status: ScoreStatus;
+  /** The deciding method's score; null when not scored. */
+  score: number | null;
+  /** The template's strongest reason, such as "Longer gap than usual"; null when not scored. */
+  mainReason: string | null;
+  mainZ: number | null;
+  /** How many of the nine methods flag it. */
+  flaggedBy: number;
 }
 
-export interface DayResponse {
+export type SortKey = 'time' | 'amount' | 'score';
+
+/** E6's query. `status` and `direction` may repeat; a leading `-` on `sort` reverses it. */
+export interface TransactionQuery {
+  /** One UTC day; not together with `from` or `to`. */
+  date?: string;
+  from?: string;
+  to?: string;
+  status?: ScoreStatus[];
+  direction?: Direction[];
+  sort?: SortKey | `-${SortKey}`;
+  method?: MethodId;
+  /** From 1. */
+  page?: number;
+  /** Default 50, at most 200. */
+  pageSize?: number;
+}
+
+/** E6: a filtered, sorted page of rows. */
+export interface TransactionsResponse {
   address: string;
-  date: string;
+  date: string | null;
   transactions: TransactionRow[];
+  page: number;
+  pageSize: number;
+  total: number;
 }
 
 /** The facts every transaction has, scored or not (FR-03). */
@@ -107,7 +158,7 @@ export interface TransactionCore {
   receivedSats: number;
   sentSats: number;
   netSats: number;
-  /** Public block-explorer page; null for illustrative data, which has no public record. */
+  /** Public block-explorer page; null for a hypothetical transaction. */
   sourceUrl: string | null;
 }
 
@@ -118,7 +169,7 @@ export interface FeatureDetail {
   name: string;
   /** What the feature measures, in plain words. */
   description: string;
-  /** Value in human units: BTC for F1, count for F2, hours for F3, ratio for F4. */
+  /** Value in the units E2 names for the feature: BTC, count, hours or ratio. */
   value: number | null;
   /** Median of the comparison window, same units as value. */
   usual: number | null;
@@ -144,6 +195,13 @@ export interface TransactionDetail extends TransactionCore {
   features: FeatureDetail[];
   comparison: ComparisonBasis[];
   limitation: string;
+  /** The template's text, line by line; on a flagged item it ends with the limitation line. */
+  explanation: string;
+  /** Every method's score; null where a method cannot score this transaction. */
+  scores: Record<MethodId, number | null>;
+  /** Every method's flag. */
+  flags: Record<MethodId, boolean>;
+  source: DataSource;
 }
 
 // ------------------------------------------------------------------ error bodies
@@ -155,24 +213,29 @@ export interface FieldError {
 
 /** Keys any error body may carry (plan section 6, "The error body"). */
 export interface ErrorExtras {
-  hint?: string;
+  hint?: string | null;
   fields?: FieldError[];
   /** Matches the server's log line; shown with a 500 so it can be quoted. */
   requestId?: string;
 }
 
+/** 400, and 415 (a body that is not JSON). */
 export interface InvalidBody extends ErrorExtras {
   status: 'invalid';
   message: string;
-  hint: string;
 }
 
+/** 404 for a valid address the service cannot open. */
 export interface UnsupportedBody extends ErrorExtras {
   status: 'unsupported';
   message: string;
+  /** Three addresses that can be opened. */
   examples: string[];
+  /** Whether a live lookup (S-09) is switched on. */
+  canLookupLive: boolean;
 }
 
+/** 422 from E7: an address with too little history, or an early transaction of a normal one. */
 export interface InsufficientHistoryBody extends ErrorExtras {
   status: 'insufficient_history';
   message: string;
@@ -181,6 +244,7 @@ export interface InsufficientHistoryBody extends ErrorExtras {
   firstScoredDate: string | null;
 }
 
+/** 404 for a transaction that is not one of the address's. */
 export interface NotFoundBody extends ErrorExtras {
   status: 'not_found';
   message: string;
@@ -192,7 +256,7 @@ export type ServiceStatusCode =
   | 'rate_limited' // 429
   | 'server_error' // 500
   | 'conflict' // 409
-  | 'too_large' // 413
+  | 'too_large' // 413: a request body over the size limit
   | 'disabled' // 403
   | 'upstream_error' // 502
   | 'upstream_timeout'; // 504
@@ -267,12 +331,13 @@ export interface WebSettings {
   limits: { maxBodyBytes: number; maxAddressChars: number };
 }
 
+export type FeatureUnit = 'BTC' | 'count' | 'hours' | 'ratio';
+
 export interface FeatureInfo {
   id: FeatureId;
   name: string;
   description: string;
-  /** 'BTC', 'count', 'hours' or 'ratio'. */
-  unit: string;
+  unit: FeatureUnit;
 }
 
 /** E2: everything the front end would otherwise hard-code. */
@@ -281,21 +346,25 @@ export interface ConfigResponse {
   limitationLine: string;
   features: FeatureInfo[];
   history: HistoryRequirement;
+  /** The flag line is the tuned threshold saved with the model (decision D-W-10), not settings.json's baseline value. */
   thresholds: { flagAbsZ: number; contributingAbsZ: number };
   /** The id of the method used when a request names none. */
-  defaultMethod: string;
+  defaultMethod: MethodId;
   web: WebSettings;
   whatIf: { defaultTime: string };
   capabilities: { assistant: boolean; liveLookup: boolean };
 }
 
 /**
- * What the shell and views read. E2's answer satisfies it as it is; when the service is
- * unreachable the bundled settings.json supplies everything except the snapshot (known only to the
- * service) and reports every optional capability as off.
+ * What the shell and views read. E2's answer satisfies it as it is. When the service is
+ * unreachable the bundled settings.json supplies the limitation line, the history rule and the
+ * `web` limits and reports every optional capability as off; the snapshot, the feature list and the
+ * flag line are known only to the service, so they are absent (no flag line is drawn).
  */
-export type AppSettings = Pick<ConfigResponse, 'limitationLine' | 'history' | 'thresholds' | 'web' | 'capabilities'> & {
+export type AppSettings = Pick<ConfigResponse, 'limitationLine' | 'history' | 'web' | 'capabilities'> & {
   snapshot: SnapshotInfo | null;
+  features: FeatureInfo[];
+  thresholds: ConfigResponse['thresholds'] | null;
 };
 
 /** Options every call accepts. Aborting the signal cancels the request in flight. */
@@ -309,6 +378,6 @@ export interface ExplorerApi {
   listAddresses(opts?: RequestOptions): Promise<AddressesResponse>;
   lookup(address: string, opts?: RequestOptions): Promise<LookupResponse>;
   timeline(address: string, opts?: RequestOptions): Promise<TimelineResponse>;
-  day(address: string, date: string, opts?: RequestOptions): Promise<DayResponse>;
+  transactions(address: string, query: TransactionQuery, opts?: RequestOptions): Promise<TransactionsResponse>;
   transaction(txid: string, address: string, opts?: RequestOptions): Promise<TransactionDetail>;
 }

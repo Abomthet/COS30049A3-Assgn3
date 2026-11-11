@@ -27,6 +27,10 @@ beforeAll(async () => {
           return json(res, 200, { hello: 'world' });
         case '/api/invalid':
           return json(res, 400, { status: 'invalid', message: 'Bad.', hint: 'Fix it.', requestId: 'abc123' });
+        case '/api/too-large':
+          return json(res, 413, { status: 'too_large', message: 'Too big.', hint: 'Send less.', requestId: 'big1' });
+        case '/api/not-json': // 415 is an `invalid` body
+          return json(res, 415, { status: 'invalid', message: 'The request body must be JSON.', requestId: 'nj1' });
         case '/api/starting':
           return json(res, 503, { status: 'unavailable', message: 'Loading.' });
         case '/api/proxy-error': // what Vite answers when the back end is stopped
@@ -77,6 +81,11 @@ describe('createHttpClient', () => {
     expect(error.body).toEqual({ status: 'invalid', message: 'Bad.', hint: 'Fix it.', requestId: 'abc123' });
   });
 
+  test('keeps a 413 too_large and a 415, which the service reports as invalid', async () => {
+    expect(await failureOf(client().get('/api/too-large'))).toMatchObject({ status: 413, body: { status: 'too_large', message: 'Too big.' } });
+    expect(await failureOf(client().get('/api/not-json'))).toMatchObject({ status: 415, body: { status: 'invalid' } });
+  });
+
   test('keeps a 503 unavailable, which means "starting"', async () => {
     const error = await failureOf(client().get('/api/starting'));
     expect(error).toMatchObject({ status: 503, body: { status: 'unavailable' } });
@@ -125,11 +134,27 @@ describe('createHttpApi', () => {
     expect(lastRequest).toMatchObject({ method: 'GET', url: '/api/config' });
   });
 
-  test('path segments are encoded and the day goes in the query string', async () => {
-    await api().day('bc1q/odd', '2026-01-02');
+  test('path segments are encoded and E6 and E7 take their parameters in the query string', async () => {
+    await api().transactions('bc1q/odd', { date: '2026-01-02' });
     expect(lastRequest.url).toBe('/api/addresses/bc1q%2Fodd/transactions?date=2026-01-02');
     await api().transaction('abc', 'addr');
     expect(lastRequest.url).toBe('/api/transactions/abc?address=addr');
+  });
+
+  test('E6 repeats a repeatable parameter (?status=a&status=b), not status[]=a, and leaves out what is not set', async () => {
+    await api().transactions('addr', {
+      status: ['flagged', 'not-scored'],
+      direction: ['out'],
+      sort: '-score',
+      from: '2026-01-01',
+      to: '2026-02-01',
+      page: 2,
+      pageSize: 200,
+      method: undefined,
+    });
+    expect(lastRequest.url).toBe(
+      '/api/addresses/addr/transactions?status=flagged&status=not-scored&direction=out&sort=-score&from=2026-01-01&to=2026-02-01&page=2&pageSize=200',
+    );
   });
 
   test('lookup posts the address as JSON', async () => {

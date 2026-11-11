@@ -4,12 +4,12 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { App } from '../src/App';
-import { mockControls, prototypeExamples } from '../src/api/mock/mockApi';
+import { mockControls } from '../src/api/mock/mockApi';
+import ex from '../src/api/mock/fixtures/examples.json';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { ToastProvider, useToasts } from '../src/hooks/useToasts';
 import { LIMITATION_LINE, settings } from '../src/lib/settings';
 
-const ex = prototypeExamples();
 const banned = new RegExp(`\\b(${settings.bannedWords.join('|')})`, 'i');
 
 function start(hash = '#/') {
@@ -124,7 +124,7 @@ describe('service status', () => {
 describe('settings from E2', () => {
   test('the header and footer show what the service says', async () => {
     start();
-    expect(await screen.findByText(/Snapshot of 5 Oct 2026 · Blockstream Esplora · days in UTC/)).toBeInTheDocument();
+    expect(await screen.findByText(/Snapshot of 22 Oct 2026 · Blockstream Esplora · days in UTC/)).toBeInTheDocument();
     expect(screen.getByRole('contentinfo')).toHaveTextContent(LIMITATION_LINE);
   });
 
@@ -143,7 +143,7 @@ describe('settings from E2', () => {
     await screen.findByText('Service not responding');
     mockControls.offline = false;
     await user.click(screen.getByRole('button', { name: 'Check again' }));
-    expect(await screen.findByText(/Snapshot of 5 Oct 2026/)).toBeInTheDocument();
+    expect(await screen.findByText(/Snapshot of 22 Oct 2026/)).toBeInTheDocument();
   });
 });
 

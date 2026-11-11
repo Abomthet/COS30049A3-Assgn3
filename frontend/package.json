@@ -2,7 +2,7 @@
   "name": "bitcoin-address-activity-explorer",
   "private": true,
   "version": "0.1.0",
-  "description": "Front end for the Bitcoin Address Activity Explorer (COS30049). Runs on illustrative data until the FastAPI back end exists.",
+  "description": "Front end for the Bitcoin Address Activity Explorer (COS30049), over the FastAPI back end.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "screenshots": "node scripts/screenshots.mjs"
+    "screenshots": "node scripts/screenshots.mjs",
+    "fixtures": "node scripts/record-fixtures.mjs"
   },
   "engines": {
     "node": ">=22"

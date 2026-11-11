@@ -6,7 +6,9 @@ import type { ExplorerApi, RequestOptions } from './types';
 
 export function createHttpApi(client: AxiosInstance): ExplorerApi {
   const enc = encodeURIComponent;
-  const get = <T>(url: string, opts?: RequestOptions, params?: Record<string, string>) =>
+  // `params` may hold arrays (E6's repeatable `status` and `direction`); the client serialises them
+  // as repeated keys, and leaves out any key whose value is undefined.
+  const get = <T>(url: string, opts?: RequestOptions, params?: object) =>
     client.get<T>(url, { signal: opts?.signal, params }).then((r) => r.data);
   const post = <T>(url: string, body: unknown, opts?: RequestOptions) =>
     client.post<T>(url, body, { signal: opts?.signal }).then((r) => r.data);
@@ -17,7 +19,7 @@ export function createHttpApi(client: AxiosInstance): ExplorerApi {
     listAddresses: (opts) => get('/api/addresses', opts),
     lookup: (address, opts) => post('/api/lookup', { address }, opts),
     timeline: (address, opts) => get(`/api/addresses/${enc(address)}/timeline`, opts),
-    day: (address, date, opts) => get(`/api/addresses/${enc(address)}/transactions`, opts, { date }),
+    transactions: (address, query, opts) => get(`/api/addresses/${enc(address)}/transactions`, opts, query),
     transaction: (txid, address, opts) => get(`/api/transactions/${enc(txid)}`, opts, { address }),
   };
 }

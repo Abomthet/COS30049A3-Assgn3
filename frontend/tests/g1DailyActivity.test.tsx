@@ -1,17 +1,17 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import { mockApi, prototypeExamples } from '../src/api/mock/mockApi';
+import { mockApi } from '../src/api/mock/mockApi';
+import ex from '../src/api/mock/fixtures/examples.json';
 import type { TimelineResponse } from '../src/api/types';
 import { G1DailyActivity } from '../src/charts/G1DailyActivity';
+import { dayKey } from '../src/lib/dates';
 import { paths } from '../src/lib/router';
 import { settings } from '../src/lib/settings';
 import { fakePlotly } from './plotlyFake';
 
 // G1 builds its figure from E5's per-day counts. These tests read the figure it passes to
 // Plotly: the marks, the range controls, the padding, the click and the keyboard.
-
-const ex = prototypeExamples();
 
 const timeline = (address = ex.mainAddress) => mockApi.timeline(address);
 
@@ -24,7 +24,7 @@ async function draw(data: TimelineResponse, onOpenDay = vi.fn()) {
 /** A timeline with the given days (txCount, flaggedCount) and range, for the edge cases. */
 function withDays(base: TimelineResponse, days: Array<[string, number, number]>, range?: { start: string; end: string }): TimelineResponse {
   const rows = days.map(([date, txCount, flaggedCount]) => ({ date, txCount, flaggedCount }));
-  return { ...base, days: rows, range: range ?? { start: rows[0].date, end: rows[rows.length - 1].date } };
+  return { ...base, days: rows, range: range ?? { start: `${rows[0].date}T08:15:00Z`, end: `${rows[rows.length - 1].date}T17:40:00Z` } };
 }
 
 describe('the marks', () => {
@@ -96,8 +96,9 @@ describe('the axes and range controls', () => {
     expect(rangeselector.buttons.map((b: any) => [b.count, b.step])).toEqual([[1, 'month'], [3, 'month'], [6, 'month'], [1, 'year'], [undefined, 'all']]);
     expect(rangeslider.visible).toBe(true);
     expect(rangeslider.range).toEqual(range);
-    expect(range[0] < `${data.range.start} 00:00:00`).toBe(true);
-    expect(range[1] > `${data.range.end} 00:00:00`).toBe(true);
+    // E5 gives the range as times; the axis is drawn from their days.
+    expect(range[0] <= `${dayKey(data.range.start)} 00:00:00`).toBe(true);
+    expect(range[1] >= `${dayKey(data.range.end)} 00:00:00`).toBe(true);
   });
 
   test('a history shorter than 21 days is padded to 21 days, as in the prototype', async () => {
@@ -138,7 +139,7 @@ describe('the words around the chart', () => {
     const data = await timeline(ex.flagged.address);
     await draw(data);
     expect(screen.getByRole('heading', { level: 2, name: 'Transactions per day' })).toBeInTheDocument();
-    expect(screen.getByText(/Data: .*snapshot of 5 Oct 2026.*days in UTC/)).toBeInTheDocument();
+    expect(screen.getByText(/Data: .*snapshot of 22 Oct 2026.*days in UTC/)).toBeInTheDocument();
     const flaggedDays = data.days.filter((d) => d.flaggedCount > 0).length;
     expect(screen.getByRole('group', { name: new RegExp(`Bar chart of transactions per day from .*: ${data.days.length} days with activity, ${flaggedDays} days with unusual transactions`) })).toBeInTheDocument();
     expect(screen.getByText(/Select a bar to open that day/)).toBeInTheDocument();

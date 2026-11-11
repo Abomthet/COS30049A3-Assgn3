@@ -1,17 +1,9 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { prototypeExamples } from '../src/api/mock/mockApi';
 import { settings } from '../src/lib/settings';
-import targets from '../scripts/screenshot-targets.json';
 
-describe('prototype housekeeping', () => {
-  test('the screenshot targets match the illustrative data', () => {
-    const { _about, ...rest } = targets;
-    expect(_about).toBeTruthy();
-    expect(rest).toEqual(prototypeExamples());
-  });
-
+describe('wording', () => {
   // NFR-01 pass condition 3: none of the banned words appears anywhere in the interface source.
   test('wording check: no banned words in the front-end source', () => {
     const root = join(__dirname, '..', 'src');

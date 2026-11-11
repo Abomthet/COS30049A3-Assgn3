@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import type { Data } from 'plotly.js';
 import type { TimelineDay, TimelineResponse } from '../api/types';
-import { addDays, dayCount, formatDay } from '../lib/dates';
+import { addDays, dayCount, dayKey, formatDay } from '../lib/dates';
 import { plural } from '../lib/format';
 import { paths } from '../lib/router';
 import { snapshotCaption } from './caption';
@@ -40,10 +40,11 @@ const hoverText = (day: TimelineDay) =>
 
 /** Everything about the data that does not depend on the theme or the size. */
 function buildModel({ days, range }: Pick<TimelineResponse, 'days' | 'range'>) {
-  // The padded span of the axis.
-  const pad = Math.max(0, Math.ceil((MIN_AXIS_DAYS - dayCount(range.start, range.end)) / 2));
-  const start = addDays(range.start, -pad);
-  const end = addDays(range.end, pad);
+  // The padded span of the axis. E5 gives the range as the first and last transaction time.
+  const [first, last] = [dayKey(range.start), dayKey(range.end)];
+  const pad = Math.max(0, Math.ceil((MIN_AXIS_DAYS - dayCount(first, last)) / 2));
+  const start = addDays(first, -pad);
+  const end = addDays(last, pad);
 
   // One bar trace per kind of day; a kind with no days has no trace, so no empty legend entry.
   const kinds: Group[] = (['ordinary', 'unusual'] as const).filter((g) => days.some((d) => groupOf(d) === g));
@@ -174,7 +175,7 @@ export function G1DailyActivity({ timeline, onOpenDay }: Props) {
   );
 
   const flaggedDays = days.filter((d) => d.flaggedCount > 0).length;
-  const summary = `Bar chart of transactions per day from ${formatDay(range.start)} to ${formatDay(range.end)}: ${plural(days.length, 'day')} with activity, ${plural(flaggedDays, 'day')} with unusual transactions.`;
+  const summary = `Bar chart of transactions per day from ${formatDay(dayKey(range.start))} to ${formatDay(dayKey(range.end))}: ${plural(days.length, 'day')} with activity, ${plural(flaggedDays, 'day')} with unusual transactions.`;
 
   return (
     <PlotlyChart

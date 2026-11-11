@@ -1,10 +1,12 @@
-// The mock must honour the same contract the FastAPI back end will (report §2.6, FR-05):
-// 400 invalid, 404 unsupported/not found, 422 insufficient history, and consistent totals.
+// The mock is a copy of the real service's recorded answers (scripts/record-fixtures.mjs), so it must
+// honour the same contract: 400 invalid, 404 unsupported / not found, 422 insufficient history, the
+// tuned flag line from E2, and E6's filters, sorting and paging computed from the recorded rows.
 import { describe, expect, test } from 'vitest';
-import { illustrativeProfiles, mockApi, mockControls, prototypeExamples } from '../src/api/mock/mockApi';
-import { ApiError, type ApiErrorBody } from '../src/api/types';
-import { reasonsFor } from '../src/lib/explain';
-import { LIMITATION_LINE, settings } from '../src/lib/settings';
+import { mockApi, mockControls } from '../src/api/mock/mockApi';
+import ex from '../src/api/mock/fixtures/examples.json';
+import { ApiError, type ApiErrorBody, type TransactionQuery, type TransactionRow } from '../src/api/types';
+import { LIMITATION_LINE } from '../src/lib/settings';
+import { METHODS } from '../src/lib/methods';
 
 async function failure(p: Promise<unknown>): Promise<{ status: number; body: ApiErrorBody }> {
   try {
@@ -16,7 +18,15 @@ async function failure(p: Promise<unknown>): Promise<{ status: number; body: Api
   throw new Error('expected the request to fail');
 }
 
-const ex = prototypeExamples();
+/** Every row that matches, joined from pages of 200 the way the scatter chart will. */
+async function rowsOf(address: string, query: TransactionQuery = {}): Promise<TransactionRow[]> {
+  const rows: TransactionRow[] = [];
+  for (let page = 1; ; page++) {
+    const p = await mockApi.transactions(address, { pageSize: 200, page, ...query });
+    rows.push(...p.transactions);
+    if (rows.length >= p.total) return rows;
+  }
+}
 
 describe('lookup (POST /api/lookup)', () => {
   test('400 for an invalid address', async () => {
@@ -25,94 +35,165 @@ describe('lookup (POST /api/lookup)', () => {
     expect(r.body).toMatchObject({ status: 'invalid', message: expect.stringMatching(/checksum/) });
   });
 
-  test('404 with supported examples for a valid address outside the snapshot (AC-02)', async () => {
+  test('404 with three examples that are in the list for a valid address outside the snapshot (AC-02)', async () => {
     const r = await failure(mockApi.lookup(ex.unsupported));
     expect(r.status).toBe(404);
     if (r.body.status !== 'unsupported') throw new Error('wrong body');
-    expect(r.body.examples.length).toBeGreaterThanOrEqual(2);
+    expect(r.body.examples).toHaveLength(3);
+    expect(r.body.canLookupLive).toBe(false);
     const { addresses } = await mockApi.listAddresses();
     for (const e of r.body.examples) expect(addresses.map((a) => a.address)).toContain(e);
   });
 
-  test('supported, including an upper-case bc1 address', async () => {
-    const r = await mockApi.lookup(ex.mainAddress.toUpperCase());
-    expect(r).toMatchObject({ status: 'supported', address: ex.mainAddress });
+  test('supported, including an upper-case bc1 address, with the summary from the list', async () => {
+    const { addresses } = await mockApi.listAddresses();
+    const bech32 = addresses.find((a) => a.address.startsWith('bc1q'))!;
+    const r = await mockApi.lookup(bech32.address.toUpperCase());
+    expect(r).toEqual({ status: 'supported', address: bech32.address, summary: bech32 });
   });
 });
 
-describe('every address in the snapshot', () => {
-  const addresses = illustrativeProfiles();
-
-  test('the snapshot is labelled illustrative and names its source and date', async () => {
-    const { snapshot } = await mockApi.listAddresses();
-    expect(snapshot).toMatchObject({ illustrative: true, source: settings.source.name, dayTimeZone: 'UTC' });
-    expect(snapshot.addressCount).toBe(addresses.length);
+describe('the address list (E3)', () => {
+  test('28 addresses of the snapshot, each with a type and a source, the short histories last', async () => {
+    const { snapshot, addresses } = await mockApi.listAddresses();
+    expect(addresses).toHaveLength(snapshot.addressCount);
+    expect(snapshot).toMatchObject({ illustrative: false, source: 'Blockstream Esplora', dayTimeZone: 'UTC' });
+    expect(addresses.every((a) => ['p2pkh', 'p2sh', 'p2wpkh', 'p2wsh', 'p2tr', 'segwit'].includes(a.kind) && a.source === 'snapshot')).toBe(true);
+    expect(addresses.at(-1)!.history).toBe('insufficient');
+    expect(addresses.find((a) => a.address === ex.mainAddress)).toMatchObject({ txCount: 377, scoredCount: 367, flaggedCount: 3, kind: 'p2pkh' });
   });
 
-  test.each(addresses.map((a) => [a.address] as const))('AC-01 timeline is complete and consistent: %s', async (address) => {
+  test('an address that is listed but was not recorded answers 404 not_found, not a made-up history', async () => {
+    const { addresses } = await mockApi.listAddresses();
+    const other = addresses.find((a) => a.address !== ex.mainAddress && a.address !== ex.shortHistory)!;
+    expect(await failure(mockApi.timeline(other.address))).toMatchObject({ status: 404, body: { status: 'not_found' } });
+  });
+});
+
+describe.each([[ex.mainAddress], [ex.shortHistory]])('the timeline and rows of %s', (address) => {
+  test('AC-01 E5 agrees with E3 and with the rows of E6', async () => {
     const summary = (await mockApi.listAddresses()).addresses.find((a) => a.address === address)!;
     const tl = await mockApi.timeline(address);
-    expect(tl.range.start).toBe(tl.days[0].date);
-    expect(tl.range.end).toBe(tl.days[tl.days.length - 1].date);
+    const rows = await rowsOf(address);
     expect(tl.days.map((d) => d.date)).toEqual([...tl.days.map((d) => d.date)].sort());
     expect(tl.days.reduce((s, d) => s + d.txCount, 0)).toBe(summary.txCount);
     expect(tl.days.reduce((s, d) => s + d.flaggedCount, 0)).toBe(summary.flaggedCount);
     expect(tl.totals.flaggedDays).toBe(tl.days.filter((d) => d.flaggedCount > 0).length);
     expect(tl.history.status).toBe(summary.history);
+    expect(rows).toHaveLength(summary.txCount);
+    expect(rows.filter((r) => r.status === 'flagged')).toHaveLength(summary.flaggedCount);
+    expect(rows.filter((r) => r.status !== 'not-scored')).toHaveLength(summary.scoredCount);
+  });
+});
+
+describe('transactions (E6)', () => {
+  const main = ex.mainAddress;
+
+  test('a day: the rows of that UTC day, with the date echoed back', async () => {
+    const day = await mockApi.transactions(main, { date: ex.flagged.date });
+    expect(day).toMatchObject({ address: main, date: ex.flagged.date, page: 1, pageSize: 50 });
+    expect(day.transactions.length).toBe(day.total);
+    expect(day.transactions.every((t) => t.time.startsWith(ex.flagged.date))).toBe(true);
+    expect(day.transactions.map((t) => t.txid)).toContain(ex.flagged.txid);
   });
 
-  test.each(addresses.map((a) => [a.address] as const))('AC-03 / FR-04 every flagged transaction explains itself: %s', async (address) => {
-    const tl = await mockApi.timeline(address);
-    for (const d of tl.days.filter((x) => x.flaggedCount > 0)) {
-      const day = await mockApi.day(address, d.date);
-      for (const row of day.transactions.filter((t) => t.status === 'flagged')) {
-        const tx = await mockApi.transaction(row.txid, address);
-        expect(tx.flagged).toBe(true);
-        expect(tx.limitation).toBe(LIMITATION_LINE);
-        expect(tx.comparison.length).toBeGreaterThan(0);
-        expect(tx.comparison.every((b) => b.txCount > 0 && b.description.length > 0)).toBe(true);
-        expect(reasonsFor(tx.features).reasons.length).toBeGreaterThan(0);
-        expect(tx.features.some((f) => f.role === 'flag')).toBe(true);
-      }
+  test('a day without transactions is an empty 200', async () => {
+    expect(await mockApi.transactions(main, { date: '2020-01-01' })).toMatchObject({ transactions: [], total: 0 });
+  });
+
+  test('status and direction may repeat and are combined with and', async () => {
+    const both = await rowsOf(main, { status: ['flagged', 'not-scored'] });
+    expect(new Set(both.map((r) => r.status))).toEqual(new Set(['flagged', 'not-scored']));
+    const out = await rowsOf(main, { status: ['flagged'], direction: ['out'] });
+    expect(out.length).toBeGreaterThan(0);
+    expect(out.every((r) => r.status === 'flagged' && r.direction === 'out')).toBe(true);
+  });
+
+  test('a range of days is inclusive', async () => {
+    const rows = await rowsOf(main, { from: '2024-07-11', to: '2024-07-12' });
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.time >= '2024-07-11' && r.time < '2024-07-13')).toBe(true);
+  });
+
+  test('sorting: time newest first, score highest first with unscored rows last either way', async () => {
+    const newest = await rowsOf(main, { sort: '-time' });
+    expect(newest.map((r) => r.time)).toEqual([...newest.map((r) => r.time)].sort().reverse());
+    for (const sort of ['score', '-score'] as const) {
+      const rows = await rowsOf(main, { sort });
+      const scores = rows.map((r) => r.score);
+      const firstNull = scores.indexOf(null);
+      expect(scores.slice(firstNull).every((s) => s === null)).toBe(true);
+      const real = scores.slice(0, firstNull) as number[];
+      expect(real).toEqual([...real].sort((a, b) => (sort === 'score' ? a - b : b - a)));
     }
+    expect((await rowsOf(main, { sort: '-score' }))[0].txid).toBe(ex.flagged.txid);
+  });
+
+  test('paging: pages are slices of one list and total is the whole list', async () => {
+    const [p1, p2, p8] = await Promise.all([1, 2, 8].map((page) => mockApi.transactions(main, { page })));
+    expect(p1).toMatchObject({ page: 1, pageSize: 50, total: 377 });
+    expect(p1.transactions).toHaveLength(50);
+    expect(p2.transactions[0].txid).not.toBe(p1.transactions[0].txid);
+    expect(p8.transactions).toHaveLength(377 - 7 * 50);
+    expect((await mockApi.transactions(main, { page: 99 })).transactions).toEqual([]);
+  });
+
+  test('a row carries the deciding method\'s view of it', async () => {
+    const [top] = await rowsOf(main, { status: ['flagged'], sort: '-score' });
+    expect(top).toMatchObject({ status: 'flagged', flaggedBy: expect.any(Number) } satisfies Partial<TransactionRow>);
+    expect(top.score).toBeGreaterThanOrEqual(5);
+    expect(top.mainReason).toEqual(expect.any(String));
+    const unscored = (await rowsOf(main, { status: ['not-scored'] }))[0];
+    expect(unscored).toMatchObject({ score: null, mainReason: null, mainZ: null, flaggedBy: 0 });
+  });
+
+  test('400 for a malformed date, a contradictory query or a page that is too large', async () => {
+    expect((await failure(mockApi.transactions(main, { date: '14-08-2026' }))).status).toBe(400);
+    expect((await failure(mockApi.transactions(main, { from: '2025-02-01', to: '2025-01-01' }))).status).toBe(400);
+    expect((await failure(mockApi.transactions(main, { date: '2025-01-01', from: '2025-01-01' }))).status).toBe(400);
+    expect((await failure(mockApi.transactions(main, { pageSize: 201 }))).status).toBe(400);
+  });
+
+  test('404 unsupported for an address outside the snapshot', async () => {
+    expect(await failure(mockApi.transactions(ex.unsupported, { date: ex.flagged.date }))).toMatchObject({ status: 404, body: { status: 'unsupported' } });
   });
 });
 
-describe('day (GET /api/addresses/{address}/transactions?date=)', () => {
-  test('400 for a malformed date', async () => {
-    const r = await failure(mockApi.day(ex.mainAddress, '14-08-2026'));
-    expect(r.status).toBe(400);
+describe('transaction (E7)', () => {
+  test('a flagged transaction: explanation ending with the limitation line, every method, the tuned flag line', async () => {
+    const tx = await mockApi.transaction(ex.flagged.txid, ex.flagged.address);
+    expect(tx).toMatchObject({ scored: true, flagged: true, source: 'snapshot', limitation: LIMITATION_LINE });
+    expect(tx.explanation.endsWith(LIMITATION_LINE)).toBe(true);
+    expect(Object.keys(tx.scores)).toEqual(METHODS.map((m) => m.id));
+    expect(Object.keys(tx.flags)).toEqual(METHODS.map((m) => m.id));
+    expect(tx.flags[tx.method.id]).toBe(true);
+    expect(tx.method.flagAbsZ).toBe((await mockApi.config()).thresholds.flagAbsZ);
+    expect(tx.features.some((f) => f.role === 'flag')).toBe(true);
+    expect(tx.comparison.every((b) => b.txCount > 0 && b.description.length > 0)).toBe(true);
   });
 
-  test('an empty list for a day without transactions', async () => {
-    const day = await mockApi.day(ex.mainAddress, '2020-01-01');
-    expect(day.transactions).toEqual([]);
+  test('FR-03: amount and direction add up', async () => {
+    const tx = await mockApi.transaction(ex.scored.txid, ex.scored.address);
+    expect(tx.netSats).toBe(tx.receivedSats - tx.sentSats);
+    expect(tx.direction).toBe(tx.netSats > 0 ? 'in' : tx.netSats < 0 ? 'out' : 'none');
+    expect(tx.flagged).toBe(false);
   });
 
-  test('404 for an address outside the snapshot', async () => {
-    expect((await failure(mockApi.day(ex.unsupported, ex.flagged.date))).status).toBe(404);
-  });
-});
-
-describe('transaction (GET /api/transactions/{txid}?address=)', () => {
-  test('422 with the transaction facts when there is not enough history', async () => {
-    const r = await failure(mockApi.transaction(ex.notScored.txid, ex.notScored.address));
+  test.each([
+    ['an early transaction of a normal address', ex.earlyUnscored],
+    ['a transaction of a short-history address', ex.notScored],
+  ])('422 with the transaction facts for %s', async (_name, ref) => {
+    const r = await failure(mockApi.transaction(ref.txid, ref.address));
     expect(r.status).toBe(422);
     if (r.body.status !== 'insufficient_history') throw new Error('wrong body');
-    expect(r.body.transaction.txid).toBe(ex.notScored.txid);
+    expect(r.body.transaction.txid).toBe(ref.txid);
     expect(r.body.history.required).toEqual({ minTx: 10, minSpanDays: 14 });
     expect(r.body.history.earlierTx).toBeLessThan(10);
   });
 
-  test('404 for a transaction that does not belong to the address', async () => {
+  test('404 not_found for a transaction that does not belong to the address', async () => {
     const r = await failure(mockApi.transaction('0'.repeat(64), ex.mainAddress));
     expect(r).toMatchObject({ status: 404, body: { status: 'not_found' } });
-  });
-
-  test('FR-03: amount and direction add up', async () => {
-    const tx = await mockApi.transaction(ex.flagged.txid, ex.flagged.address);
-    expect(tx.netSats).toBe(tx.receivedSats - tx.sentSats);
-    expect(tx.direction).toBe(tx.netSats > 0 ? 'in' : tx.netSats < 0 ? 'out' : 'none');
   });
 });
 
@@ -125,17 +206,18 @@ test('a network failure surfaces as status 0', async () => {
 describe('service endpoints (E1 /api/health, E2 /api/config)', () => {
   test('E1 reports ready with what is loaded', async () => {
     const health = await mockApi.health();
-    expect(health).toMatchObject({ status: 'ok', addressCount: illustrativeProfiles().length, methodCount: 1, assistant: 'off', liveLookup: false });
+    expect(health).toMatchObject({ status: 'ok', addressCount: 28, methodCount: 9, assistant: 'off', liveLookup: false });
     expect(health.uptimeSeconds).toBeGreaterThanOrEqual(0);
   });
 
-  test('E2 carries the snapshot, the limitation line, the thresholds and the web block', async () => {
+  test('E2 carries the snapshot, the limitation line, the tuned thresholds, the features and the web block', async () => {
     const config = await mockApi.config();
     expect(config.limitationLine).toBe(LIMITATION_LINE);
-    expect(config.snapshot).toMatchObject({ source: settings.source.name, dayTimeZone: 'UTC' });
-    expect(config.thresholds).toEqual({ flagAbsZ: settings.baseline.flagAbsZ, contributingAbsZ: settings.baseline.contributingAbsZ });
-    expect(config.history).toEqual({ minTx: settings.features.minHistoryTx, minSpanDays: settings.features.minHistorySpanDays });
-    expect(config.features.map((f) => f.id)).toEqual(['F1', 'F2', 'F3', 'F4']);
+    expect(config.snapshot).toMatchObject({ source: 'Blockstream Esplora', dayTimeZone: 'UTC' });
+    // D-W-10: the flag line is the tuned threshold saved with the model, not settings.json's 3.5.
+    expect(config.thresholds).toEqual({ flagAbsZ: 5, contributingAbsZ: 2 });
+    expect(config.history).toEqual({ minTx: 10, minSpanDays: 14 });
+    expect(config.features.map((f) => [f.id, f.unit])).toEqual([['F1', 'BTC'], ['F2', 'count'], ['F3', 'hours'], ['F4', 'ratio']]);
     expect(config.web.requests.healthPollSeconds).toBeGreaterThan(0);
     expect(config.whatIf.defaultTime).toBe(`${config.snapshot.snapshotDate}T12:00:00Z`);
     expect(config.capabilities).toEqual({ assistant: false, liveLookup: false });

@@ -8,13 +8,16 @@ import { ErrorState } from '../components/ErrorState';
 import { Icon } from '../components/Icon';
 import { Loading, StatePanel } from '../components/StatePanel';
 import { dayKey, formatDateTime, formatDay, formatDayRange } from '../lib/dates';
-import { formatZ, LEVEL_TEXT, reasonsFor } from '../lib/explain';
-import { formatBtc, plural } from '../lib/format';
+import { explanationBlocks } from '../lib/explanation';
+import { formatBtc, formatSpanDays, plural } from '../lib/format';
+import { METHODS } from '../lib/methods';
 import { paths } from '../lib/router';
 import { useRequest } from '../hooks/useRequest';
 
-// The detail panel of Screen 3 (FR-03, FR-04, AC-03). For a flagged transaction it shows which
-// features made it unusual, what they were compared against, and the fixed limitation line.
+// The detail panel of Screen 3 (FR-03, FR-04, AC-03, M-13). For a flagged transaction it shows the
+// service's explanation, what the features were compared against and the fixed limitation line; for
+// every scored one, the feature chart and what each of the nine methods says. A transaction too early
+// in its address's history to score (422) keeps its facts and says why.
 
 export function TransactionPanel({ address, date, txid }: { address: string; date: string; txid: string | null }) {
   const detail = useRequest(txid ? `tx:${address}:${txid}` : null, (signal) => api.transaction(txid!, address, { signal }));
@@ -102,7 +105,7 @@ function Facts({ tx }: { tx: TransactionCore }) {
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
           ) : (
-            <span className="muted">No public record: this is an illustrative transaction</span>
+            <span className="muted">No public page for this transaction</span>
           )}
         </dd>
       </div>
@@ -111,7 +114,6 @@ function Facts({ tx }: { tx: TransactionCore }) {
 }
 
 function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: HeadingRef }) {
-  const { reasons, fallback } = reasonsFor(tx.features);
   return (
     <article className="detail" aria-labelledby="detail-title">
       <header className="detail-head">
@@ -127,17 +129,17 @@ function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: Heading
           <h3 id="why-title">
             <Icon name="flag" className="flag-icon" /> Why this transaction stands out
           </h3>
-          {fallback ? <p>No single feature reached the contributing level; these are the largest differences.</p> : null}
-          <ul className="reasons">
-            {reasons.map((r) => (
-              <li key={r.id}>
-                <strong>{r.headline}.</strong> {r.detail}{' '}
-                <span className="reason-z">
-                  z {formatZ(r.z)}, {LEVEL_TEXT[r.level]}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {explanationBlocks(tx.explanation, tx.limitation).map((block, i) =>
+            block.kind === 'text' ? (
+              <p key={i}>{block.text}</p>
+            ) : (
+              <ul key={i} className="reasons">
+                {block.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ),
+          )}
           <h4>Compared with</h4>
           <ul className="bases">
             {tx.comparison.map((b) => (
@@ -159,10 +161,69 @@ function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: Heading
       )}
 
       <G3FeatureDeviation features={tx.features} address={tx.address} />
+      <Verdicts tx={tx} />
       <p className="method-note">
         <strong>Method:</strong> {tx.method.name}. {tx.method.note}
       </p>
     </article>
+  );
+}
+
+/** What each of the nine methods says about this transaction (M-13). The deciding one sets the status above. */
+function Verdicts({ tx }: { tx: TransactionDetail }) {
+  return (
+    <section className="verdicts" aria-labelledby="verdicts-title">
+      <h3 id="verdicts-title">What each model says</h3>
+      <p className="card-sub">
+        Nine methods score every transaction on its own scale. The deciding method ({tx.method.name}) sets the status above;
+        the others are shown for comparison.
+      </p>
+      <table className="verdict-table">
+        <caption className="sr-only">Score and verdict of each of the nine methods for this transaction</caption>
+        <thead>
+          <tr>
+            <th scope="col">Method</th>
+            <th scope="col">Family</th>
+            <th scope="col" className="num">
+              Score
+            </th>
+            <th scope="col">Verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          {METHODS.map((m) => {
+            const score = tx.scores[m.id];
+            return (
+              <tr key={m.id} className={m.id === tx.method.id ? 'is-deciding' : undefined}>
+                <th scope="row" data-label="Method">
+                  {m.name}
+                  {m.id === tx.method.id ? <span className="cell-sub">Deciding method</span> : null}
+                </th>
+                <td data-label="Family">{m.family}</td>
+                <td data-label="Score" className="num mono">
+                  {score === null ? '—' : score.toFixed(2)}
+                </td>
+                <td data-label="Verdict">
+                  {score === null ? (
+                    <span className="muted">Not available</span>
+                  ) : tx.flags[m.id] ? (
+                    <span className="badge badge-flagged">
+                      <Icon name="flag" />
+                      Flag
+                    </span>
+                  ) : (
+                    <span className="muted">
+                      <span aria-hidden="true">–</span>
+                      <span className="sr-only">Not flagged</span>
+                    </span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </section>
   );
 }
 
@@ -200,8 +261,8 @@ function NotScored({ body, address, headingRef }: { body: InsufficientHistoryBod
         }
       >
         <p>
-          Before this transaction, the address had {plural(h.earlierTx, 'confirmed transaction')} over{' '}
-          {plural(h.spanDays, 'day')}. Scoring needs at least {h.required.minTx} earlier transactions over at least{' '}
+          Before this transaction, the address had {plural(h.earlierTx, 'confirmed transaction')}, with a history spanning{' '}
+          {formatSpanDays(h.spanDays)}. Scoring needs at least {h.required.minTx} earlier transactions over at least{' '}
           {h.required.minSpanDays} days, so there is nothing reliable to compare it with.
         </p>
       </StatePanel>

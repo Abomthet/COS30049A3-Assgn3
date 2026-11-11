@@ -1,25 +1,25 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { mockApi, prototypeExamples } from '../src/api/mock/mockApi';
+import { mockApi } from '../src/api/mock/mockApi';
+import ex from '../src/api/mock/fixtures/examples.json';
 import type { FeatureDetail, SnapshotInfo } from '../src/api/types';
 import { G3FeatureDeviation } from '../src/charts/G3FeatureDeviation';
-import { BUNDLED_SETTINGS, settings } from '../src/lib/settings';
-import { describeValue } from '../src/lib/explain';
-import { formatZ } from '../src/lib/format';
+import { CONFIG } from '../src/api/mock/fixtures';
+import { settings } from '../src/lib/settings';
+import { formatFeatureValue, formatZ } from '../src/lib/format';
 import { fakePlotly } from './plotlyFake';
 
-// G3 draws one transaction's robust z for each feature. The flag line comes from the settings, and
-// the feature names from the response, so these tests change both and read the figure Plotly gets.
+// G3 draws one transaction's robust z for each feature. The flag line and the units come from E2 (the
+// settings), and the feature names from the response, so these tests change both and read the figure
+// Plotly gets.
 
 const thresholds = { flagAbsZ: 4.25, contributingAbsZ: 1.5 };
-const current = { thresholds, snapshot: null as SnapshotInfo | null };
+const current = { thresholds: thresholds as typeof thresholds | null, features: CONFIG.features, snapshot: null as SnapshotInfo | null };
 
 vi.mock('../src/hooks/useSettings', async () => {
   const { BUNDLED_SETTINGS: bundled } = await import('../src/lib/settings');
   return { useSettings: () => ({ settings: { ...bundled, ...current }, origin: 'service' }) };
 });
-
-const ex = prototypeExamples();
 
 const feature = (over: Partial<FeatureDetail> & Pick<FeatureDetail, 'id' | 'name'>): FeatureDetail => ({
   description: 'what it measures',
@@ -40,6 +40,7 @@ async function draw(features: FeatureDetail[]) {
 
 beforeEach(() => {
   current.thresholds = thresholds;
+  current.features = CONFIG.features;
   current.snapshot = null;
 });
 
@@ -81,7 +82,6 @@ describe('the bars', () => {
   test('the hover reads like the plan: feature, value, usual value and z', async () => {
     const f = feature({ id: 'F1', name: 'Size', value: 0.05, usual: 0.000525, z: 5.9, role: 'flag' });
     const { bars } = await draw([f]);
-    expect(bars.hovertext[0]).toBe(`Size: ${describeValue(f, 'value')}, against a usual ${describeValue(f, 'usual')} (z +5.9)`);
     expect(bars.hovertext[0]).toBe('Size: 0.05 BTC, against a usual 0.000525 BTC (z +5.9)');
     expect(bars.hoverinfo).toBe('text');
   });
@@ -132,10 +132,18 @@ describe('the threshold lines', () => {
     expect(keys.every((k: any) => k.hoverinfo === 'skip')).toBe(true);
   });
 
-  test('it follows the settings when they change, and the real bundled value is 3.5', async () => {
-    current.thresholds = { flagAbsZ: BUNDLED_SETTINGS.thresholds.flagAbsZ, contributingAbsZ: BUNDLED_SETTINGS.thresholds.contributingAbsZ };
+  test('with the service unreachable no flag line is drawn: no lines, no band, no legend', async () => {
+    current.thresholds = null;
+    const { layout, keys } = await draw([feature({ id: 'F1', name: 'Size', z: 2 })]);
+    expect(layout.shapes).toEqual([]);
+    expect(keys).toEqual([]);
+  });
+
+  test('the line is the one E2 reports, not the 3.5 of settings.json (D-W-10)', async () => {
+    current.thresholds = CONFIG.thresholds;
     const { layout } = await draw([feature({ id: 'F1', name: 'Size', z: 2 })]);
-    expect(layout.shapes.filter((s: any) => s.type === 'line').map((s: any) => s.x0).sort()).toEqual([-settings.baseline.flagAbsZ, settings.baseline.flagAbsZ].sort());
+    expect(layout.shapes.filter((s: any) => s.type === 'line').map((s: any) => s.x0).sort((a: number, b: number) => a - b)).toEqual([-5, 5]);
+    expect(settings.baseline.flagAbsZ).toBe(3.5);
   });
 
   test('the axis always shows the flag line, even when every bar is short', async () => {
@@ -174,12 +182,23 @@ describe('the contract', () => {
     expect(rows).toHaveLength(tx.features.length);
     tx.features.forEach((f, i) => {
       const cells = within(rows[i]).getAllByRole('cell').map((c) => c.textContent);
-      expect(cells[0]).toBe(describeValue(f, 'value'));
-      expect(cells[1]).toBe(describeValue(f, 'usual'));
+      const unit = CONFIG.features.find((u) => u.id === f.id)!.unit;
+      expect(cells[0]).toBe(formatFeatureValue(f.value, unit));
+      expect(cells[1]).toBe(formatFeatureValue(f.usual, unit));
       expect(cells[2]).toBe(f.z === null ? '—' : formatZ(f.z));
       expect(within(rows[i]).getByRole('rowheader')).toHaveTextContent(f.name);
     });
     expect(screen.getByRole('button', { name: 'Download CSV' })).toBeInTheDocument();
+  });
+
+  test('units come from E2 by feature, and a unit not yet known shows the bare number', async () => {
+    const f = feature({ id: 'F3', name: 'Gap', value: 47.9230555556, usual: 144.151944444, z: -1.8 });
+    await draw([f]);
+    expect(within(screen.getByRole('table')).getAllByRole('cell').map((c) => c.textContent).slice(0, 2)).toEqual(['48 hours', '6 days']);
+    cleanup();
+    current.features = [];
+    await draw([f]);
+    expect(within(screen.getByRole('table')).getAllByRole('cell').map((c) => c.textContent).slice(0, 2)).toEqual(['47.9', '144']);
   });
 
   test('the PNG is named from the chart, the address and the snapshot date', async () => {

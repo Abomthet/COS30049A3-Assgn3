@@ -1,5 +1,5 @@
 import { api } from '../api/client';
-import type { DayResponse, TimelineResponse } from '../api/types';
+import type { TimelineResponse, TransactionsResponse } from '../api/types';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { ErrorState } from '../components/ErrorState';
@@ -10,6 +10,7 @@ import { formatDay, formatTime, isDayKey } from '../lib/dates';
 import { formatBtc, plural, shortAddress, shortTxid } from '../lib/format';
 import { paths } from '../lib/router';
 import { useRequest } from '../hooks/useRequest';
+import { useSettings } from '../hooks/useSettings';
 import { TransactionPanel } from './TransactionPanel';
 
 // Screen 3 — one day's transactions beside the transaction detail (FR-03).
@@ -18,7 +19,10 @@ export function DayScreen({ address, date, txid }: { address: string; date: stri
   const validDate = isDayKey(date);
   useDocumentTitle(validDate ? `${formatDay(date)} · ${shortAddress(address)}` : shortAddress(address));
   const timeline = useRequest(`timeline:${address}`, (signal) => api.timeline(address, { signal }));
-  const day = useRequest(`day:${address}:${date}`, (signal) => api.day(address, date, { signal }));
+  const { settings } = useSettings();
+  const pageSize = settings.web.lists.maxPageSize;
+  // An invalid day in the link is answered here, so nothing is sent for it.
+  const day = useRequest(validDate ? `day:${address}:${date}` : null, (signal) => api.transactions(address, { date, pageSize }, { signal }));
 
   return (
     <div className="page page-day">
@@ -54,7 +58,7 @@ export function DayScreen({ address, date, txid }: { address: string; date: stri
         <>
           {day.status === 'loading' ? <Loading label="Loading the day's transactions…" block /> : null}
           {day.status === 'error' ? <ErrorState error={day.error} onRetry={day.retry} /> : null}
-          {day.status === 'success' ? <DayBody day={day.data} txid={txid} /> : null}
+          {day.status === 'success' ? <DayBody day={day.data} date={date} txid={txid} /> : null}
         </>
       )}
     </div>
@@ -100,7 +104,7 @@ function DayNav({ timeline, date }: { timeline: TimelineResponse; date: string }
   );
 }
 
-function DayBody({ day, txid }: { day: DayResponse; txid: string | null }) {
+function DayBody({ day, date, txid }: { day: TransactionsResponse; date: string; txid: string | null }) {
   if (day.transactions.length === 0) {
     return (
       <StatePanel
@@ -112,7 +116,7 @@ function DayBody({ day, txid }: { day: DayResponse; txid: string | null }) {
           </a>
         }
       >
-        <p>The address has no confirmed transactions on {formatDay(day.date)}. Pick a day with activity from the timeline.</p>
+        <p>The address has no confirmed transactions on {formatDay(date)}. Pick a day with activity from the timeline.</p>
       </StatePanel>
     );
   }
@@ -121,8 +125,9 @@ function DayBody({ day, txid }: { day: DayResponse; txid: string | null }) {
   return (
     <div className="day-layout">
       <section className="card tx-list-card" aria-labelledby="tx-list-title">
-        <h2 id="tx-list-title">{plural(day.transactions.length, 'transaction')}</h2>
+        <h2 id="tx-list-title">{plural(day.total, 'transaction')}</h2>
         <p className="card-sub">{flagged ? `${flagged} unusual, marked below` : 'None unusual on this day'}</p>
+        {day.total > day.transactions.length ? <p className="card-sub">Showing the first {day.transactions.length}, in time order.</p> : null}
         <ul className="tx-list">
           {day.transactions.map((t) => {
             const selected = t.txid === txid;
@@ -130,7 +135,7 @@ function DayBody({ day, txid }: { day: DayResponse; txid: string | null }) {
               <li key={t.txid}>
                 <a
                   className={`tx-row${selected ? ' is-selected' : ''}${t.status === 'flagged' ? ' is-flagged' : ''}`}
-                  href={paths.tx(day.address, day.date, t.txid)}
+                  href={paths.tx(day.address, date, t.txid)}
                   aria-current={selected ? 'true' : undefined}
                 >
                   <span className="tx-row-top">
@@ -141,6 +146,7 @@ function DayBody({ day, txid }: { day: DayResponse; txid: string | null }) {
                     <span className="mono amount">{formatBtc(t.netSats, { signed: true })}</span>
                     <DirectionBadge direction={t.direction} />
                   </span>
+                  {t.status === 'flagged' && t.mainReason ? <span className="tx-row-reason">{t.mainReason}</span> : null}
                   <span className="tx-row-id mono">{shortTxid(t.txid)}</span>
                 </a>
               </li>
@@ -149,7 +155,7 @@ function DayBody({ day, txid }: { day: DayResponse; txid: string | null }) {
         </ul>
       </section>
       <section className="card detail-card" aria-label="Transaction details">
-        <TransactionPanel address={day.address} date={day.date} txid={txid} />
+        <TransactionPanel address={day.address} date={date} txid={txid} />
       </section>
     </div>
   );

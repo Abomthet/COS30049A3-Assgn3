@@ -1,33 +1,38 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { base58CheckEncode, segwitEncode, validateAddress, type AddressKind } from '../src/lib/address';
 
-// Real mainnet addresses collected by the D1 check (scripts/d1_check.py) from a recent block.
-const samplesPath = join(__dirname, '..', '..', 'data', 'd1', 'address-samples.json');
-const TYPE_TO_KIND: Record<string, AddressKind> = {
-  p2pkh: 'p2pkh',
-  p2sh: 'p2sh',
-  v0_p2wpkh: 'p2wpkh',
-  v0_p2wsh: 'p2wsh',
-  v1_p2tr: 'p2tr',
-};
 const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 
+// The vectors both tiers must agree on (backend/tests/test_validation.py reads the same file): valid
+// addresses of every type, and one invalid address for each failure the checker names.
+interface AddressVector {
+  id: string;
+  input: string;
+  ok: boolean;
+  address?: string;
+  kind?: AddressKind;
+  message?: string;
+  hint?: string;
+  /** Checked by the server alone: the browser has no length limit. */
+  serverOnly?: true;
+}
+const vectors = (JSON.parse(readFileSync(join(__dirname, '..', '..', 'shared', 'address_vectors.json'), 'utf8')) as { addresses: AddressVector[] }).addresses;
+
 describe('validateAddress', () => {
-  test.runIf(existsSync(samplesPath))('accepts every real address from the D1 sample, with the right type', () => {
-    const { byType } = JSON.parse(readFileSync(samplesPath, 'utf8')) as { byType: Record<string, string[]> };
-    let checked = 0;
-    for (const [type, addresses] of Object.entries(byType)) {
-      const kind = TYPE_TO_KIND[type];
-      if (!kind) continue;
-      for (const a of addresses) {
-        const r = validateAddress(a);
-        expect(r, a).toMatchObject({ ok: true, kind });
-        checked++;
-      }
-    }
-    expect(checked).toBeGreaterThanOrEqual(20);
+  const shared = vectors.filter((v) => !v.serverOnly);
+
+  test('the shared vectors cover every type and failure, and every one is run', () => {
+    expect(shared.length).toBeGreaterThanOrEqual(50);
+    expect(new Set(shared.filter((v) => v.ok).map((v) => v.kind))).toEqual(new Set(['p2pkh', 'p2sh', 'p2wpkh', 'p2wsh', 'p2tr', 'segwit']));
+  });
+
+  test.each(shared.map((v) => [v.id, v] as const))('shared vector %s: same verdict, type and message as the server', (_id, v) => {
+    const r = validateAddress(v.input);
+    expect(r.ok).toBe(v.ok);
+    if (r.ok) expect(r).toEqual({ ok: true, address: v.address, kind: v.kind });
+    else expect(r).toEqual({ ok: false, message: v.message, hint: v.hint });
   });
 
   test('accepts the genesis block address', () => {

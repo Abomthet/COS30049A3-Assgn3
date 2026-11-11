@@ -39,6 +39,8 @@ export function createHttpClient({ baseUrl, timeoutMs = WEB.requests.timeoutMs }
     baseURL: baseUrl,
     timeout: timeoutMs,
     headers: { Accept: 'application/json' },
+    // A repeated parameter goes out as ?status=a&status=b, the form the service reads (not status[]=a).
+    paramsSerializer: { indexes: null },
     // Reports a timeout as ETIMEDOUT rather than ECONNABORTED, so it cannot be confused with other aborts.
     transitional: { clarifyTimeoutError: true },
   });

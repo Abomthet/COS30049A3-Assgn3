@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { API_MODE } from '../api/client';
 import { useServiceStatus } from '../hooks/useServiceStatus';
 import { useSettings } from '../hooks/useSettings';
 import { useToasts } from '../hooks/useToasts';
@@ -7,7 +6,6 @@ import { formatDay } from '../lib/dates';
 import { paths, useRoute } from '../lib/router';
 import { Icon } from './Icon';
 import { MainNav } from './MainNav';
-import { PrototypeTools } from './PrototypeTools';
 import { ServiceStatus } from './ServiceStatus';
 import { ThemeSwitch } from './ThemeSwitch';
 
@@ -43,7 +41,6 @@ export function Shell({ children }: { children: ReactNode }) {
   }, []);
 
   const { snapshot } = settings;
-  const illustrative = API_MODE === 'mock' || snapshot?.illustrative;
 
   return (
     <>
@@ -91,15 +88,6 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      {illustrative ? (
-        <div className="proto-banner" role="note">
-          <div className="container">
-            <strong>Prototype with illustrative data.</strong> Every address, transaction and value shown here is
-            invented to demonstrate the design.
-          </div>
-        </div>
-      ) : null}
-
       <main id="main" tabIndex={-1} className="container">
         {children}
       </main>
@@ -115,7 +103,6 @@ export function Shell({ children }: { children: ReactNode }) {
           </p>
         </div>
       </footer>
-      {API_MODE === 'mock' ? <PrototypeTools /> : null}
     </>
   );
 }

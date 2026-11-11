@@ -1,17 +1,20 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
-import { mockControls } from './api/mock/mockApi';
 import './styles/base.css';
 import './styles/shell.css';
 
-// Prototype switches in the page URL (before the #), e.g. /?latency=8000 or /?offline=1,
-// so screenshots of the loading and network-failure states can be taken from a link.
+// Switches in the page URL (before the #), for the screenshot script: ?theme=dark or light always,
+// and, when the app runs on the mock, ?latency=8000 and ?offline=1 to show the loading and
+// network-failure states, which the real service cannot be asked to produce.
 const params = new URLSearchParams(window.location.search);
-if (params.has('latency')) mockControls.latencyMs = Math.max(0, Number(params.get('latency')) || 0);
-if (params.get('offline') === '1') mockControls.offline = true;
 if (params.get('theme') === 'dark' || params.get('theme') === 'light') {
   document.documentElement.dataset.theme = params.get('theme')!;
+}
+if (import.meta.env.VITE_API_MODE === 'mock') {  // a build-time literal, so production drops this block
+  const { mockControls } = await import('./api/mock/mockApi');
+  if (params.has('latency')) mockControls.latencyMs = Math.max(0, Number(params.get('latency')) || 0);
+  if (params.get('offline') === '1') mockControls.offline = true;
 }
 
 createRoot(document.getElementById('root')!).render(

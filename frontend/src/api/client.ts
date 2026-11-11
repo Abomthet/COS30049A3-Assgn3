@@ -4,10 +4,13 @@
 
 import { createHttpApi } from './endpoints';
 import { createHttpClient } from './http';
-import { mockApi } from './mock/mockApi';
 import type { ExplorerApi } from './types';
 
 export const API_MODE: 'mock' | 'http' = import.meta.env.VITE_API_MODE === 'mock' ? 'mock' : 'http';
 
+// The condition is written on import.meta.env itself, which Vite replaces with a literal at build
+// time, so a production build folds it to false and drops the mock and its recorded fixtures.
 export const api: ExplorerApi =
-  API_MODE === 'mock' ? mockApi : createHttpApi(createHttpClient({ baseUrl: import.meta.env.VITE_API_BASE ?? '' }));
+  import.meta.env.VITE_API_MODE === 'mock'
+    ? (await import('./mock/mockApi')).mockApi
+    : createHttpApi(createHttpClient({ baseUrl: import.meta.env.VITE_API_BASE ?? '' }));

@@ -1,4 +1,4 @@
-import type { Direction } from '../api/types';
+import type { Direction, FeatureUnit } from '../api/types';
 
 const SATS_PER_BTC = 100_000_000;
 
@@ -43,6 +43,28 @@ export function formatRatio(r: number): string {
   if (r >= 10) return `${r.toFixed(0)}×`;
   if (r >= 0.1) return `${r.toFixed(1)}×`;
   return `${r.toFixed(3)}×`;
+}
+
+/** A feature's value or usual value in the unit E2 names for it; a unit that is not known yet shows the bare number. */
+export function formatFeatureValue(value: number | null, unit: FeatureUnit | undefined): string {
+  if (value === null) return '—';
+  switch (unit) {
+    case 'BTC':
+      return formatBtcShort(value * SATS_PER_BTC);
+    case 'hours':
+      return formatHours(value);
+    case 'ratio':
+      return formatRatio(value);
+    case 'count':
+      return String(Number(value.toFixed(1)));
+    default:
+      return String(Number(value.toPrecision(3)));
+  }
+}
+
+/** A span of days from E5 or E7, which is fractional: '12 days', or 'under a day'. */
+export function formatSpanDays(days: number): string {
+  return days < 1 ? 'under a day' : plural(Math.floor(days), 'day');
 }
 
 export function formatZ(z: number): string {

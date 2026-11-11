@@ -42,7 +42,7 @@ export function SelectScreen({ query }: { query: string | null }) {
       return;
     }
     const body = res.error.body;
-    if (body.status === 'invalid') setLookup({ status: 'invalid', message: body.message, hint: body.hint });
+    if (body.status === 'invalid') setLookup({ status: 'invalid', message: body.message, hint: body.hint ?? '' });
     else if (body.status === 'unsupported') setLookup({ status: 'unsupported', message: body.message, examples: body.examples });
     else setLookup({ status: 'network', message: body.message });
   }
@@ -215,7 +215,7 @@ function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
   return (
     <div className="card table-card">
       <table className="address-table">
-        <caption className="sr-only">Addresses in the snapshot, with their activity and how many transactions are unusual</caption>
+        <caption className="sr-only">Addresses in the snapshot, with their activity, how many transactions are scored and how many are unusual</caption>
         <thead>
           <tr>
             <th scope="col">Address</th>
@@ -224,13 +224,15 @@ function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
               Transactions
             </th>
             <th scope="col" className="num">
+              Scored
+            </th>
+            <th scope="col" className="num">
               Unusual
             </th>
           </tr>
         </thead>
         <tbody>
           {addresses.map((a) => {
-            const check = validateAddress(a.address);
             const pct = a.scoredCount ? Math.round((a.flaggedCount / a.scoredCount) * 100) : 0;
             return (
               <tr key={a.address}>
@@ -238,11 +240,14 @@ function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
                   <a className="address-link mono" href={paths.timeline(a.address)} aria-label={`Open activity for ${a.address}`}>
                     {shortAddress(a.address, 12, 8)}
                   </a>
-                  {check.ok ? <span className="cell-sub">{KIND_LABEL[check.kind]}</span> : null}
+                  <span className="cell-sub">{KIND_LABEL[a.kind]}</span>
                 </th>
                 <td data-label="Active (UTC)">{formatDayRange(dayKey(a.firstSeen), dayKey(a.lastSeen))}</td>
                 <td data-label="Transactions" className="num">
                   {formatCount(a.txCount)}
+                </td>
+                <td data-label="Scored" className="num">
+                  {formatCount(a.scoredCount)}
                 </td>
                 <td data-label="Unusual" className="num">
                   {a.history === 'insufficient' ? (

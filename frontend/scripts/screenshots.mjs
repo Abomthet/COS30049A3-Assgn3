@@ -3,11 +3,17 @@
 // browser over the DevTools protocol so phone and tablet widths are emulated properly, and
 // it fails if any page scrolls sideways (the responsive check from the test plan).
 //
-//   npm run dev                      (in one terminal; or npm run build && npm run preview)
-//   npm run screenshots              (in another; writes ../docs/screenshots/)
+// Against the real back end (the default; the inputs are the ones recorded in examples.json, which
+// the running service answers the same way):
+//   (backend/)   python -m uvicorn app.main:app --port 8000
+//   (frontend/)  npm run dev                  (or npm run build && npm run preview)
+//   (frontend/)  npm run screenshots          (writes ../docs/screenshots/)
+// On the mock, which can also show the loading and network-failure states the real service cannot be
+// asked to produce:
+//   VITE_API_MODE=mock npm run dev   and   MOCK=1 npm run screenshots
 //
 // Options: BASE_URL (default http://localhost:5173), BROWSER_PATH, ONLY=<regex of names>,
-// and an output folder as the first argument.
+// MOCK=1 (also take the mock-only shots), and an output folder as the first argument.
 
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -17,7 +23,8 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const t = JSON.parse(readFileSync(join(here, 'screenshot-targets.json'), 'utf8'));
+const t = JSON.parse(readFileSync(join(here, '..', 'src', 'api', 'mock', 'fixtures', 'examples.json'), 'utf8'));
+const mock = process.env.MOCK === '1';
 const base = (process.env.BASE_URL ?? 'http://localhost:5173').replace(/\/$/, '');
 const outDir = resolve(process.argv[2] ?? join(here, '..', '..', 'docs', 'screenshots'));
 const only = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
@@ -48,24 +55,27 @@ const DESKTOP = 1280;
 const TABLET = 820;
 const MOBILE = 390;
 
-// [file name, extra query, hash route, width, full page?]
+// [file name, extra query, hash route, width, full page?, mock only?]
 const shots = [
   ['01-select', '', '#/', DESKTOP, true],
   ['02-invalid', '', q(t.typo), DESKTOP, false],
   ['03-unsupported', '', q(t.unsupported), DESKTOP, false],
-  ['04-loading', 'latency=600000', tl(t.mainAddress), DESKTOP, false],
+  ['04-loading', 'latency=600000', tl(t.mainAddress), DESKTOP, false, true],
   ['05-timeline', '', tl(t.mainAddress), DESKTOP, true],
   ['06-insufficient-address', '', tl(t.shortHistory), DESKTOP, true],
   ['07-day-nothing-selected', '', day(t.flagged), DESKTOP, false],
   ['08-flagged-detail', '', tx(t.flagged), DESKTOP, true],
   ['09-not-scored-detail', '', tx(t.notScored), DESKTOP, true],
-  ['10-network-failure', 'offline=1', tl(t.mainAddress), DESKTOP, false],
-  ['11-timeline-tablet', '', tl(t.mainAddress), TABLET, true],
-  ['12-flagged-detail-tablet', '', tx(t.flagged), TABLET, true],
-  ['13-select-mobile', '', '#/', MOBILE, true],
-  ['14-timeline-mobile', '', tl(t.mainAddress), MOBILE, true],
-  ['15-flagged-detail-mobile', '', tx(t.flagged), MOBILE, true],
-  ['16-flagged-detail-dark', 'theme=dark', tx(t.flagged), DESKTOP, true],
+  ['10-early-transaction-not-scored', '', tx(t.earlyUnscored), DESKTOP, true],
+  ['11-network-failure', 'offline=1', tl(t.mainAddress), DESKTOP, false, true],
+  ['12-timeline-tablet', '', tl(t.mainAddress), TABLET, true],
+  ['13-flagged-detail-tablet', '', tx(t.flagged), TABLET, true],
+  ['14-select-mobile', '', '#/', MOBILE, true],
+  ['15-timeline-mobile', '', tl(t.mainAddress), MOBILE, true],
+  ['16-flagged-detail-mobile', '', tx(t.flagged), MOBILE, true],
+  ['17-flagged-detail-dark', 'theme=dark', tx(t.flagged), DESKTOP, true],
+  ['18-select-tablet', '', '#/', TABLET, true],
+  ['19-select-desktop-dark', 'theme=dark', '#/', DESKTOP, true],
 ];
 
 // ---------------------------------------------------------------- minimal DevTools client
@@ -136,10 +146,10 @@ async function main() {
     const send = (m, p) => cdp.send(m, p, sessionId);
     await send('Page.enable');
 
-    for (const [name, extra, hash, width, fullPage] of shots) {
-      if (only && !only.test(name)) continue;
+    for (const [name, extra, hash, width, fullPage, mockOnly] of shots) {
+      if ((only && !only.test(name)) || (mockOnly && !mock)) continue;
       const params = new URLSearchParams(extra);
-      if (!params.has('latency')) params.set('latency', '0');
+      if (mock && !params.has('latency')) params.set('latency', '0');
       if (!params.has('theme')) params.set('theme', 'light'); // don't depend on the machine's theme
       const url = `${base}/?${params}${hash}`;
       const mobile = width < 700;

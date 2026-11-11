@@ -68,6 +68,20 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
           <p>{body.message} This page reloads by itself when the service is back, or you can try again now.</p>
         </StatePanel>
       );
+    case 'too_large':
+      return (
+        <StatePanel
+          tone="error"
+          title="That request was too large"
+          headingLevel={headingLevel}
+          live="alert"
+          actions={<a className="btn btn-secondary" href={paths.select()}>Choose an address</a>}
+        >
+          <p>
+            {body.message} {body.hint}
+          </p>
+        </StatePanel>
+      );
     case 'timeout':
       return (
         <StatePanel tone="error" icon="history" title="This is taking longer than it should" headingLevel={headingLevel} live="alert" actions={retry}>
