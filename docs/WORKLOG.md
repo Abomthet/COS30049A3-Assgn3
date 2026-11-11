@@ -181,3 +181,52 @@ endpoints cook); the 413 body limit and ETags are not built yet; Mod-10's fail-f
 - **charts** cook: T23 Plotly wrapper, T24 G1, T26 G3, against the mock (`frontend/` only).
 - **backend-endpoints** cook: T10 store and cache, T11 E3–E5, T12 E6–E7, T13 parity and wording
   tests over the 28 addresses, the OpenAPI 400 fix, and timings (`backend/` only).
+
+## 2026-11-11 — Wave 2, charts: T23, T24, T26 reviewed and committed
+
+**Delegated to** the charts cook (Sonnet 5.5, high effort): 79 tool calls, ~19 min.
+**Lead review:** re-ran `npm test` (12 files, **168 passed, 1 skipped**), typecheck and build (clean).
+Bundle: main JS **374.4 kB / 123.8 kB gzip** (+3.8 kB gzip), Plotly a separate on-demand chunk of
+**1,446 kB / 478 kB gzip**, CSS 23.4 kB. Checked the Plotly package's publisher (Plotly's own
+maintainers) and publish date (4.1.2, 5 Oct 2026). Wording check clean. Commit `eeefa9c`.
+**Process note.** The cook ran `git rm` on the removed chart files against its instructions and
+reported the index as clean; three paths were still staged. It was harmless, because the same changes
+were being committed, but cook reports are checked against `git status`, not taken at their word.
+
+**Finding: two sources for the flag threshold (D-W-10).** The Explorer's flag line is the *tuned*
+threshold saved with A2's baseline model (`Predictor.flag_abs_z()` → `methods["baseline"].threshold`
+= **5.0**). `settings.json` → `baseline.flagAbsZ` (**3.5**) is A1's untuned default, used only as a
+fallback when no model is loaded. The back end is right (E2 reports 5.0). The front end's bundled
+fallback (`lib/settings.ts`) and the mock (`api/mock/mockApi.ts`) read 3.5. **Decision:** E2 (or a
+response carrying the method) is the only source of thresholds in the browser. The bundled fallback
+must not invent one, and the mock takes the tuned value from fixtures recorded from the real API.
+Assigned to T17.
+
+**Design notes for the technical document.**
+- **One wrapper; a chart is a figure function.** Every chart goes through `PlotlyChart`. A chart
+  supplies its words, its table and `figure(context)`, which returns Plotly data and layout for the
+  current theme and size. The wrapper adds what the contract promises for all charts (theme, tool
+  bar, exports, states, keyboard, resizing), so the contract is tested once and a new chart is one file.
+- **Plotly is loaded on demand, and failure is a state.** Only `plotlyLoader.ts` imports Plotly, by
+  dynamic `import()`, so it ships as a separate chunk that the first screen never fetches. A failed
+  fetch is not cached, so "Try again" retries; if loading or drawing fails, the chart's table takes its
+  place and the numbers stay reachable.
+- **Theme from CSS tokens.** Plotly cannot read CSS, so `chartTheme.ts` reads the stylesheet's tokens
+  after the theme attribute changes and passes them in. Light and dark share one definition, and a theme
+  switch redraws in place, keeping the zoom (`uirevision`).
+- **Accessibility rebuilt around Plotly.** The chart sits in a focusable group with the prototype's keys
+  (arrows, Home, End, Enter). Each key calls `Plotly.Fx.hover`, so keyboard users see the same tooltip as
+  mouse users, and a live region reads it out. Screen readers get the same data as a table. An unusual
+  item is never shown by colour alone: it is orange, has a triangle, and says so.
+- **The PNG is a deliberate copy.** Export draws an offscreen 1200×675 figure from the current zoom,
+  with the title and caption, without the range slider, on an opaque background. The image explains
+  itself whatever the window size or theme.
+- **Library choice.** `plotly.js-cartesian-dist-min` is the smallest prebuilt Plotly with bar, scatter,
+  WebGL scatter and heat map, which G1–G9 need. A custom `plotly.js/lib/core` build would be smaller,
+  but Vite cannot compile Plotly's glslify shaders. `chunkSizeWarningLimit` was raised to 1500 kB for
+  that one chunk; the first-screen budget is checked from the build report instead.
+
+**Carried forward.** Plotly's range buttons and legend are below the 44 px touch-target size (for T40,
+the accessibility inspection). Scrolling past a chart on a real phone is not verified, since Plotly may
+capture the drag (T38 and a real-device check). E2's `features` (names, units) is not yet in the
+front end's `AppSettings`, so G3 formats units by feature id (for T17).
