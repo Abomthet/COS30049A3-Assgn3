@@ -230,3 +230,67 @@ Assigned to T17.
 the accessibility inspection). Scrolling past a chart on a real phone is not verified, since Plotly may
 capture the drag (T38 and a real-device check). E2's `features` (names, units) is not yet in the
 front end's `AppSettings`, so G3 formats units by feature id (for T17).
+
+## 2026-11-11 — Wave 2, back end: T10–T13 reviewed and committed (back-end half of MS1)
+
+**Delegated to** the backend-endpoints cook (Sonnet 5.5, high effort): 62 tool calls, ~20 min.
+**Lead review:** `git diff --cached` empty (no stray staging); `vendor_a2.py --check` passes (vendored
+files untouched); `pytest` **478 passed** (343 new), warnings are errors. E6's paged shape was checked
+against the plan (s06 E6: "A1, extended", answers `address, date|null, transactions, page, pageSize,
+total`): it matches. Live probe: E3 lists 28; E4 for an address outside the snapshot → 404
+`unsupported` with three examples and `canLookupLive:false`; E5 for the running example → 377 tx,
+367 scored, 3 flagged on 3 days; E6 `status=flagged&sort=-score` → 3 rows (scores 5.61, 5.19, 5.11);
+E7 → flagged, the limitation line present, all nine methods' flags; a bad query → 400 with field
+errors; `If-None-Match` → **304**; no warnings in the server log. Commit `fd2d796`.
+
+**Measured** (Uvicorn over HTTP, gzip; warm = median of 30, cold = cache cleared):
+
+| Request | Running example cold / warm | Largest address (700 tx) cold / warm | Body (gzip) |
+|---|---|---|---|
+| E5 timeline | 57 / 1.5 ms | 102 / 1.5 ms | 11.6–18.4 kB (1.2–1.5 kB) |
+| E6, 50 rows | 97 / 1.5 ms | 104 / 1.5 ms | 12.5–13.0 kB (3.3–3.6 kB) |
+| E6, 200 rows | 58 / 2.8 ms | 104 / 2.8 ms | 52 kB (13 kB) |
+| E7 | 59 / 1.4 ms | 103 / 1.5 ms | 2.7–2.9 kB (1.2–1.3 kB) |
+
+All within the plan's budgets (s10.3: E5 150 ms, or 20 ms cached; E6 page of 200 within 150 ms; E7
+150 ms; timeline body 60 kB; one transaction 6 kB). Warming all 28 addresses: ~1.2 s and ~51 MB, after
+"ready", so the 10 s start budget is untouched.
+
+**Design notes for the technical document.**
+- **One scoring, three views.** `score_address` returns up to 2 MB, so the service scores an address once
+  per method, keeps the result and cuts it into the timeline (11–18 kB), a filtered, sorted, paged
+  list, and one transaction (under 3 kB). Endpoints only filter, sort, page and pick; nothing is
+  recomputed. Parity tests rebuild the whole `score_address` result from those pieces for all 28 addresses.
+- **An address store behind one interface.** Services read an address through `AddressStore.get` (its
+  features, transactions, scores and source, or `Unsupported`). `SnapshotStore` splits the frozen tables
+  once at start. A live store (S-09) only implements the same two methods.
+- **A bounded, warmed, per-method cache.** One entry per (method, address), least-recently-used
+  eviction, capacity of one snapshot (28 entries, ~51 MB). It fills lazily and is warmed for the
+  default method after "ready", so a warm view takes ~1.5 ms. A non-default method shares the loaded
+  tables (`dataclasses.replace(predictor, selected=m)`) and never disturbs the default entries.
+- **Short-history addresses stay visible.** `score_address` raises for them, but the screen must list
+  their transactions unscored, so their timeline and rows come from the feature table (E5/E6 200).
+  E7 answers 422 `insufficient_history` with the transaction's own history, the same body for a
+  short address and for an early transaction of a normal one.
+- **Layered validation, always 400.** Pydantic checks types and enums; `core/validation` checks
+  addresses, transaction IDs and days; the service checks rules that need settings or two fields (page
+  size, day order, `date` versus a range). Limits come from `settings.json` → `web`. Bodies over
+  `maxBodyBytes` are refused with 413 by a middleware that reads at most one byte past the limit.
+- **Revalidation without state.** An innermost middleware hashes the finished JSON (inside gzip, whose
+  timestamp would otherwise change the hash) and answers 304 on a matching `If-None-Match`. Routes opt in
+  with `Cache-Control: no-cache` through one dependency. No version table, and the tag changes exactly when
+  the answer does.
+
+**Choices accepted:** `sort=amount` is by signed `netSats`; unscored rows sort last both ways; unknown
+query parameters are a 400; `page` past the end is an empty 200 with the real `total`.
+**Found in review, carried forward:**
+- (a) A2's reason text can repeat itself ("Lower ratio to the usual amount than usual"). It comes from the
+  frozen `explorer/explain.py`; any fix belongs in the web layer and in `MODIFICATIONS.md`.
+- (b) A 400 names only the first layer's faults: with `pageSize=999&status=bogus` only `status` is
+  reported, because the type check stops before the page-size rule.
+- (c) E2 has no ETag (the plan lists only snapshot GETs).
+
+## 2026-11-11 — T17 started (front-end half of MS1)
+**frontend-views** cook: aligns `types.ts` with the real E3–E7, applies D-W-10 (thresholds only from E2),
+adds E2's `features`, records fixtures from the real API in place of the illustrative mock data, makes
+Vitest read `shared/address_vectors.json`, puts V1–V3 on the real API and removes the prototype banner.
