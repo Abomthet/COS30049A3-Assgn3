@@ -294,3 +294,5 @@ query parameters are a 400; `page` past the end is an empty 200 with the real `t
 **frontend-views** cook: aligns `types.ts` with the real E3–E7, applies D-W-10 (thresholds only from E2),
 adds E2's `features`, records fixtures from the real API in place of the illustrative mock data, makes
 Vitest read `shared/address_vectors.json`, puts V1–V3 on the real API and removes the prototype banner.
+**backend-whatif** cook started in parallel: T14 (E8, E9 with the batched feature build and its parity
+test, which must be shown to catch a planted bug) and T15 (E10 export, E11 methods). `backend/` only.
