@@ -49,6 +49,19 @@ def parse_interfaces(source: str) -> dict[str, dict[str, tuple[bool, str]]]:
     return interfaces
 
 
+def top_level_nullable(ts_type: str) -> bool:
+    """Whether a TypeScript type admits null at its top level.
+
+    `null` inside generic arguments (`Record<MethodId, number | null>`) or an inline object type
+    belongs to the values, not to the property, so nested `<...>` and `{...}` are removed first.
+    """
+    text = ts_type.rstrip(";")
+    previous = None
+    while previous != text:
+        previous, text = text, re.sub(r"<[^<>]*>|\{[^{}]*\}", "", text)
+    return "null" in (part.strip() for part in text.split("|"))
+
+
 def allows_none(model: type[BaseModel], alias: str) -> bool:
     field = next(f for n, f in model.model_fields.items() if (f.alias or n) == alias)
     return NoneType in get_args(field.annotation)
@@ -64,7 +77,7 @@ def test_model_has_every_property_of_the_prototype_contract(interface: str) -> N
     if interface in ERROR_INTERFACES:
         return
     for name, (required, text) in properties.items():
-        assert allows_none(model, name) == ("null" in text), f"{interface}.{name} nullability"
+        assert allows_none(model, name) == top_level_nullable(text), f"{interface}.{name} nullability"
         assert required, f"{interface}.{name} is optional in the contract but always sent"
 
 
