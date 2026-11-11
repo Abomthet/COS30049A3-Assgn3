@@ -1,0 +1,84 @@
+\section{Commands}
+\label{app:commands}
+
+The order in which they are first needed. Paths are from the repository's root.
+
+\subsection{Day one}
+
+\begin{lstlisting}
+# Assignment 2: tag the commit that was submitted (T02)
+cd ../COS30049A2 && git tag a2-submitted <commit> && git push origin a2-submitted
+
+# Assignment 3: copy the runtime with hashes (T03)
+python tools/vendor_a2.py --from ../COS30049A2 --commit a2-submitted
+
+# Back end (T03)
+cd backend
+conda env create -f environment.yml
+conda activate cos30049-a3
+python -m pytest -q
+
+# Front end (T04)
+cd ../frontend
+npm install
+npm test
+\end{lstlisting}
+
+\subsection{Every day}
+
+\begin{lstlisting}
+# terminal 1
+cd backend && conda activate cos30049-a3
+uvicorn app.main:app --reload --port 8000        # API documentation at http://localhost:8000/docs
+
+# terminal 2
+cd frontend && npm run dev                       # the application at http://localhost:5173
+
+# before every commit: both must exit with code 0
+cd backend  && python -m pytest -q
+cd frontend && npm run typecheck && npm run lint && npm test
+\end{lstlisting}
+
+\subsection{Checks by hand}
+
+\begin{lstlisting}
+curl http://localhost:8000/api/health
+curl http://localhost:8000/api/addresses
+curl http://localhost:8000/api/addresses/1Bbcsfxj2JRUD5crcdZVHBcViT61vrJ3dz/timeline
+curl -X POST http://localhost:8000/api/addresses/1Bbcsfxj2JRUD5crcdZVHBcViT61vrJ3dz/what-if \
+     -H "Content-Type: application/json" \
+     -d '{"amountBtc": 0.05, "direction": "out", "time": "2026-10-20T12:00:00Z"}'
+\end{lstlisting}
+
+On Windows' Command Prompt the last command needs double quotes around the body with the inner
+quotes escaped; the README gives both forms, and the documentation page at \code{/docs} can send
+the same request from the browser.
+
+\subsection{Tooling}
+
+\begin{lstlisting}
+python tools/export_openapi.py                   # writes backend/openapi.json (committed; the report reads it)
+npm run fixtures                                 # refreshes the mock's answers from the running back end
+npm run types                                    # S-10: TypeScript types from openapi.json
+npm run screenshots                              # three widths; fails on sideways scrolling
+npx playwright test                              # S-11: the journeys in three browsers
+python tools/measure.py                          # S-12: the measured performance table
+python tools/precompute_assistant.py             # S-05: guarded answers for the snapshot's flags (needs the weights)
+\end{lstlisting}
+
+\subsection{Freeze and package}
+
+\begin{lstlisting}
+git tag v1.0-rc                                  # MS4, after the clean install
+git tag v1.0                                     # Fri 4 Dec
+python tools/package.py --tag v1.0               # dist/HCMC_COS30049.1_4_Assignment3_Code.zip and SHA256SUMS.txt
+# then, in an empty folder on a clean machine: unzip, follow the README, run both test suites
+\end{lstlisting}
+
+\subsection{This plan}
+
+\begin{lstlisting}
+cd docs/plan
+pdflatex main && pdflatex main && pdflatex main
+cp main.pdf ../A3_delivery_plan.pdf
+\end{lstlisting}

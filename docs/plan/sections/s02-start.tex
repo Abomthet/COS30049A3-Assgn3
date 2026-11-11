@@ -1,0 +1,106 @@
+\section{Where we start}
+\label{sec:start}
+
+Two finished pieces already fit together: Assignment 2's prediction module returns the JSON shapes
+that Assignment 1's prototype screens read. Assignment 3 is the layer between them and the features
+around them.
+
+\subsection{From Assignment 2: the models and \code{predict.py}}
+\label{sec:inherited}
+
+\code{Predictor.load()} reads the saved artefacts once; every method returns plain dictionaries in
+camelCase. The timings are from the Mac (Apple M5, CPU environment \code{cos30049-a2}) on
+10 November 2026.
+
+{\small
+\begin{longtable}{@{}L{4.9cm}L{5.8cm}L{3.3cm}@{}}
+\toprule
+\textbf{Function} & \textbf{Returns} & \textbf{Measured} \\
+\midrule
+\endhead
+Import and \code{Predictor.load()} & Features, transactions and scores of the snapshot; nine saved methods; the selected method & 4.7 s to import, 0.9 s to load \\
+\code{score_address(address)} & Snapshot, range, per-day counts, totals, history status and every transaction's full detail & 0.04 s (273 transactions) to 0.10 s (700); 0.8 to 2.0 MB of JSON \\
+\code{transaction(address, txid)} & One transaction's detail & as above (it scores the address) \\
+\code{score_what_if(address, amount_btc, direction, time_utc)} & A hypothetical transaction scored against the real, strictly earlier history by eight methods & 0.40 s \\
+The same, for many amounts in one feature build & Identical scores for all eight methods & 7 amounts: 0.16 s, against 1.88 s for seven single calls. 41 amounts: 0.18 s \\
+\code{explain(tx, use_assistant)} & The template text, or the first Assistant answer that passes the guardrail & under 1 ms for the template; about 10 s for the Assistant on the PC's CPU (README), after a first load of up to a minute \\
+\code{txgpt_surprisal(address)} & Surprisal per transaction and per field, from a saved table & a table read \\
+\code{classify_heist}, \code{classify_elliptic} & The labelled-data classifiers & not used (W-04) \\
+\bottomrule
+\end{longtable}
+}
+
+\textbf{The data behind them.} The snapshot of 22 October 2026 holds 28 addresses (25 main and 3
+with too little history to score) and 7,966 transactions; the largest address has 700 and the
+smallest 3. The Explorer's flags come from the robust-z baseline, which flags a transaction when any
+feature's $|z|$ reaches 5.0. Nine methods have a saved model and a threshold
+(Section~\ref{sec:methods}). \code{Unsupported} and \code{InsufficientHistory} are the exceptions
+behind Assignment 1's 404 and 422.
+
+\textbf{What the running example looks like.} Address
+\code{1Bbcsfxj2JRUD5crcdZVHBcViT61vrJ3dz} has 377 transactions on 214 days from 16 May 2024 to
+19 October 2026; 367 are scored and 3 are flagged, on 3 days. A what-if of 0.05 BTC out at
+\code{2026-10-20T12:00:00Z} is flagged with score 5.98: 0.05 BTC against a usual 0.000525 BTC. The
+plan uses this address in every example, as Assignment 2's README does.
+
+\subsection{From Assignment 1: the prototype}
+
+\begin{itemize}
+  \item A React and TypeScript application built with Vite (\fp{asm1_demo/frontend}, commit
+    \code{8375cf0}): about 4,800 lines, 66 tests.
+  \item Three linked screens: address selection, daily timeline, day and transaction detail.
+  \item Six feedback states, each with a next action: invalid, unsupported, loading, empty,
+    insufficient history and network failure.
+  \item A hash router, so every screen and state has its own link and the back button works.
+  \item Address validation in the browser with the real checksums (Base58Check, Bech32, Bech32m).
+  \item \fp{src/api/types.ts}, the contract, and \fp{src/api/http.ts}, a client for the planned
+    back end that is switched on with \code{VITE_API_MODE=http}. A mock answers the same five
+    endpoints in the browser.
+  \item Two charts drawn by hand in SVG, keyboard control of the timeline, a table view of each
+    chart, light and dark themes, layouts checked at 1280, 820 and 390 pixels by a screenshot script
+    that fails on sideways scrolling.
+\end{itemize}
+
+\subsection{The gaps Assignment 3 closes}
+\label{sec:gaps}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{5.2cm}Y L{2.0cm}@{}}
+\toprule
+\textbf{Today} & \textbf{Needed} & \textbf{Section} \\
+\midrule
+No server: \code{predict.py} is called from a terminal & A FastAPI service with routes, schemas, validation, errors and documentation & \ref{sec:architecture}, \ref{sec:api} \\
+\code{score_address} returns up to 2 MB at once & Small responses per view: timeline, a page of rows, one detail & \ref{sec:api} \\
+The prototype shows invented data & The same screens on the real snapshot & \ref{sec:frontend} \\
+No form sends user input to a model & The what-if lab, validated on both tiers & \ref{sec:viewwhatif}, \ref{sec:errors} \\
+Charts are hand-drawn SVG, two types, no zoom & Plotly.js charts, three or more types, zoom, filters, export & \ref{sec:charts} \\
+Nothing updates by itself & Live what-if, replay, live-lookup progress & \ref{sec:realtime} \\
+No export, no personal state & CSV, JSON and PNG export; watchlist and preferences & \ref{sec:frontend} \\
+The Assistant runs from the command line only & An endpoint with status feedback, a cache and a clear fallback & \ref{sec:assistant} \\
+No README, report or video for the web application & Section~\ref{sec:quality} and Section~\ref{sec:report} & \ref{sec:quality}, \ref{sec:report} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Loose ends from Assignment 2 that touch this build}
+\label{sec:looseends}
+
+\begin{itemize}
+  \item \textbf{No \code{v1.0} tag.} The remote has \code{m0}, \code{results-v1} and
+    \code{results-v1.1}; the head of \code{from-scratch} is \code{aa56a26} (7 November). The
+    submitted commit is tagged before the models are copied (task T02).
+  \item \textbf{The usability walkthrough} was moved to Assignment 3 in the report. It is M-15.
+  \item \textbf{The blind reviewer check} was still open on 7 November. Could item C-04 gives it a
+    place in the application; it is not needed for any Assignment 3 mark.
+  \item \textbf{The glossary's fusion sentence} names the old pair (baseline and regression); the
+    fusion in use is regression with Isolation Forest. The application never shows glossary text:
+    view V5 describes each method from \code{/api/methods}, and free chat with the 152M model is out
+    of scope (W-05). No retraining is needed.
+  \item \textbf{The Assistant's weights} (610 MB, or about 305 MB as an fp16 export\est{}) are in
+    neither git nor, on the Mac, on disk. The GitHub Release was blocked on 7 November because
+    \code{gh} is signed in as an account with read access only. S-05 works without the weights and
+    says so in the interface.
+  \item \textbf{A licence for the team's own code} is still undecided; the zip needs one line in
+    \fp{LICENSES.md}.
+\end{itemize}

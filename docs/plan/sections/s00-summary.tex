@@ -1,0 +1,119 @@
+\section{The plan on one page}
+\label{sec:summary}
+
+\textbf{Goal.} A full-marks attempt at all 45 points and at every line of the brief's High
+Distinction list. Every item in this plan is tied to a rubric line, a line of the brief, or a
+promise made in Assignment 1 or 2. An item that earns none of these was left out.
+
+\textbf{The marks, from the rubric.}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}Y C{0.9cm} Y C{0.9cm}@{}}
+\toprule
+\textbf{Functionality} & \textbf{18} & \textbf{Visualisation} & \textbf{11} \\
+\midrule
+1. AI model integration & 3 & 1. Chart diversity and relevance (three or more types) & 3 \\
+2. Front-end and back-end communication & 4 & 2. Interactivity (zoom, filtering, tooltips, updates) & 4 \\
+3. Error handling and input validation & 3 & 3. Clarity (labels, legends, titles, units) & 2 \\
+4. Back-end API design (REST, two or more methods) & 4 & 4. Performance and loading & 2 \\
+5. Real-time updates and responsiveness & 4 & & \\
+\midrule
+\textbf{Source code} & \textbf{5} & \textbf{Usability} & \textbf{6} \\
+\midrule
+1. Execution (no errors or warnings, quick start) & 2 & 1. User interface (responsive, advanced components) & 3 \\
+2. Comments & 1 & 2. User experience (feedback, personal touches, transitions) & 3 \\
+3. Code structure & 2 & & \\
+\midrule
+\textbf{Report} (PDF, 8 pages at most) & \textbf{5} & & \\
+\midrule
+1. Formatting and Harvard referencing & 1 & 3. API endpoint documentation & 2 \\
+2. System architecture and implementation & 2 & & \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Forty of the 45 points are judged from the running application, and the brief says a video that
+cannot be opened scores zero for most components. The application and its demonstration video
+therefore come first; the report is five points.
+
+\textbf{What will be built.}
+\begin{enumerate}
+  \item \textbf{A FastAPI back end around Assignment 2's \code{Predictor}.} It keeps the five
+    endpoints Assignment 1 planned, with the same JSON, and adds a what-if prediction, a response
+    curve, exports, a method list, a health check and the settings the front end needs
+    (Section~\ref{sec:api}). Eleven endpoints are Must; eleven more come with the Should and Could
+    items.
+  \item \textbf{The React front end, grown from the Assignment 1 prototype.} Its three screens move
+    from illustrative data to the real snapshot of 28 addresses and 7,966 transactions. Five views
+    are added: a what-if lab, a models and limits page, a watchlist, an about page and a live-lookup
+    dialog (Section~\ref{sec:frontend}).
+  \item \textbf{User input to prediction in real time.} A validated form takes a hypothetical
+    transaction (amount, direction, time) and shows every model's verdict as the user types. One
+    request scores a whole range of amounts: measured at 0.16 s for seven amounts, identical to
+    seven single calls that took 1.88 s (Section~\ref{sec:model}).
+  \item \textbf{Interactive charts in Plotly.js.} Four are Must and cover three chart types (bar,
+    scatter, line); two more are Should; three are Could (Section~\ref{sec:charts}). Each has zoom,
+    tooltips, a legend, units, the snapshot date, a table view and an export.
+  \item \textbf{Validation and error handling on both tiers}, from one table of rules and one
+    catalogue of states (Section~\ref{sec:errors}).
+  \item \textbf{The High Distinction features}: a method selector, a watchlist with notes, the
+    guarded Explorer Assistant, a replay of an address's history, and a live lookup of any Bitcoin
+    address, which needs change request CR-08.
+  \item \textbf{The submission}: the report (8 pages), the code zip with its README, the video
+    (7 minutes), the minutes for Weeks 1 to 12 and the contribution form (Section~\ref{sec:report}).
+\end{enumerate}
+
+\textbf{How this keeps the earlier promises.} Assignment 1's success measure was that AC-01 to
+AC-03 and FR-05 pass on every snapshot address in the Assignment 3 build and are shown in the video.
+That is milestone MS2. The wording rule does not change: the application says ``unusual'', ``flag''
+and ``worth a look'', and every flagged item carries the line \emph{``Unusual activity requires
+investigation; it does not indicate wrongdoing.''} Assignment 2's numbers are not touched: the
+models are loaded as they were frozen at \code{results-v1.1}.
+
+\textbf{The dates that matter.}
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.2cm}Y@{}}
+\toprule
+\textbf{Date} & \textbf{Milestone} \\
+\midrule
+Wed 11 Nov & CR-07 and CR-08 sent to the team; the questions in Appendix~\ref{app:cr} sent to the tutor. \\
+Sun 15 Nov & MS1, the walking skeleton: the five Assignment 1 endpoints answer from the real snapshot and the three prototype screens show them. \\
+Sun 22 Nov & MS2, the Must tier: the minimum viable demonstration passes on all 28 addresses, with the what-if lab, four charts, validation, error states and export. \\
+Fri 27 Nov & MS3, feature freeze: the Should items that are finished stay; the rest are cut and recorded. \\
+Sun 29 Nov & MS4, code freeze: a teammate installs from the README on Windows and on macOS; tag \code{v1.0-rc}. \\
+Sat 5 Dec & MS5: everything submitted on Canvas. Sunday 6 December is spare. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{The critical path.} API contract → back-end endpoints → front end on the real API →
+what-if and charts → MS2 → usability walkthrough and fixes → clean install → video → submission.
+The Should items hang off MS2 and are never on this path. Assignment 1's baseline started this work
+on about 28 October; it starts on 10 November, so 34 planned days are done in 26. Section
+\ref{sec:schedule} shows how, and Section~\ref{sec:cutorder} says what is cut first.
+
+\subsection{What needs the team this week}
+\label{sec:needsteam}
+
+\begin{team}
+\begin{enumerate}
+  \item \textbf{Generative AI (the tutor).} The brief says generative AI ``must not be used to
+    generate content for this assignment'', allows it for learning, idea generation and debugging,
+    and requires all use to be acknowledged in the report. For Assignment 2 the tutor allowed AI on
+    condition of a separate declaration. Ask Arthur Hoang by Wed 11 Nov whether that arrangement
+    covers Assignment 3, and build nothing that depends on the answer before it arrives
+    (risk 32). The use log continues in \fp{docs/AI_USE_LOG.md} either way.
+  \item \textbf{CR-07 and CR-08 (all four members).} Assignment 1's change control needs every
+    member's recorded agreement to add the optional items and to allow a live lookup
+    (Appendix~\ref{app:cr}).
+  \item \textbf{Owners (weekly meeting, Week 9).} Section~\ref{sec:wp} proposes owners from
+    Assignment 1's WBS. Each member needs an area they build and can explain in the video and to the
+    tutor. Check the split against the contribution form's scaling rule before anyone starts.
+  \item \textbf{Which commit was submitted for Assignment 2 (Cao Tri Tran).} The repository has no
+    \code{v1.0} tag. Tag the submitted commit so the back end can name the exact models it loads.
+  \item \textbf{The Week 9--12 slides (anyone).} Put them in the shared folder when they are
+    released; decisions D-A3-2 to D-A3-4 are checked against them.
+\end{enumerate}
+\end{team}

@@ -1,0 +1,193 @@
+\section{Risks, acceptance and the submission checklist}
+\label{sec:risks}
+
+\subsection{Risk register for Assignment 3}
+\label{sec:riskregister}
+
+The register continues the numbering, owners and scoring of Assignments 1 and 2. Risks that still
+matter keep their number, with the trigger rewritten for this assignment; new risks start at 32.
+The score is likelihood × impact with Assignment 1's mapping: Unlikely 1, Low 2, Moderate 3, Likely
+and High 4; impact Low 2, Medium 3, High 4, Critical 5. Rows are sorted by score. The register is
+reviewed at each weekly meeting and after each milestone.
+
+{\small
+\begin{longtable}{@{}L{0.7cm}L{3.2cm}L{2.0cm}L{3.4cm}L{4.6cm}@{}}
+\toprule
+\textbf{No.} & \textbf{Risk} & \textbf{L × I} & \textbf{Trigger / owner} & \textbf{Prevention; fallback} \\
+\midrule
+\endhead
+7 & Critical-path tasks slip & Likely × Critical\newline 4×5 = 20 &
+MS1 or MS2 missed; the work starts 13 days after Assignment 1's baseline / Le Quang Anh Hoang &
+\textit{Prevention:} Must before Should; the contract frozen on day 59 so both tiers build at once;
+a daily check against Section~\ref{sec:schedule}. \textit{Fallback:} cut from the bottom of
+Section~\ref{sec:cutorder}; MS2 may move two days; the submission never moves. \\
+9 & The code does not run on the marker's machine & Likely × High\newline 4×4 = 16 &
+The clean install (T44) needs help, or anything prints a warning / Le Quang Anh Hoang &
+\textit{Prevention:} pinned environments; start-up checks with one-sentence messages; Vite's proxy
+so CORS never appears; two operating systems tested; expected output in the README.
+\textit{Fallback:} the troubleshooting section and the pip route; tell the tutor at once. \\
+32 & The rule on generative AI is broken or the use is under-declared & Moderate × Critical\newline 3×5 = 15 &
+No written answer from the tutor by Fri 13 Nov; or a member cannot explain code they submitted /
+Cam Dan Bui &
+\textit{Prevention:} the question goes out on 11 Nov; \fp{docs/AI_USE_LOG.md} is kept daily; each
+member owns an area and presents it in the video; the report acknowledges all use.
+\textit{Fallback:} follow the tutor's ruling at once, re-plan who writes what, and declare
+everything. \\
+6 & Scope creep: optional features take time the Must tier needs & Likely × Medium\newline 4×3 = 12 &
+Work on a Should or Could item while a Must item is open; a feature with no line in the change log /
+Le Quang Anh Hoang &
+\textit{Prevention:} the tiers; the MS2 gate; CR-07 and CR-08. \textit{Fallback:} stop the item and
+record the cut in the minutes. \\
+15 & Live API limits (only if CR-08 is approved) & Likely × Medium\newline 4×3 = 12 &
+A 429 or a time-out during a lookup; any Must feature making a network call / Le Quang Anh Hoang &
+\textit{Prevention:} off by default; a cache; two hosts; six lookups an hour; the video uses a
+cached lookup and one short fresh one. \textit{Fallback:} switch the setting off; S-09 is cut and
+nothing else changes. \\
+33 & A library version makes the saved models warn or fail to load & Moderate × High\newline 3×4 = 12 &
+A version message at start; a pickle error on another system / Cao Tri Tran &
+\textit{Prevention:} Assignment 2's exact pins; a version and hash check at start; the same models
+already ran on Windows, macOS and Linux in Assignment 2. \textit{Fallback:} the README's exact pip
+command. The models are not re-saved (W-06). \\
+36 & Uneven contribution, or a member cannot explain their part & Moderate × High\newline 3×4 = 12 &
+A member with nothing merged by MS1; a dispute over the form's shares / Cam Dan Bui &
+\textit{Prevention:} an area per member (Section~\ref{sec:wp}); reviews by a second member; the
+minutes record who did what; the form's rule checked in Week 9. \textit{Fallback:} reassign packages
+at the next meeting; tell the tutor early. \\
+8 & The video cannot be opened, is corrupt, or runs over 7 minutes & Low × Critical\newline 2×5 = 10 &
+The link is untested the day before; the rehearsal runs over 6:45 / Le Quang Anh Hoang &
+\textit{Prevention:} a script and a timed rehearsal; a file and an unlisted link; a private-window
+test by someone else; the link on the cover and in the text file. \textit{Fallback:} re-cut and
+upload a second copy. \\
+31 & Late or incomplete submission & Low × Critical\newline 2×5 = 10 &
+Not submitted 24 hours before the deadline / Le Quang Anh Hoang &
+\textit{Prevention:} the checklist of Section~\ref{sec:checklist}; submit on 5 December.
+\textit{Fallback:} resubmit at once; if past the deadline, tell the tutor and submit anyway. \\
+34 & The two tiers drift from the contract & Moderate × Medium\newline 3×3 = 9 &
+A view fails on a real response that the mock accepted / Minh Khang Nguyen &
+\textit{Prevention:} the freeze of T05; fixtures recorded from the real API; types generated from
+the schema (S-10). \textit{Fallback:} the back end's schema wins; the client is fixed the same
+day. \\
+35 & The chart library slows loading or misbehaves on phones & Moderate × Medium\newline 3×3 = 9 &
+The first chart is over budget; a touch gesture conflicts with scrolling / Minh Khang Nguyen &
+\textit{Prevention:} a partial bundle loaded on demand; device checks at MS2.
+\textit{Fallback:} a simpler tool bar; no WebGL; the table view always works. \\
+40 & A bug found after the code freeze & Moderate × Medium\newline 3×3 = 9 &
+A failing test or a review finding after MS4 / the package's owner &
+\textit{Prevention:} both suites green before MS4; only fixes afterwards. \textit{Fallback:} fix,
+retest, re-tag and rebuild the zip; re-record only the affected part of the video. \\
+12 & A flag is read as proof of wrongdoing & Low × High\newline 2×4 = 8 &
+A banned word, or a flag without the limitation line, anywhere; a walkthrough participant reads a
+flag as guilt / Cao Tri Tran &
+\textit{Prevention:} the wording tests on both tiers; views V5 and V7; the walkthrough's task 3.
+\textit{Fallback:} fix the wording and retest with another participant. \\
+37 & The Week 9--12 teaching expects a different stack detail & Low × Medium\newline 2×3 = 6 &
+The tutor's answer to question 2 / Minh Khang Nguyen &
+\textit{Prevention:} ask by 11 Nov; the README's commands are the same either way.
+\textit{Fallback:} decide by 13 Nov, before front-end work is deep. \\
+38 & The Assistant is too slow, or its weights cannot be shared & Moderate × Low\newline 3×2 = 6 &
+An answer over 30 s on the PC; no agreed way to share 610 MB / Cao Tri Tran &
+\textit{Prevention:} prepared answers; an optional download. \textit{Fallback:} the template only,
+which is already the default. \\
+39 & Canvas's size limits & Low × Medium\newline 2×3 = 6 &
+The zip (about 40 MB) or the video is refused / Le Quang Anh Hoang &
+\textit{Prevention:} question 3 to the tutor; a trial upload if Canvas allows drafts.
+\textit{Fallback:} the unlisted link and the text file. \\
+\bottomrule
+\end{longtable}
+}
+
+\textbf{Earlier risks not carried forward:} those about Assignment 2's data, training and evaluation
+(4, 13 and 23 to 30), which ended with its frozen results. Risk 13's rule still binds the wording:
+no accuracy, precision or recall is ever claimed for real transactions, in the application or in the
+report.
+
+\subsection{Requirement traceability}
+\label{sec:trace}
+
+{\small
+\begin{longtable}{@{}L{4.4cm}L{4.3cm}L{5.4cm}@{}}
+\toprule
+\textbf{Requirement (Assignment 1)} & \textbf{Built by} & \textbf{Verified by} \\
+\midrule
+\endhead
+FR-01 select a supported address; coverage explained & V1; E3, E4; M-05, M-09 & AT-01, AT-02 \\
+FR-02 timeline with range and source & V2; E5; G1 & AT-01 \\
+FR-03 drilldown to a transaction's facts and source link & V3; E6, E7 & AT-05 \\
+FR-04 reason, comparison basis and limitation line on every flag & V3; E7; \code{explorer.explain} & AT-03, AT-09 \\
+FR-05 five distinguishable feedback states, each with a next action & The state catalogue (Section~\ref{sec:catalogue}) & AT-04 \\
+DR-02 time-safe features & Assignment 2's package, unchanged; the batched what-if & The parity tests; AT-12 \\
+NFR-01 units, source, snapshot date; no banned word; flags read as ``needs investigation'' & The chart contract; the wording tests; the walkthrough & AT-07, AT-09; walkthrough task 3 \\
+NFR-02 another member can reproduce the set-up & README; pinned environments & AT-11 \\
+NFR-03 keyboard, focus, contrast, recovery & Section~\ref{sec:a11y} & The accessibility inspection \\
+AC-01, AC-02, AC-03 & J1, J3, J2 & AT-01, AT-02, AT-03 on every snapshot address \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{Acceptance tests}
+\label{sec:acceptance}
+
+Each is automated where it can be and repeated by hand for the test log.
+
+{\small
+\begin{longtable}{@{}L{1.1cm}L{9.6cm}L{3.4cm}@{}}
+\toprule
+\textbf{No.} & \textbf{Test} & \textbf{Covers} \\
+\midrule
+\endhead
+AT-01 & For each of the 25 main addresses: chosen from V1, the overview shows the date range, labelled counts and a path to the flagged days & AC-01; FR-01, FR-02 \\
+AT-02 & A valid address outside the snapshot gets the coverage explanation and three examples, and no result & AC-02 \\
+AT-03 & Every flagged transaction's detail shows its contributing features with real values, the comparison basis and the limitation line (all flags through the API; three by hand) & AC-03; FR-04 \\
+AT-04 & Invalid, unsupported, loading, empty, insufficient history and network failure each render with a next action & FR-05 \\
+AT-05 & The facts of 20 random transactions equal the snapshot table, and each source link opens that transaction & FR-03 \\
+AT-06 & A valid what-if returns eight verdicts; each invalid vector is refused in the browser and by the server; a too-early time answers 422 with a date that works & M-03, M-06, M-09 \\
+AT-07 & Three or more chart types; each chart passes the contract's checklist; zoom, tooltip and click-through work & M-07; NFR-01 \\
+AT-08 & The API uses GET and POST; its documentation lists every endpoint; each endpoint's errors answer as its row says & M-01, M-02 \\
+AT-09 & No banned word in any response, view, state or export; the limitation line on every flag & NFR-01; risk 12 \\
+AT-10 & J1 to J6 at 390, 820 and 1280 pixels with no sideways scrolling & M-11 \\
+AT-11 & The README followed on Windows and on macOS by a member who did not write it, with no help, no error and no warning & M-14; risk 9 \\
+AT-12 & For all 28 addresses the API returns what \code{Predictor} returns; each method's flags equal the scores table & M-02; DR-02 \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{Submission checklist}
+\label{sec:checklist}
+
+{\small
+\begin{longtable}{@{}L{9.4cm}L{2.9cm}L{1.6cm}@{}}
+\toprule
+\textbf{Item} & \textbf{Who} & \textbf{By} \\
+\midrule
+\endhead
+\multicolumn{3}{@{}l}{\textbf{Report}} \\
+Eight pages or fewer by the script; cover has title, group, names, IDs, tutor and the video link & Cam Dan Bui & 3 Dec \\
+All of the brief's sections; four or more endpoints documented in full; two diagrams & Cam Dan Bui & 3 Dec \\
+Harvard references; every adapted figure cited; AI use acknowledged & Cam Dan Bui & 3 Dec \\
+Wording check passes; every number comes from a script & Cao Tri Tran & 3 Dec \\
+\multicolumn{3}{@{}l}{\textbf{Zip}} \\
+Built from tag \code{v1.0}; \fp{SHA256SUMS.txt} verifies; no \fp{node_modules}, \fp{.git}, \fp{.env} or caches & Le Quang Anh Hoang & 4 Dec \\
+Unzipped on a clean machine: the README's commands start both tiers; both test suites pass & Cam Dan Bui & 4 Dec \\
+README has set-up, libraries, run steps for both tiers and the model's configuration & Le Quang Anh Hoang & 4 Dec \\
+\multicolumn{3}{@{}l}{\textbf{Video}} \\
+Under 7:00; MP4; sound clear; three device sizes; the whole workflow; decisions and difficulties & Minh Khang Nguyen & 3 Dec \\
+Unlisted link opens in a private window on another member's machine; link on the cover and in the text file & Cam Dan Bui & 4 Dec \\
+\multicolumn{3}{@{}l}{\textbf{Team documents}} \\
+Minutes for Weeks 1 to 12, with CR-07 and CR-08 and the post-project review & Cam Dan Bui & 4 Dec \\
+Contribution form checked against its rule and signed by all four & all & 4 Dec \\
+\multicolumn{3}{@{}l}{\textbf{Upload}} \\
+Five files with the group-name file names, uploaded by one member & Le Quang Anh Hoang & 5 Dec \\
+Canvas receipt saved; the uploaded files downloaded again and opened & Le Quang Anh Hoang & 5 Dec \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{After submission}
+
+\begin{itemize}
+  \item The post-project review in the Week 12 minutes: what changed from this plan, and why.
+  \item Kaggle tokens from Assignment 2 rotated; the archive folders on the PC deleted when marks
+    are released.
+  \item The repository stays private until marks are released; then the team decides whether to
+    publish it beside Assignment 2's.
+\end{itemize}

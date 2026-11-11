@@ -1,0 +1,226 @@
+\section{AI model integration}
+\label{sec:model}
+
+The brief's wording for full points is ``seamlessly integrated, provides real-time predictions,
+and handles various input types''. The application serves nine scoring methods and one language
+model from Assignment 2, takes four kinds of input (an address, a transaction of that address, a
+hypothetical transaction, and a choice of method), and answers each from memory or in well under a
+second.
+
+\subsection{The methods the application serves}
+\label{sec:methods}
+
+Names, thresholds and sizes are read from the Assignment 2 repository at commit \code{aa56a26}. A
+transaction is flagged by a method when it can be scored and its score reaches that method's
+threshold.
+
+{\small
+\begin{longtable}{@{}L{3.4cm}L{2.0cm}L{4.2cm}L{1.3cm}L{2.7cm}@{}}
+\toprule
+\textbf{Method} & \textbf{Family} & \textbf{What its score measures} & \textbf{Flag at} & \textbf{File} \\
+\midrule
+\endhead
+Robust z baseline (A1) \newline \code{baseline} & Statistics & The largest $|z|$ of F1 to F4 against the address's own median and spread. Nothing is trained & 5.0 & \fp{baseline.json} \newline 1 kB \\
+Isolation Forest \newline \code{isolation_forest} & Outlier detection & How easily random trees isolate the transaction & 0.589 & \fp{isolation_forest.joblib} \newline 2.8 MB \\
+Local Outlier Factor \newline \code{lof} & Outlier detection & Local density against the nearest neighbours & 1.855 & \fp{stage/C3_lof.joblib} \newline 3.3 MB \\
+K-Means distance \newline \code{kmeans} & Clustering & Distance to the nearest cluster centre & 9.978 & \fp{stage/C4_kmeans.joblib} \newline 2 kB \\
+DBSCAN noise \newline \code{dbscan} & Clustering & Distance to the nearest dense core & 2.821 & \fp{stage/C5_dbscan.joblib} \newline 0.3 MB \\
+Regression residual \newline \code{regression} & Regression & The miss between the predicted and actual size and gap & 3.5 & \fp{regression.joblib} \newline 1.7 MB \\
+Regression expected range \newline \code{regression_interval} & Regression & Distance outside the conformal expected range & 0.0 & \fp{regression_interval.joblib} \newline 0.5 MB \\
+Score fusion \newline \code{fusion} & Combination & Regression and Isolation Forest together, at one flag budget & 1.0 & \fp{fusion.joblib} \newline 5.0 MB \\
+TxGPT surprisal \newline \code{txgpt_method} & Language model & How surprising the transaction's tokens are to TxGPT, trained from scratch on the crawl & 12.203 & \fp{txgpt_method.joblib} \newline 17.5 MB \\
+\bottomrule
+\end{longtable}
+}
+
+The nine files total about 31 MB and go in the zip. TxGPT's scores for the snapshot were computed
+in advance and are stored with its method, so it shows a verdict for every snapshot transaction but
+not for a what-if; the interface says ``not available for a hypothetical transaction'' in its row.
+The tenth model, the 152M Explorer Assistant, writes explanations and scores nothing
+(Section~\ref{sec:assistant}).
+
+\textbf{The method selector (S-01).} Every snapshot transaction already has a score and a flag
+from all nine methods in \fp{scores.csv}. Choosing a method changes which column decides
+\code{flagged}, \code{score}, the daily flagged counts and the chart colours. The explanation then
+opens with ``Flagged by Isolation Forest.'' and lists what stands out in F1 to F4, or the two largest
+differences when nothing does, exactly as Assignment 2's template does for any method. The service
+makes this view with \code{dataclasses.replace(predictor, selected=method)}, which shares the loaded
+tables. The selector always shows which method is active and offers ``Back to the default''.
+
+\subsection{From input to output}
+\label{sec:prepost}
+
+The report must describe preprocessing and postprocessing. These are the stages and where each
+lives.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.6cm}Y L{4.1cm}@{}}
+\toprule
+\textbf{Stage} & \textbf{What happens} & \textbf{Code} \\
+\midrule
+Validate & Address checksum and network; transaction ID; amount, direction and time ranges & \fp{app/core/validation.py}, the schemas \\
+Look up & The address's rows, from the snapshot or the live cache & \fp{services/store.py} \\
+Preprocess & Amount to satoshis; the hypothetical row with the history's median shape; features F1 to F4 from strictly earlier transactions; robust z-scores against two comparison windows; z clipped to $\pm 20$; direction as two indicator columns & \fp{explorer.features}, \fp{explorer.methods.model_inputs} \\
+Predict & Each saved method's \code{score}; compared with its threshold & \fp{explorer.methods.flags}, the method classes \\
+Postprocess & Units people read (BTC, hours, counts); each feature's role (flag, contributing, within usual); the comparison basis; the template explanation; the limitation line on flags; NaN to null & \fp{Predictor.detail}, \fp{explorer.explain} \\
+Check & No banned word in any text; the response matches its model & \code{check_outputs}, the response model \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Snapshot transactions were preprocessed and scored when Assignment 2 froze its results, so a GET
+only reads and postprocesses. The time-safety rule holds everywhere: a feature uses only
+transactions confirmed strictly earlier at the same address, and transactions with the same time are
+never each other's history.
+
+\subsection{The what-if, single and batched}
+\label{sec:whatif}
+
+\textbf{Single (E8).} \code{Predictor.score_what_if} as it is: 0.40 s measured.
+
+\textbf{Batched (E9).} The curve needs the same transaction at many amounts. Called one by one,
+41 amounts would take about 16 s\est{}. Because same-time transactions are never each other's
+history, all the hypothetical rows can share one time and go through one feature build: each sees
+only the real, earlier history.
+
+\begin{lstlisting}[style=py]
+rows = [hypothetical(address, amount, direction, t, txid=f"what-if-{i:03d}")
+        for i, amount in enumerate(amounts)]            # same time t, distinct ids
+frame = build_features(pd.concat([earlier, pd.DataFrame(rows)]), FeatureConfig.refined())
+new = frame[frame["txid"].str.startswith("what-if")].assign(period="eval")
+scores = {name: method.score(new) for name, method in usable.items()}
+\end{lstlisting}
+
+Measured on the running example with seven amounts from 0.0001 to 10 BTC: 0.16 s for the batch
+against 1.88 s for seven single calls, and the scores of all eight methods equal to six decimal
+places. The default curve of 41 amounts, from a hundredth of the usual amount to a thousand times
+it, took 0.18 s for all eight methods. On it the baseline's score falls from 5.94 at the smallest
+amount to 0.45 at the usual one and rises to 9.00 at the largest: an amount far below the usual
+stands out as well as one far above. The flag line of 5.0 is crossed at about 0.023 BTC on the way
+up and at about 0.00001 BTC on the way down.
+
+\begin{done}
+A parity test scores 41 amounts both ways on three addresses and both directions and requires equal
+scores and flags for every method. E9 answers in under 1.5 s on the PC and the Mac.
+\end{done}
+
+\subsection{Copying Assignment 2's runtime}
+\label{sec:vendoring}
+
+\code{tools/vendor_a2.py --from ../COS30049A2 --commit <sha>} does the copy, so it can be repeated
+and checked.
+
+\begin{enumerate}
+  \item It checks out nothing: it reads files from the given commit with \code{git show}, so
+    uncommitted work cannot leak in.
+  \item It finds the modules to copy by loading the entry points in a clean interpreter
+    (\code{Predictor.load()}, one \code{score_address}, one \code{score_what_if}) and listing every
+    \code{explorer} and \code{lm} module that was imported. On 10 November that list was 23
+    \code{explorer} modules and \code{lm.tx_tokens}: \code{amounts}, \code{assistant},
+    \code{baseline}, \code{classify}, \code{clustering}, \code{esplora}, \code{explain},
+    \code{external}, \code{features}, \code{fusion}, \code{inject}, \code{labelled},
+    \code{methods}, \code{outliers}, \code{predict}, \code{regression}, \code{scores},
+    \code{settings}, \code{snapshot}, \code{split}, \code{stage_search}, \code{stages} and
+    \code{txgpt}. S-05 adds the Assistant's modules of \code{lm} the same way; S-09 adds
+    \code{transactions} and the frozen-model adapter.
+  \item It copies the nine method files, \fp{selection.json}, \fp{profiles.joblib}, the four
+    snapshot tables and the manifest, \fp{config/settings.json}, and the two evaluation tables E11
+    reads.
+  \item It writes \fp{backend/A2_VENDOR.json}: the source commit, the date, and a SHA-256 for every
+    copied file.
+\end{enumerate}
+
+\begin{caution}
+The package keeps the name \code{explorer} and its module names. The saved models are pickles that
+record each class by its module path; a renamed module would make them fail to load. No file under
+\fp{backend/explorer/} or \fp{backend/lm/} is edited by hand. A test recomputes every hash against
+\fp{A2_VENDOR.json}.
+\end{caution}
+
+\subsection{Modifications for the web}
+\label{sec:mods}
+
+The brief asks the report to list ``any modifications for web deployment''. Every one is in a
+service around the copied package, is written up in \fp{backend/MODIFICATIONS.md}, and has a test.
+
+{\small
+\begin{longtable}{@{}L{1.2cm}L{5.4cm}L{4.4cm}L{3.0cm}@{}}
+\toprule
+\textbf{No.} & \textbf{Modification} & \textbf{Why} & \textbf{Test} \\
+\midrule
+\endhead
+Mod-1 & The models and tables load once, in the application's lifespan, and are shared read-only & A load takes 0.9 s; a request must not pay it & Start-up test; health reports the counts \\
+Mod-2 & A per-address cache of the scored result, filled lazily and warmed for all 28 addresses in the background after start & Repeat views answer from memory & Second request faster than the first; equal bodies \\
+Mod-3 & \code{score_address}'s single result is split into timeline, a page of rows and one detail & It is up to 2 MB; a view needs a few kB & Parity: the pieces rebuild the whole \\
+Mod-4 & A timeline for addresses with too little history, built from the feature table & \code{score_address} raises for them, but A1's screen lists their transactions unscored & The three short-history addresses answer 200 \\
+Mod-5 & The batched what-if (Section~\ref{sec:whatif}) & 41 amounts in one feature build & Parity with single calls \\
+Mod-6 & A what-if that cannot be scored answers 422 with the history counts & A1's meaning of 422; the form can say which date would work & Early-time what-if \\
+Mod-7 & The deciding method can be chosen per request & S-01 & Flags equal \fp{scores.csv} for each method \\
+Mod-8 & Exceptions become HTTP errors in one place: \code{Unsupported} 404, \code{InsufficientHistory} 422, \code{ValueError} 400 & One error body & One test per mapping \\
+Mod-9 & The Assistant loads on first use behind a lock, writes one answer at a time off the event loop, and caches answers by a hash of the facts & An answer takes about 10 s of CPU; two at once would double it & Second request is cached; a busy request gets 429 \\
+Mod-10 & Start-up checks: library versions against the pins, every model file against its hash, a named count of worker threads & A clear message, not a flood of warnings & Wrong version stops with the message \\
+Mod-11 & Frozen models applied to a fetched address, with the regression's residual scales set from that address's own earlier 70\% & S-09; the route Assignment 2 used for its held-out snapshot & Parity with Assignment 2's DS10 scores on one address \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{The Explorer Assistant (S-05)}
+\label{sec:assistant}
+
+\begin{itemize}
+  \item \textbf{What the user sees.} Every explanation starts as the template, labelled ``Template:
+    fixed sentences filled in from the numbers''. A button, ``Ask the Assistant to write this'',
+    appears when \code{capabilities.assistant} is true. While it writes, the panel shows a progress
+    line (``Writing; this takes about 10 seconds on this computer'') and a ``Keep the template''
+    button that cancels. The answer replaces the template with the label ``Written by the Explorer
+    Assistant, a language model the team trained; checked by code before being shown''.
+  \item \textbf{The guardrail.} Six checks from \code{explorer.assistant.check}: every number comes
+    from the facts, the limitation line is present on a flag, no banned word, the comparison words
+    point the right way, the verdict matches, and the answer is not empty. A failed answer is
+    discarded; the template stays, with a line naming the failed checks.
+  \item \textbf{Not installed.} Without the weights the button is replaced by a note: ``The
+    Assistant's model file (610 MB) is not installed; the README says how to add it. Explanations
+    use the template.'' Nothing else changes.
+  \item \textbf{Speed.} Decoding is greedy, so the same facts always give the same answer; answers
+    are cached by a SHA-256 of the facts. \code{tools/precompute_assistant.py} writes the guarded
+    answers for the snapshot's flagged transactions under the baseline to a JSON file that ships in
+    the zip, so a marker without the weights still reads Assistant-written explanations there. A
+    what-if or a fetched address needs the weights.
+  \item \textbf{Limits.} One answer at a time; a second request waits its turn through a 429 and an
+    automatic retry. The request's time limit is 90 seconds, the first load included.
+\end{itemize}
+
+\subsection{The live lookup (S-09, needs CR-08)}
+\label{sec:live}
+
+\begin{enumerate}
+  \item The user types a valid address that is not in the snapshot. The unsupported state explains
+    the coverage as before and, when live lookup is on, adds ``Fetch this address's public history''.
+  \item \code{POST /api/live/lookups} starts a background job and answers 202. The job pages
+    through Esplora's confirmed history, newest first, 25 transactions a page, with Assignment 2's
+    client: paced requests, back-off, and a switch to the second host when the first limits the rate.
+  \item Progress events drive a dialog: pages and transactions so far against the cap, and a
+    Cancel button. The fetch stops at \code{maxTx} (500 by default), so it needs at most 20 pages.
+  \item The history is cleaned (\code{build_transactions}), featured (\code{build_features}),
+    split at 70\% (\code{assign_periods}) and scored by the frozen methods through Assignment 2's
+    adapter. TxGPT is skipped unless PyTorch is installed.
+  \item The result goes into the live store; the overview opens with a ``Live data, fetched
+    10 Nov 2026 14:02 UTC, the most recent 500 transactions'' banner in place of the snapshot date.
+\end{enumerate}
+
+\begin{caution}
+\textbf{Limits that are part of the scope.} At most six lookups an hour and one at a time;
+Blockstream allows about 700 unauthenticated requests an hour from one IP address. An address with fewer than 10
+transactions or 14 days of history shows the insufficient-history state. When only the most recent
+500 transactions are fetched, the oldest of them have little history behind them and are shown
+unscored; the banner says so. A fetched address is public blockchain data and is treated exactly
+like a snapshot address: no owner, no label, the same wording and the same limitation line. The
+cache is local and E20 clears it.
+\end{caution}
+
+\subsection{What stays out}
+
+The Elliptic and BitcoinHeist classifiers (W-04), free chat (W-05) and any retraining (W-06). The
+report's model section still recaps all of Assignment 2's models, and says which ones the web
+application serves and why.

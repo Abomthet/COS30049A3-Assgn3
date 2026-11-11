@@ -1,0 +1,293 @@
+\section{The front end}
+\label{sec:frontend}
+
+\subsection{Views and routes}
+\label{sec:routes}
+
+Every view and every state has its own link, as in the prototype, so the back button works, a
+usability task or a screenshot can start anywhere, and a filter can be shared by copying the address
+bar. Filters live in the query string.
+
+{\small
+\begin{longtable}{@{}L{0.7cm}L{3.0cm}L{5.7cm}L{2.4cm}L{1.7cm}@{}}
+\toprule
+\textbf{View} & \textbf{Name} & \textbf{Route} & \textbf{Endpoints} & \textbf{Tier} \\
+\midrule
+\endhead
+V1 & Address selection & \texttt{\#/} \ (\texttt{?q=} prefills the box) & E3, E4 & \must{} (A1) \\
+V2 & Address overview & \texttt{\#/address/\{address\}} & E5, E6 & \must{} (A1) \\
+V2 & \ldots its transactions tab & \texttt{\#/address/\{address\}/\allowbreak transactions} & E6, E10 & \must \\
+V3 & Day and transaction & \texttt{\#/address/\{address\}/\allowbreak day/\{date\}} and \texttt{\ldots/tx/\{txid\}} & E6, E7, E12 & \must{} (A1) \\
+V4 & What-if lab & \texttt{\#/address/\{address\}/what-if} & E8, E9 & \must \\
+V5 & Models and limits & \texttt{\#/models} & E11 & \must \\
+V6 & Watchlist & \texttt{\#/watchlist} & E13 to E15 & \should \\
+V7 & About and help & \texttt{\#/about} & E2 & \must \\
+V8 & Live lookup & a dialog over V1 & E16 to E19 & \should \\
+\bottomrule
+\end{longtable}
+}
+
+\textbf{The shell around every view.} A header with the product name (a link to V1), the
+navigation (Addresses, Models, Watchlist, About), the snapshot date and source, a service-status dot
+with its words, and a theme switch. A footer with the limitation line. A skip link, a region for
+toasts, and an error boundary. After each navigation the page scrolls to the top and focus moves to
+the new heading.
+
+\subsection{V1: address selection}
+
+\begin{itemize}
+  \item \textbf{Lookup form.} One field, labelled ``Bitcoin address'', with the hint ``Addresses
+    start with 1, 3 or bc1''. The checker runs as the user types and on submit, before any request.
+    A valid address goes to E4.
+  \item \textbf{Outcomes.} Supported: open V2. Invalid: the specific message under the field, the
+    field keeps the text and the focus. Unsupported: a panel that explains the coverage, three
+    example addresses as links and ``Clear and try another address''; with S-09, ``Fetch this
+    address's public history''.
+  \item \textbf{Address table} from E3: address, type, active period, transactions, scored,
+    unusual (or ``Short history, not scored''). New: sorting on every column, a search box, and
+    filter chips (All, With unusual transactions, Short history, Watched).
+  \item \textbf{States.} Skeleton rows while loading; an error panel with ``Try again''; ``No
+    address matches; clear the filter'' when a filter empties the table.
+  \item \textbf{With S-04:} a star on each row and up to five ``Recently opened'' chips.
+\end{itemize}
+
+\subsection{V2: address overview}
+
+\begin{itemize}
+  \item \textbf{Heading.} The full address with a copy button, its type, the source and snapshot
+    date, an Export menu (CSV, JSON), and with S-01 the method selector.
+  \item \textbf{Four summary tiles}: transactions, active period, unusual transactions and days,
+    and ``Scored 367 of 377''.
+  \item \textbf{Tabs}: Overview, Transactions, What-if and, with S-06, Replay. Each tab is a route.
+  \item \textbf{Overview tab.} Chart G1 and the list ``Days with unusual transactions'', which
+    shows eight days and a ``Show all'' control (the fix for Assignment 1's inspection issue 2).
+  \item \textbf{Transactions tab.} The filter bar, chart G2 and the transaction table
+    (Section~\ref{sec:filters}).
+  \item \textbf{Short history.} The banner from the prototype with its two actions, ``Browse its
+    transactions anyway'' and ``Choose an address with more history''; the tiles and G1 still show
+    the counts.
+\end{itemize}
+
+\subsection{The filter bar and the transaction table (M-08)}
+\label{sec:filters}
+
+\begin{itemize}
+  \item \textbf{Controls.} Status chips (Unusual, Not unusual, Not scored), direction chips
+    (Received, Sent), a date range (two date fields limited to the address's active period), a
+    sort menu (newest, oldest, largest, highest score) and ``Reset filters''.
+  \item \textbf{Behaviour.} Each change updates the query string, sends E6 and redraws chart G2
+    and the table together. The count line says ``Showing 12 of 377 transactions''. Zooming G2 on
+    the time axis fills the date range; the two stay in step.
+  \item \textbf{Table.} Time (UTC), direction, amount in BTC to eight places, score, status badge
+    and the main reason; 50 rows a page; a row opens V3. On a phone each row becomes a card.
+  \item \textbf{Validation.} A ``from'' date after the ``to'' date marks both fields and sends
+    nothing. The server applies the same rule.
+\end{itemize}
+
+\subsection{V3: day and transaction}
+
+\begin{itemize}
+  \item \textbf{Layout.} The day's transactions on the left and the detail panel on the right. On
+    a phone the panel opens as a full-height sheet over the list, with a Close button and focus held
+    inside it.
+  \item \textbf{Facts (FR-03).} Transaction ID with a copy button, confirmed time in UTC, block,
+    direction, the amount and how it is made up from received and sent, and a ``View on
+    Blockstream'' link that opens in a new tab.
+  \item \textbf{Why this transaction stands out (FR-04, AC-03).} The explanation in plain words,
+    the comparison basis (``10 earlier transactions in the same direction, 16 May to 9 July 2024''),
+    and the limitation line. With S-05, the Assistant control of Section~\ref{sec:assistant}.
+  \item \textbf{Chart G3} and the table that repeats every number. The z-score appears in the
+    table and the tooltip, not in the sentence (inspection issue 1).
+  \item \textbf{What each model says (M-13).} A table of the nine methods: family, score,
+    threshold and verdict (``Flag'', a dash, or ``not available''), with the deciding method
+    marked. With S-02, chart G4 above it.
+  \item \textbf{Moving on.} Previous and next day, previous and next unusual day, and ``Try a
+    what-if from here'', which opens V4 with this transaction's direction.
+  \item \textbf{States.} Nothing selected: ``Choose a transaction to see its details''. Not
+    scored: the facts, then the insufficient-history note with its two next steps.
+\end{itemize}
+
+\subsection{V4: the what-if lab (M-06)}
+\label{sec:viewwhatif}
+
+This is the brief's ``custom user input form with comprehensive validation and dynamic feedback''
+and its ``real-time prediction''.
+
+\begin{longtable}{@{}L{2.2cm}L{5.6cm}L{6.2cm}@{}}
+\toprule
+\textbf{Field} & \textbf{Control} & \textbf{Feedback while typing} \\
+\midrule
+\endhead
+Amount & A text field in decimal mode with a BTC or satoshi switch; a slider on a log scale over the curve's range; chips for ``Usual'', ``10 × usual'' and ``100 × usual'' & The rule that fails, under the field; else a line such as ``0.05 BTC is about 95 times this address's usual outgoing amount'' \\
+Direction & A two-way switch: Received, Sent & The usual amount and the comparison count change with it \\
+Time (UTC) & A date field and a time field; chips for ``The day after its last transaction'', ``After 30 quiet days'' and ``After 90 quiet days'' & The gap since the previous transaction, in days and hours; a message if the time is before the first transaction or too far ahead \\
+\bottomrule
+\end{longtable}
+
+\begin{itemize}
+  \item \textbf{No submit button is needed.} When all three fields are valid, the request goes
+    250 ms after the last change and any older request is cancelled. A ``Score it'' button is still
+    there for keyboard users and for anyone who expects one.
+  \item \textbf{While it updates.} The previous result stays in place, dimmed, with an ``Updating''
+    mark; nothing jumps.
+  \item \textbf{The result.} A verdict card (``Flagged by Robust z baseline'' or ``Not flagged'',
+    the score against the flag line, the explanation, and the limitation line when flagged); chart
+    G3 for the hypothetical transaction; the table of eight models, with TxGPT's row marked ``not
+    available for a hypothetical transaction''; chart G5 with the current amount marked.
+  \item \textbf{Under the curve}, one sentence read from it. For the running example it is: ``On
+    this address, a sent amount would be flagged from about 0.023 BTC upwards, and below about
+    0.00001 BTC.''
+  \item \textbf{A note at the top:} ``A what-if is hypothetical. Nothing is sent to the Bitcoin
+    network and nothing is stored.''
+  \item \textbf{Errors.} 422: ``At that time this address had 6 earlier transactions; scoring
+    needs 10 over 14 days'', with a button that sets the first date that works. A network failure
+    keeps every value in the form.
+  \item \textbf{With S-08:} ``Keep this scenario'' adds a row to a table of up to ten scenarios
+    (amount, direction, time, verdict, score, how many models flag it), which can be exported.
+\end{itemize}
+
+\subsection{V5 to V8}
+\label{sec:viewwatch}
+
+\begin{itemize}
+  \item \textbf{V5, models and limits.} A card per method from E11: name, family, one sentence on
+    how it scores, its threshold and whether it can score new input. With S-03, chart G6. Then
+    ``What a flag means, and what it does not'': flags compare an address with its own past; real
+    transactions have no labels, so no accuracy is claimed for them; recall is measured on planted
+    test transactions; the snapshot covers 28 addresses on one date.
+  \item \textbf{V6, watchlist (S-04).} Entries with label, note and counts. The star on V1 and V2
+    opens a dialog with a label field and a note field, each with a character count. Removing an
+    entry takes effect at once and shows a toast with Undo.
+  \item \textbf{V7, about and help.} What the Explorer is for and not for; how to read a flag; the
+    four features in plain words; the data source, snapshot and terms; keyboard help; the version.
+  \item \textbf{V8, live lookup (S-09).} A dialog with a progress bar, the page and transaction
+    counts and Cancel. Rate-limited: the wait, counting down. Upstream failure: ``Try again'' and
+    ``Pick a snapshot address''.
+\end{itemize}
+
+\subsection{State and data}
+
+\begin{itemize}
+  \item \textbf{Server data} comes through \code{useRequest}, keyed by the request's address. The
+    hook gains cancellation, an optional refresh interval, and ``keep the previous data while
+    loading''. Snapshot answers are kept for the session.
+  \item \textbf{The address bar} is the source of truth for the view, the selected transaction
+    and the filters.
+  \item \textbf{Preferences} (theme, units, recent addresses, the last method and filters) are in
+    local storage under one versioned key.
+  \item \textbf{The watchlist} is on the server. \textbf{Scenarios} are in session storage.
+  \item \textbf{Settings} come from E2 once at start. No store library is needed.
+\end{itemize}
+
+\subsection{Components}
+\label{sec:components}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.3cm}Y@{}}
+\toprule
+\textbf{From the prototype} & Badges, breadcrumbs, copy button, error state, state panel, page heading, icons \\
+\textbf{New, general} & Tabs; modal dialog (focus held inside, Escape closes, focus returns); toast with Undo; tooltip; skeleton; progress bar; data table with sorting and paging; empty state; error boundary; theme switch; service-status indicator \\
+\textbf{New, forms} & Field (label, hint, error, described-by links); number field with a unit switch; log slider; two-way switch; date and time fields; character counter; filter bar with chips; method menu; export menu \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The rubric's examples of advanced components are modals and dynamic forms. The build has three
+dialogs (watchlist note, live lookup, the phone's detail sheet), one dynamic form (V4), tabs, toasts
+with Undo and skeleton loading.
+
+\subsection{Layouts and touch}
+\label{sec:responsive}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.3cm}Y Y Y@{}}
+\toprule
+ & \textbf{Phone, 390 px} & \textbf{Tablet, 820 px} & \textbf{Desktop, 1280 px} \\
+\midrule
+Navigation & A menu button & A row & A row \\
+V1 table & Cards & Table, fewer columns & Full table \\
+V2 tiles & Two by two & Four in a row & Four in a row \\
+V3 & List, then a sheet & List above the panel & List beside the panel \\
+V4 & Form, then result & Form beside the verdict & Form, verdict and curve in view together \\
+Charts & Full width; fewer ticks; tools in a menu & Full width & Up to two side by side \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+No page scrolls sideways; the screenshot script fails if one does. Touch targets are at least
+44 px. On a touch screen a tap shows a chart's tooltip and a second tap opens the item.
+
+\subsection{Accessibility (NFR-03)}
+\label{sec:a11y}
+
+\begin{itemize}
+  \item Every action is a link or a button, reachable by Tab in reading order, with a visible
+    focus ring.
+  \item Chart G1 keeps the prototype's keyboard control: arrow keys move between days, Enter
+    opens one. Every chart has a text summary and a ``View as table'' switch.
+  \item A flag is never colour alone: orange, a triangle and the word ``Unusual''.
+  \item Text contrast is at least 4.5 to 1 in both themes; the chart colours are checked for
+    colour-blind readers.
+  \item Form errors are tied to their field, announced when they appear, and never clear what the
+    user typed.
+  \item Toasts and loading messages use a polite live region. Motion stops when the system asks
+    for reduced motion. The layout holds at 200\% zoom.
+\end{itemize}
+
+\subsection{Experience details (Usability 2)}
+
+\begin{itemize}
+  \item \textbf{Feedback.} Something visible within 100 ms of every action: a pressed state, a
+    skeleton, a progress line. Success is confirmed (``Copied'', ``Exported 377 rows'', ``Added to
+    the watchlist''). Every error says what happened and offers a next step.
+  \item \textbf{Personal.} The theme, the units, the last method and filters and the recent
+    addresses are remembered; the watchlist carries the user's own labels and notes.
+  \item \textbf{Transitions.} Panels, dialogs and toasts ease in and out in 150 to 200 ms; chart
+    updates animate between states and keep the zoom.
+  \item \textbf{Words.} One vocabulary everywhere (Section~\ref{sec:wording}).
+\end{itemize}
+
+\subsection{Wording}
+\label{sec:wording}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{4.2cm}Y@{}}
+\toprule
+\textbf{Say} & unusual; flag, flagged; worth a look; stands out; compared with this address's own history; not scored \\
+\textbf{Never say} & fraud, criminal, illicit, guilty, suspicious, for the tool or for any address (\code{bannedWords} in the settings); also no ``risk score'', ``alert'', ``threat'' or ``safe'' for an address \\
+\textbf{Always show} & ``Unusual activity requires investigation; it does not indicate wrongdoing.'' on every flagged item, in the footer, in every export \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A test renders every view and state and fails on a banned word; the back end's test does the same
+for every string in every response.
+
+\subsection{The usability walkthrough and the accessibility inspection (M-15)}
+\label{sec:usability}
+
+\begin{itemize}
+  \item \textbf{Who and when.} Two or more people who did not build the application; Wednesday 25
+    and Thursday 26 November, on the MS2 build. Minh Khang Nguyen runs the sessions; another member
+    observes with Assignment 1's observer sheet.
+  \item \textbf{Tasks.} Assignment 1's four, unchanged: (1) open the activity of a given address;
+    (2) find a day with unusual activity and open it; (3) find the transaction that stands out and
+    say what the marker means; (4) look up an address outside the snapshot and decide what to do.
+    A fifth is added: (5) find out how large a payment would have to be to stand out on this
+    address.
+  \item \textbf{Success.} Task 3 passes when the participant describes the flag as ``worth a
+    closer look'' and not as wrongdoing (NFR-01, condition 4). Each task records completion, time,
+    errors and the participant's words.
+  \item \textbf{After.} Issues are rated on Nielsen's 0 to 4 scale; every 3 and 4 is fixed before
+    MS4 and retested.
+  \item \textbf{Accessibility inspection.} J1 to J4 by keyboard alone; the contrast check; a pass
+    with a screen reader; reduced motion; 200\% zoom. Findings go in the same log.
+\end{itemize}
+
+\begin{done}
+\fp{docs/usability/} holds the filled observer sheets and the issue log; the report's appendix has
+the results table; no issue rated 3 or 4 is open.
+\end{done}

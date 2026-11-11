@@ -1,0 +1,242 @@
+\section{Work packages and schedule}
+\label{sec:schedule}
+
+\subsection{Where the schedule stands}
+
+Assignment 1's baseline gave WBS 1.4 34 days from about 28 October, finishing on 1 December with
+five days of margin. The work starts on 10 November (day 57), 13 days later, and the submission date
+does not move. The plan recovers the time in three ways: the back end and the front end run in
+parallel from a contract frozen on day 59; the prototype and \code{predict.py} already exist, so
+packages 1.4.2 and 1.4.3 are shorter than Assignment 1 estimated; and package 1.4.5, the optional
+features, is the only place where time is spent on anything that can be cut. This uses the whole of
+the Assignment 3 buffer, which is one of the things CR-07 records.
+
+\subsection{Work packages}
+\label{sec:wp}
+
+Owners follow Assignment 1's WBS: Le Quang Anh Hoang the back end (1.4.2), Minh Khang Nguyen the
+front end (1.4.3), all three of Cam Dan Bui, Cao Tri Tran and Minh Khang Nguyen the visualisations
+(1.4.4), and Cao Tri Tran the model. They are proposals until the Week 9 meeting records them.
+A second name is the reviewer.
+
+{\small
+\begin{longtable}{@{}L{0.8cm}L{6.3cm}L{1.3cm}L{2.9cm}L{2.5cm}@{}}
+\toprule
+\textbf{Task} & \textbf{What} & \textbf{Scope} & \textbf{Owner; reviewer} & \textbf{When} \\
+\midrule
+\endhead
+\multicolumn{5}{@{}l}{\textbf{1.4.1 Architecture and API}} \\
+T01 & Questions to the tutor; CR-07 and CR-08 to the team; answers recorded & -- & Cam Dan Bui & Wed 11 Nov \\
+T02 & Tag Assignment 2's submitted commit; create the private repository and its rules & M-01 & Cao Tri Tran & Wed 11 Nov \\
+T03 & \code{vendor_a2.py}; runtime copied with hashes; back-end environment; a smoke test loads the \code{Predictor} & M-01 & Cao Tri Tran; Hoang & 11--12 Nov \\
+T04 & Front end copied from the prototype; it builds and its 66 tests pass; the client moves to Axios & M-05 & Minh Khang Nguyen; Cao & 11--12 Nov \\
+T05 & The contract: Pydantic schemas for E1 to E11 and the error body; \fp{openapi.json} exported; the front end reviews it & M-01, M-02 & Hoang; Khang & Thu 12 Nov \\
+T06 & The \code{web} block of the settings; E2 & M-01 & Hoang & Thu 12 Nov \\
+\midrule
+\multicolumn{5}{@{}l}{\textbf{1.4.2 FastAPI back end}} \\
+T07 & Application factory, lifespan load, E1, logging, request identifiers, CORS & M-01 & Hoang; Cao & 12--13 Nov \\
+T08 & Exception classes and handlers; validation errors answer 400 & M-10 & Hoang & Fri 13 Nov \\
+T09 & Address and transaction-ID checks in Python; the shared vectors & M-09 & Hoang; Khang & Fri 13 Nov \\
+T10 & The address store, the explorer service and its cache (Mod-1 to Mod-4) & M-02 & Cao; Hoang & 13--14 Nov \\
+T11 & E3, E4, E5 & M-02 & Hoang & 13--14 Nov \\
+T12 & E6 with filters, sorting and paging; E7 & M-02, M-08 & Hoang & 14--15 Nov \\
+T13 & Parity and wording tests over all 28 addresses & M-14 & Cao & Sun 15 Nov \\
+T14 & E8; E9 with the batched build and its parity test (Mod-5, Mod-6) & M-03, M-04 & Cao; Hoang & 16--17 Nov \\
+T15 & E10 export; E11 methods with the evaluation tables & M-12, M-13 & Hoang & 17--18 Nov \\
+\midrule
+\multicolumn{5}{@{}l}{\textbf{1.4.3 React front end}} \\
+T16 & The shell: navigation, status indicator, theme, toasts, error boundary; settings from E2 & M-05, M-10 & Khang & 13--14 Nov \\
+T17 & V1, V2 and V3 on the real API; fixtures recorded; prototype banner and tools removed & M-05 & Khang; Dan & 14--15 Nov \\
+T18 & Tabs; the filter bar and the transaction table & M-08 & Khang & 16--18 Nov \\
+T19 & V4: the form, its rules and feedback, the live request & M-06, M-11 & Khang; Cao & 17--19 Nov \\
+T20 & V5 models and limits; V7 about and help & M-13 & Dan; Cao & 19--20 Nov \\
+T21 & The state catalogue in every view; time limits; recovery & M-10 & Khang; Hoang & 19--20 Nov \\
+T22 & Export menu; PNG export & M-12 & Khang & Fri 20 Nov \\
+\midrule
+\multicolumn{5}{@{}l}{\textbf{1.4.4 Visualisations}} \\
+T23 & The chart wrapper: contract, theme, table view, export, on-demand loading & M-07 & Cao; Khang & 15--16 Nov \\
+T24 & G1 daily activity, with keyboard control & M-07 & Khang & 16--17 Nov \\
+T25 & G2 transactions over time, with the filters & M-07, M-08 & Dan; Cao & 17--18 Nov \\
+T26 & G3 feature deviation & M-07 & Dan; Khang & Wed 18 Nov \\
+T27 & G5 what-if response & M-07 & Cao; Khang & 19--20 Nov \\
+T28 & Layouts at three widths; the screenshot script & M-11 & Khang; Dan & Sat 21 Nov \\
+T29 & \textbf{MS2}: the minimum viable demonstration on 28 addresses; test log entry & all Must & all & Sun 22 Nov \\
+\midrule
+\multicolumn{5}{@{}l}{\textbf{1.4.5 Optional features (the buffer)}} \\
+T30 & Method selector, both tiers & S-01 & Hoang, Khang & Mon 23 Nov \\
+T31 & G4 with ranks; G6 & S-02, S-03 & Cao, Dan & 23--24 Nov \\
+T32 & Watchlist: store, E13 to E15, dialog, V6; preferences & S-04 & Hoang, Khang & 23--25 Nov \\
+T33 & Assistant: service, E12, panel, prepared answers & S-05 & Cao; Dan & 24--25 Nov \\
+T34 & Replay & S-06 & Khang & 25--26 Nov \\
+T35 & Linked selection; scenario table & S-07, S-08 & Khang, Cao & Thu 26 Nov \\
+T36 & Live lookup, only if CR-08 is approved by 22 Nov: service, E16 to E20, dialog & S-09 & Hoang, Cao; Khang & 24--27 Nov \\
+T37 & Types generated from OpenAPI; tests and builds on every push & S-10 & Hoang & Mon 23 Nov \\
+T38 & Browser tests at three widths; the measurements & S-11, S-12 & Cao; Khang & 26--28 Nov \\
+\midrule
+\multicolumn{5}{@{}l}{\textbf{1.4.6 Test and fix}} \\
+T39 & Usability walkthrough, two sessions & M-15 & Khang runs; Dan observes & 25--26 Nov \\
+T40 & Accessibility inspection & M-15 & Dan & Thu 26 Nov \\
+T41 & Fixes for every issue rated 3 or 4; retest & M-15 & owners & 27--28 Nov \\
+T42 & \textbf{MS3}: feature freeze; the cut list recorded & -- & all & Fri 27 Nov \\
+T43 & README complete; comment and docstring pass; \fp{MODIFICATIONS.md} & M-14 & Hoang; all & 27--28 Nov \\
+T44 & Clean install from a trial zip: Windows, then macOS; README fixes & M-14 & Dan (Windows), Khang (macOS) & 28--29 Nov \\
+T45 & Browsers and devices; test log complete. \textbf{MS4}: tag \code{v1.0-rc} & M-14 & all & Sun 29 Nov \\
+\midrule
+\multicolumn{5}{@{}l}{\textbf{1.4.7 Report, video and submission}} \\
+T46 & Report sections written by their owners and integrated & M-16 & Dan integrates & 28 Nov--1 Dec \\
+T47 & Figures, screenshots, API tables from the schema, the measured table & M-16 & Cao, Hoang & 30 Nov--1 Dec \\
+T48 & Video: script and timed rehearsal; recording; edit and length check; unlisted upload & M-16 & Khang; all speak & 1--3 Dec \\
+T49 & Report review against the rubric; page count; references; AI acknowledgement & M-16 & Dan; Hoang & 2--3 Dec \\
+T50 & Tag \code{v1.0}; the zip from the tag; checksums; unzip and run on a clean machine & M-16 & Hoang; Cao & Fri 4 Dec \\
+T51 & Minutes for Weeks 1 to 12; contribution form signed & M-16 & Dan; all & Fri 4 Dec \\
+T52 & \textbf{MS5}: submit; download what was uploaded and open every file & M-16 & Hoang & Sat 5 Dec \\
+\bottomrule
+\end{longtable}
+}
+
+\textbf{Each member's area}, for the contribution form and the video:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.6cm}Y L{3.3cm}@{}}
+\toprule
+\textbf{Member} & \textbf{Builds and can explain} & \textbf{Writes} \\
+\midrule
+Le Quang Anh Hoang & The FastAPI service: routes, schemas, validation, errors, export, watchlist store, live lookup; the README; the zip & Report §2 and §4 \\
+Minh Khang Nguyen & The React application: shell, views, forms, states, filters, G1, replay; the usability sessions; the video & Report §3 \\
+Cam Dan Bui & Charts G2, G3 and G6; views V5 and V7; the accessibility inspection; the test log; minutes and form & Report §1, §6; integration \\
+Cao Tri Tran & The model layer: the copy from Assignment 2, the store and cache, the what-if and its batching, the chart wrapper, G4 and G5, the Assistant, the measurements & Report §5 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Day by day}
+
+Day numbers follow Assignment 1: day 0 is Monday 14 September 2026 and Assignment 3 is due on day 83.
+
+{\small
+\begin{longtable}{@{}L{2.1cm}L{4.3cm}L{4.3cm}L{3.5cm}@{}}
+\toprule
+\textbf{Day} & \textbf{Back end and model} & \textbf{Front end and charts} & \textbf{Tests, documents, team} \\
+\midrule
+\endhead
+Tue 10 Nov (57) & This plan & -- & -- \\
+Wed 11 Nov (58) & T02 tag and repository; T03 copy script, environment & T04 prototype copied, builds, tests pass & T01 questions and change requests sent \\
+Thu 12 Nov (59) & T05 schemas and error body; T06 settings and E2; T07 application factory, E1 & T04 Axios client; T05 contract review & Week 9 meeting: decisions, owners, CR votes \\
+Fri 13 Nov (60) & T08 handlers; T09 validation; T10 store and cache; T11 E3, E4 & T16 shell, status indicator, toasts, error boundary & The tutor's answer due; AI log and test log started \\
+Sat 14 Nov (61) & T11 E5; T12 E6 & T17 V1 and V2 on the API & -- \\
+Sun 15 Nov (62) & T12 E7; T13 parity and wording tests & T17 V3; T23 chart wrapper & \textbf{MS1} \\
+Mon 16 Nov (63) & T14 E8 & T23 wrapper done; T24 G1; T18 tabs & -- \\
+Tue 17 Nov (64) & T14 E9 and its parity test; T15 E10 & T24 keyboard control; T25 G2; T19 the form & -- \\
+Wed 18 Nov (65) & T15 E11 & T25 filters on G2; T26 G3; T18 filter bar and table & -- \\
+Thu 19 Nov (66) & Fixes from front-end use & T19 live request; T27 G5; T20 V5 & Week 10 meeting \\
+Fri 20 Nov (67) & Timings against the budgets & T21 states in every view; T22 export; T27 done; T20 V7 & Walkthrough participants booked \\
+Sat 21 Nov (68) & Examples in the API documentation; README draft & T28 three widths, screenshot script & -- \\
+Sun 22 Nov (69) & \multicolumn{2}{L{8.6cm}}{T29: the minimum viable demonstration on all 28 addresses} & \textbf{MS2}. CR-08 decision due \\
+Mon 23 Nov (70) & T30 method parameter; T37 generated types, CI; T32 watchlist store, E13 to E15 & T30 method menu; T31 G4 and G6 & -- \\
+Tue 24 Nov (71) & T33 Assistant service, E12; T36 live service & T32 watchlist dialog, V6, preferences & -- \\
+Wed 25 Nov (72) & T33 prepared answers; T36 & T34 replay; T33 Assistant panel & T39 walkthrough, session 1 \\
+Thu 26 Nov (73) & T36 E16 to E20; T38 measurements & T34; T35 selection and scenarios; T36 dialog & T39 session 2; T40 accessibility; Week 11 meeting \\
+Fri 27 Nov (74) & Fixes & Fixes & T41 fixes; T43 README. \textbf{MS3}: feature freeze \\
+Sat 28 Nov (75) & T43 comments, \fp{MODIFICATIONS.md} & T43 comments; T38 browser tests, screenshots & T44 clean install, Windows; T46 report sections begun \\
+Sun 29 Nov (76) & Fixes from the install & Fixes from the install & T44 macOS; T45 devices. \textbf{MS4}: tag \code{v1.0-rc} \\
+Mon 30 Nov (77) & T47 API tables, measured table & T47 screenshots and figures & T46 report draft \\
+Tue 1 Dec (78) & -- & T48 script and timed rehearsal & T46 draft complete \\
+Wed 2 Dec (79) & -- & T48 recording & T49 report review against the rubric \\
+Thu 3 Dec (80) & -- & T48 edit, length check, unlisted upload & T49 final report; Week 12 meeting \\
+Fri 4 Dec (81) & T50 tag \code{v1.0}, zip, checksums, unzip and run & -- & T51 minutes, form; the link opened in a private window \\
+Sat 5 Dec (82) & \multicolumn{2}{L{8.6cm}}{T52: submit; download the upload and open every file} & \textbf{MS5} \\
+Sun 6 Dec (83) & \multicolumn{3}{L{12.3cm}}{Buffer only. Deadline 23:59 GMT+7} \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{Gantt chart}
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[x=0.56cm, y=0.52cm, font=\scriptsize]
+  % day columns: 0 = Tue 10 Nov ... 26 = Sun 6 Dec
+  \def\labels{{"10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","1","2","3","4","5","6"}}
+  \def\nrows{17}
+  \foreach \d in {0,...,26} {
+    \pgfmathsetmacro{\lab}{\labels[\d]}
+    \node[anchor=south] at (\d+0.5, 0.15) {\lab};
+  }
+  % weekends shaded
+  \foreach \d in {4,5,11,12,18,19,25,26} { \fill[greysoft] (\d,0) rectangle (\d+1,-\nrows); }
+  \node[anchor=south west, font=\scriptsize\bfseries] at (0,0.8) {November};
+  \node[anchor=south west, font=\scriptsize\bfseries] at (21,0.8) {December};
+  \draw[grey] (0,0) -- (27,0);
+  \foreach \d in {0,...,27} { \draw[grey!25] (\d,0) -- (\d,-\nrows); }
+  \newcommand{\task}[5]{%
+    \node[anchor=east, align=right] at (-0.2, -#1+0.5) {#2};
+    \fill[#5, rounded corners=1pt] (#3, -#1+0.2) rectangle (#4, -#1+0.8);
+  }
+  \newcommand{\mile}[3]{%
+    \node[diamond, fill=warn, inner sep=1.6pt] at (#1, -#2+0.5) {};
+    \node[anchor=west, font=\scriptsize\bfseries, text=warn] at (#1+0.15, -#2+0.5) {#3};
+  }
+  \task{1}{Plan, questions, CRs, set-up (T01--T06)}{0}{3}{accent!45}
+  \task{2}{Back-end core, errors, validation (T07--T09)}{2}{4}{accent}
+  \task{3}{Store, E3--E7, parity tests (T10--T13)}{3}{6}{accent}
+  \task{4}{Shell and V1--V3 on the API (T16, T17)}{3}{6}{accent}
+  \mile{6}{4}{MS1}
+  \task{5}{Chart wrapper, G1, G2, G3 (T23--T26)}{5}{9}{accent}
+  \task{6}{What-if: E8, E9, V4, G5 (T14, T19, T27)}{6}{11}{accent}
+  \task{7}{Filters, table, export, E10, E11 (T15, T18, T22)}{6}{11}{accent!45}
+  \task{8}{States, V5, V7, three widths (T20, T21, T28)}{9}{12}{accent!45}
+  \task{9}{Minimum viable demonstration (T29)}{12}{13}{accent}
+  \mile{13}{9}{MS2}
+  \task{10}{Should items S-01 to S-08, S-10 (T30--T35, T37)}{13}{17}{teal!60}
+  \task{11}{Live lookup, if CR-08 (T36)}{14}{18}{teal!35}
+  \task{12}{Usability, accessibility, fixes (T39--T41)}{15}{19}{accent}
+  \mile{18}{12}{MS3}
+  \task{13}{README, comments, clean install (T43--T45)}{17}{20}{accent}
+  \mile{20}{13}{MS4}
+  \task{14}{Report (T46, T47, T49)}{18}{24}{accent}
+  \task{15}{Video (T48)}{21}{24}{accent}
+  \task{16}{Zip, minutes, form, submit (T50--T52)}{24}{26}{accent}
+  \mile{26}{16}{MS5}
+  \task{17}{Buffer}{26}{27}{grey!40}
+\end{tikzpicture}}
+\caption{Dark blue bars are on the critical path. Light blue bars have a day or two of float. Green
+bars are the optional features, which can be cut without moving anything below them. Weekends are
+shaded.}
+\end{figure}
+
+\subsection{Milestones and their gates}
+\label{sec:milestones}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{1.0cm}L{2.2cm}Y@{}}
+\toprule
+\textbf{No.} & \textbf{Date} & \textbf{Passed when} \\
+\midrule
+MS1 & Sun 15 Nov & Both tiers start from a fresh clone. E1 to E7 answer for all 28 addresses and pass the parity test. V1 to V3 show real data, with the unsupported and short-history states working \\
+MS2 & Sun 22 Nov & The minimum viable demonstration of Section~\ref{sec:mvd}, on all 28 addresses, at three widths. Every Must item except M-14 to M-16 is done \\
+MS3 & Fri 27 Nov & Feature freeze. Each Should item is either finished with its tests or cut and recorded. The walkthrough's issues rated 3 or 4 are fixed or have an owner and a date before MS4 \\
+MS4 & Sun 29 Nov & Code freeze. The clean install passed on Windows and macOS. Both test suites pass. No error or warning at start or in the browser console. Tag \code{v1.0-rc}; only fixes after this \\
+MS5 & Sat 5 Dec & The five files are on Canvas; the upload was downloaded and opened; the video link opens in a private window \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{If the plan slips}
+\label{sec:variance}
+
+Assignment 1's rules (its §8.2) apply, with these dates:
+
+\begin{itemize}
+  \item \textbf{A task is late but its milestone holds.} The owner re-plans inside the week and
+    says so in the team channel the same day.
+  \item \textbf{MS1 is missed.} The Week 10 meeting moves people onto the late package. The Should
+    tier shrinks by the same number of days, from the bottom of the cut order.
+  \item \textbf{MS2 is missed.} It may move to Tuesday 24 November at most. Every day it moves
+    removes a day of Should work; the live lookup goes first.
+  \item \textbf{MS3 and MS4 do not move.} What is not finished is cut.
+  \item \textbf{The submission date never moves.} If a due date is at risk, the tutor is told
+    early; the tutor does not extend it.
+\end{itemize}
