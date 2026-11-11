@@ -11,6 +11,13 @@ const proxy = { '/api': 'http://127.0.0.1:8000' };
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // Plotly is one deliberate chunk of about 1.4 MB, fetched on demand (src/charts/plotlyLoader.ts),
+    // so Vite's default 500 kB advice for chunks on the first screen does not fit it. The limit
+    // is raised just enough to let that chunk pass; the first-screen script is checked by size
+    // in the build report instead (budget in plan section 10).
+    chunkSizeWarningLimit: 1500,
+  },
   server: { port: 5173, fs: { allow: [repoRoot] }, proxy },
   preview: { port: 4173, proxy },
   test: {

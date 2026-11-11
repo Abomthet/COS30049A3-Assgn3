@@ -19,7 +19,6 @@
   --series-2: #eb6834;
   --bar-neutral: #b4b2aa;
   --ref: #9a988f;
-  --hover-wash: rgba(42, 120, 214, 0.09);
   --accent: #1c5cab;
   --accent-hover: #184f95;
   --on-accent: #ffffff;
@@ -64,7 +63,6 @@
     --series-2: #d95926;
     --bar-neutral: #5d5c57;
     --ref: #77756e;
-    --hover-wash: rgba(57, 135, 229, 0.14);
     --accent: #86b6ef;
     --accent-hover: #9ec5f4;
     --on-accent: #0b0b0b;
@@ -104,7 +102,6 @@
   --series-2: #d95926;
   --bar-neutral: #5d5c57;
   --ref: #77756e;
-  --hover-wash: rgba(57, 135, 229, 0.14);
   --accent: #86b6ef;
   --accent-hover: #9ec5f4;
   --on-accent: #0b0b0b;
@@ -339,7 +336,6 @@ main.container {
   }
 }
 .card-sub,
-.chart-sub,
 .section-meta,
 .source-line,
 .field-help {
@@ -825,149 +821,100 @@ main.container {
     grid-template-columns: minmax(0, 1fr) 300px;
   }
 }
-.chart-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px 24px;
-  margin-bottom: 8px;
-}
-.chart-head h2,
-.chart-head p {
-  margin: 0;
-}
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: 0.82rem;
-  color: var(--text-2);
-}
-.legend li {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  display: inline-block;
-}
-.swatch-normal {
-  background: var(--series-1);
-}
-.swatch-flag {
-  background: var(--series-2);
-}
 .chart-hint {
   color: var(--text-muted);
   font-size: 0.82rem;
   margin: 4px 0 0;
 }
 
-.chart {
+/* Every chart: the wrapper in src/charts/PlotlyChart.tsx. Plotly draws inside .pchart-plot. */
+.pchart {
+  margin: 0;
+  min-width: 0;
+}
+.pchart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 24px;
+  margin-bottom: 8px;
+}
+.pchart-title {
+  margin: 0;
+}
+.pchart-caption {
+  flex-basis: 100%;
+  order: 2;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.pchart-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pchart-menu {
+  position: relative;
+}
+.pchart-menu summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--link);
+  font-weight: 600;
+}
+.pchart-menu .pchart-tools {
+  margin-top: 4px;
+}
+.pchart-box {
   position: relative;
   width: 100%;
 }
-.chart svg {
-  display: block;
-  overflow: visible;
+.pchart-plot {
+  width: 100%;
+}
+/* The skeleton fills the chart's final box until Plotly has drawn, so nothing jumps. */
+.pchart-skeleton {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface-2), var(--surface), var(--surface-2));
+  background-size: 200% 100%;
+  animation: pchart-shimmer 1.4s linear infinite;
+}
+@keyframes pchart-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pchart-skeleton {
+    animation: none;
+  }
+}
+.pchart-table {
+  margin-top: 8px;
+}
+.pchart-summary {
+  margin: 0 0 4px;
+  color: var(--text-2);
+}
+@media (max-width: 559px) {
+  .pchart .cell-sub {
+    display: none;
+  }
+  .pchart .data-table th,
+  .pchart .data-table td {
+    padding: 8px 6px;
+  }
 }
 .chart-focus {
   border-radius: var(--radius-sm);
 }
-.grid-line {
-  stroke: var(--grid);
-  stroke-width: 1;
-  shape-rendering: crispEdges;
-}
-.axis-line {
-  stroke: var(--axis);
-  stroke-width: 1;
-  shape-rendering: crispEdges;
-}
-.tick-label {
-  fill: var(--axis-ink);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-.axis-title {
-  fill: var(--axis-ink);
-  font-size: 11px;
-  font-weight: 600;
-}
-.bar path {
-  fill: var(--series-1);
-}
-.bar-flagged path {
-  fill: var(--series-2);
-}
-.flag-marker {
-  fill: var(--series-2);
-}
-.hover-wash {
-  fill: var(--hover-wash);
-}
-.hit-area {
-  fill: transparent;
-}
-.chart-tooltip {
-  position: absolute;
-  z-index: 3;
-  width: 180px;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  font-size: 0.82rem;
-}
-.chart-tooltip strong {
-  font-size: 0.95rem;
-}
-.tooltip-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-2);
-}
-.tooltip-date {
-  color: var(--text-muted);
-}
-.tooltip-hint {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-.line-key {
-  width: 12px;
-  height: 3px;
-  border-radius: 2px;
-  display: inline-block;
-}
-.line-key-flag {
-  background: var(--series-2);
-}
 
-.table-view {
-  margin-top: 12px;
-  border-top: 1px solid var(--border);
-  padding-top: 10px;
-}
-.table-view summary {
-  cursor: pointer;
-  color: var(--link);
-  font-size: 0.875rem;
-  font-weight: 560;
-  padding: 4px 0;
-}
 .table-scroll {
   max-height: 360px;
   overflow: auto;
@@ -1288,77 +1235,6 @@ main.container {
   border-radius: var(--radius-sm);
 }
 
-.features-section h3 {
-  margin-bottom: 2px;
-}
-.feature-label {
-  fill: var(--text);
-  font-size: 13px;
-  font-weight: 560;
-}
-.feature-bar {
-  fill: var(--bar-neutral);
-}
-.role-contributing .feature-bar {
-  fill: var(--series-1);
-}
-.role-flag .feature-bar,
-.overflow-arrow {
-  fill: var(--series-2);
-}
-.feature-zero {
-  stroke: var(--bar-neutral);
-  stroke-width: 2;
-}
-.z-label {
-  fill: var(--text);
-  font-size: 12px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.no-data {
-  fill: var(--text-muted);
-  font-size: 12px;
-  font-style: italic;
-}
-.ref-line {
-  stroke: var(--ref);
-  stroke-width: 1;
-  stroke-dasharray: 3 3;
-}
-.ref-flag {
-  stroke: var(--series-2);
-}
-.ref-label {
-  fill: var(--axis-ink);
-  font-size: 10px;
-}
-.table-wrap {
-  overflow-x: auto;
-  margin-top: 8px;
-}
-.feature-table td,
-.feature-table th {
-  font-size: 0.85rem;
-}
-@media (max-width: 559px) {
-  .feature-table .cell-sub {
-    display: none;
-  }
-  .feature-table th,
-  .feature-table td {
-    padding: 8px 6px;
-  }
-}
-.role-tag {
-  display: block;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-.role-tag-flag {
-  color: var(--flag-ink);
-}
 .method-note {
   margin: 0;
   color: var(--text-muted);
@@ -1448,12 +1324,6 @@ main.container {
   }
 }
 @media (forced-colors: active) {
-  .bar path,
-  .bar-flagged path,
-  .feature-bar,
-  .flag-marker {
-    fill: CanvasText;
-  }
   .badge,
   .state-panel,
   .tx-row {

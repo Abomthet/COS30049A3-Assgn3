@@ -1,8 +1,12 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
 import { mockControls } from '../src/api/mock/mockApi';
 import { clearRequestCache } from '../src/hooks/useRequest';
+import { fakePlotly } from './plotlyFake';
+
+// Plotly cannot run in jsdom; every test gets the stand-in (see plotlyFake.ts).
+vi.mock('../src/charts/plotlyLoader', () => ({ loadPlotly: () => fakePlotly.load() }));
 
 // jsdom has no layout engine; the charts only need ResizeObserver to exist.
 class ResizeObserverStub {
@@ -26,9 +30,14 @@ beforeEach(() => {
   mockControls.offline = false;
   mockControls.starting = false;
   clearRequestCache();
+  fakePlotly.reset();
   localStorage.clear();
   delete document.documentElement.dataset.theme;
   window.location.hash = '';
 });
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  // Spies on browser APIs (layout size, matchMedia) never leak into the next test.
+  vi.restoreAllMocks();
+});

@@ -1,14 +1,14 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import { api } from '../api/client';
 import type { InsufficientHistoryBody, TransactionCore, TransactionDetail } from '../api/types';
-import { FeatureChart } from '../charts/FeatureChart';
+import { G3FeatureDeviation } from '../charts/G3FeatureDeviation';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { CopyButton } from '../components/CopyButton';
 import { ErrorState } from '../components/ErrorState';
 import { Icon } from '../components/Icon';
 import { Loading, StatePanel } from '../components/StatePanel';
 import { dayKey, formatDateTime, formatDay, formatDayRange } from '../lib/dates';
-import { describeValue, formatZ, LEVEL_TEXT, reasonsFor } from '../lib/explain';
+import { formatZ, LEVEL_TEXT, reasonsFor } from '../lib/explain';
 import { formatBtc, plural } from '../lib/format';
 import { paths } from '../lib/router';
 import { useRequest } from '../hooks/useRequest';
@@ -158,46 +158,7 @@ function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: Heading
         </p>
       )}
 
-      <section className="features-section" aria-labelledby="features-title">
-        <h3 id="features-title">How this transaction compares with usual</h3>
-        <p className="card-sub">
-          Distance from the address's usual value, as a robust z-score. Dashed lines: {tx.method.contributingAbsZ} is
-          contributing, {tx.method.flagAbsZ} is the flag level.
-        </p>
-        <FeatureChart features={tx.features} flagAbsZ={tx.method.flagAbsZ} contributingAbsZ={tx.method.contributingAbsZ} />
-        <div className="table-wrap">
-          <table className="data-table feature-table">
-            <caption className="sr-only">Feature values compared with the address's usual values</caption>
-            <thead>
-              <tr>
-                <th scope="col">Feature</th>
-                <th scope="col">This transaction</th>
-                <th scope="col">Usual</th>
-                <th scope="col" className="num">
-                  z
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {tx.features.map((f) => (
-                <tr key={f.id} className={`role-${f.role}`}>
-                  <th scope="row">
-                    {f.name}
-                    <span className="cell-sub">{f.description}</span>
-                  </th>
-                  <td>{describeValue(f, 'value')}</td>
-                  <td>{describeValue(f, 'usual')}</td>
-                  <td className="num">
-                    {f.z === null ? '—' : formatZ(f.z)}
-                    {f.role === 'flag' ? <span className="role-tag role-tag-flag">flag level</span> : null}
-                    {f.role === 'contributing' ? <span className="role-tag">contributing</span> : null}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <G3FeatureDeviation features={tx.features} address={tx.address} />
       <p className="method-note">
         <strong>Method:</strong> {tx.method.name}. {tx.method.note}
       </p>

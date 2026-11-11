@@ -1,0 +1,389 @@
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import type { Data, Layout, PlotMouseEvent } from 'plotly.js';
+import { StatePanel } from '../components/StatePanel';
+import { useSettings } from '../hooks/useSettings';
+import { useToasts } from '../hooks/useToasts';
+import { plural } from '../lib/format';
+import {
+  COMPACT_BELOW_PX,
+  EXPORT_SIZE,
+  baseLayout,
+  chooseTraceTypes,
+  exportLayout,
+  mergeLayout,
+  plotlyConfig,
+  webglAvailable,
+  type Figure,
+  type FigureContext,
+} from './chartFigure';
+import { downloadText, fileStem, tableToCsv, type ChartTable } from './chartTable';
+import { useChartPalette } from './chartTheme';
+import { loadPlotly, type PlotlyApi } from './plotlyLoader';
+import { useElementWidth } from './useElementWidth';
+import { useInView } from './useInView';
+
+// The one component that draws every chart (plan section 9, "The chart contract"). A chart
+// component supplies its data, its words and a function that builds the Plotly figure; this
+// wrapper supplies everything the contract promises for all charts alike: the title and caption,
+// the theme, zoom and reset, the PNG and CSV exports, the table view, the loading, empty and
+// error states, keyboard control, click-through and resizing.
+
+export interface PointClick {
+  /** Index of the trace in the figure's `data`. */
+  curve: number;
+  /** Index of the point within that trace. */
+  point: number;
+  customdata: unknown;
+}
+
+/** Keyboard stops, in reading order: each is one point of the figure. */
+export interface KeyboardStops {
+  points: Array<{ curve: number; point: number; /** Read aloud when the stop is reached. */ label: string }>;
+  /** Enter or Space on a stop. */
+  onOpen: (index: number) => void;
+  /** Said in the chart's accessible name, after the summary. */
+  instructions: string;
+}
+
+interface Props {
+  /** The parts of the exported file names, such as the chart, the address and the snapshot date. */
+  fileName: string[];
+  title: string;
+  headingLevel?: 2 | 3 | 4;
+  /** The source and the snapshot date (or fetch time). It is printed on the PNG as well. */
+  caption: string;
+  /** One sentence: the chart's accessible name, and the line above the table view. */
+  summary: string;
+  hint?: string;
+  /** Builds the figure for the current theme and size. Keep it stable (useCallback) so the chart is not redrawn needlessly. */
+  figure: (context: FigureContext) => Figure;
+  table: ChartTable;
+  /** 'toggle': a switch shows the table instead of the chart. 'always': the table stays under the chart. */
+  tableView?: 'toggle' | 'always';
+  /** Zoom and pan are kept across redraws while this stays the same; a new address gets a new value. */
+  revision?: string;
+  /** False for charts with nothing to zoom: no drag, no tool bar. */
+  zoomable?: boolean;
+  height?: number;
+  onPointClick?: (click: PointClick) => void;
+  keyboard?: KeyboardStops;
+  /** Replaces the chart when there is nothing to draw. It always offers a next step. */
+  empty?: { title: string; body: string; action?: ReactNode };
+}
+
+type Phase = 'loading' | 'ready' | 'failed';
+
+export function PlotlyChart({
+  fileName,
+  title,
+  headingLevel = 3,
+  caption,
+  summary,
+  hint,
+  figure,
+  table,
+  tableView = 'toggle',
+  revision = fileName.join('/'),
+  zoomable = true,
+  height = 340,
+  onPointClick,
+  keyboard,
+  empty,
+}: Props) {
+  const id = useId();
+  const palette = useChartPalette();
+  const { settings } = useSettings();
+  const { notify } = useToasts();
+  const [outerRef, width] = useElementWidth<HTMLElement>();
+  const [stageRef, inView] = useInView<HTMLDivElement>();
+  const plotRef = useRef<HTMLDivElement>(null);
+  const [plotly, setPlotly] = useState<PlotlyApi | null>(null);
+  const [phase, setPhase] = useState<Phase>('loading');
+  const [attempt, setAttempt] = useState(0);
+  const [tableOpen, setTableOpen] = useState(false);
+  const [active, setActive] = useState<number | null>(null);
+  const listening = useRef(false);
+  const tapped = useRef<string | null>(null);
+  const clickHandler = useRef<(event: PlotMouseEvent) => void>(() => {});
+  const compact = width < COMPACT_BELOW_PX;
+  const webglMinPoints = settings.web.charts.webglMinPoints;
+
+  // What Plotly is given, rebuilt only when the figure, the theme or the size changes.
+  const drawing = useMemo(() => {
+    const built = figure({ palette, compact });
+    const animate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return {
+      data: chooseTraceTypes(built.data, webglMinPoints, webglAvailable),
+      layout: mergeLayout(baseLayout(palette, { compact, zoomable, revision, animate }), built.layout),
+      config: plotlyConfig({ compact, zoomable }),
+    };
+  }, [figure, palette, compact, zoomable, revision, webglMinPoints]);
+
+  // Fetch Plotly when the first chart mounts. A chart with nothing to draw never needs it.
+  const hasChart = !empty;
+  useEffect(() => {
+    if (!hasChart) return;
+    let current = true;
+    setPhase('loading');
+    loadPlotly().then(
+      (api) => current && setPlotly(api),
+      () => current && setPhase('failed'),
+    );
+    return () => {
+      current = false;
+    };
+  }, [attempt, hasChart]);
+
+  // Draw, and redraw in place when the data, theme or size changes. Plotly keeps the zoom (uirevision).
+  // A chart that is off screen or hidden is left alone and catches up when it is shown again.
+  useEffect(() => {
+    const el = plotRef.current;
+    if (!plotly || !el || !inView) return;
+    let current = true;
+    (async () => {
+      try {
+        const root = await plotly.react(el, drawing.data, drawing.layout, drawing.config);
+        if (!current) return;
+        if (!listening.current) {
+          root.on('plotly_click', (event) => clickHandler.current(event));
+          listening.current = true;
+        }
+        setPhase('ready');
+      } catch {
+        if (current) setPhase('failed');
+      }
+    })();
+    return () => {
+      current = false;
+    };
+  }, [plotly, inView, drawing, attempt]);
+
+  useEffect(() => {
+    const el = plotRef.current;
+    return () => {
+      if (plotly && el) plotly.purge(el);
+      listening.current = false;
+    };
+  }, [plotly]);
+
+  // The container changed size (already debounced by useElementWidth).
+  useEffect(() => {
+    if (plotly && plotRef.current && inView && phase === 'ready') plotly.Plots.resize(plotRef.current);
+  }, [width]);
+
+  // Click-through. On a touch screen the first tap on a point shows its tooltip and the second opens it (plan section 8).
+  useEffect(() => {
+    clickHandler.current = (event) => {
+      const hit = event.points[0];
+      if (!hit || !onPointClick) return;
+      const key = `${hit.curveNumber}:${hit.pointNumber}`;
+      if (window.matchMedia('(pointer: coarse)').matches && tapped.current !== key) {
+        tapped.current = key;
+        return;
+      }
+      tapped.current = null;
+      onPointClick({ curve: hit.curveNumber, point: hit.pointNumber, customdata: hit.customdata });
+    };
+  });
+
+  // Keyboard control: the stop under the cursor is shown with Plotly's own tooltip.
+  const stops = keyboard?.points;
+  useEffect(() => {
+    const el = plotRef.current;
+    if (!plotly || !el || phase !== 'ready' || !stops) return;
+    const stop = active === null ? undefined : stops[active];
+    if (stop) plotly.Fx.hover(el, [{ curveNumber: stop.curve, pointNumber: stop.point }]);
+    else plotly.Fx.unhover(el);
+  }, [plotly, phase, stops, active]);
+
+  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (!keyboard || keyboard.points.length === 0) return;
+    const last = keyboard.points.length - 1;
+    let next: number | undefined;
+    if (event.key === 'ArrowRight') next = Math.min(last, (active ?? -1) + 1);
+    else if (event.key === 'ArrowLeft') next = active === null ? last : Math.max(0, active - 1);
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = last;
+    else if ((event.key === 'Enter' || event.key === ' ') && active !== null) {
+      event.preventDefault();
+      keyboard.onOpen(active);
+      return;
+    }
+    if (next !== undefined) {
+      event.preventDefault();
+      setActive(next);
+    }
+  }
+
+  const stem = fileStem(fileName);
+
+  async function downloadPng() {
+    const live = plotRef.current as (HTMLDivElement & { data?: Data[]; layout?: Partial<Layout> }) | null;
+    if (!plotly || !live?.data) return;
+    // The picture is drawn offscreen, at a fixed size, from what is on screen now.
+    const host = document.createElement('div');
+    host.style.cssText = `position:fixed;left:-10000px;top:0;width:${EXPORT_SIZE.width}px;height:${EXPORT_SIZE.height}px`;
+    document.body.append(host);
+    try {
+      await plotly.react(host, live.data, exportLayout(live.layout ?? {}, palette, title, caption), { staticPlot: true, displayModeBar: false });
+      await plotly.downloadImage(host, { format: 'png', filename: stem, ...EXPORT_SIZE });
+      notify({ message: 'Chart image downloaded', tone: 'success' });
+    } catch {
+      notify({ message: 'The image could not be made. Try again.', tone: 'error' });
+    } finally {
+      plotly.purge(host);
+      host.remove();
+    }
+  }
+
+  function downloadCsv() {
+    downloadText(`${stem}.csv`, tableToCsv(table), 'text/csv;charset=utf-8');
+    notify({ message: `Exported ${plural(table.rows.length, 'row')}`, tone: 'success' });
+  }
+
+  if (empty) {
+    return (
+      <StatePanel tone="empty" title={empty.title} headingLevel={headingLevel === 2 ? 2 : 3} testId="state-empty-chart" actions={empty.action}>
+        <p>{empty.body}</p>
+      </StatePanel>
+    );
+  }
+
+  // If the chart cannot be drawn, the table stands in for it.
+  const failed = phase === 'failed';
+  const tableVisible = tableView === 'always' || tableOpen || failed;
+  const Heading = `h${headingLevel}` as 'h2' | 'h3' | 'h4';
+  // A chart with keyboard stops is one focusable group; any other is a labelled picture.
+  const focusProps = keyboard
+    ? {
+        role: 'group',
+        'aria-roledescription': 'chart',
+        'aria-label': `${summary} ${keyboard.instructions}`,
+        tabIndex: 0,
+        onKeyDown,
+        onFocus: () => active === null && keyboard.points.length > 0 && setActive(keyboard.points.length - 1),
+        onBlur: () => setActive(null),
+      }
+    : { role: 'img', 'aria-label': summary };
+
+  const tools = (
+    <>
+      <button type="button" className="btn btn-secondary" onClick={downloadPng} disabled={phase !== 'ready'}>
+        Download PNG
+      </button>
+      {tableView === 'toggle' ? (
+        <button
+          type="button"
+          className="btn btn-secondary"
+          aria-pressed={tableVisible}
+          aria-controls={`${id}-table`}
+          disabled={failed}
+          onClick={() => setTableOpen((open) => !open)}
+        >
+          View as table
+        </button>
+      ) : null}
+      {tableVisible ? (
+        <button type="button" className="btn btn-secondary" onClick={downloadCsv}>
+          Download CSV
+        </button>
+      ) : null}
+    </>
+  );
+
+  return (
+    <figure className="pchart" ref={outerRef} aria-labelledby={`${id}-title`}>
+      <header className="pchart-head">
+        <Heading id={`${id}-title`} className="pchart-title">
+          {title}
+        </Heading>
+        <p className="pchart-caption">{caption}</p>
+        {compact ? (
+          <details className="pchart-menu">
+            <summary>Chart tools</summary>
+            <div className="pchart-tools">{tools}</div>
+          </details>
+        ) : (
+          <div className="pchart-tools">{tools}</div>
+        )}
+      </header>
+
+      <div className="pchart-stage" ref={stageRef} hidden={tableOpen && tableView === 'toggle' && !failed} aria-busy={phase === 'loading'}>
+        {/* A box of the chart's final size from the first paint, so nothing jumps when Plotly arrives. */}
+        <div className="pchart-box" style={{ height }}>
+          <div className="chart-focus" hidden={failed} {...focusProps}>
+            <div ref={plotRef} className="pchart-plot" style={{ height }} />
+          </div>
+          {phase === 'loading' ? <div className="pchart-skeleton" aria-hidden="true" /> : null}
+          {failed ? (
+            <StatePanel
+              tone="error"
+              title="The chart could not be drawn"
+              headingLevel={3}
+              live="alert"
+              testId="state-chart-failed"
+              actions={
+                <button type="button" className="btn btn-secondary" onClick={() => setAttempt((n) => n + 1)}>
+                  Try again
+                </button>
+              }
+            >
+              <p>The same numbers are in the table below.</p>
+            </StatePanel>
+          ) : null}
+        </div>
+        {hint && !failed ? <p className="chart-hint">{hint}</p> : null}
+      </div>
+      <p className="sr-only" role="status">
+        {phase === 'loading' ? 'Loading the chart…' : active !== null && stops ? stops[active].label : ''}
+      </p>
+
+      <div id={`${id}-table`} className={tableVisible ? 'pchart-table' : 'sr-only'}>
+        {tableVisible && tableView === 'toggle' ? <p className="pchart-summary">{summary}</p> : null}
+        <DataTable table={table} title={title} links={tableVisible} />
+      </div>
+    </figure>
+  );
+}
+
+function DataTable({ table, title, links }: { table: ChartTable; title: string; links: boolean }) {
+  return (
+    <div className="table-scroll">
+      <table className="data-table">
+        <caption className="sr-only">{title}</caption>
+        <thead>
+          <tr>
+            {table.columns.map((column) => (
+              <th key={column.label} scope="col" className={column.numeric ? 'num' : undefined}>
+                {column.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, r) => (
+            <tr key={r}>
+              {row.map((cell, c) => {
+                const content = (
+                  <>
+                    {links && cell.href ? <a href={cell.href}>{cell.text}</a> : cell.text}
+                    {cell.sub ? <span className="cell-sub">{cell.sub}</span> : null}
+                  </>
+                );
+                return c === 0 ? (
+                  <th key={c} scope="row">
+                    {content}
+                  </th>
+                ) : (
+                  <td key={c} className={table.columns[c].numeric ? 'num' : undefined}>
+                    {content}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

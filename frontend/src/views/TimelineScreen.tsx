@@ -1,6 +1,6 @@
 import { api } from '../api/client';
 import type { TimelineResponse } from '../api/types';
-import { TimelineChart } from '../charts/TimelineChart';
+import { G1DailyActivity } from '../charts/G1DailyActivity';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { CopyButton } from '../components/CopyButton';
 import { ErrorState } from '../components/ErrorState';
@@ -121,57 +121,9 @@ function Timeline({ data }: { data: TimelineResponse }) {
       ) : null}
 
       <div className="timeline-layout">
-        <section className="card chart-card" aria-labelledby="chart-title">
-          <div className="chart-head">
-            <div>
-              <h2 id="chart-title">Transactions per day</h2>
-              <p className="chart-sub">
-                {formatDayRange(data.range.start, data.range.end)} · UTC · snapshot of {formatDay(data.snapshot.snapshotDate)}
-              </p>
-            </div>
-            <ul className="legend" aria-label="Legend">
-              <li>
-                <span className="swatch swatch-normal" /> No unusual transactions
-              </li>
-              <li>
-                <span className="swatch swatch-flag" />
-                <Icon name="flag" className="flag-icon" /> At least one unusual
-              </li>
-            </ul>
-          </div>
-          <TimelineChart days={data.days} range={data.range} onOpenDay={open} />
-          <p className="chart-hint">Select a bar to open that day. With a keyboard, focus the chart and use the arrow keys.</p>
-          <details className="table-view">
-            <summary>Show as a table ({plural(data.days.length, 'day')} with activity)</summary>
-            <div className="table-scroll">
-              <table className="data-table">
-                <caption className="sr-only">Transactions per day</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Date (UTC)</th>
-                    <th scope="col" className="num">
-                      Transactions
-                    </th>
-                    <th scope="col" className="num">
-                      Unusual
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.days.map((d) => (
-                    <tr key={d.date}>
-                      <th scope="row">
-                        <a href={paths.day(data.address, d.date)}>{formatDay(d.date)}</a>
-                      </th>
-                      <td className="num">{d.txCount}</td>
-                      <td className="num">{d.flaggedCount || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </details>
-        </section>
+        <div className="card">
+          <G1DailyActivity timeline={data} onOpenDay={open} />
+        </div>
 
         <section className="card flagged-card" aria-labelledby="flagged-title">
           <h2 id="flagged-title">Days with unusual transactions</h2>
