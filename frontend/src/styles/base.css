@@ -1862,6 +1862,26 @@ main.container {
   font-weight: 560;
 }
 
+.method-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+.method-menu label {
+  font-weight: 600;
+}
+.method-menu .text-input {
+  flex: 0 1 24rem;
+  max-width: 100%;
+}
+.method-status {
+  min-width: 6rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
 /* ------------------------------------------------------------------ Models and limits (V5) */
 
 .page-models .lede {

@@ -41,10 +41,13 @@ async function draw(over: Over = {}) {
 
 describe('the curve', () => {
   test('is one line of the method\'s score against the amount, on a log amount axis with labelled axes', async () => {
-    const { data, layout } = await draw();
+    await draw();
+    // The method's name comes from E11 (useMethods), which can answer after the first draw; the chart then
+    // redraws with it. Wait for that redraw rather than reading whichever draw came first (flaky under load).
+    await waitFor(() => expect(fakePlotly.lastChartDraw().layout.yaxis.title.text).toBe(`Score of ${baseline.name}`));
+    const { data, layout } = fakePlotly.lastChartDraw() as { data: any[]; layout: any };
     expect(data[0]).toMatchObject({ type: 'scatter', mode: 'lines+markers', x: curve.amountsBtc, y: baseline.scores });
     expect(layout.xaxis).toMatchObject({ type: 'log', title: { text: 'Amount (BTC, log scale)' } });
-    expect(layout.yaxis.title.text).toBe(`Score of ${baseline.name}`);
     expect(layout.showlegend).toBe(true);
   });
 

@@ -118,6 +118,7 @@ const shots = [
   ['45-about-tablet', '', '#/about', TABLET, true],
   ['46-timeline-mobile-dark', 'theme=dark', tl(t.mainAddress), MOBILE, true],
   ['47-what-if-tablet-dark', 'theme=dark', lab(t.mainAddress, t.whatIf.direction), TABLET, true, false, typeAmount(t.whatIf.amountBtc)],
+  ['48-timeline-other-method', '', `${tl(t.mainAddress)}?method=regression`, DESKTOP, true],
 ];
 
 // ---------------------------------------------------------------- minimal DevTools client

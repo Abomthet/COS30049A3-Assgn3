@@ -1,6 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import { api } from '../api/client';
-import type { InsufficientHistoryBody, TransactionCore, TransactionDetail } from '../api/types';
+import type { InsufficientHistoryBody, MethodId, TransactionCore, TransactionDetail } from '../api/types';
 import { G3FeatureDeviation } from '../charts/G3FeatureDeviation';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { CopyButton } from '../components/CopyButton';
@@ -11,8 +11,9 @@ import { Loading, StatePanel } from '../components/StatePanel';
 import { VerdictTable } from '../components/VerdictTable';
 import { formatDateTime, formatDay } from '../lib/dates';
 import { formatBtc, formatSpanDays, plural } from '../lib/format';
+import { DEFAULT_METHOD } from '../lib/methods';
 import { paths } from '../lib/router';
-import { useMethodLabels } from '../hooks/useMethods';
+import { useMethodLabels, useThresholds } from '../hooks/useMethods';
 import { useRequest } from '../hooks/useRequest';
 
 // The detail panel of Screen 3 (FR-03, FR-04, AC-03, M-13). For a flagged transaction it shows the
@@ -20,8 +21,8 @@ import { useRequest } from '../hooks/useRequest';
 // every scored one, the feature chart and what each of the nine methods says. A transaction too early
 // in its address's history to score (422) keeps its facts and says why.
 
-export function TransactionPanel({ address, date, txid }: { address: string; date: string; txid: string | null }) {
-  const detail = useRequest(txid ? `tx:${address}:${txid}` : null, (signal) => api.transaction(txid!, address, { signal }));
+export function TransactionPanel({ address, date, txid, method }: { address: string; date: string; txid: string | null; method: MethodId }) {
+  const detail = useRequest(txid ? `tx:${address}:${txid}:${method}` : null, (signal) => api.transaction(txid!, address, { signal, method }));
   const headingRef = useRef<HTMLHeadingElement>(null);
   const settled = detail.status === 'success' || detail.status === 'error';
 
@@ -41,12 +42,15 @@ export function TransactionPanel({ address, date, txid }: { address: string; dat
       </StatePanel>
     );
   }
-  if (detail.status === 'loading') return <Loading label="Loading the transaction…" block />;
+  if (detail.status === 'loading') {
+    // The same transaction under another method stays on screen, dimmed, until the new answer arrives.
+    return detail.previous?.txid === txid ? <Detail tx={detail.previous} headingRef={headingRef} method={method} updating /> : <Loading label="Loading the transaction…" block />;
+  }
 
   if (detail.status === 'error') {
     const { body } = detail.error;
     if (body.status === 'insufficient_history' && body.transaction) {
-      return <NotScored body={body} transaction={body.transaction} address={address} headingRef={headingRef} />;
+      return <NotScored body={body} transaction={body.transaction} address={address} method={method} headingRef={headingRef} />;
     }
     return (
       <div>
@@ -55,12 +59,12 @@ export function TransactionPanel({ address, date, txid }: { address: string; dat
         </h2>
         <ErrorState error={detail.error} onRetry={detail.retry} headingLevel={3} />
         <p>
-          <a href={paths.day(address, date)}>Back to {formatDay(date)}</a>
+          <a href={paths.day(address, date, method)}>Back to {formatDay(date)}</a>
         </p>
       </div>
     );
   }
-  return <Detail tx={detail.data} headingRef={headingRef} />;
+  return <Detail tx={detail.data} headingRef={headingRef} method={method} updating={false} />;
 }
 
 type HeadingRef = RefObject<HTMLHeadingElement | null>;
@@ -115,10 +119,11 @@ function Facts({ tx }: { tx: TransactionCore }) {
   );
 }
 
-function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: HeadingRef }) {
+function Detail({ tx, headingRef, method, updating }: { tx: TransactionDetail; headingRef: HeadingRef; method: MethodId; updating: boolean }) {
   const methodName = useMethodLabels()[tx.method.id].name;
+  const flagLine = useThresholds()[tx.method.id];
   return (
-    <article className="detail" aria-labelledby="detail-title">
+    <article className={`detail${updating ? ' is-updating' : ''}`} aria-labelledby="detail-title" aria-busy={updating}>
       <header className="detail-head">
         <h2 id="detail-title" ref={headingRef} tabIndex={-1}>
           Transaction details
@@ -131,7 +136,10 @@ function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: Heading
         <FlagCallout tx={tx} title="Why this transaction stands out" />
       ) : (
         <p className="not-flagged-note">
-          <strong>Not unusual.</strong> No feature was {tx.method.flagAbsZ} or more from this address's usual pattern.
+          <strong>Not unusual.</strong>{' '}
+          {tx.method.id === DEFAULT_METHOD
+            ? `No feature was ${tx.method.flagAbsZ} or more from this address's usual pattern.`
+            : `${methodName} scores it ${tx.score.toFixed(2)}${flagLine === undefined ? '' : `, below its flag line of ${flagLine.toFixed(2)}`}.`}
         </p>
       )}
 
@@ -142,7 +150,7 @@ function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: Heading
       </p>
       {tx.direction === 'none' ? null : (
         <p>
-          <a className="btn btn-secondary" href={paths.whatIf(tx.address, tx.direction)}>
+          <a className="btn btn-secondary" href={paths.whatIf(tx.address, tx.direction, method)}>
             Try a what-if from here
           </a>
         </p>
@@ -166,7 +174,7 @@ function Verdicts({ tx }: { tx: TransactionDetail }) {
   );
 }
 
-function NotScored({ body, transaction, address, headingRef }: { body: InsufficientHistoryBody; transaction: TransactionCore; address: string; headingRef: HeadingRef }) {
+function NotScored({ body, transaction, address, method, headingRef }: { body: InsufficientHistoryBody; transaction: TransactionCore; address: string; method: MethodId; headingRef: HeadingRef }) {
   const h = body.history;
   return (
     <article className="detail" aria-labelledby="detail-title">
@@ -185,7 +193,7 @@ function NotScored({ body, transaction, address, headingRef }: { body: Insuffici
         actions={
           <>
             {body.firstScoredDate ? (
-              <a className="btn btn-secondary" href={paths.day(address, body.firstScoredDate)}>
+              <a className="btn btn-secondary" href={paths.day(address, body.firstScoredDate, method)}>
                 Go to the first scored day ({formatDay(body.firstScoredDate)})
               </a>
             ) : (
@@ -193,7 +201,7 @@ function NotScored({ body, transaction, address, headingRef }: { body: Insuffici
                 Choose an address with more history
               </a>
             )}
-            <a className="btn btn-ghost" href={paths.timeline(address)}>
+            <a className="btn btn-ghost" href={paths.timeline(address, method)}>
               Back to the timeline
             </a>
           </>

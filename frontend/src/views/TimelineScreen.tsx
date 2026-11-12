@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { api } from '../api/client';
-import type { TimelineDay, TimelineResponse } from '../api/types';
+import type { MethodId, TimelineDay, TimelineResponse } from '../api/types';
 import { G1DailyActivity } from '../charts/G1DailyActivity';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { CopyButton } from '../components/CopyButton';
 import { ErrorState } from '../components/ErrorState';
 import { Icon } from '../components/Icon';
+import { MethodMenu } from '../components/MethodMenu';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Loading, StatePanel } from '../components/StatePanel';
 import { KIND_LABEL, validateAddress } from '../lib/address';
 import { dayCount, dayKey, formatDay, formatDayRange } from '../lib/dates';
 import { formatCount, formatSpanDays, plural, shortAddress } from '../lib/format';
 import { navigate, paths } from '../lib/router';
+import { methodSearch } from '../lib/methods';
+import { useMethodLabels } from '../hooks/useMethods';
 import { useRequest } from '../hooks/useRequest';
 import { useSettings } from '../hooks/useSettings';
 import { TransactionsTab } from './TransactionsTab';
@@ -29,14 +32,16 @@ export type AddressTab = { name: 'overview' } | { name: 'transactions'; search: 
 
 const TAB_TITLE: Record<AddressTab['name'], string> = { overview: 'Activity', transactions: 'Transactions', 'what-if': 'What-if' };
 
-export function TimelineScreen({ address, tab }: { address: string; tab: AddressTab }) {
+export function TimelineScreen({ address, tab, method }: { address: string; tab: AddressTab; method: MethodId }) {
   useDocumentTitle(`${TAB_TITLE[tab.name]} for ${shortAddress(address)}`);
-  const timeline = useRequest(`timeline:${address}`, (signal) => api.timeline(address, { signal }));
+  const timeline = useRequest(`timeline:${address}:${method}`, (signal) => api.timeline(address, { signal, method }));
+  // After a change of method the answer for the old one stays on screen, dimmed, until the new one arrives.
+  const shown = timeline.status === 'success' ? timeline.data : timeline.previous;
 
   return (
     <div className="page page-timeline">
       <Breadcrumbs items={[{ label: 'Addresses', href: paths.select() }, { label: shortAddress(address), mono: true }]} />
-      {timeline.status === 'loading' ? (
+      {shown === undefined && timeline.status === 'loading' ? (
         <>
           <PageHeading className="sr-only">Activity for {address}</PageHeading>
           <Loading label="Loading this address's activity…" block />
@@ -45,21 +50,23 @@ export function TimelineScreen({ address, tab }: { address: string; tab: Address
       {timeline.status === 'error' ? (
         <>
           <PageHeading>Address activity</PageHeading>
+          <MethodMenu method={method} updating={false} />
           <ErrorState error={timeline.error} onRetry={timeline.retry} />
         </>
       ) : null}
-      {timeline.status === 'success' ? <Timeline data={timeline.data} tab={tab} /> : null}
+      {shown !== undefined && timeline.status !== 'error' ? <Timeline data={shown} tab={tab} method={method} updating={timeline.status === 'loading'} /> : null}
     </div>
   );
 }
 
-function Timeline({ data, tab }: { data: TimelineResponse; tab: AddressTab }) {
+function Timeline({ data, tab, method, updating }: { data: TimelineResponse; tab: AddressTab; method: MethodId; updating: boolean }) {
+  const labels = useMethodLabels();
   const kind = validateAddress(data.address);
   const flaggedDays = data.days.filter((d) => d.flaggedCount > 0);
   const insufficient = data.history.status === 'insufficient';
   const [first, last] = [dayKey(data.range.start), dayKey(data.range.end)];
   const spanDays = dayCount(first, last);
-  const open = (date: string) => navigate(paths.day(data.address, date));
+  const open = (date: string) => navigate(paths.day(data.address, date, method));
 
   return (
     <>
@@ -73,9 +80,10 @@ function Timeline({ data, tab }: { data: TimelineResponse; tab: AddressTab }) {
           Source: {data.snapshot.source} · snapshot of {formatDay(data.snapshot.snapshotDate)} · days in UTC
           {data.snapshot.illustrative ? ' · illustrative data' : ''}
         </p>
+        <MethodMenu method={method} updating={updating} />
       </header>
 
-      <dl className="stat-row">
+      <dl className={`stat-row${updating ? ' is-updating' : ''}`} aria-busy={updating}>
         <div className="stat">
           <dt>Transactions</dt>
           <dd>{formatCount(data.totals.txCount)}</dd>
@@ -95,7 +103,9 @@ function Timeline({ data, tab }: { data: TimelineResponse; tab: AddressTab }) {
             ) : (
               <>
                 {formatCount(data.totals.flaggedCount)}
-                <span className="stat-sub">on {plural(data.totals.flaggedDays, 'day')}</span>
+                <span className="stat-sub">
+                  on {plural(data.totals.flaggedDays, 'day')} by {labels[data.snapshot.method.id].name}
+                </span>
               </>
             )}
           </dd>
@@ -109,7 +119,7 @@ function Timeline({ data, tab }: { data: TimelineResponse; tab: AddressTab }) {
         </div>
       </dl>
 
-      <AddressTabs address={data.address} tab={tab.name} />
+      <AddressTabs address={data.address} tab={tab.name} method={method} />
 
       {tab.name === 'transactions' ? <TransactionsTab timeline={data} search={tab.search} /> : null}
       {tab.name === 'what-if' ? <WhatIfLab timeline={data} search={tab.search} /> : null}
@@ -122,7 +132,7 @@ function Timeline({ data, tab }: { data: TimelineResponse; tab: AddressTab }) {
               testId="state-insufficient"
               actions={
                 <>
-                  <a className="btn btn-secondary" href={paths.transactions(data.address)}>
+                  <a className="btn btn-secondary" href={paths.transactions(data.address, methodSearch(method))}>
                     Browse its transactions anyway
                   </a>
                   <a className="btn btn-ghost" href={paths.select()}>
@@ -140,12 +150,12 @@ function Timeline({ data, tab }: { data: TimelineResponse; tab: AddressTab }) {
             </StatePanel>
           ) : null}
 
-          <div className="timeline-layout">
+          <div className={`timeline-layout${updating ? ' is-updating' : ''}`} aria-busy={updating}>
             <div className="card">
               <G1DailyActivity timeline={data} onOpenDay={open} />
             </div>
 
-            <FlaggedDays address={data.address} days={flaggedDays} insufficient={insufficient} />
+            <FlaggedDays address={data.address} days={flaggedDays} insufficient={insufficient} method={method} />
           </div>
         </>
       ) : null}
@@ -154,11 +164,11 @@ function Timeline({ data, tab }: { data: TimelineResponse; tab: AddressTab }) {
 }
 
 /** The tabs are routes, so they are links; the current one is marked for assistive technology as well as by its look. */
-function AddressTabs({ address, tab }: { address: string; tab: AddressTab['name'] }) {
+function AddressTabs({ address, tab, method }: { address: string; tab: AddressTab['name']; method: MethodId }) {
   const tabs = [
-    { name: 'overview', label: 'Overview', href: paths.timeline(address) },
-    { name: 'transactions', label: 'Transactions', href: paths.transactions(address) },
-    { name: 'what-if', label: 'What-if', href: paths.whatIf(address) },
+    { name: 'overview', label: 'Overview', href: paths.timeline(address, method) },
+    { name: 'transactions', label: 'Transactions', href: paths.transactions(address, methodSearch(method)) },
+    { name: 'what-if', label: 'What-if', href: paths.whatIf(address, undefined, method) },
   ] as const;
   return (
     <nav className="tabs" aria-label="Views of this address">
@@ -175,12 +185,12 @@ function AddressTabs({ address, tab }: { address: string; tab: AddressTab['name'
   );
 }
 
-function FlaggedDays({ address, days, insufficient }: { address: string; days: TimelineDay[]; insufficient: boolean }) {
+function FlaggedDays({ address, days, insufficient, method }: { address: string; days: TimelineDay[]; insufficient: boolean; method: MethodId }) {
   const { settings } = useSettings();
   const [showAll, setShowAll] = useState(false);
   // The strongest flagged transactions first, so the first row met for a day gives its reason.
-  const flagged = useRequest(days.length > 0 ? `flagged:${address}` : null, (signal) =>
-    api.transactions(address, { status: ['flagged'], sort: '-score', pageSize: settings.web.lists.maxPageSize }, { signal }),
+  const flagged = useRequest(days.length > 0 ? `flagged:${address}:${method}` : null, (signal) =>
+    api.transactions(address, { status: ['flagged'], sort: '-score', pageSize: settings.web.lists.maxPageSize, method }, { signal }),
   );
   const reasons = new Map<string, string>();
   if (flagged.status === 'success') {
@@ -202,7 +212,7 @@ function FlaggedDays({ address, days, insufficient }: { address: string; days: T
           <ul className="day-list">
             {shown.map((d) => (
               <li key={d.date}>
-                <a className="day-link" href={paths.day(address, d.date)}>
+                <a className="day-link" href={paths.day(address, d.date, method)}>
                   <Icon name="flag" className="flag-icon" />
                   <span className="day-link-date">{formatDay(d.date)}</span>
                   <span className="day-link-count">

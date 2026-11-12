@@ -16,3 +16,26 @@ export const METHODS: Array<{ id: MethodId; name: string; family: string }> = [
   { id: 'fusion', name: 'Score fusion', family: 'Combination' },
   { id: 'txgpt_method', name: 'TxGPT surprisal', family: 'Language model' },
 ];
+
+/** The method that decides when a link names none; E2 and E11 say the same (`defaultMethod`). It is left out of links. */
+export const DEFAULT_METHOD: MethodId = 'baseline';
+
+/** The method a link's query string names; the default when it names none or one that does not exist. */
+export function parseMethod(search: string): MethodId {
+  const named = new URLSearchParams(search).get('method');
+  return METHODS.find((m) => m.id === named)?.id ?? DEFAULT_METHOD;
+}
+
+/** `method=<id>` for a link's query string, or nothing for the default. */
+export const methodSearch = (method: MethodId): string => (method === DEFAULT_METHOD ? '' : `method=${method}`);
+
+/** A link (a hash route) with its method set to `method`, its page reset and every other part kept. */
+export function withMethod(hash: string, method: MethodId): string {
+  const [path, search = ''] = hash.split('?');
+  const params = new URLSearchParams(search);
+  params.delete('method');
+  params.delete('page');
+  if (method !== DEFAULT_METHOD) params.set('method', method);
+  const rest = params.toString();
+  return rest ? `${path}?${rest}` : path;
+}

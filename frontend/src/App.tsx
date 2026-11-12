@@ -59,15 +59,15 @@ function Views() {
   return (
     <ErrorBoundary resetKey={key}>
       {route.screen === 'select' ? <SelectScreen query={route.query} /> : null}
-      {route.screen === 'timeline' ? <TimelineScreen key={route.address} address={route.address} tab={{ name: 'overview' }} /> : null}
+      {route.screen === 'timeline' ? <TimelineScreen key={route.address} address={route.address} method={route.method} tab={{ name: 'overview' }} /> : null}
       {route.screen === 'transactions' ? (
-        <TimelineScreen key={route.address} address={route.address} tab={{ name: 'transactions', search: route.search }} />
+        <TimelineScreen key={route.address} address={route.address} method={route.method} tab={{ name: 'transactions', search: route.search }} />
       ) : null}
       {route.screen === 'what-if' ? (
-        <TimelineScreen key={route.address} address={route.address} tab={{ name: 'what-if', search: route.search }} />
+        <TimelineScreen key={route.address} address={route.address} method={route.method} tab={{ name: 'what-if', search: route.search }} />
       ) : null}
       {route.screen === 'day' ? (
-        <DayScreen key={`${route.address}|${route.date}`} address={route.address} date={route.date} txid={route.txid} />
+        <DayScreen key={`${route.address}|${route.date}`} address={route.address} date={route.date} txid={route.txid} method={route.method} />
       ) : null}
       {route.screen === 'models' ? <ModelsScreen /> : null}
       {route.screen === 'watchlist' ? <ComingSoon title="Watchlist" /> : null}

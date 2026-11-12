@@ -1,11 +1,12 @@
 import { useCallback, useMemo } from 'react';
 import type { Data } from 'plotly.js';
-import type { Direction, ScoreStatus, TransactionRow } from '../api/types';
+import type { Direction, MethodId, ScoreStatus, TransactionRow } from '../api/types';
 import { STATUS_TEXT } from '../components/Badges';
 import { dayKey, formatDateTime, formatDay } from '../lib/dates';
 import { DIRECTION_LABEL, formatBtc, formatCount, plural } from '../lib/format';
 import { paths } from '../lib/router';
 import { DIRECTIONS, STATUSES } from '../lib/transactionFilters';
+import { useMethodLabels } from '../hooks/useMethods';
 import { useSettings } from '../hooks/useSettings';
 import { snapshotCaption } from './caption';
 import type { Figure, FigureContext } from './chartFigure';
@@ -33,6 +34,8 @@ const ALL_DIRECTIONS: Direction[] = [...DIRECTIONS, 'none'];
 
 interface Props {
   address: string;
+  /** The deciding method the rows were scored by; links to a transaction keep it. */
+  method: MethodId;
   rows: TransactionRow[];
   /** Pages still arriving: the chart already draws what has come. */
   loading: { loaded: number; total: number } | null;
@@ -149,8 +152,9 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
   };
 }
 
-export function G2TransactionsOverTime({ address, rows, loading, revision, onOpenTransaction, onZoomDays }: Props) {
+export function G2TransactionsOverTime({ address, method, rows, loading, revision, onOpenTransaction, onZoomDays }: Props) {
   const { settings } = useSettings();
+  const methodName = useMethodLabels()[method].name;
   const model = useMemo(() => buildModel(rows), [rows]);
   const figure = useCallback((context: FigureContext) => buildFigure(model, context), [model]);
 
@@ -158,7 +162,7 @@ export function G2TransactionsOverTime({ address, rows, loading, revision, onOpe
     () => ({
       columns: [{ label: 'Time (UTC)' }, { label: 'Direction' }, { label: 'Amount', numeric: true }, { label: 'Score', numeric: true }, { label: 'Status' }, { label: 'Main reason' }],
       rows: model.ordered.map((r) => [
-        { text: formatDateTime(r.time), href: paths.tx(address, dayKey(r.time), r.txid) },
+        { text: formatDateTime(r.time), href: paths.tx(address, dayKey(r.time), r.txid, method) },
         { text: DIRECTION_LABEL[r.direction] },
         { text: formatBtc(r.netSats, { signed: true }) },
         { text: r.score === null ? '—' : r.score.toFixed(2) },
@@ -166,7 +170,7 @@ export function G2TransactionsOverTime({ address, rows, loading, revision, onOpe
         { text: r.status === 'flagged' && r.mainReason ? r.mainReason : '—' },
       ]),
     }),
-    [model, address],
+    [model, address, method],
   );
 
   const keyboard = useMemo<KeyboardStops>(
@@ -189,7 +193,7 @@ export function G2TransactionsOverTime({ address, rows, loading, revision, onOpe
       fileName={['transactions-over-time', address, settings.snapshot?.snapshotDate ?? '']}
       title="Transactions over time"
       headingLevel={2}
-      caption={`${snapshotCaption(settings.snapshot)} · times in UTC${loading ? ` · loading, ${formatCount(loading.loaded)} of ${formatCount(loading.total)} drawn` : ''}`}
+      caption={`${snapshotCaption(settings.snapshot)} · times in UTC · flagged by ${methodName}${loading ? ` · loading, ${formatCount(loading.loaded)} of ${formatCount(loading.total)} drawn` : ''}`}
       summary={summary}
       hint="Select a point to open that transaction. Drag to zoom on the time axis, which also sets the dates above; double-click to reset. Filled marks were received and outlined marks were sent; the orange triangles are unusual."
       figure={figure}

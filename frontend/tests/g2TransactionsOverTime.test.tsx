@@ -45,7 +45,7 @@ interface Options {
 async function draw({ rows = allRows(), loading = null, onOpenTransaction = () => {}, onZoomDays = () => {} }: Options = {}) {
   vi.spyOn(window, 'getComputedStyle').mockImplementation(() => ({ getPropertyValue: (token: string) => TOKENS[token] ?? '' }) as CSSStyleDeclaration);
   render(
-    <G2TransactionsOverTime address={ex.mainAddress} rows={rows} loading={loading} revision="r1" onOpenTransaction={onOpenTransaction} onZoomDays={onZoomDays} />,
+    <G2TransactionsOverTime address={ex.mainAddress} method="baseline" rows={rows} loading={loading} revision="r1" onOpenTransaction={onOpenTransaction} onZoomDays={onZoomDays} />,
   );
   await waitFor(() => expect(fakePlotly.chartDraws().length).toBeGreaterThan(0));
   const { data, layout, config } = fakePlotly.lastChartDraw();
@@ -177,7 +177,7 @@ describe('the contract', () => {
     current.snapshot = { snapshotDate: '2026-10-05', source: 'Test source', sourceUrl: '', illustrative: false } as SnapshotInfo;
     const { config } = await draw();
     expect(screen.getByRole('heading', { level: 2, name: 'Transactions over time' })).toBeInTheDocument();
-    expect(screen.getByText('Data: Test source, snapshot of 5 Oct 2026 · times in UTC')).toBeInTheDocument();
+    expect(await screen.findByText('Data: Test source, snapshot of 5 Oct 2026 · times in UTC · flagged by Robust z baseline (A1)')).toBeInTheDocument();
     expect(screen.getByRole('group', { name: /from 16 May 2024 to 19 Oct 2026, by amount on a log scale: 3 unusual, 364 not unusual, 10 not scored\./ })).toBeInTheDocument();
     expect(config.displayModeBar).toBe(true);
   });

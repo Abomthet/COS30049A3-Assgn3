@@ -1,23 +1,16 @@
-import type { Interval, MethodDescription, PlantedPattern } from '../api/types';
+import type { MethodDescription } from '../api/types';
+import { G6PlantedRecall, PATTERNS } from '../charts/G6PlantedRecall';
 import { ErrorState } from '../components/ErrorState';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Loading } from '../components/StatePanel';
 import { useMethods } from '../hooks/useMethods';
 import { useSettings } from '../hooks/useSettings';
 import { formatDay } from '../lib/dates';
-import { capitalised, formatShare, plural } from '../lib/format';
+import { capitalised, formatInterval, formatShare, plural } from '../lib/format';
 
 // V5, models and limits (plan section 8): a card for each of the nine methods, then what a flag means
 // and what it does not. Every figure on the page is E11's (or E2's, for the snapshot); none is typed
 // in, so the page cannot drift from the evaluation it reports.
-
-const PATTERNS: Array<{ id: PlantedPattern; label: string }> = [
-  { id: 'spike', label: 'Spike' },
-  { id: 'burst', label: 'Burst' },
-  { id: 'dormant', label: 'Dormant' },
-];
-
-const interval = ({ value, ciLow, ciHigh }: Interval) => `${formatShare(value)} (${formatShare(ciLow)} to ${formatShare(ciHigh)})`;
 
 function MethodCard({ method }: { method: MethodDescription }) {
   const { evaluation } = method;
@@ -47,12 +40,12 @@ function MethodCard({ method }: { method: MethodDescription }) {
         <tbody>
           <tr>
             <th scope="row">All three patterns</th>
-            <td>{interval(evaluation.meanRecall)}</td>
+            <td>{formatInterval(evaluation.meanRecall)}</td>
           </tr>
           {PATTERNS.map(({ id, label }) => (
             <tr key={id}>
               <th scope="row">{label}</th>
-              <td>{interval(evaluation.recallByPattern[id])}</td>
+              <td>{formatInterval(evaluation.recallByPattern[id])}</td>
             </tr>
           ))}
         </tbody>
@@ -82,6 +75,11 @@ export function ModelsScreen() {
             <MethodCard key={m.id} method={m} />
           ))}
         </ul>
+      ) : null}
+      {methods.status === 'success' ? (
+        <div className="card chart-card">
+          <G6PlantedRecall methods={methods.data.methods} />
+        </div>
       ) : null}
 
       <section className="card prose" aria-labelledby="limits-title">

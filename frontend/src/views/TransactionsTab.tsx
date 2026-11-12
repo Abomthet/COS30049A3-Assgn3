@@ -53,7 +53,7 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
     const next = days ? { from: days.from <= period.first ? '' : days.from, to: days.to >= period.last ? '' : days.to } : { from: '', to: '' };
     if (next.from !== filters.from || next.to !== filters.to) change(next);
   };
-  const open = (row: TransactionRow) => navigate(paths.tx(address, dayKey(row.time), row.txid));
+  const open = (row: TransactionRow) => navigate(paths.tx(address, dayKey(row.time), row.txid, filters.method));
 
   // A new page starts at the top of the table; the first render does not scroll.
   const tableTop = useRef<HTMLDivElement>(null);
@@ -113,6 +113,7 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
           ) : chart.rows ? (
             <G2TransactionsOverTime
               address={address}
+              method={filters.method}
               rows={chart.rows}
               loading={chart.progress}
               revision={`${address}|${filters.from}|${filters.to}`}
@@ -124,7 +125,7 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
           )}
         </div>
         <div ref={tableTop}>
-          <TransactionTable page={page} pageHref={(n) => paths.transactions(address, filtersToSearch({ ...filters, page: n }))} />
+          <TransactionTable page={page} method={filters.method} pageHref={(n) => paths.transactions(address, filtersToSearch({ ...filters, page: n }))} />
         </div>
       </>
     );

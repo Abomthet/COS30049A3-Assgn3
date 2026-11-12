@@ -5,13 +5,16 @@
 // Its world is what was recorded: E1 to E3 and E11 whole, and for two addresses the timeline, every row and a
 // few transaction details. E6 is computed from the recorded rows (filter, sort, page). Any other
 // address in the list, or an unrecorded transaction, answers 404 `not_found`; an address outside the
-// list answers the recorded `unsupported` body. It always decides with the default method.
+// list answers the recorded `unsupported` body. It decides with the default method, and for the running
+// example also with Regression residual and TxGPT surprisal (E5, E6 and some E7); any other
+// method answers 404 `not_found`, and a method that does not exist answers 400.
 // For the running example, E8 and E9 answer the requests that were recorded (after the same checks of
 // the body as the service makes) and E10 the file of its flagged transactions; any other what-if or
 // export answers 404 `not_found`.
 
 import { validateAddress } from '../../lib/address';
 import { dayKey, isDayKey } from '../../lib/dates';
+import { DEFAULT_METHOD, METHODS } from '../../lib/methods';
 import { WEB } from '../../lib/settings';
 import { checkAmount, checkDirection, checkTime } from '../../lib/whatIf';
 import {
@@ -25,6 +28,7 @@ import {
   type FieldError,
   type HealthResponse,
   type LookupResponse,
+  type MethodId,
   type MethodsResponse,
   type RequestOptions,
   type TimelineResponse,
@@ -37,7 +41,7 @@ import {
   type WhatIfRequest,
   type WhatIfResult,
 } from '../types';
-import { ADDRESSES, CONFIG, EXPORT_RECORDED, HEALTH, METHODS_ANSWER, RECORDED, UNSUPPORTED, WHAT_IF_RECORDED, type RecordedAddress } from './fixtures';
+import { ADDRESSES, CONFIG, EXPORT_RECORDED, HEALTH, METHODS_ANSWER, METHOD_RUNS, RECORDED, UNSUPPORTED, WHAT_IF_RECORDED, type RecordedAddress } from './fixtures';
 
 /** Mutable so the tests and the screenshot script can change behaviour at run time. */
 export const mockControls = {
@@ -109,6 +113,14 @@ function requireAddress(input: string): RecordedAddress {
   return recorded;
 }
 
+/** What was recorded under `method`: the default's for every address, another method's for the running example only, and only the parts that were recorded. */
+function recordedFor(recorded: RecordedAddress, method: MethodId = DEFAULT_METHOD): Omit<RecordedAddress, 'address'> {
+  if (!METHODS.some((m) => m.id === method)) throw invalid('That is not one of the methods.', 'Choose one from the method menu.', 'method');
+  const run = method === DEFAULT_METHOD ? recorded : recorded.address === METHOD_RUNS.address ? METHOD_RUNS.runs[method] : undefined;
+  if (!run) throw new ApiError(404, { status: 'not_found', message: 'The mock has no recorded answer for this method.' });
+  return run;
+}
+
 function checkDay(value: string | undefined, field: string): void {
   if (value !== undefined && !isDayKey(value)) throw invalid('Dates use the form YYYY-MM-DD.', 'Pick a day from the timeline instead.', field);
 }
@@ -126,7 +138,7 @@ function compare(sort: NonNullable<TransactionQuery['sort']>): (a: TransactionRo
 }
 
 function page(recorded: RecordedAddress, query: TransactionQuery): TransactionsResponse {
-  const { date, from, to, status, direction, sort = 'time', page: n = 1, pageSize = WEB.lists.pageSize } = query;
+  const { date, from, to, status, direction, sort = 'time', page: n = 1, pageSize = WEB.lists.pageSize, method } = query;
   checkDay(date, 'date');
   checkDay(from, 'from');
   checkDay(to, 'to');
@@ -134,8 +146,8 @@ function page(recorded: RecordedAddress, query: TransactionQuery): TransactionsR
   if (from !== undefined && to !== undefined && from > to) throw invalid('The first day is after the last day.', 'Swap the two dates.', 'from');
   if (pageSize < 1 || pageSize > WEB.lists.maxPageSize) throw invalid(`The page size must be from 1 to ${WEB.lists.maxPageSize}.`, 'Choose a smaller page.', 'pageSize');
 
-  const rows = recorded.transactionPages
-    .flatMap((p) => p.transactions)
+  const rows = recordedFor(recorded, method)
+    .transactionPages.flatMap((p) => p.transactions)
     .filter((r) => {
       const day = dayKey(r.time);
       return (
@@ -190,13 +202,14 @@ export const mockApi: ExplorerApi = {
       return { status: 'supported', address: summary.address, summary };
     }, opts),
 
-  timeline: (address, opts) => respond<TimelineResponse>(() => requireAddress(address).timeline, opts),
+  timeline: (address, opts) =>
+    respond<TimelineResponse>(() => recordedFor(requireAddress(address), opts?.method).timeline, opts),
 
   transactions: (address, query, opts) => respond<TransactionsResponse>(() => page(requireAddress(address), query), opts),
 
   transaction: (txid, address, opts) =>
     respond<TransactionDetail>(() => {
-      const recorded = requireAddress(address).details[txid.toLowerCase()];
+      const recorded = recordedFor(requireAddress(address), opts?.method).details[txid.toLowerCase()];
       if (recorded?.status === 200) return recorded.body;
       if (recorded?.status === 422) throw new ApiError(422, recorded.body);
       throw new ApiError(404, { status: 'not_found', message: "This transaction is not one of this address's transactions in the snapshot." });
@@ -221,7 +234,7 @@ export const mockApi: ExplorerApi = {
   exportFile: (address, format: ExportFormat, query, opts) =>
     respond<ExportFile>(() => {
       requireAddress(address);
-      if (address !== EXPORT_RECORDED.address || filterKey(query) !== filterKey(EXPORT_RECORDED.query)) {
+      if (address !== EXPORT_RECORDED.address || (query.method ?? DEFAULT_METHOD) !== DEFAULT_METHOD || filterKey(query) !== filterKey(EXPORT_RECORDED.query)) {
         throw new ApiError(404, { status: 'not_found', message: 'The mock has a file only for the flagged transactions of the running example.' });
       }
       return EXPORT_RECORDED[format];

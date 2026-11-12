@@ -331,3 +331,32 @@ describe('the export (E10) and the methods (E11)', () => {
     expect(methods.filter((m) => !m.scoresNewInput).map((m) => m.id)).toEqual(['txgpt_method']);
   });
 });
+
+describe('the deciding method', () => {
+  test('another method answers with its own recorded flags, and the default method\'s answer is unchanged by it', async () => {
+    const base = await mockApi.timeline(ex.mainAddress);
+    const regression = await mockApi.timeline(ex.mainAddress, { method: 'regression' });
+    expect(regression.snapshot.method.id).toBe('regression');
+    expect(base.snapshot.method.id).toBe('baseline');
+    expect(regression.totals.flaggedCount).toBeGreaterThan(base.totals.flaggedCount);
+    expect(regression.totals.txCount).toBe(base.totals.txCount);
+    const flagged = await mockApi.transactions(ex.mainAddress, { status: ['flagged'], method: 'regression', pageSize: 200 });
+    expect(flagged.total).toBe(regression.totals.flaggedCount);
+    expect((await mockApi.transactions(ex.mainAddress, { status: ['flagged'] })).total).toBe(base.totals.flaggedCount);
+  });
+
+  test('a transaction is scored by the method asked for', async () => {
+    const tx = await mockApi.transaction(ex.flagged.txid, ex.flagged.address, { method: 'regression' });
+    expect(tx.method.id).toBe('regression');
+    expect(tx.flagged).toBe(false);
+    expect((await mockApi.transaction(ex.flagged.txid, ex.flagged.address)).flagged).toBe(true);
+  });
+
+  test('a method that does not exist is a 400 naming the field; one the mock did not record is a 404', async () => {
+    expect(await failure(mockApi.timeline(ex.mainAddress, { method: 'bogus' as 'lof' }))).toMatchObject({ status: 400, body: { status: 'invalid', fields: [{ name: 'method' }] } });
+    expect(await failure(mockApi.timeline(ex.mainAddress, { method: 'lof' }))).toMatchObject({ status: 404, body: { status: 'not_found' } });
+    expect(await failure(mockApi.transactions(ex.mainAddress, { method: 'lof' }))).toMatchObject({ status: 404, body: { status: 'not_found' } });
+    expect(await failure(mockApi.timeline(ex.shortHistory, { method: 'regression' }))).toMatchObject({ status: 404 });
+    expect(await failure(mockApi.exportFile(ex.mainAddress, 'csv', { status: ['flagged'], method: 'regression' }))).toMatchObject({ status: 404 });
+  });
+});

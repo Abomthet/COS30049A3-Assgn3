@@ -10,6 +10,9 @@
 // unscored ones, whose 422 bodies are what V3 shows for them). For the running example it also records
 // E8 and E9 for a few what-ifs (whatif-main.json: the mock answers exactly these requests), one E10
 // export of the flagged transactions as CSV and as JSON (export-main.json) and E11 (methods.json).
+// For the running example it also records what two other deciding methods say (methods-main.json): the
+// whole of E5 and E6 and a few E7 answers under Regression residual (many flags) and under TxGPT surprisal
+// (a language model, which cannot score a new amount); the mock answers exactly these.
 // `examples.json` names the inputs that reach each state, for the tests and for scripts/screenshots.mjs.
 // Bodies are saved exactly as the service sent them.
 
@@ -49,20 +52,24 @@ async function ok(path) {
 const save = (name, data) => writeFileSync(join(outDir, name), `${JSON.stringify(data)}\n`);
 const dayOf = (row) => row.time.slice(0, 10);
 
-/** E5, every page of E6 and the E7 answers for `txids` (a 200 or the 422 body, each with its status). */
-async function recordAddress(address, pickTxids) {
+/** The deciding methods recorded for the running example besides the default. */
+const OTHER_METHODS = ['regression', 'txgpt_method'];
+
+/** E5, every page of E6 and the E7 answers for `txids` (a 200 or the 422 body, each with its status), all under `method` (the default when it is empty). */
+async function recordAddress(address, pickTxids, method = '') {
   const q = encodeURIComponent(address);
-  const timeline = await ok(`/api/addresses/${q}/timeline`);
+  const m = method ? `method=${method}` : '';
+  const timeline = await ok(`/api/addresses/${q}/timeline${m ? `?${m}` : ''}`);
   const transactionPages = [];
   for (let page = 1, seen = 0, total = Infinity; seen < total; page++) {
-    const p = await ok(`/api/addresses/${q}/transactions?pageSize=${PAGE_SIZE}&page=${page}`);
+    const p = await ok(`/api/addresses/${q}/transactions?pageSize=${PAGE_SIZE}&page=${page}${m ? `&${m}` : ''}`);
     transactionPages.push(p);
     seen += p.transactions.length;
     total = p.total;
   }
   const rows = transactionPages.flatMap((p) => p.transactions);
   const details = {};
-  for (const txid of pickTxids(rows)) details[txid] = await call(`/api/transactions/${txid}?address=${q}`);
+  for (const txid of pickTxids(rows)) details[txid] = await call(`/api/transactions/${txid}?address=${q}${m ? `&${m}` : ''}`);
   return { rows, record: { address, timeline, transactionPages, details } };
 }
 
@@ -113,6 +120,17 @@ async function recordExport() {
   return { address: MAIN, query: { status: ['flagged'] }, csv: await file('csv'), json: await file('json') };
 }
 
+/** What each other method says about the running example: the transactions it flags most strongly, and the ones the default method flags. */
+async function recordMethods(baseRows) {
+  const runs = {};
+  for (const method of OTHER_METHODS) {
+    const pick = (rows) => [...new Set([...rows.filter((r) => r.status === 'flagged').sort((a, b) => b.score - a.score).slice(0, 3), ...baseRows.filter((r) => r.status === 'flagged')].map((r) => r.txid))];
+    const run = await recordAddress(MAIN, pick, method);
+    runs[method] = { timeline: run.record.timeline, transactionPages: run.record.transactionPages, details: run.record.details };
+  }
+  return { address: MAIN, runs };
+}
+
 async function main() {
   mkdirSync(outDir, { recursive: true });
   const health = await ok('/api/health');
@@ -135,6 +153,7 @@ async function main() {
     return [...scored.filter((r) => r.status === 'flagged'), nearest, unscored[0], unscored[unscored.length - 1]].map((r) => r.txid);
   });
   const methods = await ok('/api/methods');
+  const otherMethods = await recordMethods(main.rows);
   const whatIf = await recordWhatIf(config);
   const exported = await recordExport();
   const shortRun = await recordAddress(short, (rows) => rows.map((r) => r.txid));
@@ -162,6 +181,7 @@ async function main() {
   save('address-main.json', main.record);
   save('address-short.json', shortRun.record);
   save('methods.json', methods);
+  save('methods-main.json', otherMethods);
   save('whatif-main.json', whatIf);
   save('export-main.json', exported);
   save('examples.json', examples);

@@ -10,6 +10,7 @@ import { dayKey, formatDay, formatDayRange } from '../lib/dates';
 import { formatCount, plural, shortAddress } from '../lib/format';
 import { navigate, paths } from '../lib/router';
 import { isTransient, runRequest, useRequest } from '../hooks/useRequest';
+import { usePreferences } from '../hooks/usePreferences';
 import { useServiceStatus } from '../hooks/useServiceStatus';
 import { useSlow } from '../hooks/useSlow';
 
@@ -30,6 +31,8 @@ export function SelectScreen({ query }: { query: string | null }) {
   const [value, setValue] = useState(query ?? '');
   const [lookup, setLookup] = useState<Lookup>({ status: 'idle' });
   const inputRef = useRef<HTMLInputElement>(null);
+  // An address opens with the method the user chose last (V2's method menu remembers it).
+  const [{ method }] = usePreferences();
 
   async function check(text: string) {
     const local = validateAddress(text);
@@ -41,7 +44,7 @@ export function SelectScreen({ query }: { query: string | null }) {
     setLookup({ status: 'checking' });
     const res = await runRequest(() => api.lookup(local.address));
     if (res.ok) {
-      navigate(paths.timeline(res.data.address));
+      navigate(paths.timeline(res.data.address, method ?? undefined));
       return;
     }
     const body = res.error.body;
@@ -165,7 +168,7 @@ export function SelectScreen({ query }: { query: string | null }) {
             <ul className="example-list">
               {lookup.examples.map((a) => (
                 <li key={a}>
-                  <a className="mono" href={paths.timeline(a)}>
+                  <a className="mono" href={paths.timeline(a, method ?? undefined)}>
                     {shortAddress(a, 12, 8)}
                   </a>
                 </li>
@@ -200,6 +203,7 @@ export function SelectScreen({ query }: { query: string | null }) {
 }
 
 function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
+  const [{ method }] = usePreferences();
   return (
     <div className="card table-card">
       <table className="address-table">
@@ -225,7 +229,7 @@ function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
             return (
               <tr key={a.address}>
                 <th scope="row" data-label="Address">
-                  <a className="address-link mono" href={paths.timeline(a.address)} aria-label={`Open activity for ${a.address}`}>
+                  <a className="address-link mono" href={paths.timeline(a.address, method ?? undefined)} aria-label={`Open activity for ${a.address}`}>
                     {shortAddress(a.address, 12, 8)}
                   </a>
                   <span className="cell-sub">{KIND_LABEL[a.kind]}</span>

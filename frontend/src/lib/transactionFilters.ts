@@ -3,8 +3,9 @@
 // reload; the filter bar, chart G2 and the table all read the same `Filters` and never hold their own.
 // The checks are the ones the server applies to E6 (plan section 11), with the server's words.
 
-import type { Direction, ScoreStatus, TransactionQuery } from '../api/types';
+import type { Direction, MethodId, ScoreStatus, TransactionQuery } from '../api/types';
 import { isDayKey } from './dates';
+import { DEFAULT_METHOD, methodSearch, parseMethod } from './methods';
 
 /** The sort menu's four choices (the plan's "newest, oldest, largest, highest score"). */
 export const SORTS = [
@@ -31,9 +32,11 @@ export interface Filters {
   sort: SortValue;
   /** From 1. */
   page: number;
+  /** The deciding method: it sets every row's status and score. */
+  method: MethodId;
 }
 
-export const NO_FILTERS: Filters = { status: [], direction: [], from: '', to: '', sort: DEFAULT_SORT, page: 1 };
+export const NO_FILTERS: Filters = { status: [], direction: [], from: '', to: '', sort: DEFAULT_SORT, page: 1, method: DEFAULT_METHOD };
 
 /** What the link says, made safe: unknown values are dropped, so a hand-edited link can never reach the server malformed. */
 export function parseFilters(search: string): Filters {
@@ -47,6 +50,7 @@ export function parseFilters(search: string): Filters {
     to: params.get('to') ?? '',
     sort: SORTS.find((s) => s.value === sort)?.value ?? DEFAULT_SORT,
     page: Number.isInteger(page) && page >= 1 ? page : 1,
+    method: parseMethod(search),
   };
 }
 
@@ -59,10 +63,11 @@ export function filtersToSearch(filters: Filters): string {
   if (filters.to) params.set('to', filters.to);
   if (filters.sort !== DEFAULT_SORT) params.set('sort', filters.sort);
   if (filters.page > 1) params.set('page', String(filters.page));
+  if (methodSearch(filters.method)) params.set('method', filters.method);
   return params.toString();
 }
 
-/** Whether anything but the sort order narrows the list. */
+/** Whether anything but the sort order and the method narrows the list. */
 export const isFiltered = (f: Filters): boolean => f.status.length + f.direction.length > 0 || f.from !== '' || f.to !== '';
 
 export interface FilterErrors {
@@ -86,13 +91,14 @@ export function validateFilters({ from, to }: Pick<Filters, 'from' | 'to'>, exam
   return errors;
 }
 
-/** E6's query for what narrows the list; the table adds its sort and page, and chart G2 its own paging. */
+/** E6's query for what narrows the list (and the method, when it is not the default); the table adds its sort and page, and chart G2 its own paging. */
 export function toQuery(filters: Filters): TransactionQuery {
   const query: TransactionQuery = {};
   if (filters.status.length > 0) query.status = filters.status;
   if (filters.direction.length > 0) query.direction = filters.direction;
   if (filters.from) query.from = filters.from;
   if (filters.to) query.to = filters.to;
+  if (filters.method !== DEFAULT_METHOD) query.method = filters.method;
   return query;
 }
 

@@ -8,6 +8,7 @@ import config from './fixtures/config.json';
 import exportMain from './fixtures/export-main.json';
 import health from './fixtures/health.json';
 import methods from './fixtures/methods.json';
+import methodsMain from './fixtures/methods-main.json';
 import unsupported from './fixtures/unsupported.json';
 import whatIfMain from './fixtures/whatif-main.json';
 import type {
@@ -17,6 +18,7 @@ import type {
   HealthResponse,
   InsufficientHistoryBody,
   InvalidBody,
+  MethodId,
   MethodsResponse,
   TimelineResponse,
   TransactionDetail,
@@ -43,6 +45,8 @@ export const ADDRESSES = addresses as AddressesResponse;
 export const UNSUPPORTED = unsupported as UnsupportedBody;
 export const RECORDED: RecordedAddress[] = [addressMain, addressShort] as unknown as RecordedAddress[];
 export const METHODS_ANSWER = methods as MethodsResponse;
+/** The running example under the two recorded methods other than the default (Regression residual and TxGPT surprisal). */
+export const METHOD_RUNS = methodsMain as unknown as { address: string; runs: Partial<Record<MethodId, Omit<RecordedAddress, 'address'>>> };
 
 /** A request the service was asked, with the status and body it answered. */
 type Recorded<Request, Ok> = { request: Request } & ({ status: 200; body: Ok } | { status: 400; body: InvalidBody } | { status: 422; body: InsufficientHistoryBody });

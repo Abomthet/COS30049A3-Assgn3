@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from 'react';
+import type { MethodId } from '../api/types';
+import { METHODS } from '../lib/methods';
 
 // The user's remembered choices live in local storage under one versioned key (plan section 8,
 // "State and data"). A change reaches every component that reads them, and other tabs.
@@ -6,10 +8,12 @@ import { useSyncExternalStore } from 'react';
 export interface Preferences {
   /** null until the user chooses; the system setting applies until then. */
   theme: 'light' | 'dark' | null;
+  /** The deciding method last chosen (V2's method menu); null until the user chooses, and then the default applies. */
+  method: MethodId | null;
 }
 
 const KEY = 'explorer.preferences.v1';
-const DEFAULTS: Preferences = { theme: null };
+const DEFAULTS: Preferences = { theme: null, method: null };
 
 // Storage can throw (blocked, private window). The choice then lasts until the page closes.
 let fallbackRaw: string | null = null;
@@ -26,7 +30,10 @@ function parse(raw: string | null): Preferences {
   if (raw === null) return DEFAULTS;
   try {
     const stored = JSON.parse(raw) as Partial<Preferences>;
-    return { theme: stored.theme === 'light' || stored.theme === 'dark' ? stored.theme : null };
+    return {
+      theme: stored.theme === 'light' || stored.theme === 'dark' ? stored.theme : null,
+      method: METHODS.find((m) => m.id === stored.method)?.id ?? null,
+    };
   } catch {
     return DEFAULTS;
   }

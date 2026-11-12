@@ -480,6 +480,8 @@ export type AppSettings = Pick<ConfigResponse, 'limitationLine' | 'history' | 'w
 /** Options every call accepts. Aborting the signal cancels the request in flight. */
 export interface RequestOptions {
   signal?: AbortSignal;
+  /** The deciding method of E5 and E7 (E6 and E10 take it in their query); left out, the default decides. */
+  method?: MethodId;
 }
 
 export interface ExplorerApi {

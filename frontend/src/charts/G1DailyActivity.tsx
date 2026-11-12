@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import type { Data } from 'plotly.js';
 import type { TimelineDay, TimelineResponse } from '../api/types';
+import { useMethodLabels } from '../hooks/useMethods';
 import { addDays, dayCount, dayKey, formatDay } from '../lib/dates';
 import { plural } from '../lib/format';
 import { paths } from '../lib/router';
@@ -156,6 +157,7 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
 
 export function G1DailyActivity({ timeline, onOpenDay }: Props) {
   const { address, days, range, snapshot } = timeline;
+  const methodName = useMethodLabels()[snapshot.method.id].name;
   const model = useMemo(() => buildModel({ days, range }), [days, range]);
   const figure = useCallback((context: FigureContext) => buildFigure(model, context), [model]);
 
@@ -163,12 +165,12 @@ export function G1DailyActivity({ timeline, onOpenDay }: Props) {
     () => ({
       columns: [{ label: 'Date (UTC)' }, { label: 'Transactions', numeric: true }, { label: 'Unusual', numeric: true }],
       rows: days.map((d) => [
-        { text: formatDay(d.date), href: paths.day(address, d.date) },
+        { text: formatDay(d.date), href: paths.day(address, d.date, snapshot.method.id) },
         { text: String(d.txCount) },
         { text: d.flaggedCount > 0 ? String(d.flaggedCount) : '—' },
       ]),
     }),
-    [days, address],
+    [days, address, snapshot.method.id],
   );
 
   const keyboard = useMemo<KeyboardStops>(
@@ -188,7 +190,7 @@ export function G1DailyActivity({ timeline, onOpenDay }: Props) {
       fileName={['daily-activity', address, snapshot.snapshotDate]}
       title="Transactions per day"
       headingLevel={2}
-      caption={`${snapshotCaption(snapshot)} · days in UTC`}
+      caption={`${snapshotCaption(snapshot)} · days in UTC · flagged by ${methodName}`}
       summary={summary}
       hint="Select a bar to open that day. Drag to zoom, double-click to reset. With a keyboard, focus the chart and use the arrow keys."
       figure={figure}

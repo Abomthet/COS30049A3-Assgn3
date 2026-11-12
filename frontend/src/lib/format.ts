@@ -21,6 +21,9 @@ export function formatBtcRounded(btc: number): string {
 /** A share between 0 and 1 as a whole percentage: '66%'. */
 export const formatShare = (share: number): string => `${Math.round(share * 100)}%`;
 
+/** A measured share with its 95% interval: '66% (58% to 73%)'. */
+export const formatInterval = ({ value, ciLow, ciHigh }: { value: number; ciLow: number; ciHigh: number }): string => `${formatShare(value)} (${formatShare(ciLow)} to ${formatShare(ciHigh)})`;
+
 export function formatCount(n: number): string {
   return n.toLocaleString('en-US');
 }

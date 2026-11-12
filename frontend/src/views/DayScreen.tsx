@@ -1,9 +1,10 @@
 import { api } from '../api/client';
-import type { TimelineResponse, TransactionsResponse } from '../api/types';
+import type { MethodId, TimelineResponse, TransactionsResponse } from '../api/types';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { ErrorState } from '../components/ErrorState';
 import { Icon } from '../components/Icon';
+import { MethodMenu } from '../components/MethodMenu';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Loading, StatePanel } from '../components/StatePanel';
 import { formatDay, formatTime, isDayKey } from '../lib/dates';
@@ -15,21 +16,24 @@ import { TransactionPanel } from './TransactionPanel';
 
 // Screen 3 — one day's transactions beside the transaction detail (FR-03).
 
-export function DayScreen({ address, date, txid }: { address: string; date: string; txid: string | null }) {
+export function DayScreen({ address, date, txid, method }: { address: string; date: string; txid: string | null; method: MethodId }) {
   const validDate = isDayKey(date);
   useDocumentTitle(validDate ? `${formatDay(date)} · ${shortAddress(address)}` : shortAddress(address));
-  const timeline = useRequest(`timeline:${address}`, (signal) => api.timeline(address, { signal }));
+  const timeline = useRequest(`timeline:${address}:${method}`, (signal) => api.timeline(address, { signal, method }));
   const { settings } = useSettings();
   const pageSize = settings.web.lists.maxPageSize;
   // An invalid day in the link is answered here, so nothing is sent for it.
-  const day = useRequest(validDate ? `day:${address}:${date}` : null, (signal) => api.transactions(address, { date, pageSize }, { signal }));
+  const day = useRequest(validDate ? `day:${address}:${date}:${method}` : null, (signal) => api.transactions(address, { date, pageSize, method }, { signal }));
+  // After a change of method the day's list for the old one stays on screen, dimmed, until the new one arrives.
+  const shownDay = day.status === 'success' ? day.data : day.previous;
+  const updating = day.status === 'loading' && shownDay !== undefined;
 
   return (
     <div className="page page-day">
       <Breadcrumbs
         items={[
           { label: 'Addresses', href: paths.select() },
-          { label: shortAddress(address), href: paths.timeline(address), mono: true },
+          { label: shortAddress(address), href: paths.timeline(address, method), mono: true },
           { label: validDate ? formatDay(date) : 'Day' },
         ]}
       />
@@ -37,9 +41,10 @@ export function DayScreen({ address, date, txid }: { address: string; date: stri
         <p className="eyebrow mono">{shortAddress(address, 12, 8)}</p>
         <PageHeading>{validDate ? formatDay(date) : 'Unknown day'}</PageHeading>
         <p className="source-line">Transactions confirmed on this day (UTC)</p>
+        <MethodMenu method={method} updating={updating} />
       </header>
 
-      {timeline.status === 'success' && validDate ? <DayNav timeline={timeline.data} date={date} /> : null}
+      {timeline.status === 'success' && validDate ? <DayNav timeline={timeline.data} date={date} method={method} /> : null}
 
       {!validDate ? (
         <StatePanel
@@ -47,7 +52,7 @@ export function DayScreen({ address, date, txid }: { address: string; date: stri
           title="That day isn't valid"
           live="alert"
           actions={
-            <a className="btn btn-secondary" href={paths.timeline(address)}>
+            <a className="btn btn-secondary" href={paths.timeline(address, method)}>
               Back to the timeline
             </a>
           }
@@ -56,16 +61,16 @@ export function DayScreen({ address, date, txid }: { address: string; date: stri
         </StatePanel>
       ) : (
         <>
-          {day.status === 'loading' ? <Loading label="Loading the day's transactions…" block /> : null}
+          {shownDay === undefined && day.status === 'loading' ? <Loading label="Loading the day's transactions…" block /> : null}
           {day.status === 'error' ? <ErrorState error={day.error} onRetry={day.retry} /> : null}
-          {day.status === 'success' ? <DayBody day={day.data} date={date} txid={txid} /> : null}
+          {shownDay !== undefined && day.status !== 'error' ? <DayBody day={shownDay} date={date} txid={txid} method={method} updating={updating} /> : null}
         </>
       )}
     </div>
   );
 }
 
-function DayNav({ timeline, date }: { timeline: TimelineResponse; date: string }) {
+function DayNav({ timeline, date, method }: { timeline: TimelineResponse; date: string; method: MethodId }) {
   const before = timeline.days.filter((d) => d.date < date);
   const after = timeline.days.filter((d) => d.date > date);
   const prev = before[before.length - 1];
@@ -74,7 +79,7 @@ function DayNav({ timeline, date }: { timeline: TimelineResponse; date: string }
   const nextFlag = after.find((d) => d.flaggedCount > 0);
   const link = (target: { date: string } | undefined, label: string, icon: 'chevron-left' | 'chevron-right', flag = false) =>
     target ? (
-      <a className={`nav-link${flag ? ' nav-link-flag' : ''}`} href={paths.day(timeline.address, target.date)}>
+      <a className={`nav-link${flag ? ' nav-link-flag' : ''}`} href={paths.day(timeline.address, target.date, method)}>
         {icon === 'chevron-left' ? <Icon name={icon} /> : null}
         {flag ? <Icon name="flag" className="flag-icon" /> : null}
         <span>
@@ -104,14 +109,14 @@ function DayNav({ timeline, date }: { timeline: TimelineResponse; date: string }
   );
 }
 
-function DayBody({ day, date, txid }: { day: TransactionsResponse; date: string; txid: string | null }) {
+function DayBody({ day, date, txid, method, updating }: { day: TransactionsResponse; date: string; txid: string | null; method: MethodId; updating: boolean }) {
   if (day.transactions.length === 0) {
     return (
       <StatePanel
         tone="empty"
         title="No transactions on this day"
         actions={
-          <a className="btn btn-secondary" href={paths.timeline(day.address)}>
+          <a className="btn btn-secondary" href={paths.timeline(day.address, method)}>
             Back to the timeline
           </a>
         }
@@ -124,7 +129,7 @@ function DayBody({ day, date, txid }: { day: TransactionsResponse; date: string;
 
   return (
     <div className="day-layout">
-      <section className="card tx-list-card" aria-labelledby="tx-list-title">
+      <section className={`card tx-list-card${updating ? ' is-updating' : ''}`} aria-labelledby="tx-list-title" aria-busy={updating}>
         <h2 id="tx-list-title">{plural(day.total, 'transaction')}</h2>
         <p className="card-sub">{flagged ? `${flagged} unusual, marked below` : 'None unusual on this day'}</p>
         {day.total > day.transactions.length ? <p className="card-sub">Showing the first {day.transactions.length}, in time order.</p> : null}
@@ -135,7 +140,7 @@ function DayBody({ day, date, txid }: { day: TransactionsResponse; date: string;
               <li key={t.txid}>
                 <a
                   className={`tx-row${selected ? ' is-selected' : ''}${t.status === 'flagged' ? ' is-flagged' : ''}`}
-                  href={paths.tx(day.address, date, t.txid)}
+                  href={paths.tx(day.address, date, t.txid, method)}
                   aria-current={selected ? 'true' : undefined}
                 >
                   <span className="tx-row-top">
@@ -155,7 +160,7 @@ function DayBody({ day, date, txid }: { day: TransactionsResponse; date: string;
         </ul>
       </section>
       <section className="card detail-card" aria-label="Transaction details">
-        <TransactionPanel address={day.address} date={date} txid={txid} />
+        <TransactionPanel address={day.address} date={date} txid={txid} method={method} />
       </section>
     </div>
   );

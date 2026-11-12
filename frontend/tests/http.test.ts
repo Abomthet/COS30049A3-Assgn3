@@ -158,6 +158,17 @@ describe('createHttpApi', () => {
     expect(lastRequest.url).toBe('/api/transactions/abc?address=addr');
   });
 
+  test('E5 and E7 send the deciding method in the query, and leave it out when none is named', async () => {
+    await api().timeline('addr', { method: 'lof' });
+    expect(lastRequest.url).toBe('/api/addresses/addr/timeline?method=lof');
+    await api().timeline('addr');
+    expect(lastRequest.url).toBe('/api/addresses/addr/timeline');
+    await api().transaction('abc', 'addr', { method: 'txgpt_method' });
+    expect(lastRequest.url).toBe('/api/transactions/abc?address=addr&method=txgpt_method');
+    await api().exportFile('addr', 'csv', { status: ['flagged'], method: 'fusion' });
+    expect(lastRequest.url).toBe('/api/addresses/addr/export?status=flagged&method=fusion&format=csv');
+  });
+
   test('E6 repeats a repeatable parameter (?status=a&status=b), not status[]=a, and leaves out what is not set', async () => {
     await api().transactions('addr', {
       status: ['flagged', 'not-scored'],

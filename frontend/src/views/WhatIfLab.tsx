@@ -17,6 +17,7 @@ import { useSettings } from '../hooks/useSettings';
 import { useSlow } from '../hooks/useSlow';
 import { addDays, dayKey, formatDay } from '../lib/dates';
 import { DIRECTION_LABEL, formatBtc, formatHours, formatSpanDays, plural } from '../lib/format';
+import { DEFAULT_METHOD, parseMethod } from '../lib/methods';
 import { paths } from '../lib/router';
 import { amountText, checkAmount, checkWhen, splitTime } from '../lib/whatIf';
 
@@ -171,6 +172,7 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
     <div className="whatif">
       <p className="whatif-note">
         <Icon name="info" /> A what-if is hypothetical. Nothing is sent to the Bitcoin network and nothing is stored.
+        {parseMethod(search) === DEFAULT_METHOD ? '' : ' The lab always decides with the default method; its table shows all nine.'}
       </p>
 
       <div className="whatif-layout">

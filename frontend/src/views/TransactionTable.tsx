@@ -1,4 +1,4 @@
-import type { TransactionsResponse } from '../api/types';
+import type { MethodId, TransactionsResponse } from '../api/types';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { Icon } from '../components/Icon';
 import { formatDateTime, dayKey } from '../lib/dates';
@@ -12,11 +12,13 @@ import { paths } from '../lib/router';
 
 interface Props {
   page: TransactionsResponse;
+  /** The deciding method the rows were scored by; the links keep it. */
+  method: MethodId;
   /** The link for another page of the same filters. */
   pageHref: (page: number) => string;
 }
 
-export function TransactionTable({ page, pageHref }: Props) {
+export function TransactionTable({ page, method, pageHref }: Props) {
   const pages = Math.max(1, Math.ceil(page.total / page.pageSize));
   const first = (page.page - 1) * page.pageSize + 1;
   const last = first + page.transactions.length - 1;
@@ -52,7 +54,7 @@ export function TransactionTable({ page, pageHref }: Props) {
             <tr key={t.txid} className={t.status === 'flagged' ? 'is-flagged' : undefined}>
               <th scope="row" className="col-time" data-label="Time (UTC)">
                 {/* The link's ::after covers the whole row, so the row opens the transaction and keeps a real link's keyboard and middle-click. */}
-                <a className="row-link" href={paths.tx(page.address, dayKey(t.time), t.txid)}>
+                <a className="row-link" href={paths.tx(page.address, dayKey(t.time), t.txid, method)}>
                   {formatDateTime(t.time)}
                 </a>
               </th>
