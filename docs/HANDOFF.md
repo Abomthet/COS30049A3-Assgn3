@@ -161,8 +161,10 @@ planning, gates and review, and the cheapest on mechanical work.
 - **The repository stays private** until marks are released (D-A3-1).
 - **No working-tree-wide git command** (`stash`, `checkout`, `reset`) while another agent is editing
   the tree. Compare builds in a worktree.
-- **If you delegate to sub-agents:** they write only in their assigned folders, run **no git commands**,
-  stop their servers by PID, and report. The lead reviews, verifies (§5) and commits. Verify their
+- **If you delegate to sub-agents:** a **code** cook runs in its own git worktree on its own branch (D-W-16), commits
+  there without AI attribution, never pushes, and reports its branch; the lead reviews the branch, merges it into
+  `main`, resolves overlaps, verifies and pushes. A **document-only** cook writes only in its own `docs/` folder and
+  runs no git. Every cook stops its servers by PID and reports in detail. The lead reviews, verifies (§5) and commits. Verify their
   claims against `git status` and the build: about a third of agent reports contained a false claim.
 - **Should items only after MS2** (the plan's risk 6). Could items only after MS3, with a logged change.
 - **Log as you go:** append a dated entry to `docs/WORKLOG.md` (Context / Decisions / Done / Evidence /

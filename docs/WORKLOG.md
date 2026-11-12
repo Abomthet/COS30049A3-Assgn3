@@ -684,3 +684,79 @@ updated in 32–36 ms warm (worst 46 ms), 175 ms (running example) to 349 ms (la
 - **Waiting for the state, not the first event.** Tests of charts whose words come from a second request wait for
   the redraw that carries them; reading the first draw raced under load.
 **Choices accepted:** the what-if lab keeps the baseline (E8/E9 take no `method`) and says so; the method menu is on V3 too.
+
+## 2026-11-12 — Wave B reviewed (Assistant back end; watchlist UI, G4, replay); worktree parallelism; usability pack
+
+### Wave B front end (commit `0f4febf`)
+**Delegated to** B-front (Sonnet 5.5, medium): 83 tool calls, ~20 min, ~269k tokens. **Lead review:** 610 tests twice,
+typecheck and build clean, **no mock in `dist/`** (the cook had not checked; the lead did), wording clean, the replay
+never says "live". Lead's own measurement: **first-screen JS 145.3 kB gzip** (entry plus preloaded chunks, gzip -9),
+inside the 150 kB budget with little room, so every later screen is lazy-loaded. Looked at the replay screenshot.
+Verified in a clean worktree: back end 646, front end 610, build clean.
+**Design notes:**
+- **The watchlist is a store, not a request cache:** a module-level `useSyncExternalStore` keeps the star, V1 and V6
+  in step, with optimistic removal rolled back if the service refuses.
+- **The replay is honest:** each row carries its snapshot verdict, which never used later transactions (the
+  time-safety rule), so replaying forward shows what the Explorer would have said on the day; replaying every row
+  reproduces E5's days and totals exactly (a test asserts it). The charts' axes stay fixed to the full history.
+- **G4** shows where a transaction ranks among the address's own transactions for each model, on each model's own
+  scale (E7/E8 `ranks`), with the deciding method ringed.
+
+### The Assistant back end (commit `6e1a6b8`)
+**Delegated to** B-back (Sonnet 5.5, **high**: subtle work): 65 tool calls, ~20 min, ~214k tokens.
+**Lead review:**
+- The 5 newly vendored `lm/` modules (`writers`, `chat`, `generate`, `model`, `tokenizer`) are byte-identical to A2
+  `aa56a26`; `vendor_a2.py --check` passes; the weights stay git-ignored.
+- **The precompute finished:** 677 distinct fact sets for the 681 flagged transactions, **all 677 written by the
+  Assistant and passed A2's guardrail, 0 template fallbacks**, ~2.2 s each (`backend/data/assistant_answers.json`,
+  472 kB).
+- The 32 Assistant tests re-run on the finished file.
+- Live probe:
+  - a prepared answer, served in 0.0 s;
+  - a fresh what-if, which loaded the real model and wrote a guarded answer in **6.7 s**;
+  - a concurrent second request, **429 with `Retry-After: 10`**;
+  - the repeat, cached in 0.0 s;
+  - a clean log.
+- Clean worktree: back end **677 passed, 1 skipped** (the real-model test, since the weights are not in git), front
+  end 610, build clean.
+- **D-W-09 closed:** `EXPLORER_ASSISTANT` is back to `auto`.
+
+**Choices accepted:**
+- The served text gets the Mod-12 rewording after the guardrail has judged the writer's own words. The rewording
+  changes no value, and re-checking would wrongly fail "0.05000000" against "0.05".
+- A cancelled request finishes in its worker and is cached (a thread cannot be cancelled, and greedy decoding means
+  a retry gets the same answer).
+- Prepared answers are keyed by the facts hash, so an identical what-if hits them too.
+
+**Design notes:**
+- **One answer at a time, without queueing:** a try-lock answers 429 at once and the client counts down from
+  `Retry-After`; memory and prepared answers bypass the lock, so only new writing is serialised.
+- **Greedy decoding makes caching sound:** same facts, same answer, so the cache key is the SHA-256 of A2's facts
+  summary, and failures are cached too. Prepared answers use the same key and are re-checked by the guardrail when
+  served.
+- **Torch is optional:** `find_spec` decides "not installed" without importing it. With the Assistant off or absent,
+  E12 answers the template and the reason. The Must tier and every test run without torch.
+- **A rejected answer cannot leak:** the service keeps only the names of failed checks, never the rejected text.
+
+### Parallel cooks in git worktrees (the user's instruction: more cooks at once, detailed reports) — D-W-16
+From now on each **code** cook runs in its own git worktree on its own branch (the Agent tool's worktree
+isolation). It commits there (no AI attribution, no push), and the lead reviews each branch and merges it into
+`main`, resolving overlaps (`types.ts`, `endpoints.ts`, `mockApi.ts`, `main.py`). **Document-only** cooks write in
+their own folder under `docs/` in the main tree.
+Running now:
+- **B2 live lookup** (S-09, Sonnet high, worktree)
+- **C-front** (S-05 panel, S-07, S-08; Sonnet medium, worktree)
+- **C-tools** (S-12 `measure.py` and CI; Sonnet medium, worktree)
+- **report-material** (Haiku, `docs/report-material/`)
+
+### Usability pack (commit `7c3dd25`)
+**Delegated to** a Haiku 5.5 cook (~109k tokens). Delivered `docs/usability/`:
+- the facilitator's script (five tasks on real data: s08's four from A1 plus the added what-if task);
+- the observation sheet, with **Nielsen's 0–4 severity scale**. The brief said 1–4, but the plan says 0–4, so the
+  plan won;
+- a consent template marked for the Swinburne check;
+- the accessibility checklist.
+
+The tool refused the cook's write of `findings-template.md`; the cook did not work around it, and the lead saved its
+text. **For the team:** check the consent template; book two participants; pick Task 3's flagged day in rehearsal;
+confirm Task 5's threshold on the build.

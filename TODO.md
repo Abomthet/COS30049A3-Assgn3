@@ -12,6 +12,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 ---
 
 ## Brigade (who does what)
+- **Parallel cooks in git worktrees (D-W-16):** each code cook on its own branch; the lead reviews and merges. Docs-only cooks write in their own `docs/` folder.
 - **Model policy (D-W-14):** Opus 5.5 / Fable 5.2 for replanning, gates and high-stakes work (with a detailed written plan); Sonnet 5.5 (medium) for routine features; Haiku 5.5 for mechanical work.
 - **Lead (Opus 5.5)**: plans, writes the task specs, reviews every package, runs the checks, commits, signs off the API contract (T05), keeps `docs/WORKLOG.md` and `docs/AI_USE_LOG.md`.
 - **Cooks (Sonnet 5.5, high effort)**: build one bounded package each in their own part of the tree; they never commit.
@@ -65,17 +66,17 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 
 ## 1.4.5 Should items (23–27 Nov), in build order; cut from the bottom
 - [x] T30 (`2411243`) S-01 method selector (`?method=`), both tiers
-- [~] T31 S-02 G4 (ranks `a411820`; chart `@B-front`); S-03 G6 done (`2411243`) planted-test recall
-- [~] T32 (back end `a411820`; front end `@B-front`) S-04 watchlist: SQLite store, E13–E15, dialog, V6; preferences
-- [~] T33 `@B-back` (back end) S-05 Assistant: service, E12, panel, guardrail, cache, prepared answers (works without the 610 MB weights)
-- [~] T34 `@B-front` S-06 replay
-- [ ] T35 S-07 linked selection; S-08 scenario table
-- [ ] T36 S-09 live lookup, E16–E20, dialog V8 — **CR-08 approved by the team (reported 12 Nov)**; package after wave B (Sonnet 5.5 high)
-- [ ] T37 S-10 TS types generated from OpenAPI; CI runs tests and builds on every push
-- [ ] T38 S-11 browser tests at three widths; S-12 `measure.py` (response times, bundle sizes, render times)
+- [x] T31 S-02 G4 (`a411820`, `0f4febf`); S-03 G6 (`2411243`) planted-test recall
+- [x] T32 (`a411820`, `0f4febf`) S-04 watchlist: SQLite store, E13–E15, dialog, V6; preferences
+- [~] T33 (back end `6e1a6b8`, 677 prepared answers; panel `@C-front`) S-05 Assistant: service, E12, panel, guardrail, cache, prepared answers (works without the 610 MB weights)
+- [x] T34 (`0f4febf`) S-06 replay
+- [~] T35 `@C-front` S-07 linked selection; S-08 scenario table
+- [~] T36 `@B2-live` S-09 live lookup, E16–E20, dialog V8 (CR-08 approved)
+- [~] T37 S-10: CI `@C-tools`; generated types deferred until the API settles
+- [~] T38 S-11 browser tests (wave D); S-12 `measure.py` `@C-tools` (response times, bundle sizes, render times)
 
 ## 1.4.6 Test and fix (25–29 Nov)
-- [ ] T39 **[you]** Usability walkthrough, two sessions (Claude prepares the script, tasks and recording sheet)
+- [~] T39 **[you]** Usability walkthrough, two sessions: pack ready in `docs/usability/` (`7c3dd25`); book participants
 - [ ] T40 Accessibility inspection (Claude runs the automated checks; **[you]** keyboard and screen-reader pass)
 - [ ] T41 Fix every severity 3–4 issue; retest
 - [ ] T42 **MS3 (Fri 27 Nov)**: feature freeze; cut list recorded in the change log
@@ -114,4 +115,4 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] (`ee858f7`) A 400 reports only the first validation layer's faults (`pageSize=999&status=bogus` → only `status`)
 - [x] Touch targets: own 44 px range buttons; legend display-only on touch (`55c0b98`); desktop legend stays compact
 - [ ] Phone scroll past a chart not verified on a real device (T38)
-- [ ] Restore `EXPLORER_ASSISTANT` default to `auto` with S-05 (D-W-09)
+- [x] `EXPLORER_ASSISTANT` default back to `auto` (`6e1a6b8`, D-W-09 closed)
