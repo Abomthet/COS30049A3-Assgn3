@@ -44,7 +44,10 @@ WEB_KEY = "web"
 
 # Read by the web application but not opened by the discovery run (plan section 7.3, step 3).
 # profiles.joblib needs explorer.profiles, which is vendored only when the C-02 profile endpoint is built.
+# explorer/transactions.py (build_transactions) is what the live lookup (S-09) uses to clean a fetched history into
+# the table the features are built from; the snapshot is loaded ready-made, so the discovery run never imports it.
 EXTRA_FILES = (
+    "explorer/transactions.py",
     "models/selection.json",
     "models/profiles.joblib",
     "reports/tables/eval_selection.csv",
