@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 644" width="720" height="644" role="img" aria-labelledby="t d" font-family="'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', sans-serif">
+<title id="t">The path of one what-if, from a keystroke to the charts</title>
+<desc id="d">A keystroke in the what-if lab is checked, debounced and sent as E8 and E9; FastAPI validates in two layers and answers one 400; E8 uses Assignment 2's score_what_if and E9 one batched feature build; the answers draw the verdict card and charts G3, G4 and G5.</desc>
+<defs>
+<marker id="head-ink" viewBox="0 0 10 8" markerWidth="8.5" markerHeight="6.8" refX="9.2" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 L2.6,4 Z" fill="#1F2933"/></marker>
+<marker id="head-warn" viewBox="0 0 10 8" markerWidth="8.5" markerHeight="6.8" refX="9.2" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 L2.6,4 Z" fill="#B45309"/></marker>
+</defs>
+<!-- A white card, so the figure reads the same on a light and on a dark page. -->
+<rect x="0" y="0" width="720" height="644" rx="8" fill="#FFFFFF"/>
+<g>
+<rect x="12.0" y="28.8" width="696.0" height="128.8" rx="6" fill="none" stroke="#1D4ED8" stroke-width="1.1"/>
+<text x="14.0" y="22.8" font-size="11.4" fill="#1D4ED8" xml:space="preserve"><tspan font-weight="700">Browser</tspan> · V4, the what-if lab (<tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">views/WhatIfLab.tsx</tspan>)</text>
+<rect x="12.0" y="187.6" width="696.0" height="296.0" rx="6" fill="none" stroke="#0F766E" stroke-width="1.1"/>
+<text x="14.0" y="181.6" font-size="11.4" fill="#0F766E" xml:space="preserve"><tspan font-weight="700">FastAPI</tspan> · <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">api/whatif.py</tspan>, <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">services/whatif_service.py</tspan></text>
+<rect x="12.0" y="523.6" width="696.0" height="108.0" rx="6" fill="none" stroke="#1D4ED8" stroke-width="1.1"/>
+<text x="150.0" y="517.6" font-size="11.4" fill="#1D4ED8" xml:space="preserve"><tspan font-weight="700">Browser</tspan> · the answer, same view</text>
+</g>
+<g>
+<rect x="20.0" y="37.6" width="164.0" height="78.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="102.0" y="53.8"><tspan font-weight="700" font-size="11.4">1  Keystroke</tspan></tspan>
+<tspan x="102.0" y="67.9">the form's rules run at once:</tspan>
+<tspan x="102.0" y="81.3"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">checkAmount</tspan>, <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">checkWhen</tspan>;</tspan>
+<tspan x="102.0" y="94.7">a bad value shows its</tspan>
+<tspan x="102.0" y="108.1">message, nothing is sent</tspan>
+</text>
+<rect x="192.0" y="37.6" width="164.0" height="78.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="274.0" y="60.5"><tspan font-weight="700" font-size="11.4">2  Debounce</tspan></tspan>
+<tspan x="274.0" y="74.6"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">useDebouncedValue</tspan> waits</tspan>
+<tspan x="274.0" y="88.0"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">web.whatIf.debounceMs</tspan></tspan>
+<tspan x="274.0" y="101.4">(250 ms) without a change</tspan>
+</text>
+<rect x="364.0" y="37.6" width="164.0" height="78.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="446.0" y="60.5"><tspan font-weight="700" font-size="11.4">3  Cancel the older</tspan></tspan>
+<tspan x="446.0" y="74.6"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">useRequest</tspan>: a new key</tspan>
+<tspan x="446.0" y="88.0">aborts the request in flight</tspan>
+<tspan x="446.0" y="101.4">(<tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">AbortController</tspan>)</tspan>
+</text>
+<rect x="536.0" y="37.6" width="164.0" height="78.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="618.0" y="60.5"><tspan font-weight="700" font-size="11.4">4  Send</tspan></tspan>
+<tspan x="618.0" y="74.6">E8 <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">POST …/what-if</tspan></tspan>
+<tspan x="618.0" y="88.0">E9 <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">POST …/what-if/curve</tspan></tspan>
+<tspan x="618.0" y="101.4">by Axios, through <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">/api</tspan></tspan>
+</text>
+<rect x="476.0" y="197.6" width="208.0" height="64.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="580.0" y="213.5"><tspan font-weight="700" font-size="11.4">5  Layer 1: types (Pydantic)</tspan></tspan>
+<tspan x="580.0" y="227.6"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">schemas/whatif.py</tspan>: types, unknown</tspan>
+<tspan x="580.0" y="241.0">fields, amount &gt; 0, a zoned time;</tspan>
+<tspan x="580.0" y="254.4"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">path_address</tspan>: the address checksum</tspan>
+</text>
+<rect x="476.0" y="281.6" width="208.0" height="64.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="580.0" y="297.5"><tspan font-weight="700" font-size="11.4">6  Layer 2: the service's rules</tspan></tspan>
+<tspan x="580.0" y="311.6"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">WhatIfService._problems</tspan>: amount</tspan>
+<tspan x="580.0" y="325.0">range; time within <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">maxGapYears</tspan> of</tspan>
+<tspan x="580.0" y="338.4">the last transaction; curve points</tspan>
+</text>
+<rect x="476.0" y="373.6" width="208.0" height="100.0" rx="3" fill="#FDF1E3" stroke="#B45309" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="580.0" y="394.1"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">core/errors.py</tspan><tspan font-weight="700" font-size="11.4">: one body</tspan></tspan>
+<tspan x="580.0" y="408.2">A type fault: <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">handle_validation</tspan></tspan>
+<tspan x="580.0" y="421.6">then runs layer 2 on what parsed</tspan>
+<tspan x="580.0" y="435.0">(<tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">FIELD_RULES</tspan>), so one 400 <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">invalid</tspan></tspan>
+<tspan x="580.0" y="448.4">names every field at fault.</tspan>
+<tspan x="580.0" y="461.8">Too little history: 422 (E8, E9).</tspan>
+</text>
+<rect x="20.0" y="253.6" width="212.0" height="220.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="126.0" y="269.4"><tspan font-weight="700" font-size="11.4">7  E8: </tspan><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">WhatIfService.what_if</tspan></tspan>
+</text>
+<rect x="28.0" y="279.6" width="196.0" height="90.0" rx="3" fill="#F1EBFD" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="126.0" y="294.7">A2's code, as it is:</tspan>
+<tspan x="126.0" y="308.1"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">Predictor.score_what_if</tspan></tspan>
+<tspan x="126.0" y="321.5">one hypothetical row after the</tspan>
+<tspan x="126.0" y="334.9">strictly earlier history, one</tspan>
+<tspan x="126.0" y="348.3"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">build_features</tspan>, then the score</tspan>
+<tspan x="126.0" y="361.7">and flag of the 8 usable methods</tspan>
+</text>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="126.0" y="392.7">Around it, in the service:</tspan>
+<tspan x="126.0" y="406.1">422 if too little history lies</tspan>
+<tspan x="126.0" y="419.5">before the time (Mod-6); <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">ranks</tspan></tspan>
+<tspan x="126.0" y="432.9">among the address's own stored</tspan>
+<tspan x="126.0" y="446.3">scores; the explanation reworded</tspan>
+<tspan x="126.0" y="459.7">(Mod-12). Nothing is stored.</tspan>
+</text>
+<rect x="244.0" y="253.6" width="212.0" height="220.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="350.0" y="269.4"><tspan font-weight="700" font-size="11.4">8  E9: </tspan><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">WhatIfService.curve</tspan></tspan>
+</text>
+<rect x="252.0" y="279.6" width="196.0" height="48.0" rx="3" fill="#FFFFFF" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="350.0" y="293.8"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">hypothetical_frame</tspan> (Mod-5):</tspan>
+<tspan x="350.0" y="307.2">N amounts (41 by default) make</tspan>
+<tspan x="350.0" y="320.6">N rows, all at the same second</tspan>
+</text>
+<rect x="252.0" y="332.4" width="196.0" height="74.0" rx="3" fill="#F1EBFD" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="350.0" y="346.2">A2's <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">build_features</tspan>, <tspan font-weight="700">one call</tspan></tspan>
+<tspan x="350.0" y="359.6">for all N. A row is given only</tspan>
+<tspan x="350.0" y="373.0">strictly earlier transactions,</tspan>
+<tspan x="350.0" y="386.4">so no hypothetical row sees</tspan>
+<tspan x="350.0" y="399.8">another: each equals E8's row</tspan>
+</text>
+<rect x="252.0" y="411.2" width="196.0" height="58.4" rx="3" fill="#F1EBFD" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="350.0" y="423.9">A2's <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">Method.score</tspan> and <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">flags</tspan>,</tspan>
+<tspan x="350.0" y="437.3">once per method: 8 of the 9</tspan>
+<tspan x="350.0" y="450.7">(TxGPT is precomputed only):</tspan>
+<tspan x="350.0" y="464.1"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">threshold</tspan>, <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">scores[]</tspan>, <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">flags[]</tspan></tspan>
+</text>
+<rect x="20.0" y="533.6" width="212.0" height="78.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="126.0" y="556.5"><tspan font-weight="700" font-size="11.4">9  E8: </tspan><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">WhatIfResult</tspan></tspan>
+<tspan x="126.0" y="570.6">verdict card: flagged or not, score</tspan>
+<tspan x="126.0" y="584.0">against the flag line, the reason;</tspan>
+<tspan x="126.0" y="597.4">G3, the verdict table, <tspan font-weight="700">G4</tspan> (<tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">ranks</tspan>)</tspan>
+</text>
+<rect x="244.0" y="533.6" width="212.0" height="78.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="350.0" y="549.8"><tspan font-weight="700" font-size="11.4">10  E9: </tspan><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">CurveResponse</tspan></tspan>
+<tspan x="350.0" y="563.9"><tspan font-weight="700">G5</tspan>: one method's score by amount;</tspan>
+<tspan x="350.0" y="577.3">crossings and shaded stretches</tspan>
+<tspan x="350.0" y="590.7">come from the server's <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">flags[]</tspan></tspan>
+<tspan x="350.0" y="604.1">(<tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">lib/curve.ts</tspan>)</tspan>
+</text>
+<rect x="476.0" y="533.6" width="208.0" height="78.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="580.0" y="556.5"><tspan font-weight="700" font-size="11.4">One </tspan><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">ApiError</tspan><tspan font-size="11.4"> (</tspan><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">api/http.ts</tspan><tspan font-size="11.4">)</tspan></tspan>
+<tspan x="580.0" y="570.6">400: the server's words by the field</tspan>
+<tspan x="580.0" y="584.0">422: “Not enough history at that</tspan>
+<tspan x="580.0" y="597.4">time”, and the first date that works</tspan>
+</text>
+</g>
+<g fill="none" stroke-linejoin="round">
+<path d="M184.0,76.4 L192.0,76.4" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M356.0,76.4 L364.0,76.4" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M528.0,76.4 L536.0,76.4" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M620.0,115.6 L620.0,197.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M524.0,261.6 L524.0,281.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M684.0,229.6 L696.0,229.6 L696.0,405.6 L684.0,405.6" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+<path d="M580.0,345.6 L580.0,373.6" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+<path d="M476.0,297.6 L466.0,297.6 L466.0,233.6 L126.0,233.6 L126.0,253.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M476.0,329.6 L456.0,329.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M456.0,441.6 L476.0,441.6" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+<path d="M126.0,473.6 L126.0,533.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M350.0,473.6 L350.0,533.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M580.0,473.6 L580.0,533.6" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+</g>
+<g>
+<text x="20.0" y="132.8" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">Two keys are debounced. E8's is {amountBtc, direction, time}; E9's is {direction, time}, so typing an</text>
+<text x="20.0" y="145.9" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">amount sends E8 again but not E9. An answer already received for a key is reused for the session.</text>
+<text x="612.0" y="176.0" text-anchor="end" font-size="9.0" fill="#1F2933" xml:space="preserve">HTTP + JSON</text>
+<text x="530.0" y="274.7" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">types pass</text>
+<text x="586.0" y="362.8" text-anchor="start" font-size="9.0" fill="#B45309" xml:space="preserve">a rule broken</text>
+<text x="691.2" y="274.7" text-anchor="end" font-size="9.0" fill="#B45309" xml:space="preserve">a type fault</text>
+<text x="296.0" y="228.8" text-anchor="middle" font-size="9.0" fill="#1F2933" xml:space="preserve">E8: one amount</text>
+<text x="466.0" y="341.5" text-anchor="middle" font-size="9.0" fill="#1F2933" xml:space="preserve">E9</text>
+<text x="466.0" y="435.9" text-anchor="middle" font-size="9.0" fill="#B45309" xml:space="preserve">422</text>
+<text x="132.0" y="498.7" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">200</text>
+<text x="356.0" y="498.7" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">200</text>
+<text x="586.0" y="498.7" text-anchor="start" font-size="9.0" fill="#B45309" xml:space="preserve">400 or 422</text>
+<text x="20.0" y="624.7" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">While a newer answer is on its way, the previous one stays on screen, dimmed and marked “Updating…”.</text>
+</g>
+</svg>

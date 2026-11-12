@@ -843,3 +843,27 @@ loopback; the 50,000-point WebGL and "first view usable in 2 s" budgets are not 
 **Note:** `chart-timings.mjs` missed a draw about once in 40 runs (cause unknown), so it retries up to 3 times and
 reports retries on stderr.
 **Push blocked (13 Nov):** GitHub refused `75eaf5a` because the login token lacks the `workflow` scope ("refusing to allow an OAuth App to create or update workflow `.github/workflows/ci.yml`"). Local `main` is ahead of `origin/main` until the user grants the scope (`gh auth refresh -h github.com -s workflow`, then `gh auth setup-git`).
+
+## 2026-11-13 — C-front merged (S-05 panel, S-07, S-08); architecture figures (Fable)
+**C-front** (Sonnet 5.5, medium; resumed twice after usage limits) on branch `worktree-agent-af1bba6203d9d303f`,
+commits `a5029d1`, `bc14059`, `658d94e`, `fc31a29`, **merged** as `ea70d25` (git merged `screenshots.mjs` cleanly
+with C-tools' refactor; the lead checked its syntax and shot list).
+- Clean worktree of the merge: back end 677 + 1 skipped, front end **635**, build clean, no mock in `dist/`, wording
+  clean, **first-screen JS 146.9 kB gzip** (budget 150; 3.1 kB left).
+- **S-05 panel:** template first; for a flagged snapshot transaction where the model cannot run, E12 is asked at once
+  (the prepared answer); where it can run, a button, so opening a page never starts a 10 s write; a progress line with
+  "Keep the template"; failed checks named in plain words; 429 through the existing countdown; a per-call 90 s limit.
+  Shown under the default method only (the prepared answers describe the baseline's flag).
+- **S-07:** box or lasso in G2, or a span-of-days form for keyboard and touch, selects table rows with a summary. A
+  real-browser bug was found and fixed: Plotly reports an empty selection while redrawing to show one.
+- **S-08:** keep up to 10 what-ifs per address, compare two, CSV with the limitation line on every row.
+
+**Architecture figures** (Fable 5.2, ~364k tokens): `docs/report-material/figures/` holds `architecture`, `whatif-flow`
+and `request-lifecycle`, each as compilable TikZ (pdflatex, exit 0), PDF and SVG, generated from one description in
+`make_figures.py` so the two formats cannot drift. Every box is checked against a named source file (`README.md`).
+The figures record **16 plan-versus-code differences** (V1–V7 not V8; G1–G6; E1–E15; five middleware layers;
+`useDebouncedValue`; two-layer validation; E9 independent of E8; and others).
+**Lead update:** the footer said "no view calls E12". That was true when drawn and stale after `ea70d25`, so it was
+regenerated, and README row 14 updated. A stale comment in `api/endpoints.ts` about exposed headers was corrected.
+**For the report:** at full width, the architecture figure is about two-thirds of a page of the 1.25-page section.
+Either trim the footer and legend, or move it to the appendix and keep `whatif-flow` in the body (the team's call).

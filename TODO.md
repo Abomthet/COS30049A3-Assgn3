@@ -68,9 +68,9 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T30 (`2411243`) S-01 method selector (`?method=`), both tiers
 - [x] T31 S-02 G4 (`a411820`, `0f4febf`); S-03 G6 (`2411243`) planted-test recall
 - [x] T32 (`a411820`, `0f4febf`) S-04 watchlist: SQLite store, E13–E15, dialog, V6; preferences
-- [~] T33 (back end `6e1a6b8`, 677 prepared answers; panel `@C-front`) S-05 Assistant: service, E12, panel, guardrail, cache, prepared answers (works without the 610 MB weights)
+- [x] T33 (`6e1a6b8`, `ea70d25`) S-05 Assistant: service, E12, panel, guardrail, cache, prepared answers (works without the 610 MB weights)
 - [x] T34 (`0f4febf`) S-06 replay
-- [~] T35 `@C-front` S-07 linked selection; S-08 scenario table
+- [x] T35 (`ea70d25`) S-07 linked selection; S-08 scenario table
 - [~] T36 `@B2-live` S-09 live lookup, E16–E20, dialog V8 (CR-08 approved)
 - [~] T37 S-10: CI done (`75eaf5a`); generated types deferred until the API settles
 - [~] T38 S-11 browser tests (wave D); S-12 `measure.py` done (`75eaf5a`, every budget passes) (response times, bundle sizes, render times)
@@ -86,7 +86,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 
 ## 1.4.7 Report, video, submission (28 Nov–5 Dec)
 - [ ] T46 **[you/team]** Report sections (8 pages max) — Claude supplies generated material only
-- [~] T47 Figures, screenshots, API tables from `openapi.json` (done: `docs/report-material/`), measured table from `measure.py` (`@C-tools`); **architecture figure still to draw**
+- [~] T47 Figures, screenshots, API tables from `openapi.json` (done: `docs/report-material/`), measured table from `measure.py` (`@C-tools`); architecture figures done (`docs/report-material/figures/`)
 - [ ] T48 **[you/team]** Video (7 min): Claude drafts the shot list and checks timing; recording, narration and unlisted upload are yours
 - [ ] T49 Report review against the rubric; page count; Harvard references; AI acknowledgement from the log
 - [ ] T50 Tag `v1.0`; build the zip from the tag (no `node_modules`); checksums; unzip and run clean

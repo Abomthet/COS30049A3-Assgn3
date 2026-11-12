@@ -38,7 +38,7 @@ export function createHttpApi(client: AxiosInstance): ExplorerApi {
       client.put<WatchlistEntry>(`/api/watchlist/${enc(address)}`, body, { signal: opts?.signal }).then((r) => ({ entry: r.data, created: r.status === 201 })),
     deleteWatchlist: (address, opts) => client.delete(`/api/watchlist/${enc(address)}`, { signal: opts?.signal }).then(() => undefined),
     // A file is read as text, so the client does not parse the JSON export. The name is the service's;
-    // a browser on another origin cannot read the header (the service lists only X-Request-ID as exposed), so the format names the file then.
+    // CORS exposes Content-Disposition, so a page on another origin can read it too; without the header, the format names the file.
     exportFile: (address, format, query, opts) =>
       client
         .get<string>(`/api/addresses/${enc(address)}/export`, { signal: opts?.signal, params: { ...query, format }, responseType: 'text' })

@@ -1,0 +1,249 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 778" width="720" height="778" role="img" aria-labelledby="t d" font-family="'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', sans-serif">
+<title id="t">System architecture of the Bitcoin Address Activity Explorer</title>
+<desc id="d">Browser (React views, charts, hooks, Axios client), the Vite dev proxy, the FastAPI service (middleware, routers, services, one error module), Assignment 2's frozen runtime, local files, and the optional parts.</desc>
+<defs>
+<marker id="head-ink" viewBox="0 0 10 8" markerWidth="8.5" markerHeight="6.8" refX="9.2" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 L2.6,4 Z" fill="#1F2933"/></marker>
+<marker id="head-warn" viewBox="0 0 10 8" markerWidth="8.5" markerHeight="6.8" refX="9.2" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 L2.6,4 Z" fill="#B45309"/></marker>
+</defs>
+<!-- A white card, so the figure reads the same on a light and on a dark page. -->
+<rect x="0" y="0" width="720" height="778" rx="8" fill="#FFFFFF"/>
+<g>
+<rect x="12.0" y="28.8" width="696.0" height="93.6" rx="6" fill="none" stroke="#1D4ED8" stroke-width="1.1"/>
+<text x="14.0" y="22.8" font-size="11.4" fill="#1D4ED8" xml:space="preserve"><tspan font-weight="700">Browser</tspan> · React + TypeScript app, built by Vite (<tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">frontend/src/</tspan>)</text>
+<rect x="12.0" y="249.6" width="696.0" height="326.0" rx="6" fill="none" stroke="#0F766E" stroke-width="1.1"/>
+<text x="68.0" y="243.6" font-size="11.4" fill="#0F766E" xml:space="preserve"><tspan font-weight="700">FastAPI on Uvicorn :8000</tspan> · <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">backend/app/main.py</tspan>, <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">create_app()</tspan></text>
+<rect x="344.0" y="327.6" width="360.8" height="238.8" rx="6" fill="none" stroke="#0F766E" stroke-width="1.1"/>
+<rect x="12.0" y="618.8" width="282.0" height="115.6" rx="6" fill="none" stroke="#6D28D9" stroke-width="1.1"/>
+<text x="14.0" y="612.8" font-size="11.4" fill="#6D28D9" xml:space="preserve"><tspan font-weight="700">A2's frozen runtime</tspan>, vendored with hashes</text>
+</g>
+<g>
+<rect x="20.0" y="37.6" width="160.0" height="76.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="100.0" y="59.5"><tspan font-weight="700" font-size="11.4">API client</tspan></tspan>
+<tspan x="100.0" y="73.6"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">endpoints.ts</tspan>: typed calls</tspan>
+<tspan x="100.0" y="87.0"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">http.ts</tspan>: one Axios instance</tspan>
+<tspan x="100.0" y="100.4">every failure is one <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">ApiError</tspan></tspan>
+</text>
+<rect x="188.0" y="37.6" width="160.0" height="76.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="268.0" y="59.5"><tspan font-weight="700" font-size="11.4">Hooks</tspan></tspan>
+<tspan x="268.0" y="73.6"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">useRequest</tspan>: cancels, caches</tspan>
+<tspan x="268.0" y="87.0"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">useServiceStatus</tspan>: polls E1</tspan>
+<tspan x="268.0" y="100.4"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">useSettings</tspan>: reads E2</tspan>
+</text>
+<rect x="356.0" y="37.6" width="184.0" height="76.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="448.0" y="59.5"><tspan font-weight="700" font-size="11.4">Views V1–V7</tspan><tspan font-size="11.4"> (hash router)</tspan></tspan>
+<tspan x="448.0" y="73.6">V1 select · V2 overview · V3 day</tspan>
+<tspan x="448.0" y="87.0">V4 what-if · V5 models</tspan>
+<tspan x="448.0" y="100.4">V6 watchlist · V7 about</tspan>
+</text>
+<rect x="548.0" y="37.6" width="152.0" height="76.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="624.0" y="59.5"><tspan font-weight="700" font-size="11.4">Charts G1–G6</tspan></tspan>
+<tspan x="624.0" y="73.6">wrapper: <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">PlotlyChart.tsx</tspan></tspan>
+<tspan x="624.0" y="87.0">Plotly fetched on demand</tspan>
+<tspan x="624.0" y="100.4">(<tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">plotlyLoader.ts</tspan>)</tspan>
+</text>
+<rect x="30.0" y="153.6" width="172.0" height="52.0" rx="3" fill="#FFFFFF" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="116.0" y="170.2"><tspan font-weight="700" font-size="11.4">Vite dev server</tspan><tspan font-size="11.4"> :5173</tspan></tspan>
+<tspan x="116.0" y="184.3">proxies <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">/api</tspan> to 127.0.0.1:8000:</tspan>
+<tspan x="116.0" y="197.7">one origin (D-A3-11)</tspan>
+</text>
+<rect x="324.0" y="153.6" width="376.0" height="52.0" rx="3" fill="#F3F4F6" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="512.0" y="170.2"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">backend/config/settings.json</tspan><tspan font-size="11.4">: the one settings file</tspan></tspan>
+<tspan x="512.0" y="184.3">A2's thresholds, the limitation line, the wording rule, the <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">web</tspan> block</tspan>
+<tspan x="512.0" y="197.7">(what-if limits, <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">debounceMs</tspan>, page sizes, time limits, body limit)</tspan>
+</text>
+<rect x="36.0" y="257.6" width="152.0" height="42.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="112.0" y="275.5"><tspan font-weight="700">1 · RequestContext</tspan></tspan>
+<tspan x="112.0" y="288.9">request ID, one log line</tspan>
+</text>
+<rect x="36.0" y="313.6" width="152.0" height="42.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="112.0" y="331.5"><tspan font-weight="700">2 · CORS</tspan></tspan>
+<tspan x="112.0" y="344.9">origins, exposed headers</tspan>
+</text>
+<rect x="36.0" y="369.6" width="152.0" height="42.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="112.0" y="387.5"><tspan font-weight="700">3 · BodyLimit</tspan></tspan>
+<tspan x="112.0" y="400.9">body over 10 kB: 413</tspan>
+</text>
+<rect x="36.0" y="425.6" width="152.0" height="42.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="112.0" y="443.5"><tspan font-weight="700">4 · GZip</tspan></tspan>
+<tspan x="112.0" y="456.9">bodies of 1000 B or more</tspan>
+</text>
+<rect x="36.0" y="481.6" width="152.0" height="42.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="112.0" y="499.5"><tspan font-weight="700">5 · ETag</tspan></tspan>
+<tspan x="112.0" y="512.9">snapshot GETs: tag, 304</tspan>
+</text>
+<rect x="212.0" y="257.6" width="488.0" height="48.0" rx="3" fill="#FDF1E3" stroke="#B45309" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="456.0" y="271.8"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">core/errors.py</tspan>: the one place that decides a status code and builds the error body</tspan>
+<tspan x="456.0" y="285.2">{status, message, hint, fields, requestId}; never a stack trace or an echo of the input</tspan>
+<tspan x="456.0" y="298.6">validation: 400 · <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">Unsupported</tspan>: 404 · <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">InsufficientHistory</tspan>: 422 · 413 · 429 · 503 · else 500</tspan>
+</text>
+<rect x="212.0" y="327.6" width="108.0" height="238.8" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="266.0" y="363.9"><tspan font-weight="700" font-size="11.4">Routers</tspan></tspan>
+<tspan x="266.0" y="378.0"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">api/*.py</tspan></tspan>
+<tspan x="266.0" y="391.4">prefix <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">/api</tspan>;</tspan>
+<tspan x="266.0" y="404.8">one service</tspan>
+<tspan x="266.0" y="418.2">call each</tspan>
+<tspan x="266.0" y="431.6"></tspan>
+<tspan x="266.0" y="445.0">system  E1–E2</tspan>
+<tspan x="266.0" y="458.4">addresses  E3–E6</tspan>
+<tspan x="266.0" y="471.8">transactions  E7</tspan>
+<tspan x="266.0" y="485.2">what-if  E8–E9</tspan>
+<tspan x="266.0" y="498.6">exports  E10</tspan>
+<tspan x="266.0" y="512.0">methods  E11</tspan>
+<tspan x="266.0" y="525.4">watchlist  E13–E15</tspan>
+<tspan x="266.0" y="538.8">explanations  E12</tspan>
+</text>
+<rect x="350.0" y="345.6" width="170.0" height="48.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="435.0" y="359.8"><tspan font-weight="700">ExplorerService</tspan> E3–E7</tspan>
+<tspan x="435.0" y="373.2">one cache entry per (method,</tspan>
+<tspan x="435.0" y="386.6">address); warmed at start</tspan>
+</text>
+<rect x="528.0" y="345.6" width="172.0" height="48.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="614.0" y="359.8"><tspan font-weight="700">WhatIfService</tspan> E8, E9</tspan>
+<tspan x="614.0" y="373.2">E8: <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">score_what_if</tspan> as it is</tspan>
+<tspan x="614.0" y="386.6">E9: one <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">build_features</tspan> call</tspan>
+</text>
+<rect x="350.0" y="401.6" width="170.0" height="48.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="435.0" y="415.8"><tspan font-weight="700">ExportService</tspan> E10</tspan>
+<tspan x="435.0" y="429.2">the rows E6 lists, as CSV or</tspan>
+<tspan x="435.0" y="442.6">JSON, from the cached view</tspan>
+</text>
+<rect x="528.0" y="401.6" width="172.0" height="48.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="614.0" y="415.8"><tspan font-weight="700">MethodsService</tspan> E11</tspan>
+<tspan x="614.0" y="429.2">nine methods: thresholds and</tspan>
+<tspan x="614.0" y="442.6">A2's test results (two tables)</tspan>
+</text>
+<rect x="350.0" y="457.6" width="170.0" height="48.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="435.0" y="471.8"><tspan font-weight="700">SnapshotStore</tspan> <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">store.py</tspan></tspan>
+<tspan x="435.0" y="485.2">the <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">Predictor</tspan>'s three tables,</tspan>
+<tspan x="435.0" y="498.6">split by address once at start</tspan>
+</text>
+<rect x="528.0" y="457.6" width="172.0" height="48.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="614.0" y="471.8"><tspan font-weight="700">System + model service</tspan></tspan>
+<tspan x="614.0" y="485.2">E1, E2; the lifespan loads the</tspan>
+<tspan x="614.0" y="498.6"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">Predictor</tspan> once; 503 until then</tspan>
+</text>
+<rect x="350.0" y="513.6" width="170.0" height="48.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="435.0" y="527.8"><tspan font-weight="700">WatchlistService</tspan> E13–E15</tspan>
+<tspan x="435.0" y="541.2"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">WatchlistRepo</tspan>: one SQLite</tspan>
+<tspan x="435.0" y="554.6">connection behind one lock</tspan>
+</text>
+<rect x="528.0" y="513.6" width="172.0" height="48.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="614.0" y="527.8"><tspan font-weight="700">AssistantService</tspan> E12</tspan>
+<tspan x="614.0" y="541.2">prepared answers; lazy load;</tspan>
+<tspan x="614.0" y="554.6">one at a time; A2's guardrail</tspan>
+</text>
+<rect x="20.0" y="626.8" width="130.0" height="48.0" rx="3" fill="#F1EBFD" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="85.0" y="641.0"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">explorer/</tspan></tspan>
+<tspan x="85.0" y="654.4"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">Predictor</tspan>, features,</tspan>
+<tspan x="85.0" y="667.8">methods, guardrail</tspan>
+</text>
+<rect x="156.0" y="626.8" width="130.0" height="48.0" rx="3" fill="#F1EBFD" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="221.0" y="641.0"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">lm/</tspan></tspan>
+<tspan x="221.0" y="654.4">the Assistant writer's</tspan>
+<tspan x="221.0" y="667.8">modules (PyTorch)</tspan>
+</text>
+<rect x="20.0" y="679.6" width="130.0" height="48.0" rx="3" fill="#F1EBFD" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="85.0" y="693.8"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">models/</tspan></tspan>
+<tspan x="85.0" y="707.2">nine saved methods</tspan>
+<tspan x="85.0" y="720.6">(<tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">.joblib</tspan>, <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">.json</tspan>)</tspan>
+</text>
+<rect x="156.0" y="679.6" width="130.0" height="48.0" rx="3" fill="#F1EBFD" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="221.0" y="693.8"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">data/</tspan>, <tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">reports/</tspan></tspan>
+<tspan x="221.0" y="707.2">the snapshot's tables,</tspan>
+<tspan x="221.0" y="720.6">A2's test results</tspan>
+</text>
+<rect x="304.0" y="605.6" width="112.0" height="60.0" rx="3" fill="#FFFFFF" stroke="#1F2933" stroke-width="0.9" stroke-dasharray="5 3"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="360.0" y="620.0"><tspan font-weight="700">Esplora API</tspan></tspan>
+<tspan x="360.0" y="633.4">live lookup</tspan>
+<tspan x="360.0" y="646.8"><tspan font-weight="700">S-09, in progress</tspan></tspan>
+<tspan x="360.0" y="658.8"><tspan font-size="9.0">(a branch, not </tspan><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">main</tspan><tspan font-size="9.0">)</tspan></tspan>
+</text>
+<rect x="424.0" y="605.6" width="106.0" height="44.0" rx="3" fill="#F3F4F6" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="477.0" y="624.5"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">var/explorer.db</tspan></tspan>
+<tspan x="477.0" y="637.9">SQLite: watchlist</tspan>
+</text>
+<rect x="538.0" y="605.6" width="140.0" height="44.0" rx="3" fill="#F3F4F6" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="608.0" y="624.5"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">assistant_answers.json</tspan></tspan>
+<tspan x="608.0" y="637.9">677 prepared answers</tspan>
+</text>
+<rect x="460.0" y="675.6" width="240.0" height="42.0" rx="3" fill="#FFFFFF" stroke="#1F2933" stroke-width="0.9" stroke-dasharray="5 3"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="580.0" y="693.5"><tspan font-weight="700">Optional</tspan>: Assistant weights (610 MB),</tspan>
+<tspan x="580.0" y="706.9">PyTorch and tokenizers; loaded on first use</tspan>
+</text>
+</g>
+<g fill="none" stroke-linejoin="round">
+<path d="M356.0,75.6 L348.0,75.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M188.0,75.6 L180.0,75.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M540.0,75.6 L548.0,75.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M56.0,113.6 L56.0,153.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)" marker-start="url(#head-ink)"/>
+<path d="M56.0,205.6 L56.0,257.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)" marker-start="url(#head-ink)"/>
+<path d="M500.0,153.6 L500.0,122.4" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M668.0,205.6 L668.0,249.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M112.0,299.6 L112.0,313.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M112.0,355.6 L112.0,369.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M112.0,411.6 L112.0,425.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M112.0,467.6 L112.0,481.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M188.0,502.4 L212.0,502.4" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M320.0,449.6 L344.0,449.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M188.0,390.4 L200.0,390.4 L200.0,281.6 L212.0,281.6" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+<path d="M266.0,327.6 L266.0,305.6" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+<path d="M644.0,327.6 L644.0,305.6" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+<path d="M360.0,566.4 L360.0,590.4 L284.8,590.4 L284.8,618.8" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M392.0,605.6 L392.0,566.4" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)" stroke-dasharray="5 3"/>
+<path d="M500.0,561.6 L500.0,605.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M588.0,561.6 L588.0,605.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M690.0,561.6 L690.0,675.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)" stroke-dasharray="5 3"/>
+<path d="M304.0,681.6 L330.0,681.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M304.0,697.6 L330.0,697.6" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)" stroke-dasharray="5 3"/>
+<path d="M304.0,713.6 L330.0,713.6" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+</g>
+<g>
+<text x="64.0" y="141.6" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">same origin: <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">/api/...</tspan></text>
+<text x="64.0" y="222.8" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">HTTP + JSON: GET, POST, PUT, DELETE</text>
+<text x="508.0" y="141.6" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">bundled at build: <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">lib/settings.ts</tspan></text>
+<text x="660.0" y="222.8" text-anchor="end" font-size="9.0" fill="#1F2933" xml:space="preserve"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">core/config.py</tspan> reads it at start;</text>
+<text x="660.0" y="236.0" text-anchor="end" font-size="9.0" fill="#1F2933" xml:space="preserve">E2 hands <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">web</tspan> to the browser</text>
+<text x="112.0" y="540.8" text-anchor="middle" font-size="9.0" fill="#1F2933" xml:space="preserve"><tspan font-weight="700">Middleware</tspan>, outermost first;</text>
+<text x="112.0" y="553.9" text-anchor="middle" font-size="9.0" fill="#1F2933" xml:space="preserve"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">main.py</tspan> adds them in reverse</text>
+<text x="350.0" y="339.9" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve"><tspan font-weight="700">Services</tspan> · <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">services/*.py</tspan>: no HTTP inside, they only raise</text>
+<text x="204.0" y="319.9" text-anchor="start" font-size="9.0" fill="#B45309" xml:space="preserve">413</text>
+<text x="272.0" y="319.9" text-anchor="start" font-size="9.0" fill="#B45309" xml:space="preserve">raise</text>
+<text x="650.0" y="319.9" text-anchor="start" font-size="9.0" fill="#B45309" xml:space="preserve">raise</text>
+<text x="278.0" y="593.5" text-anchor="end" font-size="9.0" fill="#1F2933" xml:space="preserve">A2's code, called as it is</text>
+<text x="12.0" y="749.5" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">Hashes: <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">A2_VENDOR.json</tspan> holds the SHA-256 of 49 files · <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">tools/vendor_a2.py --check</tspan> · A2 commit <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">aa56a26</tspan> (tag v1.0)</text>
+<text x="12.0" y="762.8" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">V3 and V4 call E12 through the Assistant panel (S-05); prepared answers need no weights. The live lookup's endpoints are not on <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">main</tspan> yet.</text>
+<text x="398.0" y="593.5" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">S-09, in progress</text>
+<text x="336.0" y="684.8" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">a call on <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">main</tspan></text>
+<text x="336.0" y="700.8" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">optional / not on <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="8.1">main</tspan></text>
+<text x="336.0" y="716.8" text-anchor="start" font-size="9.0" fill="#1F2933" xml:space="preserve">an error raised</text>
+</g>
+</svg>
