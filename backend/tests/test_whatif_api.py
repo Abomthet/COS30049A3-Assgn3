@@ -16,6 +16,7 @@ from app.core.config import Settings
 from app.services.reasons import reword
 
 from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY, VALID_OUTSIDE_SNAPSHOT, wait_until_ready
+from .test_whatif_parity import agree
 
 VECTORS = json.loads((Path(__file__).resolve().parents[2] / "shared" / "whatif_vectors.json").read_text(encoding="utf-8"))
 PLAN_TIME = "2026-10-20T12:00:00Z"
@@ -234,7 +235,10 @@ def test_e9_scores_equal_what_e8_answers_for_each_amount(shared_client: TestClie
     for i, amount in enumerate(amounts):
         single = what_if(shared_client, amountBtc=amount).json()
         for method in body["methods"]:
-            assert method["scores"][i] == single["scores"][method["id"]] and method["flags"][i] == single["flags"][method["id"]]
+            # Flags exactly; scores within the parity tolerance, because multithreaded BLAS can change the last digits
+            # of the regression, fusion and k-means scores between two runs (see test_whatif_parity.SCORE_TOLERANCE).
+            assert method["flags"][i] == single["flags"][method["id"]]
+            assert agree(method["scores"][i], single["scores"][method["id"]]), (method["id"], amount)
 
 
 def test_e9_with_nothing_chosen_spaces_41_amounts_from_a_hundredth_to_a_thousand_times_the_usual(shared_client: TestClient,
