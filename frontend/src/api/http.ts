@@ -13,6 +13,16 @@ export interface HttpClientOptions {
   timeoutMs?: number;
 }
 
+/** A file download is read as text, so its error body arrives as a string; it is JSON all the same. */
+function parseBody(data: unknown): unknown {
+  if (typeof data !== 'string') return data;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return data;
+  }
+}
+
 /** A body is one of ours when it carries a `status` string (plan section 6, "The error body"). */
 function isErrorBody(body: unknown): body is ApiErrorBody {
   return typeof body === 'object' && body !== null && typeof (body as { status?: unknown }).status === 'string';
@@ -30,7 +40,8 @@ function toApiError(error: unknown): unknown {
   const { response } = error;
   // A response without one of our bodies did not come from the service: with the dev proxy and
   // the back end stopped, Vite itself answers 502 with an empty body. That is "no answer".
-  if (response && isErrorBody(response.data)) return new ApiError(response.status, response.data);
+  const body = parseBody(response?.data);
+  if (response && isErrorBody(body)) return new ApiError(response.status, body);
   return new ApiError(response?.status ?? 0, { status: 'network', message: 'The explorer service did not respond.' });
 }
 

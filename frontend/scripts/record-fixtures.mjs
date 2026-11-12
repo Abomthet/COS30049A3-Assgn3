@@ -7,9 +7,11 @@
 // It writes src/api/mock/fixtures/: E1, E2 and E3 whole; the 404 `unsupported` body of E4 for an
 // address outside the snapshot; and, for the running example and for one short-history address,
 // E5, every E6 page and a few E7 answers (the flagged ones, one scored but not flagged, and
-// unscored ones, whose 422 bodies are what V3 shows for them). `examples.json` names the inputs that
-// reach each state, for the tests and for scripts/screenshots.mjs. Bodies are saved exactly as
-// the service sent them.
+// unscored ones, whose 422 bodies are what V3 shows for them). For the running example it also records
+// E8 and E9 for a few what-ifs (whatif-main.json: the mock answers exactly these requests), one E10
+// export of the flagged transactions as CSV and as JSON (export-main.json) and E11 (methods.json).
+// `examples.json` names the inputs that reach each state, for the tests and for scripts/screenshots.mjs.
+// Bodies are saved exactly as the service sent them.
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -23,10 +25,19 @@ const MAIN = '1Bbcsfxj2JRUD5crcdZVHBcViT61vrJ3dz';
 /** The first address ever mined, valid and not in the snapshot. */
 const UNSUPPORTED = '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa';
 const PAGE_SIZE = 200;
+/** The running example's what-if (J4): 0.05 BTC sent, which is flagged with score 5.98. */
+const WHAT_IF = { amountBtc: '0.05', direction: 'out', time: '2026-10-20T12:00:00Z' };
+/** A time with too little history before it for E8 to score, and one at which the address has sent nothing yet (E9 cannot centre its curve on a usual amount). */
+const TOO_EARLY = '2024-06-01T00:00:00Z';
+const NO_SENT_YET = '2024-07-11T12:00:00Z';
 
 async function call(path, init) {
   const res = await fetch(`${base}${path}`, init);
   return { status: res.status, body: await res.json() };
+}
+
+async function post(path, body) {
+  return { request: body, ...(await call(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })) };
 }
 
 async function ok(path) {
@@ -55,6 +66,53 @@ async function recordAddress(address, pickTxids) {
   return { rows, record: { address, timeline, transactionPages, details } };
 }
 
+/** Every request the mock will answer for the running example's what-if lab, each with the status and body the service gave. */
+async function recordWhatIf(config) {
+  const url = `/api/addresses/${encodeURIComponent(MAIN)}/what-if`;
+  const atDefault = config.whatIf.defaultTime;
+  const lab = (amountBtc, direction, time) => ({ amountBtc, direction, time });
+  const requests = [
+    [lab('0.00001', 'out', atDefault), 200],
+    [lab('0.0005', 'out', atDefault), 200],
+    [lab('0.05', 'out', atDefault), 200],
+    [lab('0.5', 'out', atDefault), 200],
+    [lab('0.0005', 'in', atDefault), 200],
+    [WHAT_IF, 200],
+    [lab('0.05', 'out', TOO_EARLY), 422],
+    [lab('0.001', 'out', NO_SENT_YET), 200],
+  ];
+  const results = [];
+  for (const [body, expected] of requests) {
+    const r = await post(url, body);
+    if (r.status !== expected) throw new Error(`E8 for ${JSON.stringify(body)} answered ${r.status}`);
+    results.push(r);
+  }
+  if (!results[5].body.flagged || results[5].body.score.toFixed(2) !== '5.98') throw new Error('The running example what-if is no longer flagged at 5.98.');
+
+  const curves = [];
+  for (const body of [
+    { direction: 'out', time: atDefault },
+    { direction: 'in', time: atDefault },
+    { direction: 'out', time: WHAT_IF.time },
+    { direction: 'out', time: NO_SENT_YET },
+    { direction: 'out', time: NO_SENT_YET, minBtc: 0.00001, maxBtc: 1, points: 41 },
+  ]) {
+    curves.push(await post(`${url}/curve`, body));
+  }
+  if (curves[3].status !== 400) throw new Error('Expected a 400 on direction from the default curve of a direction with no history.');
+  return { address: MAIN, results, curves };
+}
+
+/** E10 for the flagged transactions of the running example, in both formats, with the names the service gave them. */
+async function recordExport() {
+  const file = async (format) => {
+    const res = await fetch(`${base}/api/addresses/${encodeURIComponent(MAIN)}/export?status=flagged&format=${format}`);
+    if (res.status !== 200) throw new Error(`The ${format} export answered ${res.status}`);
+    return { filename: /filename="([^"]+)"/.exec(res.headers.get('content-disposition'))[1], text: await res.text() };
+  };
+  return { address: MAIN, query: { status: ['flagged'] }, csv: await file('csv'), json: await file('json') };
+}
+
 async function main() {
   mkdirSync(outDir, { recursive: true });
   const health = await ok('/api/health');
@@ -76,6 +134,9 @@ async function main() {
     const nearest = scored.filter((r) => r.status === 'not-flagged').sort((a, b) => b.score - a.score)[0];
     return [...scored.filter((r) => r.status === 'flagged'), nearest, unscored[0], unscored[unscored.length - 1]].map((r) => r.txid);
   });
+  const methods = await ok('/api/methods');
+  const whatIf = await recordWhatIf(config);
+  const exported = await recordExport();
   const shortRun = await recordAddress(short, (rows) => rows.map((r) => r.txid));
 
   const row = (rows, pick) => rows.filter((r) => pick(r)).sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
@@ -91,6 +152,7 @@ async function main() {
     scored: ref(MAIN, row(main.rows, (r) => r.status === 'not-flagged' && r.txid in main.record.details)),
     earlyUnscored: ref(MAIN, unscoredMain[0]),
     notScored: ref(short, shortRun.rows[shortRun.rows.length - 1]),
+    whatIf: { address: MAIN, ...WHAT_IF, tooEarlyTime: TOO_EARLY, noSentYetTime: NO_SENT_YET },
   };
 
   save('health.json', health);
@@ -99,6 +161,9 @@ async function main() {
   save('unsupported.json', unsupported.body);
   save('address-main.json', main.record);
   save('address-short.json', shortRun.record);
+  save('methods.json', methods);
+  save('whatif-main.json', whatIf);
+  save('export-main.json', exported);
   save('examples.json', examples);
   console.log(`Recorded ${MAIN} (${main.rows.length} rows, ${Object.keys(main.record.details).length} details) and ${short} (${shortRun.rows.length} rows) from ${base}.`);
 }

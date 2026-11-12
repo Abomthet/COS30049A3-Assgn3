@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { App } from '../src/App';
 import ex from '../src/api/mock/fixtures/examples.json';
-import { RECORDED } from '../src/api/mock/fixtures';
+import { METHODS_ANSWER, RECORDED } from '../src/api/mock/fixtures';
 import { mockApi, mockControls } from '../src/api/mock/mockApi';
 import { ApiError, type TimelineResponse } from '../src/api/types';
 import { METHODS } from '../src/lib/methods';
@@ -138,15 +138,18 @@ describe('the transaction detail (V3)', () => {
 
   test('every model is named: nine rows, the deciding one marked, and a flag where a method flags', async () => {
     start(detailHash(ex.flagged));
-    const table = await screen.findByRole('table', { name: /Score and verdict of each of the nine methods/ });
+    const table = await screen.findByRole('table', { name: /Score, flag line and verdict of each of the nine methods/ });
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(9);
     const tx = await mockApi.transaction(ex.flagged.txid, ex.flagged.address);
+    // Each method's flag line is the threshold E11 gives it, so a score such as K-Means' 6.69 is read against its own.
+    await waitFor(() => expect(within(rows[3]).getAllByRole('cell')[2]).not.toHaveTextContent('—'));
     METHODS.forEach((m, i) => {
       expect(within(rows[i]).getByRole('rowheader')).toHaveTextContent(m.name);
       const cells = within(rows[i]).getAllByRole('cell');
       expect(cells[1]).toHaveTextContent(tx.scores[m.id]!.toFixed(2));
-      expect(cells[2]).toHaveTextContent(tx.flags[m.id] ? 'Flag' : 'Not flagged');
+      expect(cells[2]).toHaveTextContent(METHODS_ANSWER.methods.find((e) => e.id === m.id)!.threshold.toFixed(2));
+      expect(cells[3]).toHaveTextContent(tx.flags[m.id] ? 'Flag' : 'Not flagged');
     });
     expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent('Deciding method');
     expect(within(rows[0]).getByText('Flag')).toBeInTheDocument();

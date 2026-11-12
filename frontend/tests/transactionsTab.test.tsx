@@ -67,7 +67,7 @@ describe('the table', () => {
     const rows = await bodyRows();
     expect(rows).toHaveLength(3);
     const cells = within(rows[0]).getAllByRole('cell').map((c) => c.textContent);
-    expect(cells).toEqual(['Received', '+0.00111260 BTC', '5.61', 'Unusual', 'Lower ratio to the usual amount than usual', '1 of 9 methods']);
+    expect(cells).toEqual(['Received', '+0.00111260 BTC', '5.61', 'Unusual', 'Smaller amount relative to the usual for this direction', '1 of 9 methods']);
   });
 
   test('a row is a link that opens the transaction', async () => {
@@ -387,5 +387,114 @@ describe('the router', () => {
     start('#/about');
     expect(await screen.findByRole('heading', { level: 1, name: 'About and help' })).toBeInTheDocument();
     expect(screen.queryByText('This page is not available yet')).not.toBeInTheDocument();
+  });
+});
+
+describe('the export menu (E10)', () => {
+  /** What the browser was told to download: the name, and the text of the file behind the link. */
+  function captureDownloads() {
+    const files: Array<{ name: string; text: Promise<string> }> = [];
+    const blobs = new Map<string, Blob>();
+    URL.createObjectURL = vi.fn((blob: Blob) => {
+      const url = `blob:test/${blobs.size}`;
+      blobs.set(url, blob);
+      return url;
+    });
+    URL.revokeObjectURL = vi.fn();
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      files.push({ name: this.download, text: blobs.get(this.href)!.text() });
+    });
+    return files;
+  }
+
+  const open = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(await screen.findByRole('button', { name: 'Export' }));
+  };
+
+  test('is a button that opens two entries worded like the chart tools; Escape closes it and returns to the button', async () => {
+    const user = start(`${base}?status=flagged`);
+    const trigger = await screen.findByRole('button', { name: 'Export' });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: 'Download CSV' })).not.toBeInTheDocument();
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Download CSV' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Download JSON' })).toBeVisible();
+    await user.keyboard('{Escape}');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger).toHaveFocus();
+  });
+
+  test('a CSV of the filtered view: the file is named by the service, holds the rows of the table, and is confirmed', async () => {
+    const files = captureDownloads();
+    const send = vi.spyOn(mockApi, 'exportFile');
+    const user = start(`${base}?status=flagged`);
+    const shown = (await bodyRows()).length;
+    await open(user);
+    await user.click(screen.getByRole('button', { name: 'Download CSV' }));
+    await waitFor(() => expect(files).toHaveLength(1));
+    // The filters of the table go to E10 as they are, with the sort; the page does not.
+    expect(send).toHaveBeenCalledWith(main, 'csv', { status: ['flagged'], sort: '-time' });
+    expect(files[0].name).toBe('1Bbcsfxj-2026-10-22.csv');
+    const lines = (await files[0].text).trim().split(/\r?\n/);
+    expect(lines.length - 1).toBe(shown);
+    expect(lines[0]).toMatch(/^address,txid,time_utc,direction/);
+    expect(await screen.findByText('Exported 3 rows to 1Bbcsfxj-2026-10-22.csv')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Export' })).toBeEnabled();
+  });
+
+  test('every row of the CSV is a row of the table, found by its transaction id', async () => {
+    const files = captureDownloads();
+    const user = start(`${base}?status=flagged`);
+    const rows = await bodyRows();
+    await open(user);
+    await user.click(screen.getByRole('button', { name: 'Download CSV' }));
+    await waitFor(() => expect(files).toHaveLength(1));
+    const [, ...lines] = (await files[0].text).trim().split(/\r?\n/);
+    expect(lines).toHaveLength(rows.length);
+    for (const row of rows) {
+      const href = within(row).getByRole('link').getAttribute('href')!;
+      expect(lines.some((l) => href.endsWith(l.split(',')[1]))).toBe(true);
+    }
+  });
+
+  test('a JSON file is downloaded the same way', async () => {
+    const files = captureDownloads();
+    const user = start(`${base}?status=flagged`);
+    await open(user);
+    await user.click(screen.getByRole('button', { name: 'Download JSON' }));
+    await waitFor(() => expect(files).toHaveLength(1));
+    expect(files[0].name).toBe('1Bbcsfxj-2026-10-22.json');
+    expect(JSON.parse(await files[0].text)).toMatchObject({ count: 3 });
+  });
+
+  test('the button says "Exporting…" and is disabled while the file is made', async () => {
+    captureDownloads();
+    mockControls.latencyMs = 0;
+    let finish!: () => void;
+    const real = mockApi.exportFile;
+    vi.spyOn(mockApi, 'exportFile').mockImplementation((...args) => new Promise((resolve) => (finish = () => resolve(real(...args)))));
+    const user = start(`${base}?status=flagged`);
+    await open(user);
+    await user.click(screen.getByRole('button', { name: 'Download CSV' }));
+    expect(await screen.findByRole('button', { name: 'Exporting…' })).toBeDisabled();
+    finish();
+    expect(await screen.findByRole('button', { name: 'Export' })).toBeEnabled();
+  });
+
+  test('a failure is said in a toast, and nothing is downloaded', async () => {
+    const files = captureDownloads();
+    vi.spyOn(mockApi, 'exportFile').mockRejectedValue(new ApiError(0, { status: 'network', message: 'The explorer service did not respond.' }));
+    const user = start(`${base}?status=flagged`);
+    await open(user);
+    await user.click(screen.getByRole('button', { name: 'Download JSON' }));
+    expect(await screen.findByText('The export could not be made. The explorer service did not respond.')).toBeInTheDocument();
+    expect(files).toHaveLength(0);
+  });
+
+  test('is not offered while a date is wrong, because nothing is shown to export', async () => {
+    start(`${base}?from=2026-02-01&to=2026-01-01`);
+    await screen.findByTestId('state-invalid-filters');
+    expect(screen.queryByRole('button', { name: 'Export' })).not.toBeInTheDocument();
   });
 });

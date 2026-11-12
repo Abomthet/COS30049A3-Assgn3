@@ -2,30 +2,42 @@
 // (scripts/record-fixtures.mjs). It has the same endpoints, response shapes and error codes, plus a
 // configurable delay and simulated failures so every state can be shown.
 //
-// Its world is what was recorded: E1 to E3 whole, and for two addresses the timeline, every row and a
+// Its world is what was recorded: E1 to E3 and E11 whole, and for two addresses the timeline, every row and a
 // few transaction details. E6 is computed from the recorded rows (filter, sort, page). Any other
 // address in the list, or an unrecorded transaction, answers 404 `not_found`; an address outside the
 // list answers the recorded `unsupported` body. It always decides with the default method.
+// For the running example, E8 and E9 answer the requests that were recorded (after the same checks of
+// the body as the service makes) and E10 the file of its flagged transactions; any other what-if or
+// export answers 404 `not_found`.
 
 import { validateAddress } from '../../lib/address';
 import { dayKey, isDayKey } from '../../lib/dates';
 import { WEB } from '../../lib/settings';
+import { checkAmount, checkDirection, checkTime } from '../../lib/whatIf';
 import {
   ApiError,
   type AddressSummary,
   type AddressesResponse,
   type ConfigResponse,
   type ExplorerApi,
+  type ExportFile,
+  type ExportFormat,
+  type FieldError,
   type HealthResponse,
   type LookupResponse,
+  type MethodsResponse,
   type RequestOptions,
   type TimelineResponse,
   type TransactionDetail,
   type TransactionQuery,
   type TransactionRow,
   type TransactionsResponse,
+  type WhatIfCurve,
+  type WhatIfCurveRequest,
+  type WhatIfRequest,
+  type WhatIfResult,
 } from '../types';
-import { ADDRESSES, CONFIG, HEALTH, RECORDED, UNSUPPORTED, type RecordedAddress } from './fixtures';
+import { ADDRESSES, CONFIG, EXPORT_RECORDED, HEALTH, METHODS_ANSWER, RECORDED, UNSUPPORTED, WHAT_IF_RECORDED, type RecordedAddress } from './fixtures';
 
 /** Mutable so the tests and the screenshot script can change behaviour at run time. */
 export const mockControls = {
@@ -131,6 +143,33 @@ function page(recorded: RecordedAddress, query: TransactionQuery): TransactionsR
   return { address: recorded.address, date: date ?? null, transactions: rows.slice((n - 1) * pageSize, n * pageSize), page: n, pageSize, total: rows.length };
 }
 
+/** The service's 400 for a what-if body: every field that fails, each with its message. */
+function checkBody(body: Partial<Record<keyof WhatIfRequest, unknown>>, fields: Array<keyof WhatIfRequest>): void {
+  const checks = { amountBtc: checkAmount, direction: checkDirection, time: checkTime };
+  const failed = fields.flatMap((name): FieldError[] => {
+    const check = checks[name](body[name]);
+    return check.ok ? [] : [{ name, message: check.message }];
+  });
+  if (failed.length > 0) {
+    throw new ApiError(400, {
+      status: 'invalid',
+      message: failed.length === 1 ? 'One value needs correcting.' : 'Some values need correcting.',
+      hint: 'Correct the values named below and send the request again.',
+      fields: failed,
+    });
+  }
+}
+
+/** The recorded answer to this request, or the 422 or 400 that was recorded for it; no record is a 404. */
+function recordedAnswer<Request, Ok>(address: string, list: Array<{ request: Request; status: number; body: unknown }>, same: (r: Request) => boolean): Ok {
+  const found = address === WHAT_IF_RECORDED.address ? list.find((r) => same(r.request)) : undefined;
+  if (!found) throw new ApiError(404, { status: 'not_found', message: 'The mock has no recorded answer for this what-if.' });
+  if (found.status !== 200) throw new ApiError(found.status, found.body as ApiError['body']);
+  return found.body as Ok;
+}
+
+const filterKey = ({ date, from, to, status, direction }: Omit<TransactionQuery, 'page' | 'pageSize'>) => JSON.stringify({ date, from, to, status, direction });
+
 export const mockApi: ExplorerApi = {
   health: (opts) => respond<HealthResponse>(() => HEALTH, opts),
 
@@ -155,4 +194,31 @@ export const mockApi: ExplorerApi = {
       if (recorded?.status === 422) throw new ApiError(422, recorded.body);
       throw new ApiError(404, { status: 'not_found', message: "This transaction is not one of this address's transactions in the snapshot." });
     }, opts),
+
+  whatIf: (address, body, opts) =>
+    respond<WhatIfResult>(() => {
+      requireAddress(address);
+      checkBody(body, ['amountBtc', 'direction', 'time']);
+      const sats = (btc: string) => (checkAmount(btc) as { value: { sats: number } }).value.sats;
+      return recordedAnswer(address, WHAT_IF_RECORDED.results, (r) => r.direction === body.direction && r.time === body.time && sats(r.amountBtc) === sats(body.amountBtc));
+    }, opts),
+
+  whatIfCurve: (address, body, opts) =>
+    respond<WhatIfCurve>(() => {
+      requireAddress(address);
+      checkBody(body, ['direction', 'time']);
+      return recordedAnswer(address, WHAT_IF_RECORDED.curves, (r: WhatIfCurveRequest) => (['direction', 'time', 'minBtc', 'maxBtc', 'points'] as const).every((key) => r[key] === body[key]));
+    }, opts),
+
+  // Whatever the order, the recorded file has the flagged transactions: the filters decide only whether there is a file.
+  exportFile: (address, format: ExportFormat, query, opts) =>
+    respond<ExportFile>(() => {
+      requireAddress(address);
+      if (address !== EXPORT_RECORDED.address || filterKey(query) !== filterKey(EXPORT_RECORDED.query)) {
+        throw new ApiError(404, { status: 'not_found', message: 'The mock has a file only for the flagged transactions of the running example.' });
+      }
+      return EXPORT_RECORDED[format];
+    }, opts),
+
+  methods: (opts) => respond<MethodsResponse>(() => METHODS_ANSWER, opts),
 };

@@ -186,7 +186,7 @@ describe('transaction (E7)', () => {
     const r = await failure(mockApi.transaction(ref.txid, ref.address));
     expect(r.status).toBe(422);
     if (r.body.status !== 'insufficient_history') throw new Error('wrong body');
-    expect(r.body.transaction.txid).toBe(ref.txid);
+    expect(r.body.transaction?.txid).toBe(ref.txid);
     expect(r.body.history.required).toEqual({ minTx: 10, minSpanDays: 14 });
     expect(r.body.history.earlierTx).toBeLessThan(10);
   });
@@ -240,5 +240,94 @@ describe('service endpoints (E1 /api/health, E2 /api/config)', () => {
     const pending = failure(mockApi.listAddresses({ signal: late.signal }));
     late.abort();
     expect(await pending).toMatchObject({ status: 0, body: { status: 'cancelled' } });
+  });
+});
+
+describe('the what-if endpoints (E8, E9)', () => {
+  const labBody = { amountBtc: ex.whatIf.amountBtc, direction: ex.whatIf.direction as 'out', time: ex.whatIf.time };
+
+  test('E8 answers the running example as the service did: flagged, 5.98, and TxGPT not available', async () => {
+    const r = await mockApi.whatIf(ex.whatIf.address, labBody);
+    expect(r).toMatchObject({ txid: 'what-if', sourceUrl: null, flagged: true, notAvailable: ['txgpt_method'], limitation: LIMITATION_LINE });
+    expect(r.score.toFixed(2)).toBe('5.98');
+    expect(Object.keys(r.scores)).toHaveLength(8);
+  });
+
+  test('E8 takes the amount as the number it is, so 0.050 is the recorded 0.05', async () => {
+    expect((await mockApi.whatIf(ex.whatIf.address, { ...labBody, amountBtc: '0,050' })).score.toFixed(2)).toBe('5.98');
+  });
+
+  test('E8 checks the body as the service does: 400 with every failing field named', async () => {
+    const r = await failure(mockApi.whatIf(ex.whatIf.address, { amountBtc: '0.123456789', direction: 'sideways' as 'in', time: 'tomorrow' }));
+    expect(r.status).toBe(400);
+    expect(r.body).toMatchObject({
+      status: 'invalid',
+      fields: [
+        { name: 'amountBtc', message: 'Use at most 8 decimal places.' },
+        { name: 'direction', message: 'Must be "in" or "out".' },
+        { name: 'time', message: 'Use a date and time such as 2026-10-20T12:00:00Z.' },
+      ],
+    });
+  });
+
+  test('E8 answers 422 insufficient_history, with the counts and the first date that works, for a time with too little history', async () => {
+    const r = await failure(mockApi.whatIf(ex.whatIf.address, { ...labBody, time: ex.whatIf.tooEarlyTime }));
+    expect(r.status).toBe(422);
+    expect(r.body).toMatchObject({ status: 'insufficient_history', firstScoredDate: '2024-07-11', history: { required: { minTx: 10, minSpanDays: 14 } } });
+    expect((r.body as { transaction?: unknown }).transaction).toBeUndefined();
+  });
+
+  test('a what-if that was not recorded is a 404 not_found, and an address outside the list is unsupported', async () => {
+    expect(await failure(mockApi.whatIf(ex.whatIf.address, { ...labBody, amountBtc: '0.07' }))).toMatchObject({ status: 404, body: { status: 'not_found' } });
+    expect(await failure(mockApi.whatIf(ex.unsupported, labBody))).toMatchObject({ status: 404, body: { status: 'unsupported' } });
+  });
+
+  test('E9 draws 41 amounts around the usual one, for eight methods with a flag line each', async () => {
+    const c = await mockApi.whatIfCurve(ex.whatIf.address, { direction: 'out', time: ex.whatIf.time });
+    expect(c.amountsBtc).toHaveLength(41);
+    expect(c.usualBtc).toBeGreaterThan(0);
+    expect(c.decidingMethod).toBe('baseline');
+    expect(c.methods).toHaveLength(8);
+    for (const m of c.methods) {
+      expect(m.scores).toHaveLength(41);
+      expect(m.flags).toHaveLength(41);
+      expect(typeof m.threshold).toBe('number');
+    }
+  });
+
+  test('E9 answers 400 on direction when the address has sent nothing yet, and an explicit range works there', async () => {
+    const r = await failure(mockApi.whatIfCurve(ex.whatIf.address, { direction: 'out', time: ex.whatIf.noSentYetTime }));
+    expect(r).toMatchObject({ status: 400, body: { status: 'invalid', fields: [{ name: 'direction' }] } });
+    const ranged = await mockApi.whatIfCurve(ex.whatIf.address, { direction: 'out', time: ex.whatIf.noSentYetTime, minBtc: 0.00001, maxBtc: 1, points: 41 });
+    expect(ranged.usualBtc).toBeNull();
+    expect(ranged.amountsBtc[0]).toBe(0.00001);
+  });
+});
+
+describe('the export (E10) and the methods (E11)', () => {
+  test('E10 gives the flagged transactions of the running example as a CSV and a JSON file with the names the service gave them', async () => {
+    const csv = await mockApi.exportFile(ex.mainAddress, 'csv', { status: ['flagged'], sort: '-time' });
+    expect(csv.filename).toBe('1Bbcsfxj-2026-10-22.csv');
+    const lines = csv.text.trim().split(/\r?\n/);
+    expect(lines).toHaveLength(1 + 3);
+    expect(lines[0]).toMatch(/^address,txid,time_utc,direction,/);
+    const json = await mockApi.exportFile(ex.mainAddress, 'json', { status: ['flagged'] });
+    expect(json.filename).toBe('1Bbcsfxj-2026-10-22.json');
+    expect(JSON.parse(json.text)).toMatchObject({ count: 3, limitation: LIMITATION_LINE });
+  });
+
+  test('E10 for any other filter is a 404 not_found: the mock has no file for it', async () => {
+    expect(await failure(mockApi.exportFile(ex.mainAddress, 'csv', { direction: ['in'] }))).toMatchObject({ status: 404, body: { status: 'not_found' } });
+  });
+
+  test('E11 lists the nine methods with a flag line and test results with intervals', async () => {
+    const { methods } = await mockApi.methods();
+    expect(methods.map((m) => m.id)).toEqual(METHODS.map((m) => m.id));
+    for (const m of methods) {
+      expect(m.evaluation.meanRecall.ciLow).toBeLessThanOrEqual(m.evaluation.meanRecall.value);
+      expect(m.evaluation.meanRecall.value).toBeLessThanOrEqual(m.evaluation.meanRecall.ciHigh);
+      expect(Object.keys(m.evaluation.recallByPattern)).toEqual(['spike', 'burst', 'dormant']);
+    }
+    expect(methods.filter((m) => !m.scoresNewInput).map((m) => m.id)).toEqual(['txgpt_method']);
   });
 });

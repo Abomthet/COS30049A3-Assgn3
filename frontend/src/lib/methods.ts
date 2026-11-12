@@ -1,6 +1,6 @@
-// The nine methods in the order V3 lists them, with the names and families the plan uses. The names
-// match the service's own (`METHOD_NAMES` in the explorer package); E11 (V5) will supply them with
-// their thresholds, and this list then goes away.
+// The nine methods in the order the verdict tables (V3 and V4) list them, with the names and families the plan
+// uses. E11 names two of them with a suffix ("(A1)", "(two methods, one flag budget)") that these leave out; V5 shows
+// E11's names, and the verdict tables take each method's flag line from E11.
 
 import type { MethodId } from '../api/types';
 

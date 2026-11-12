@@ -10,6 +10,10 @@
 //   GET  /api/addresses/{address}/transactions?...    -> TransactionsResponse | 400 | 404 UnsupportedBody
 //   GET  /api/transactions/{txid}?address=            -> TransactionDetail | 400 | 404 UnsupportedBody or NotFoundBody
 //                                                        | 422 InsufficientHistoryBody
+//   POST /api/addresses/{address}/what-if             -> WhatIfResult | 400 | 404 | 422 InsufficientHistoryBody
+//   POST /api/addresses/{address}/what-if/curve       -> WhatIfCurve | 400 | 404 | 422 InsufficientHistoryBody
+//   GET  /api/addresses/{address}/export?format=...   -> a CSV or JSON file (ExportFile) | 400 | 404
+//   GET  /api/methods                                 -> MethodsResponse
 //
 // Times are ISO 8601 in UTC; days are 'YYYY-MM-DD' in UTC; amounts are integer satoshis.
 
@@ -204,6 +208,104 @@ export interface TransactionDetail extends TransactionCore {
   source: DataSource;
 }
 
+// ------------------------------------------------------------------ what-if (E8, E9)
+
+/** The two directions a hypothetical transaction can have; `none` is only what a real one can show. */
+export type WhatIfDirection = Exclude<Direction, 'none'>;
+
+/** E8's body. The amount is a decimal string, so no digit is lost to a float. */
+export interface WhatIfRequest {
+  amountBtc: string;
+  direction: WhatIfDirection;
+  /** ISO 8601 with a zone. */
+  time: string;
+}
+
+/** E8: a transaction detail for a transaction that does not exist, so it has no id, block or public page. */
+export interface WhatIfResult
+  extends Omit<TransactionDetail, 'txid' | 'blockHeight' | 'sourceUrl' | 'scores' | 'flags' | 'source'> {
+  txid: 'what-if';
+  sourceUrl: null;
+  /** Only the methods that can score new input have a key. */
+  scores: Partial<Record<MethodId, number>>;
+  flags: Partial<Record<MethodId, boolean>>;
+  /** The methods that cannot score a hypothetical transaction. */
+  notAvailable: MethodId[];
+  note: string;
+}
+
+/** E9's body: the server spaces its default amounts around the address's usual one, or `minBtc` to `maxBtc` is spaced evenly on a log scale. */
+export interface WhatIfCurveRequest {
+  direction: WhatIfDirection;
+  time: string;
+  minBtc?: number;
+  maxBtc?: number;
+  points?: number;
+}
+
+export interface CurveMethod {
+  id: MethodId;
+  name: string;
+  /** The score from which this method flags. */
+  threshold: number;
+  /** One per amount; null where the method cannot score that amount. */
+  scores: Array<number | null>;
+  flags: boolean[];
+}
+
+export interface WhatIfCurve {
+  address: string;
+  direction: WhatIfDirection;
+  time: string;
+  /** The median amount in this direction before `time`; null when the amounts were given. */
+  usualBtc: number | null;
+  decidingMethod: MethodId;
+  amountsBtc: number[];
+  methods: CurveMethod[];
+  notAvailable: MethodId[];
+}
+
+// ------------------------------------------------------------------ export (E10) and methods (E11)
+
+export type ExportFormat = 'csv' | 'json';
+
+/** E10's answer: the file's text and the name the service gave it. */
+export interface ExportFile {
+  filename: string;
+  text: string;
+}
+
+/** A measured figure with its 95% interval. */
+export interface Interval {
+  value: number;
+  ciLow: number;
+  ciHigh: number;
+}
+
+export type PlantedPattern = 'spike' | 'burst' | 'dormant';
+
+export interface MethodDescription {
+  id: MethodId;
+  name: string;
+  /** Lower case, such as "outlier detection". */
+  family: string;
+  description: string;
+  threshold: number;
+  scoresNewInput: boolean;
+  evaluation: {
+    /** Recall on planted test transactions, over the three patterns. */
+    meanRecall: Interval;
+    recallByPattern: Record<PlantedPattern, Interval>;
+    /** The share of real transactions the method flags. */
+    flagRate: number;
+  };
+}
+
+export interface MethodsResponse {
+  defaultMethod: MethodId;
+  methods: MethodDescription[];
+}
+
 // ------------------------------------------------------------------ error bodies
 
 export interface FieldError {
@@ -235,11 +337,11 @@ export interface UnsupportedBody extends ErrorExtras {
   canLookupLive: boolean;
 }
 
-/** 422 from E7: an address with too little history, or an early transaction of a normal one. */
+/** 422 from E7 (an address with too little history, or an early transaction of a normal one) and from E8 and E9, which have no transaction. */
 export interface InsufficientHistoryBody extends ErrorExtras {
   status: 'insufficient_history';
   message: string;
-  transaction: TransactionCore;
+  transaction?: TransactionCore;
   history: { earlierTx: number; spanDays: number; required: HistoryRequirement };
   firstScoredDate: string | null;
 }
@@ -359,12 +461,14 @@ export interface ConfigResponse {
  * What the shell and views read. E2's answer satisfies it as it is. When the service is
  * unreachable the bundled settings.json supplies the limitation line, the history rule and the
  * `web` limits and reports every optional capability as off; the snapshot, the feature list and the
- * flag line are known only to the service, so they are absent (no flag line is drawn).
+ * flag line and the lab's default time are known only to the service, so they are absent (no flag line is drawn).
  */
 export type AppSettings = Pick<ConfigResponse, 'limitationLine' | 'history' | 'web' | 'capabilities'> & {
   snapshot: SnapshotInfo | null;
   features: FeatureInfo[];
   thresholds: ConfigResponse['thresholds'] | null;
+  /** The time the what-if lab opens with; the service picks it from the snapshot date. */
+  whatIf: ConfigResponse['whatIf'] | null;
 };
 
 /** Options every call accepts. Aborting the signal cancels the request in flight. */
@@ -380,4 +484,9 @@ export interface ExplorerApi {
   timeline(address: string, opts?: RequestOptions): Promise<TimelineResponse>;
   transactions(address: string, query: TransactionQuery, opts?: RequestOptions): Promise<TransactionsResponse>;
   transaction(txid: string, address: string, opts?: RequestOptions): Promise<TransactionDetail>;
+  whatIf(address: string, body: WhatIfRequest, opts?: RequestOptions): Promise<WhatIfResult>;
+  whatIfCurve(address: string, body: WhatIfCurveRequest, opts?: RequestOptions): Promise<WhatIfCurve>;
+  /** E10 with E6's filters; `page` and `pageSize` do not apply to a file. */
+  exportFile(address: string, format: ExportFormat, query: Omit<TransactionQuery, 'page' | 'pageSize'>, opts?: RequestOptions): Promise<ExportFile>;
+  methods(opts?: RequestOptions): Promise<MethodsResponse>;
 }

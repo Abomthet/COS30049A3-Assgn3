@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import type { TimelineResponse, TransactionRow } from '../api/types';
 import { G2TransactionsOverTime } from '../charts/G2TransactionsOverTime';
 import { ErrorState } from '../components/ErrorState';
+import { ExportMenu } from '../components/ExportMenu';
 import { FilterBar } from '../components/FilterBar';
 import { Loading, StatePanel } from '../components/StatePanel';
 import { dayKey } from '../lib/dates';
@@ -139,6 +140,7 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
         updating={updating}
         onChange={(patch) => change(patch)}
         onReset={reset}
+        actions={narrowing && page ? <ExportMenu address={address} query={{ ...narrowing, sort: filters.sort }} rows={page.total} /> : null}
       />
       <div className={updating ? 'is-updating' : undefined} aria-busy={updating}>
         {results}

@@ -27,4 +27,5 @@ export const BUNDLED_SETTINGS: AppSettings = {
   snapshot: null,
   features: [],
   thresholds: null,
+  whatIf: null,
 };

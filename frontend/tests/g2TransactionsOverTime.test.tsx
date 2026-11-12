@@ -196,7 +196,7 @@ describe('the contract', () => {
     expect(rows).toHaveLength(377);
     expect(within(rows[0]).getByRole('link')).toHaveAttribute('href', expect.stringMatching(/#\/address\/.+\/day\/2024-05-16\/tx\/[0-9a-f]{64}$/));
     const unusual = rows.find((r) => within(r).queryByText('Unusual'))!;
-    expect(unusual).toHaveTextContent('Lower ratio to the usual amount than usual');
+    expect(unusual).toHaveTextContent('Smaller amount relative to the usual for this direction');
     expect(screen.getByRole('button', { name: 'Download CSV' })).toBeInTheDocument();
   });
 

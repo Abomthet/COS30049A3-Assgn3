@@ -1665,3 +1665,275 @@ main.container {
     gap: 16px;
   }
 }
+
+/* ------------------------------------------------------------------ What-if lab (V4) */
+
+.whatif {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.whatif-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-sm);
+  color: var(--info-ink);
+}
+.whatif-note .icon {
+  margin-top: 3px;
+}
+/* The form beside the verdict and the curve; on a phone they stack, form first. */
+.whatif-layout {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 980px) {
+  .whatif-layout {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+  .whatif-form {
+    position: sticky;
+    top: 16px;
+  }
+}
+.whatif-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.whatif-form h2,
+.whatif-form .field {
+  margin: 0;
+}
+.whatif-form fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.whatif-form .field > .chips,
+.whatif-form .field > .when,
+.whatif-form .field > .segmented {
+  margin-top: 8px;
+}
+.whatif-form .field-error {
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+.whatif-slider {
+  width: 100%;
+  min-height: 44px;
+  margin: 6px 0 0;
+  accent-color: var(--accent);
+}
+.when {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.when .text-input {
+  flex: 1 1 9rem;
+}
+.whatif-feedback {
+  margin: 8px 0 0;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+/* A two-way switch: two labelled radio buttons that look like one control. The checked side is filled and ticked by its text colour and weight too. */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.segmented label {
+  position: relative;
+  display: block;
+}
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.segmented span {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 20px;
+  background: var(--surface);
+}
+.segmented label + label span {
+  border-left: 1px solid var(--border-strong);
+}
+.segmented input:checked + span {
+  background: var(--info-bg);
+  color: var(--info-ink);
+  font-weight: 650;
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+.segmented input:focus-visible + span {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+.whatif-submit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.whatif-status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.whatif-result {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.verdict-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.verdict-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.verdict-head h2 {
+  margin: 0;
+}
+.verdict-score {
+  margin: 0;
+}
+.updating-mark {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.g5-method {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+.g5-method label {
+  font-weight: 600;
+}
+.g5-method .text-input {
+  flex: 0 1 22rem;
+}
+.g5-reading {
+  margin: 8px 0 0;
+  font-weight: 560;
+}
+
+/* ------------------------------------------------------------------ Models and limits (V5) */
+
+.page-models .lede {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--text-2);
+}
+.method-grid {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+}
+.method-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.method-card h3,
+.method-card p {
+  margin: 0;
+}
+.method-facts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+.method-facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.method-facts dt {
+  color: var(--text-muted);
+}
+.method-facts dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 560;
+}
+.method-recall {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.method-recall caption {
+  padding-bottom: 6px;
+  text-align: left;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.method-recall th,
+.method-recall td {
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+  text-align: left;
+  font-weight: 400;
+}
+.method-recall td {
+  text-align: right;
+}
+
+/* ------------------------------------------------------------------ Export menu */
+
+.filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.export-menu {
+  position: relative;
+}
+.export-entries {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 100%;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+.export-entries[hidden] {
+  display: none;
+}
+@media (max-width: 479px) {
+  .export-entries {
+    right: auto;
+    left: 0;
+  }
+}

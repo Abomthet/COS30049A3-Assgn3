@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import type { Direction, ScoreStatus } from '../api/types';
 import { isDayKey } from '../lib/dates';
 import { DIRECTION_LABEL, formatCount, plural } from '../lib/format';
@@ -20,6 +20,8 @@ interface Props {
   updating: boolean;
   onChange: (patch: Partial<Filters>) => void;
   onReset: () => void;
+  /** Further controls for the filtered view, such as the export menu, beside "Reset filters". */
+  actions?: ReactNode;
 }
 
 function Chip({ pressed, onClick, children }: { pressed: boolean; onClick: () => void; children: string }) {
@@ -79,7 +81,7 @@ function DateField({ label, value, min, max, error, onChange }: { label: string;
   );
 }
 
-export function FilterBar({ filters, errors, period, count, updating, onChange, onReset }: Props) {
+export function FilterBar({ filters, errors, period, count, updating, onChange, onReset, actions }: Props) {
   const sortId = useId();
   const invalid = errors.from !== undefined || errors.to !== undefined;
   return (
@@ -111,9 +113,12 @@ export function FilterBar({ filters, errors, period, count, updating, onChange, 
               ? `Showing ${formatCount(count.matching)} of ${plural(count.all, 'transaction')}${updating ? ' · Updating…' : ''}`
               : 'Loading the transactions…'}
         </p>
-        <button type="button" className="btn btn-secondary" disabled={!isFiltered(filters)} onClick={onReset}>
-          Reset filters
-        </button>
+        <div className="filter-actions">
+          <button type="button" className="btn btn-secondary" disabled={!isFiltered(filters)} onClick={onReset}>
+            Reset filters
+          </button>
+          {actions}
+        </div>
       </div>
     </section>
   );

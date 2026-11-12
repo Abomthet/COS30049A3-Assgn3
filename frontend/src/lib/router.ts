@@ -4,6 +4,7 @@
 //   #/                                      Screen 1  address selection   (?q=<text> prefills and checks the lookup box)
 //   #/address/<address>                     Screen 2  daily timeline (the overview tab)
 //   #/address/<address>/transactions        ...its transactions tab (?status=, direction=, from=, to=, sort=, page= are the filters)
+//   #/address/<address>/what-if              ...its what-if tab (V4; ?direction=in|out opens it with that direction)
 //   #/address/<address>/day/<YYYY-MM-DD>    Screen 3  day's transactions
 //   #/address/<address>/day/<date>/tx/<txid>          ...with one transaction open
 //   #/models   #/watchlist   #/about                  the other sections in the navigation
@@ -14,6 +15,7 @@ export type Route =
   | { screen: 'select'; query: string | null }
   | { screen: 'timeline'; address: string }
   | { screen: 'transactions'; address: string; search: string }
+  | { screen: 'what-if'; address: string; search: string }
   | { screen: 'day'; address: string; date: string; txid: string | null }
   | { screen: 'models' }
   | { screen: 'watchlist' }
@@ -34,6 +36,9 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'address' && parts.length === 3 && parts[2] === 'transactions') {
     return { screen: 'transactions', address: parts[1], search };
   }
+  if (parts[0] === 'address' && parts.length === 3 && parts[2] === 'what-if') {
+    return { screen: 'what-if', address: parts[1], search };
+  }
   if (parts[0] === 'address' && parts[2] === 'day' && (parts.length === 4 || (parts.length === 6 && parts[4] === 'tx'))) {
     return { screen: 'day', address: parts[1], date: parts[3], txid: parts[5] ?? null };
   }
@@ -51,6 +56,8 @@ export const paths = {
   timeline: (address: string) => `#/address/${encodeURIComponent(address)}`,
   /** `search` is the filters' query string, without the `?`. */
   transactions: (address: string, search = '') => `#/address/${encodeURIComponent(address)}/transactions${search ? `?${search}` : ''}`,
+  /** `direction` opens the lab with that direction chosen. */
+  whatIf: (address: string, direction?: 'in' | 'out') => `#/address/${encodeURIComponent(address)}/what-if${direction ? `?direction=${direction}` : ''}`,
   day: (address: string, date: string) => `#/address/${encodeURIComponent(address)}/day/${date}`,
   tx: (address: string, date: string, txid: string) =>
     `#/address/${encodeURIComponent(address)}/day/${date}/tx/${txid}`,

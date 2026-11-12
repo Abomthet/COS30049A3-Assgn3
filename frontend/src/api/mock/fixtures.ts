@@ -5,17 +5,28 @@ import addressMain from './fixtures/address-main.json';
 import addressShort from './fixtures/address-short.json';
 import addresses from './fixtures/addresses.json';
 import config from './fixtures/config.json';
+import exportMain from './fixtures/export-main.json';
 import health from './fixtures/health.json';
+import methods from './fixtures/methods.json';
 import unsupported from './fixtures/unsupported.json';
+import whatIfMain from './fixtures/whatif-main.json';
 import type {
   AddressesResponse,
   ConfigResponse,
+  ExportFile,
   HealthResponse,
   InsufficientHistoryBody,
+  InvalidBody,
+  MethodsResponse,
   TimelineResponse,
   TransactionDetail,
+  TransactionQuery,
   TransactionsResponse,
   UnsupportedBody,
+  WhatIfCurve,
+  WhatIfCurveRequest,
+  WhatIfRequest,
+  WhatIfResult,
 } from '../types';
 
 /** What was recorded for one address: its timeline, every page of its rows, and some E7 answers. */
@@ -31,3 +42,17 @@ export const CONFIG = config as ConfigResponse;
 export const ADDRESSES = addresses as AddressesResponse;
 export const UNSUPPORTED = unsupported as UnsupportedBody;
 export const RECORDED: RecordedAddress[] = [addressMain, addressShort] as unknown as RecordedAddress[];
+export const METHODS_ANSWER = methods as MethodsResponse;
+
+/** A request the service was asked, with the status and body it answered. */
+type Recorded<Request, Ok> = { request: Request } & ({ status: 200; body: Ok } | { status: 400; body: InvalidBody } | { status: 422; body: InsufficientHistoryBody });
+
+/** The what-if requests recorded for the running example; the mock answers these and no others. */
+export const WHAT_IF_RECORDED = whatIfMain as unknown as {
+  address: string;
+  results: Array<Recorded<WhatIfRequest, WhatIfResult>>;
+  curves: Array<Recorded<WhatIfCurveRequest, WhatIfCurve>>;
+};
+
+/** The running example's flagged transactions, exported: the one filtered view the mock has a file for. */
+export const EXPORT_RECORDED = exportMain as { address: string; query: TransactionQuery; csv: ExportFile; json: ExportFile };

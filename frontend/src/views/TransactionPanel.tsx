@@ -5,12 +5,12 @@ import { G3FeatureDeviation } from '../charts/G3FeatureDeviation';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { CopyButton } from '../components/CopyButton';
 import { ErrorState } from '../components/ErrorState';
+import { FlagCallout } from '../components/FlagCallout';
 import { Icon } from '../components/Icon';
 import { Loading, StatePanel } from '../components/StatePanel';
-import { dayKey, formatDateTime, formatDay, formatDayRange } from '../lib/dates';
-import { explanationBlocks } from '../lib/explanation';
+import { VerdictTable } from '../components/VerdictTable';
+import { formatDateTime, formatDay } from '../lib/dates';
 import { formatBtc, formatSpanDays, plural } from '../lib/format';
-import { METHODS } from '../lib/methods';
 import { paths } from '../lib/router';
 import { useRequest } from '../hooks/useRequest';
 
@@ -43,8 +43,9 @@ export function TransactionPanel({ address, date, txid }: { address: string; dat
   if (detail.status === 'loading') return <Loading label="Loading the transaction…" block />;
 
   if (detail.status === 'error') {
-    if (detail.error.body.status === 'insufficient_history') {
-      return <NotScored body={detail.error.body} address={address} headingRef={headingRef} />;
+    const { body } = detail.error;
+    if (body.status === 'insufficient_history' && body.transaction) {
+      return <NotScored body={body} transaction={body.transaction} address={address} headingRef={headingRef} />;
     }
     return (
       <div>
@@ -125,35 +126,7 @@ function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: Heading
       <Facts tx={tx} />
 
       {tx.flagged ? (
-        <section className="flag-callout" aria-labelledby="why-title" data-testid="flag-explanation">
-          <h3 id="why-title">
-            <Icon name="flag" className="flag-icon" /> Why this transaction stands out
-          </h3>
-          {explanationBlocks(tx.explanation, tx.limitation).map((block, i) =>
-            block.kind === 'text' ? (
-              <p key={i}>{block.text}</p>
-            ) : (
-              <ul key={i} className="reasons">
-                {block.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            ),
-          )}
-          <h4>Compared with</h4>
-          <ul className="bases">
-            {tx.comparison.map((b) => (
-              <li key={b.label}>
-                <strong>{b.label}:</strong> {b.description}{' '}
-                <span className="muted">({formatDayRange(dayKey(b.start), dayKey(b.end))})</span>
-              </li>
-            ))}
-          </ul>
-          <p className="limitation" data-testid="limitation-line">
-            <Icon name="info" />
-            <span>{tx.limitation}</span>
-          </p>
-        </section>
+        <FlagCallout tx={tx} title="Why this transaction stands out" />
       ) : (
         <p className="not-flagged-note">
           <strong>Not unusual.</strong> No feature was {tx.method.flagAbsZ} or more from this address's usual pattern.
@@ -165,6 +138,13 @@ function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: Heading
       <p className="method-note">
         <strong>Method:</strong> {tx.method.name}. {tx.method.note}
       </p>
+      {tx.direction === 'none' ? null : (
+        <p>
+          <a className="btn btn-secondary" href={paths.whatIf(tx.address, tx.direction)}>
+            Try a what-if from here
+          </a>
+        </p>
+      )}
     </article>
   );
 }
@@ -178,56 +158,12 @@ function Verdicts({ tx }: { tx: TransactionDetail }) {
         Nine methods score every transaction on its own scale. The deciding method ({tx.method.name}) sets the status above;
         the others are shown for comparison.
       </p>
-      <table className="verdict-table">
-        <caption className="sr-only">Score and verdict of each of the nine methods for this transaction</caption>
-        <thead>
-          <tr>
-            <th scope="col">Method</th>
-            <th scope="col">Family</th>
-            <th scope="col" className="num">
-              Score
-            </th>
-            <th scope="col">Verdict</th>
-          </tr>
-        </thead>
-        <tbody>
-          {METHODS.map((m) => {
-            const score = tx.scores[m.id];
-            return (
-              <tr key={m.id} className={m.id === tx.method.id ? 'is-deciding' : undefined}>
-                <th scope="row" data-label="Method">
-                  {m.name}
-                  {m.id === tx.method.id ? <span className="cell-sub">Deciding method</span> : null}
-                </th>
-                <td data-label="Family">{m.family}</td>
-                <td data-label="Score" className="num mono">
-                  {score === null ? '—' : score.toFixed(2)}
-                </td>
-                <td data-label="Verdict">
-                  {score === null ? (
-                    <span className="muted">Not available</span>
-                  ) : tx.flags[m.id] ? (
-                    <span className="badge badge-flagged">
-                      <Icon name="flag" />
-                      Flag
-                    </span>
-                  ) : (
-                    <span className="muted">
-                      <span aria-hidden="true">–</span>
-                      <span className="sr-only">Not flagged</span>
-                    </span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <VerdictTable scores={tx.scores} flags={tx.flags} deciding={tx.method.id} caption="Score, flag line and verdict of each of the nine methods for this transaction" />
     </section>
   );
 }
 
-function NotScored({ body, address, headingRef }: { body: InsufficientHistoryBody; address: string; headingRef: HeadingRef }) {
+function NotScored({ body, transaction, address, headingRef }: { body: InsufficientHistoryBody; transaction: TransactionCore; address: string; headingRef: HeadingRef }) {
   const h = body.history;
   return (
     <article className="detail" aria-labelledby="detail-title">
@@ -237,7 +173,7 @@ function NotScored({ body, address, headingRef }: { body: InsufficientHistoryBod
         </h2>
         <StatusBadge status="not-scored" />
       </header>
-      <Facts tx={body.transaction} />
+      <Facts tx={transaction} />
       <StatePanel
         tone="warning"
         title="Not enough history to score this transaction"

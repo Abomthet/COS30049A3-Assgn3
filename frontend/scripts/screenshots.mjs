@@ -51,12 +51,21 @@ const tl = (a) => `#/address/${a}`;
 const txs = (a, search = '') => `#/address/${a}/transactions${search ? `?${search}` : ''}`;
 const day = (r) => `#/address/${r.address}/day/${r.date}`;
 const tx = (r) => `${day(r)}/tx/${r.txid}`;
+const lab = (a, direction = '') => `#/address/${a}/what-if${direction ? `?direction=${direction}` : ''}`;
 const q = (s) => `#/?q=${encodeURIComponent(s)}`;
+
+// Types into the what-if lab's amount field the way a person does (React listens for the input event,
+// which a plain assignment to .value does not send).
+const typeAmount = (amount) => `(() => {
+  const input = document.querySelector('input[inputmode="decimal"]');
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(amount)});
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+})()`;
 const DESKTOP = 1280;
 const TABLET = 820;
 const MOBILE = 390;
 
-// [file name, extra query, hash route, width, full page?, mock only?]
+// [file name, extra query, hash route, width, full page?, mock only?, script to run once the page has loaded]
 const shots = [
   ['01-select', '', '#/', DESKTOP, true],
   ['02-invalid', '', q(t.typo), DESKTOP, false],
@@ -87,6 +96,16 @@ const shots = [
   ['26-transactions-dark', 'theme=dark', txs(t.mainAddress, 'status=flagged'), DESKTOP, true],
   ['27-about', '', '#/about', DESKTOP, true],
   ['28-about-mobile', '', '#/about', MOBILE, true],
+  ['29-what-if-empty', '', lab(t.mainAddress), DESKTOP, false],
+  ['30-what-if-flagged', '', lab(t.mainAddress, t.whatIf.direction), DESKTOP, true, false, typeAmount(t.whatIf.amountBtc)],
+  ['31-what-if-not-flagged', '', lab(t.mainAddress, t.whatIf.direction), DESKTOP, true, false, typeAmount('0.0005')],
+  ['32-what-if-tablet', '', lab(t.mainAddress, t.whatIf.direction), TABLET, true, false, typeAmount(t.whatIf.amountBtc)],
+  ['33-what-if-mobile', '', lab(t.mainAddress, t.whatIf.direction), MOBILE, true, false, typeAmount(t.whatIf.amountBtc)],
+  ['34-what-if-invalid-amount', '', lab(t.mainAddress), DESKTOP, false, false, typeAmount('0.123456789')],
+  ['35-what-if-dark', 'theme=dark', lab(t.mainAddress, t.whatIf.direction), DESKTOP, true, false, typeAmount(t.whatIf.amountBtc)],
+  ['36-models', '', '#/models', DESKTOP, true],
+  ['37-models-tablet', '', '#/models', TABLET, true],
+  ['38-models-mobile', '', '#/models', MOBILE, true],
 ];
 
 // ---------------------------------------------------------------- minimal DevTools client
@@ -157,7 +176,7 @@ async function main() {
     const send = (m, p) => cdp.send(m, p, sessionId);
     await send('Page.enable');
 
-    for (const [name, extra, hash, width, fullPage, mockOnly] of shots) {
+    for (const [name, extra, hash, width, fullPage, mockOnly, after] of shots) {
       if ((only && !only.test(name)) || (mockOnly && !mock)) continue;
       const params = new URLSearchParams(extra);
       if (mock && !params.has('latency')) params.set('latency', '0');
@@ -171,6 +190,10 @@ async function main() {
       await send('Page.navigate', { url });
       await loaded;
       await sleep(900); // let requests settle and charts measure themselves
+      if (after) {
+        await send('Runtime.evaluate', { expression: after });
+        await sleep(1200); // the lab waits for the typing to stop, asks, and draws
+      }
 
       const { result } = await send('Runtime.evaluate', {
         expression: 'JSON.stringify({ w: document.documentElement.scrollWidth, h: document.documentElement.scrollHeight, vw: window.innerWidth })',

@@ -1,6 +1,7 @@
 import type { Direction, FeatureUnit } from '../api/types';
 
 const SATS_PER_BTC = 100_000_000;
+const MAX_DECIMALS = 8;
 
 /** The one way every amount is printed: '1,204.00042100 BTC'. Always 8 decimals, so amounts agree everywhere and line up in monospace columns. */
 export function formatBtc(sats: number, opts: { signed?: boolean } = {}): string {
@@ -10,6 +11,15 @@ export function formatBtc(sats: number, opts: { signed?: boolean } = {}): string
   const frac = String(abs % SATS_PER_BTC).padStart(8, '0');
   return `${sign}${whole}.${frac} BTC`;
 }
+
+/** An amount in BTC (not satoshis) rounded to two significant digits and written out in full, for labels and sentences: '0.023 BTC', '0.00001 BTC'. */
+export function formatBtcRounded(btc: number): string {
+  const digits = Math.min(MAX_DECIMALS, Math.max(0, 1 - Math.floor(Math.log10(btc))));
+  return `${Number(btc.toFixed(digits)).toLocaleString('en-US', { maximumFractionDigits: MAX_DECIMALS })} BTC`;
+}
+
+/** A share between 0 and 1 as a whole percentage: '66%'. */
+export const formatShare = (share: number): string => `${Math.round(share * 100)}%`;
 
 export function formatCount(n: number): string {
   return n.toLocaleString('en-US');

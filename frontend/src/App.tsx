@@ -9,6 +9,7 @@ import { ToastProvider } from './hooks/useToasts';
 import { paths, useRoute, type Route } from './lib/router';
 import { AboutScreen } from './views/AboutScreen';
 import { DayScreen } from './views/DayScreen';
+import { ModelsScreen } from './views/ModelsScreen';
 import { SelectScreen } from './views/SelectScreen';
 import { TimelineScreen } from './views/TimelineScreen';
 
@@ -20,13 +21,14 @@ function screenKey(route: Route): string {
       return `day|${route.address}|${route.date}`;
     case 'timeline':
     case 'transactions':
+    case 'what-if':
       return `tl|${route.address}`;
     default:
       return route.screen;
   }
 }
 
-// Stands in for the views that are not built yet (models, watchlist), so the navigation
+// Stands in for the views that are not built yet (watchlist), so the navigation
 // never leads to a dead end. Each is replaced by its own view.
 function ComingSoon({ title }: { title: string }) {
   return (
@@ -61,10 +63,13 @@ function Views() {
       {route.screen === 'transactions' ? (
         <TimelineScreen key={route.address} address={route.address} tab={{ name: 'transactions', search: route.search }} />
       ) : null}
+      {route.screen === 'what-if' ? (
+        <TimelineScreen key={route.address} address={route.address} tab={{ name: 'what-if', search: route.search }} />
+      ) : null}
       {route.screen === 'day' ? (
         <DayScreen key={`${route.address}|${route.date}`} address={route.address} date={route.date} txid={route.txid} />
       ) : null}
-      {route.screen === 'models' ? <ComingSoon title="Models and limits" /> : null}
+      {route.screen === 'models' ? <ModelsScreen /> : null}
       {route.screen === 'watchlist' ? <ComingSoon title="Watchlist" /> : null}
       {route.screen === 'about' ? <AboutScreen /> : null}
       {route.screen === 'not-found' ? (

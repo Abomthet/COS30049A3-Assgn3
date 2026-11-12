@@ -37,6 +37,13 @@ beforeAll(async () => {
           return void res.writeHead(500).end();
         case '/api/slow': // never answers; the client's time limit has to end it
           return;
+        case '/api/addresses/addr/export':
+          if (req.url?.includes('format=xml')) return json(res, 400, { status: 'invalid', message: 'Choose csv or json.' });
+          return void res.writeHead(200, { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="addr-2026-10-22.csv"' }).end('a,b\r\n1,2\r\n');
+        case '/api/addresses/bc1qunnamed/export':
+          return void res.writeHead(200, { 'Content-Type': 'application/json' }).end('{"count":0}');
+        case '/api/addresses/addr/what-if':
+          return json(res, 422, { status: 'insufficient_history', message: 'Too early.', history: { earlierTx: 2, spanDays: 3, required: { minTx: 10, minSpanDays: 14 } }, firstScoredDate: '2024-07-11' });
         default:
           return json(res, 200, {});
       }
@@ -155,6 +162,33 @@ describe('createHttpApi', () => {
     expect(lastRequest.url).toBe(
       '/api/addresses/addr/transactions?status=flagged&status=not-scored&direction=out&sort=-score&from=2026-01-01&to=2026-02-01&page=2&pageSize=200',
     );
+  });
+
+  test('E8 and E9 post their body as JSON, and a 422 without a transaction keeps its counts', async () => {
+    const body = { amountBtc: '0.05', direction: 'out' as const, time: '2026-10-20T12:00:00Z' };
+    const error = await failureOf(api().whatIf('addr', body));
+    expect(lastRequest).toMatchObject({ method: 'POST', url: '/api/addresses/addr/what-if', body: JSON.stringify(body) });
+    expect(error).toMatchObject({ status: 422, body: { status: 'insufficient_history', firstScoredDate: '2024-07-11' } });
+    await api().whatIfCurve('addr', { direction: 'in', time: body.time, minBtc: 0.00001, maxBtc: 1, points: 41 });
+    expect(lastRequest.url).toBe('/api/addresses/addr/what-if/curve');
+    await api().methods();
+    expect(lastRequest).toMatchObject({ method: 'GET', url: '/api/methods' });
+  });
+
+  test('E10 sends the filters and the format, reads the file as text and takes its name from Content-Disposition', async () => {
+    const file = await api().exportFile('addr', 'csv', { status: ['flagged'], direction: ['out'], sort: '-time' });
+    expect(lastRequest.url).toBe('/api/addresses/addr/export?status=flagged&direction=out&sort=-time&format=csv');
+    expect(file).toEqual({ filename: 'addr-2026-10-22.csv', text: 'a,b\r\n1,2\r\n' });
+  });
+
+  test('E10 names the file from the address and format when the browser cannot read the header; a JSON file stays text', async () => {
+    const file = await api().exportFile('bc1qunnamed', 'json', {});
+    expect(file).toEqual({ filename: 'bc1qunnamed.json', text: '{"count":0}' });
+  });
+
+  test("E10's error body arrives as text and still becomes the ApiError of the service", async () => {
+    const error = await failureOf(api().exportFile('addr', 'xml' as 'csv', {}));
+    expect(error).toMatchObject({ status: 400, body: { status: 'invalid', message: 'Choose csv or json.' } });
   });
 
   test('lookup posts the address as JSON', async () => {

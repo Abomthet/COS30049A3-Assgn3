@@ -15,8 +15,9 @@ import { navigate, paths } from '../lib/router';
 import { useRequest } from '../hooks/useRequest';
 import { useSettings } from '../hooks/useSettings';
 import { TransactionsTab } from './TransactionsTab';
+import { WhatIfLab } from './WhatIfLab';
 
-// Screen 2 — the address overview (FR-02, AC-01): date range, source and snapshot, the four tiles, and two
+// Screen 2 — the address overview (FR-02, AC-01): date range, source and snapshot, the four tiles, and three
 // tabs that are routes of their own. The overview tab has the daily timeline, with flagged days marked and
 // a keyboard path to every flagged day; E5 supplies the days and totals, and E6 the strongest reason on each
 // flagged day. The transactions tab (TransactionsTab) has the filter bar, chart G2 and the table.
@@ -24,10 +25,12 @@ import { TransactionsTab } from './TransactionsTab';
 /** Flagged days listed before "Show all" (plan section 8, V2). */
 const DAYS_SHOWN = 8;
 
-export type AddressTab = { name: 'overview' } | { name: 'transactions'; search: string };
+export type AddressTab = { name: 'overview' } | { name: 'transactions'; search: string } | { name: 'what-if'; search: string };
+
+const TAB_TITLE: Record<AddressTab['name'], string> = { overview: 'Activity', transactions: 'Transactions', 'what-if': 'What-if' };
 
 export function TimelineScreen({ address, tab }: { address: string; tab: AddressTab }) {
-  useDocumentTitle(`${tab.name === 'overview' ? 'Activity' : 'Transactions'} for ${shortAddress(address)}`);
+  useDocumentTitle(`${TAB_TITLE[tab.name]} for ${shortAddress(address)}`);
   const timeline = useRequest(`timeline:${address}`, (signal) => api.timeline(address, { signal }));
 
   return (
@@ -108,9 +111,9 @@ function Timeline({ data, tab }: { data: TimelineResponse; tab: AddressTab }) {
 
       <AddressTabs address={data.address} tab={tab.name} />
 
-      {tab.name === 'transactions' ? (
-        <TransactionsTab timeline={data} search={tab.search} />
-      ) : (
+      {tab.name === 'transactions' ? <TransactionsTab timeline={data} search={tab.search} /> : null}
+      {tab.name === 'what-if' ? <WhatIfLab timeline={data} search={tab.search} /> : null}
+      {tab.name === 'overview' ? (
         <>
           {insufficient ? (
             <StatePanel
@@ -145,16 +148,17 @@ function Timeline({ data, tab }: { data: TimelineResponse; tab: AddressTab }) {
             <FlaggedDays address={data.address} days={flaggedDays} insufficient={insufficient} />
           </div>
         </>
-      )}
+      ) : null}
     </>
   );
 }
 
-/** The two tabs are routes, so they are links; the current one is marked for assistive technology as well as by its look. */
+/** The tabs are routes, so they are links; the current one is marked for assistive technology as well as by its look. */
 function AddressTabs({ address, tab }: { address: string; tab: AddressTab['name'] }) {
   const tabs = [
     { name: 'overview', label: 'Overview', href: paths.timeline(address) },
     { name: 'transactions', label: 'Transactions', href: paths.transactions(address) },
+    { name: 'what-if', label: 'What-if', href: paths.whatIf(address) },
   ] as const;
   return (
     <nav className="tabs" aria-label="Views of this address">
