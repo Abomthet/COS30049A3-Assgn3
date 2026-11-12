@@ -6,8 +6,9 @@ import { fileURLToPath } from 'node:url';
 // service), so the dev server must be allowed to read the repository root.
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 
-// The browser sees one origin: Vite hands every /api request to Uvicorn (plan D-A3-11).
-const proxy = { '/api': 'http://127.0.0.1:8000' };
+// The browser sees one origin: Vite hands every /api request to Uvicorn (plan D-A3-11), on port 8000
+// unless EXPLORER_API names another address (tools/measure.py measures a back end on a scratch port).
+const proxy = { '/api': process.env.EXPLORER_API ?? 'http://127.0.0.1:8000' };
 
 export default defineConfig({
   plugins: [react()],
