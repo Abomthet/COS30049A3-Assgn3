@@ -502,3 +502,77 @@ start times) that 96319 was an orphan of the endpoints cook. No stray servers re
 **Carried forward:** the About page's generated feature list lacks an "and" ("Size, Burst, Gap,
 Relative size are measured"); the mock-only loading and offline shots were not re-run.
 **frontend-whatif** cook started: T19 V4 what-if lab, T27 G5 (MS2 critical path first), then V5 models page (with thresholds in the verdict table) and T22 export menu. `frontend/` only, back end on port 8010.
+
+## 2026-11-12 — Hardening and the what-if lab reviewed; a flaky test found; the Mac lost its developer tools
+
+### Back-end hardening (commit `ee858f7`)
+**Delegated to** the backend-hardening cook (Sonnet 5.5, high effort; resumed once after the usage limit):
+88 tool calls. Delivered:
+- **Mod-12** (`app/services/reasons.py`): A2's F4 reasons "Higher/Lower ratio to the usual amount than
+  usual" become "Larger/Smaller amount relative to the usual for this direction", keyed by A2's own
+  `headline()`; BTC amounts in A2's text are written to 8 places (D-W-13), checked against E7's facts.
+- **Mod-13:** one 400 names every faulty field across both layers.
+- **Mod-14:** `sort=amount` by absolute amount (D-W-12).
+- E2 ETag; a `slow` marker (`-m "not slow"`: 431 tests in ~28 s; full: 600 in ~2 min).
+- **The README draft:** every command run on the Mac except those marked as not run (the Windows block,
+  `pip install`, `--assistant-weights`).
+**Lead review:** index clean, wording clean (re-run after the tool problem below), vendored files
+untouched, README structure checked.
+
+### The what-if lab (commit `d57c220`)
+**Delegated to** the frontend-whatif cook (Sonnet 5.5, high effort): 104 tool calls, ~27 min.
+**Lead review:** `npm test` **445 passed, 0 skipped**; typecheck and build clean; main JS **139.1 kB
+gzip** (+8.2); no mock or fixtures in `dist/`; wording clean. Looked at the lab (the 0.05 BTC example:
+flagged 5.98 against 5.00, both crossings marked, "flagged from about 0.023 BTC upwards, and below about
+0.000011 BTC") and V5 (nine E11 cards with intervals). The verdict table now has each method's flag
+line, which settles the "K-Means 6.69 next to –" confusion: its line is 9.98.
+**Lead fix:** CORS now exposes `Content-Disposition`, so a cross-origin page can read E10's file name
+(commit `14309b2`).
+
+### A flaky test, found and fixed (commit `89d8c6e`)
+The full back-end suite failed **1 run in about 5**, both in the cooks' runs and in clean worktrees with
+nothing else running. A first guess, a wall-clock ratio in `test_cache.py` (`warm < cold / 5`), was
+removed (the hit counter already proves the cache), but failures continued. Recording failing test names
+over repeated runs found the real cause: `test_e9_scores_equal_what_e8_answers_for_each_amount`
+compared E9 and E8 **scores with `==`**, and the regression score differed in the 15th digit
+(11.471391016432957 vs …962). This is the multithreaded-BLAS noise the parity tests already tolerate
+(1e-12). Now flags are compared exactly and scores with the parity helper `agree()`.
+**Verification:** three consecutive full runs in a clean worktree, **601 passed** each time; front end
+445 passed; build clean.
+**Lead mistake recorded:** `14309b2` (the CORS change) broke `test_cors_allows_the_vite_origins_and_nothing_else`,
+because the lead ran only `test_http_layer.py` before committing. It was caught by the worktree run
+before any push, and fixed in `89d8c6e`. The rule stands: **the full suite runs before every commit**.
+
+### The Mac lost its Command Line Tools
+At 08:24 on 12 Nov, `/Library/Developer/CommandLineTools` disappeared, so Apple's `/usr/bin/git` and
+`/usr/bin/python3` stubs began asking to install the developer tools. macOS itself was not updated
+(the system version dates from 13 Aug), and no installer was running. Deleting that folder needs
+administrator rights, which the lead and the cooks do not have. **Workaround (no admin needed):** a
+standalone git 2.56.1 in its own conda environment (`conda create -n tools -c conda-forge git`), linked
+as `~/.local/bin/git` (first on the PATH). Python commands use the conda interpreters. Pushing works.
+The user can reinstall the tools with `xcode-select --install`.
+
+### Design notes for the technical document
+- **One place for A2's wording.** A2's explanation template is frozen, so the web layer rewrites its
+  output once (two F4 phrases; amounts to a satoshi's precision), keyed by A2's own `headline()`, so a
+  change in A2's wording fails `test_reasons.py` first.
+- **Two-layer validation, one answer.** Pydantic checks types; each route's service rules then judge the
+  values that passed; one 400 lists every field at fault. A value that failed its type check is named
+  once.
+- **The real-time loop.** The form state becomes a request key, debounced by `web.whatIf.debounceMs`;
+  `useRequest` cancels the older request and keeps the previous result, dimmed. "Updating" shows as
+  soon as the key and its debounced copy differ (within one frame), so feedback is immediate while the
+  server is asked at most once per pause. Keystroke to verdict: ~600–650 ms, including the 250 ms
+  debounce.
+- **Amounts are strings until the server.** The browser parses BTC amounts as digit strings (BigInt),
+  never as floats, and sends the decimal string, so "0.1" is never 0.1000000000000000055.
+- **The curve follows the server's flags.** G5 marks crossings between neighbouring points whose
+  server flags differ, interpolated on log amount, and writes the sentence under the chart from the same
+  runs, rather than re-deriving a rule in the browser.
+- **Tolerances are stated, not hidden.** Wherever two code paths compute the same score (batch vs
+  single, E9 vs E8), flags are compared exactly and scores within 1e-12, with the reason in the test.
+
+**Carried forward:**
+- G5's log-axis tick labels overlap at desktop width.
+- Method names differ between E11 ("Robust z baseline (A1)") and the front end's own list ("Robust z
+  baseline"); one source (E11) is to be chosen.

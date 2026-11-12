@@ -46,17 +46,17 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T16 (`271642a`) Shell: navigation, service-status indicator, theme, toasts, error boundary; settings from E2 (M-05, M-10)
 - [x] T17 (`610331d`) V1, V2 and V3 on the real API; fixtures recorded; prototype banner and tools removed (M-05). Also: thresholds only from E2 (D-W-10), E2 `features` into `AppSettings`, Vitest reads `shared/address_vectors.json` (un-skip)
 - [x] T18 (`867c2f9`) Tabs; filter bar (status, direction, date range); transaction table (M-08)
-- [~] T19 `@frontend-whatif` V4 what-if lab: form, rules, feedback, live request with cancellation (M-06, M-11)
-- [~] T20 V5 models and limits; V7 about and help (V7 done `867c2f9`; V5 `@frontend-whatif`) (M-13)
+- [x] T19 (`d57c220`) V4 what-if lab: form, rules, feedback, live request with cancellation (M-06, M-11)
+- [x] T20 V5 models and limits; V7 about and help (`867c2f9`, `d57c220`) (M-13)
 - [ ] T21 State catalogue in every view; time limits; recovery and retry (M-10)
-- [~] T22 `@frontend-whatif` Export menu; PNG export (M-12)
+- [x] T22 (`d57c220`) Export menu; PNG export (M-12)
 
 ## 1.4.4 Charts (15–21 Nov), Plotly.js
 - [x] T23 (`eeefa9c`) Chart wrapper: contract, theme, table view, export, lazy loading (M-07)
 - [x] T24 (`eeefa9c`) G1 daily activity (bar), keyboard control, range slider
 - [x] T25 (`867c2f9`) G2 transactions over time (scatter, log amount), driven by the filters
 - [x] T26 (`eeefa9c`) G3 feature deviation (horizontal bar)
-- [~] T27 `@frontend-whatif` G5 what-if response (line, log amount, flag line)
+- [x] T27 (`d57c220`) G5 what-if response (line, log amount, flag line)
 - [ ] T28 Layouts at 390 / 820 / 1280 px; screenshot script fails on sideways scroll (M-11)
 - [ ] T29 **MS2 (Sun 22 Nov)**: minimum viable demonstration on all 28 addresses; test log entry
 
@@ -76,7 +76,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] T40 Accessibility inspection (Claude runs the automated checks; **[you]** keyboard and screen-reader pass)
 - [ ] T41 Fix every severity 3–4 issue; retest
 - [ ] T42 **MS3 (Fri 27 Nov)**: feature freeze; cut list recorded in the change log
-- [~] T43 (README draft `@backend-hardening`) README complete; comment and docstring pass; `MODIFICATIONS.md`; `LICENSES.md` line
+- [~] T43 (README draft `ee858f7`) README complete; comment and docstring pass; `MODIFICATIONS.md`; `LICENSES.md` line
 - [ ] T44 Clean install from a trial zip: macOS (Claude); **[you]** Windows PC
 - [ ] T45 Browsers and devices; test log complete; **MS4 (Sun 29 Nov)**: tag `v1.0-rc`
 
@@ -96,15 +96,18 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] Fix the chart owners in `explainers/a3/t05-people-rules.tex` to match the plan (or drop owners from the briefing)
 
 ## Review findings to fix later
-- [~] E6 `sort=amount` by absolute amount `@backend-hardening` (D-W-12)
+- [ ] G5: log-axis tick labels overlap at desktop width (T28)
+- [ ] Method names: E11 vs the front end's `lib/methods.ts`; use E11 everywhere
+- [ ] Command Line Tools missing on the Mac since 12 Nov 08:24 (user: `xcode-select --install`); git via `~/.local/bin/git` (conda) meanwhile
+- [x] E6 `sort=amount` by absolute amount (`ee858f7`, D-W-12)
 - [ ] About page: generated feature list needs "and"
-- [~] `@backend-hardening` Back-end suite ~2 min: add a `slow` marker for the wording/parity grids (full suite still before every commit)
+- [x] (`ee858f7`) Back-end suite ~2 min: add a `slow` marker for the wording/parity grids (full suite still before every commit)
 - [x] Stray Uvicorn on :8000 was the explore cook's; stopped
 - [x] Phone: G3 table's Role column clips (`867c2f9`)
-- [~] Amount precision: client done (`867c2f9`); server text `@backend-hardening` (D-W-13)
-- [ ] Verdict table: add each method's threshold once E11 exists; G4 (S-02) explains per-method scales
-- [~] `@backend-hardening` A2's reason text repeats itself ("…ratio to the usual amount than usual"): fix in the web layer, record in `MODIFICATIONS.md`
-- [~] `@backend-hardening` A 400 reports only the first validation layer's faults (`pageSize=999&status=bogus` → only `status`)
+- [x] Amount precision: client (`867c2f9`) and server text (`ee858f7`, D-W-13)
+- [x] Verdict table shows each method's flag line (`d57c220`); G4 (S-02) still planned
+- [x] (`ee858f7`) A2's reason text repeats itself ("…ratio to the usual amount than usual"): fix in the web layer, record in `MODIFICATIONS.md`
+- [x] (`ee858f7`) A 400 reports only the first validation layer's faults (`pageSize=999&status=bogus` → only `status`)
 - [ ] Plotly range buttons and legend are under 44 px touch targets (T40)
 - [ ] Phone scroll past a chart not verified on a real device (T38)
 - [ ] Restore `EXPLORER_ASSISTANT` default to `auto` with S-05 (D-W-09)
