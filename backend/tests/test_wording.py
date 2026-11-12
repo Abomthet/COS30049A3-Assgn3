@@ -41,6 +41,7 @@ def bodies_of(client: TestClient, address: str) -> Iterator[tuple[str, str]]:
             yield f"detail {row['txid']}", client.get(f"/api/transactions/{row['txid']}", params={"address": address}).text
 
 
+@pytest.mark.slow
 def test_no_response_of_e1_to_e7_over_all_28_addresses_has_a_banned_word(shared_client: TestClient, addresses: list[str]) -> None:
     texts: list[tuple[str, str]] = [("health", shared_client.get("/api/health").text), ("config", shared_client.get("/api/config").text),
                                     ("list", shared_client.get("/api/addresses").text)]
@@ -65,6 +66,7 @@ def test_the_three_short_history_addresses_use_the_plans_422_wording(shared_clie
         assert BANNED.search(json.dumps(body)) is None
 
 
+@pytest.mark.slow
 def test_every_flagged_transaction_carries_the_limitation_line(shared_client: TestClient, addresses: list[str], settings: Settings,
                                                                predictor: Predictor) -> None:
     line = SETTINGS["limitationLine"]
@@ -93,6 +95,7 @@ def test_a_flag_of_any_method_carries_the_limitation_line(shared_client: TestCli
         assert detail["explanation"].endswith(SETTINGS["limitationLine"])
 
 
+@pytest.mark.slow
 def test_no_response_of_e8_to_e11_has_a_banned_word_and_every_flagged_what_if_carries_the_limitation_line(
         shared_client: TestClient, addresses: list[str]) -> None:
     """A grid of what-ifs over all 28 addresses (E8 and E9, both directions, a tiny and a huge amount; the short-history

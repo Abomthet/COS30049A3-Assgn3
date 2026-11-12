@@ -6,7 +6,7 @@ come from settings.json -> web and are checked by the service, so no number is t
 """
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import Field
 
@@ -105,6 +105,7 @@ class TransactionsResponse(CamelModel):
     total: int
 
 
+PageSize = Annotated[int, Field(ge=1)]
 Sort = Literal["time", "-time", "amount", "-amount", "score", "-score"]
 
 
@@ -124,4 +125,4 @@ class TransactionsQuery(TransactionFilters):
     """E6's query: the filters and a page."""
 
     page: int = Field(default=1, ge=1)
-    page_size: int | None = Field(default=None, ge=1, description="Defaults to settings web.lists.pageSize.")
+    page_size: PageSize | None = Field(default=None, description="Defaults to settings web.lists.pageSize.")

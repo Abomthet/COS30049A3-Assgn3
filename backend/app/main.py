@@ -21,6 +21,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 from . import __version__
 from .api import addresses, exports, methods, system, transactions, whatif
+from .api.field_rules import FIELD_RULES
 from .core.body_limit import BodyLimitMiddleware
 from .core.config import Settings, load_settings
 from .core.errors import register_handlers
@@ -118,7 +119,7 @@ def create_app(settings: Settings | None = None, loader: Callable[[], Predictor]
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins), allow_methods=["GET", "POST", "PUT", "DELETE"],
                        allow_headers=["Content-Type", REQUEST_ID_HEADER], expose_headers=[REQUEST_ID_HEADER])
     app.add_middleware(RequestContextMiddleware)
-    register_handlers(app)
+    register_handlers(app, FIELD_RULES)
     app.include_router(system.router)
     app.include_router(addresses.router)
     app.include_router(transactions.router)

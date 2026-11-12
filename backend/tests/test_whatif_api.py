@@ -13,6 +13,7 @@ from explorer.predict import PRECOMPUTED_ONLY, Predictor
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings
+from app.services.reasons import reword
 
 from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY, VALID_OUTSIDE_SNAPSHOT, wait_until_ready
 
@@ -52,7 +53,7 @@ def test_e8_the_plans_running_example_is_flagged_with_score_5_98(shared_client: 
     # It is Assignment 2's own answer, unchanged.
     single = predictor.score_what_if(RUNNING_EXAMPLE, 0.05, "out", PLAN_TIME)
     assert body["scores"] == pytest.approx(single["scores"], rel=1e-12) and body["flags"] == single["flags"]
-    assert body["explanation"] == single["explanation"]
+    assert body["explanation"] == reword(single["explanation"])  # A2's text, with Mod-12's wording
 
 
 def test_e8_a_usual_sized_transaction_is_not_flagged_and_its_explanation_has_no_limitation_line(shared_client: TestClient) -> None:
@@ -61,6 +62,7 @@ def test_e8_a_usual_sized_transaction_is_not_flagged_and_its_explanation_has_no_
     assert body["limitation"] == LIMITATION  # the field is always there; the explanation adds it on a flag
 
 
+@pytest.mark.slow
 def test_e8_an_incoming_transaction_and_a_time_with_an_offset(shared_client: TestClient) -> None:
     incoming = what_if(shared_client, direction="in").json()
     assert incoming["direction"] == "in" and (incoming["receivedSats"], incoming["sentSats"]) == (5_000_000, 0)
@@ -74,6 +76,7 @@ def test_e8_accepted_amounts_become_whole_satoshis(shared_client: TestClient, en
     assert body["receivedSats"] == entry["sats"]
 
 
+@pytest.mark.slow
 def test_e8_does_not_depend_on_how_the_amount_is_written(shared_client: TestClient) -> None:
     bodies = [what_if(shared_client, amountBtc=a).json() for a in (0.05, "0.05", "0,05", "0.050000")]
     for body in bodies[1:]:
@@ -224,6 +227,7 @@ def test_e9_the_plans_example_amounts(shared_client: TestClient) -> None:
     assert all(len(m["scores"]) == len(m["flags"]) == 7 for m in body["methods"])
 
 
+@pytest.mark.slow
 def test_e9_scores_equal_what_e8_answers_for_each_amount(shared_client: TestClient) -> None:
     amounts = [0.0001, 0.05, 10]
     body = curve(shared_client, amountsBtc=amounts).json()
@@ -272,9 +276,35 @@ def test_e9_body_shape_rules(shared_client: TestClient) -> None:
     backwards = curve(shared_client, minBtc=2, maxBtc=1, points=3)
     assert backwards.json()["fields"] == [{"name": "maxBtc", "message": "Must be greater than minBtc."}]
     assert curve(shared_client, minBtc=1, maxBtc=2, points=1).json()["fields"][0]["name"] == "points"
-    # The schema's rules (greater than 0) are reported first; the range rules follow once those pass.
+    # The schema's rules (greater than 0) and the service's range rules are reported in one answer.
     assert [f["name"] for f in curve(shared_client, amountsBtc=[0.01, 0, 0.02, -1]).json()["fields"]] == ["amountsBtc.1", "amountsBtc.3"]
     assert [f["name"] for f in curve(shared_client, amountsBtc=[0.01, "0.123456789", 0.02, 1e-9]).json()["fields"]] == ["amountsBtc.1", "amountsBtc.3"]
+
+
+def test_e9_a_400_names_the_amount_that_fails_the_schema_and_the_one_that_fails_the_range(shared_client: TestClient) -> None:
+    """Pydantic names the 0 (not greater than 0); the range rule names 1e-9 (under a satoshi) in the same answer."""
+    body = curve(shared_client, amountsBtc=[0.01, 0, 0.02, 1e-9]).json()
+    assert [f["name"] for f in body["fields"]] == ["amountsBtc.1", "amountsBtc.3"]
+    assert body["message"] == "Two values need correcting."
+    assert body["fields"][0]["message"] == "Must be greater than 0."
+    assert body["fields"][1]["message"].startswith("Must be at least")
+
+
+def test_a_400_judges_every_value_that_passed_its_type_whichever_other_field_failed(shared_client: TestClient) -> None:
+    too_far = "2040-01-01T00:00:00Z"
+    # E8: the amount fails the schema, the time fails a rule that needs the address.
+    assert [f["name"] for f in what_if(shared_client, amountBtc=0, time=too_far).json()["fields"]] == ["amountBtc", "time"]
+    # E8: the direction fails its type; the amount and the time are still judged.
+    assert [f["name"] for f in what_if(shared_client, amountBtc="1e-9", direction="up", time=too_far).json()["fields"]] == [
+        "direction", "amountBtc", "time"]
+    # E9: a failed `points` leaves the amounts and the time to be judged.
+    body = curve(shared_client, amountsBtc=[0, 1e-9], points="many", time=too_far).json()
+    assert [f["name"] for f in body["fields"]] == ["amountsBtc.0", "points", "amountsBtc.1", "time"]
+    # E9: a range whose minimum fails the schema still has its point count judged.
+    assert [f["name"] for f in curve(shared_client, minBtc=0, maxBtc=1, points=10_000).json()["fields"]] == ["minBtc", "points"]
+    # An address outside the snapshot has no last transaction: the time is not judged, the 404 waits for a correct body.
+    outside = shared_client.post(f"/api/addresses/{VALID_OUTSIDE_SNAPSHOT}/what-if", json={**BODY, "amountBtc": 0, "time": too_far})
+    assert outside.status_code == 400 and [f["name"] for f in outside.json()["fields"]] == ["amountBtc"]
 
 
 def test_e9_default_curve_needs_an_earlier_transaction_in_the_direction(shared_client: TestClient) -> None:

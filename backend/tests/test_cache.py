@@ -85,6 +85,7 @@ def test_an_unknown_address_is_refused_before_anything_is_scored(service: Explor
     assert service.cache_size == 0
 
 
+@pytest.mark.slow
 def test_the_cache_holds_one_entry_per_snapshot_address_and_drops_the_least_recently_used(service: ExplorerService,
                                                                                          addresses: list[str]) -> None:
     for address in addresses:
@@ -100,6 +101,7 @@ def test_the_cache_holds_one_entry_per_snapshot_address_and_drops_the_least_rece
     assert service.cache_hits == before + 1
 
 
+@pytest.mark.slow
 def test_warm_fills_every_address_and_stops_when_asked(service: ExplorerService, addresses: list[str], predictor: Predictor,
                                                        store: SnapshotStore, settings: Settings) -> None:
     assert service.warm(threading.Event()) == len(addresses) and service.cache_size == len(addresses)
@@ -109,6 +111,7 @@ def test_warm_fills_every_address_and_stops_when_asked(service: ExplorerService,
     assert idle.warm(stopped) == 0 and idle.cache_size == 0
 
 
+@pytest.mark.slow
 def test_the_service_warms_the_cache_after_it_is_ready(make_client: Callable[..., TestClient], addresses: list[str]) -> None:
     client = make_client(warm=True)
     explorer = client.app.state.runtime.explorer  # type: ignore[attr-defined]

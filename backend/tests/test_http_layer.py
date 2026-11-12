@@ -1,4 +1,4 @@
-"""T07 to T12: what the middleware adds to E3 to E7: `ETag` and 304 (plan section 6.1), and the 413 body limit (section 6.3)."""
+"""T07 to T12: what the middleware adds to E2 to E7: `ETag` and 304 (plan section 6.1), and the 413 body limit (section 6.3)."""
 from __future__ import annotations
 
 import json
@@ -14,6 +14,7 @@ from .conftest import RUNNING_EXAMPLE, VALID_OUTSIDE_SNAPSHOT
 
 FLAGGED_TX = "c91d9fbbd396070099f3147822cd6e1eb97b1de376ad353f42007149ddb73140"
 SNAPSHOT_GETS = [
+    "/api/config",
     "/api/addresses",
     f"/api/addresses/{RUNNING_EXAMPLE}/timeline",
     f"/api/addresses/{RUNNING_EXAMPLE}/transactions?status=flagged",

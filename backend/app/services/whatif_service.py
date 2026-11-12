@@ -8,22 +8,28 @@ little history before the chosen time answers with the counts and the first day 
 """
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from decimal import Decimal
+from typing import Any
 
 import numpy as np
 import pandas as pd
 from explorer.amounts import SATS_PER_BTC
-from explorer.predict import InsufficientHistory, Predictor, day, finite, iso
+from explorer.predict import InsufficientHistory, Predictor, Unsupported, day, finite, iso
+from pydantic import AwareDatetime, TypeAdapter
 
 from ..core.config import WhatIfLimits
 from ..core.errors import InvalidRequest, needs_correcting
-from ..core.validation import amount_problem, gap_problem
+from ..core.validation import amount_problem, gap_problem, passed
 from ..schemas.errors import FieldError
-from ..schemas.whatif import CurveRequest, CurveResponse, WhatIfRequest, WhatIfResult
+from ..schemas.whatif import Amount, CurveRequest, CurveResponse, Points, WhatIfRequest, WhatIfResult
+from .reasons import reword
 from .store import AddressData, AddressStore
 from .whatif_batch import hypothetical_frame, score_frame, usable_methods
 
+# Each judges one raw value as the body's own field is, for a body that failed its type check elsewhere (`rejected_*`).
+AMOUNT, MOMENT, POINTS = TypeAdapter(Amount), TypeAdapter(AwareDatetime), TypeAdapter(Points)
 DAY_SECONDS = 86400
 CORRECT_HINT = "Correct the values named below and send the request again."
 TOO_EARLY_MESSAGE = "At that time this address did not have enough earlier history to compare with."
@@ -69,7 +75,7 @@ class WhatIfService:
         data = self._store.get(address)
         amount = float(request.amount_btc)
         time_utc = request.time.astimezone(timezone.utc)
-        self._check(data, time_utc, [("amountBtc", request.amount_btc)])
+        self._raise_for(self._problems(data, time_utc, [("amountBtc", request.amount_btc)]))
         seconds = int(time_utc.timestamp())
         try:
             result = self._predictor.score_what_if(address, amount, request.direction, iso(seconds))
@@ -77,7 +83,7 @@ class WhatIfService:
             raise self._too_early(data, seconds) from None
         if not result["scored"]:  # earlier history exists but is under the minimum: A2 returns the row unscored
             raise self._too_early(data, seconds)
-        return WhatIfResult.model_validate({**result, "notAvailable": self._not_available})
+        return WhatIfResult.model_validate({**result, "explanation": reword(result["explanation"]), "notAvailable": self._not_available})
 
     # ---------------------------------------------------------------- E9
 
@@ -92,7 +98,7 @@ class WhatIfService:
         """
         data = self._store.get(address)
         time_utc = request.time.astimezone(timezone.utc)
-        self._check_curve(data, time_utc, request)
+        self._raise_for(self._curve_problems(data, time_utc, request.amounts_btc, request.min_btc, request.max_btc, request.points))
         seconds = int(time_utc.timestamp())
         if request.amounts_btc is not None:
             amounts = [float(a) for a in request.amounts_btc]
@@ -149,31 +155,69 @@ class WhatIfService:
                         "required": self._predictor.requirement()},
             "firstScoredDate": day(scorable.min()) if len(scorable) else None})
 
-    def _check(self, data: AddressData, time_utc: datetime, amounts: list[tuple[str, Decimal]],
-               extra: list[FieldError] | None = None) -> None:
-        """Raise one 400 naming every field of the body at fault: each amount, the time, and any `extra` the caller found."""
-        errors = list(extra or [])
+    def _problems(self, data: AddressData | None, time_utc: datetime | None, amounts: Sequence[tuple[str, Decimal]],
+                  extra: Sequence[FieldError] = ()) -> list[FieldError]:
+        """Every field of the body at fault: the `extra` the caller found, each amount outside its range, and a time too far on.
+
+        A `time_utc` or `data` of None is not judged: the time failed its type check, or the address is not in the store.
+        """
+        errors = list(extra)
         errors += [FieldError(name=name, message=problem) for name, amount in amounts
                    if (problem := amount_problem(amount, self._limits))]
-        last = datetime.fromtimestamp(int(data.features["block_time_utc"].max()), tz=timezone.utc)
-        if problem := gap_problem(time_utc, last, self._limits):
-            errors.append(FieldError(name="time", message=problem))
+        if data is not None and time_utc is not None:
+            last = datetime.fromtimestamp(int(data.features["block_time_utc"].max()), tz=timezone.utc)
+            if problem := gap_problem(time_utc, last, self._limits):
+                errors.append(FieldError(name="time", message=problem))
+        return errors
+
+    @staticmethod
+    def _raise_for(errors: list[FieldError]) -> None:
+        """One 400 naming every field in `errors`, when there are any."""
         if errors:
             raise InvalidRequest(needs_correcting(len(errors)), CORRECT_HINT, errors)
 
-    def _check_curve(self, data: AddressData, time_utc: datetime, request: CurveRequest) -> None:
-        """E9's body: the amounts or the range, the point count and the time, checked together."""
+    def _curve_problems(self, data: AddressData | None, time_utc: datetime | None, amounts_btc: Sequence[Decimal | None] | None,
+                        min_btc: Decimal | None, max_btc: Decimal | None, points: int | None) -> list[FieldError]:
+        """E9's body: the amounts or the range, the point count and the time. A value of None is not judged.
+
+        Each rule stands on its own, so a body whose `points` failed its type check still has its amounts judged.
+        """
         limit = self._limits.curve_max_points
         extra: list[FieldError] = []
         amounts: list[tuple[str, Decimal]] = []
-        if request.amounts_btc is not None:
-            if not request.amounts_btc or len(request.amounts_btc) > limit:
+        if amounts_btc is not None:
+            if not amounts_btc or len(amounts_btc) > limit:
                 extra.append(FieldError(name="amountsBtc", message=f"Give between 1 and {limit} amounts."))
-            amounts = [(f"amountsBtc.{i}", a) for i, a in enumerate(request.amounts_btc)]
-        elif request.min_btc is not None and request.max_btc is not None and request.points is not None:
-            amounts = [("minBtc", request.min_btc), ("maxBtc", request.max_btc)]
-            if request.points > limit:
-                extra.append(FieldError(name="points", message=f"Must be at most {limit}."))
-            if request.min_btc >= request.max_btc:
-                extra.append(FieldError(name="maxBtc", message="Must be greater than minBtc."))
-        self._check(data, time_utc, amounts, extra)
+            amounts += [(f"amountsBtc.{i}", a) for i, a in enumerate(amounts_btc) if a is not None]
+        if points is not None and points > limit:
+            extra.append(FieldError(name="points", message=f"Must be at most {limit}."))
+        if min_btc is not None and max_btc is not None and min_btc >= max_btc:
+            extra.append(FieldError(name="maxBtc", message="Must be greater than minBtc."))
+        amounts += [(name, a) for name, a in (("minBtc", min_btc), ("maxBtc", max_btc)) if a is not None]
+        return self._problems(data, time_utc, amounts, extra)
+
+    # ---------------------------------------------------------------- bodies that failed their type check
+
+    def _known(self, address: str) -> AddressData | None:
+        """The address's data, or None when the address is not in the store (its 404 comes once the body is right)."""
+        try:
+            return self._store.get(address)
+        except Unsupported:
+            return None
+
+    def rejected_what_if(self, address: str, body: Mapping[str, Any]) -> list[FieldError]:
+        """E8: the fields at fault by this service's rules, for a body that failed its type check on another field.
+
+        Only what passed the type check is judged (see `passed`), so one 400 can name every field at fault.
+        """
+        amount = passed(AMOUNT, body.get("amountBtc"))
+        return self._problems(self._known(address), passed(MOMENT, body.get("time")),
+                              [] if amount is None else [("amountBtc", amount)])
+
+    def rejected_curve(self, address: str, body: Mapping[str, Any]) -> list[FieldError]:
+        """E9: as `rejected_what_if`, for the amounts, the range, the point count and the time."""
+        raw = body.get("amountsBtc")
+        return self._curve_problems(
+            self._known(address), passed(MOMENT, body.get("time")),
+            [passed(AMOUNT, item) for item in raw] if isinstance(raw, list) else None,
+            passed(AMOUNT, body.get("minBtc")), passed(AMOUNT, body.get("maxBtc")), passed(POINTS, body.get("points")))

@@ -44,7 +44,7 @@
           "system"
         ],
         "summary": "Limits, thresholds, names and capabilities",
-        "description": "Everything the front end would otherwise hard-code: the snapshot, the limitation line, the four features,\nthe history rule, the two z lines, the default method, the `web` limits and which optional parts are on.",
+        "description": "Everything the front end would otherwise hard-code: the snapshot, the limitation line, the four features,\nthe history rule, the two z lines, the default method, the `web` limits and which optional parts are on.\nCarries an `ETag`: the front end reads it at start and after each recovery, and a repeat costs a 304.",
         "operationId": "config_api_config_get",
         "responses": {
           "200": {
@@ -56,6 +56,9 @@
                 }
               }
             }
+          },
+          "304": {
+            "description": "The copy the client holds is still right (the `ETag` matched)."
           },
           "503": {
             "description": "The service is starting or a file is missing.",
@@ -331,7 +334,7 @@
           "addresses"
         ],
         "summary": "A filtered, sorted page of transaction rows",
-        "description": "Filter by one day (`date`) or a range (`from`, `to`), by `status` and `direction` (each may repeat), sort by\n`time`, `amount` (net, signed) or `score` (a leading minus reverses), and page with `page` and `pageSize`.\nA filter that matches nothing is a 200 with an empty list.",
+        "description": "Filter by one day (`date`) or a range (`from`, `to`), by `status` and `direction` (each may repeat), sort by\n`time`, `amount` (the size of the net amount, in or out) or `score` (a leading minus reverses), and page with `page` and `pageSize`.\nA filter that matches nothing is a 200 with an empty list.",
         "operationId": "transactions_api_addresses__address__transactions_get",
         "parameters": [
           {
@@ -1553,13 +1556,13 @@
                 "items": {
                   "anyOf": [
                     {
-                      "type": "number",
-                      "exclusiveMinimum": 0.0
+                      "type": "number"
                     },
                     {
                       "type": "string"
                     }
-                  ]
+                  ],
+                  "gt": 0
                 },
                 "type": "array"
               },
@@ -1572,11 +1575,15 @@
           "minBtc": {
             "anyOf": [
               {
-                "type": "number",
-                "exclusiveMinimum": 0.0
-              },
-              {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "gt": 0
               },
               {
                 "type": "null"
@@ -1587,11 +1594,15 @@
           "maxBtc": {
             "anyOf": [
               {
-                "type": "number",
-                "exclusiveMinimum": 0.0
-              },
-              {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "gt": 0
               },
               {
                 "type": "null"
@@ -3431,15 +3442,15 @@
           "amountBtc": {
             "anyOf": [
               {
-                "type": "number",
-                "exclusiveMinimum": 0.0
+                "type": "number"
               },
               {
                 "type": "string"
               }
             ],
             "title": "Amountbtc",
-            "description": "A number or decimal string, in BTC."
+            "description": "A number or decimal string, in BTC.",
+            "gt": 0
           },
           "direction": {
             "type": "string",

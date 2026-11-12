@@ -14,24 +14,27 @@ from __future__ import annotations
 import dataclasses
 import threading
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, cast
 
 from explorer.explain import reasons_for
 from explorer.predict import InsufficientHistory, Predictor, iso
+from pydantic import TypeAdapter
 
 from ..core.config import ListLimits
 from ..core.errors import InvalidRequest, NotFound, needs_correcting
-from ..core.validation import is_day, validate_address
-from ..schemas.addresses import (AddressesResponse, AddressSummary, LookupResponse, TimelineResponse, TransactionFilters,
-                                 TransactionRow, TransactionsQuery, TransactionsResponse)
+from ..core.validation import is_day, passed, validate_address
+from ..schemas.addresses import (AddressesResponse, AddressSummary, LookupResponse, PageSize, TimelineResponse,
+                                 TransactionFilters, TransactionRow, TransactionsQuery, TransactionsResponse)
 from ..schemas.common import SnapshotInfo
 from ..schemas.errors import FieldError
 from ..schemas.transactions import TransactionDetail
+from .reasons import reword
 from .store import AddressData, AddressStore
 
+PAGE_SIZE = TypeAdapter(PageSize)
 NOT_SCORED_MESSAGE = "This transaction could not be scored: the address had too little earlier history to compare it with."
 
 
@@ -55,7 +58,7 @@ def _row(tx: dict[str, Any]) -> TransactionRow:
     status = "not-scored" if not scored else "flagged" if tx["flagged"] else "not-flagged"
     return TransactionRow(
         txid=tx["txid"], time=tx["time"], direction=tx["direction"], net_sats=tx["netSats"], status=status,
-        score=tx["score"] if scored else None, main_reason=reasons[0]["headline"] if reasons else None,
+        score=tx["score"] if scored else None, main_reason=reword(reasons[0]["headline"]) if reasons else None,
         main_z=reasons[0]["z"] if reasons else None, flagged_by=sum(tx["flags"].values()) if scored else 0)
 
 
@@ -111,7 +114,8 @@ class ExplorerService:
         if not data.features["scorable"].any():
             return self._unscored_view(predictor, data)
         result = predictor.score_address(address)
-        transactions = {tx["txid"]: tx for tx in result["transactions"]}
+        # The explanation is A2's template text; its repeating phrases are reworded here (Mod-12).
+        transactions = {tx["txid"]: {**tx, "explanation": reword(tx["explanation"])} for tx in result["transactions"]}
         timeline = TimelineResponse.model_validate({key: value for key, value in result.items() if key != "transactions"})
         return AddressView(timeline, tuple(_row(tx) for tx in result["transactions"]), transactions)
 
@@ -179,7 +183,8 @@ class ExplorerService:
                 `pageSize` is over the limit.
             Unsupported: The address is not in the store.
         """
-        page_size = self._check_query(query)
+        page_size = query.page_size or self._lists.page_size
+        self._check_filters(query.date, query.from_, query.to, self._page_size_problems(page_size))
         self._store.get(address)
         selected = self._select(self._view(query.method or self._default, address).rows, query)
         start = (query.page - 1) * page_size
@@ -212,7 +217,7 @@ class ExplorerService:
             InvalidRequest: A filter is not acceptable (the rules of E6).
             Unsupported: The address is not in the store.
         """
-        self._check_filters(query)
+        self._check_filters(query.date, query.from_, query.to)
         self._store.get(address)
         view = self._view(query.method or self._default, address)
         return self._select(view.rows, query), view.transactions
@@ -229,45 +234,57 @@ class ExplorerService:
 
     # ---------------------------------------------------------------- E6's query
 
-    def _check_query(self, query: TransactionsQuery) -> int:
-        """Apply the rules of plan section 11.2 that Pydantic cannot: the filters' (`_check_filters`) and the page-size limit.
-
-        Returns:
-            The page size to use.
-
-        Raises:
-            InvalidRequest: With every field at fault named.
-        """
-        page_size = query.page_size or self._lists.page_size
-        over = [FieldError(name="pageSize", message=f"Must be at most {self._lists.max_page_size}.")] if page_size > self._lists.max_page_size else []
-        self._check_filters(query, over)
-        return page_size
+    def _page_size_problems(self, page_size: int) -> list[FieldError]:
+        """The page-size limit of plan section 11.2, which comes from settings.json and so is not the schema's."""
+        if page_size > self._lists.max_page_size:
+            return [FieldError(name="pageSize", message=f"Must be at most {self._lists.max_page_size}.")]
+        return []
 
     @staticmethod
-    def _check_filters(query: TransactionFilters, others: Sequence[FieldError] = ()) -> None:
+    def _check_filters(date: str | None, from_: str | None, to: str | None, others: Sequence[FieldError] = ()) -> None:
         """The rules for the filters E6 and E10 share: each day is a real day, `date` is not combined with a range, and
         the range does not run backwards.
 
         Args:
-            query: The filters.
+            date: The `date` filter, as sent.
+            from_: The `from` filter, as sent.
+            to: The `to` filter, as sent.
             others: Problems the caller found in its own fields, reported together with the days'.
 
         Raises:
             InvalidRequest: With every field at fault named.
         """
-        days = {"date": query.date, "from": query.from_, "to": query.to}
+        days = {"date": date, "from": from_, "to": to}
         errors = [FieldError(name=name, message="Use a day such as 2026-10-20.")
                   for name, value in days.items() if value is not None and not is_day(value)] + list(others)
         if errors:
             raise InvalidRequest(needs_correcting(len(errors)), "Correct the values named below and send the request again.", errors)
-        if query.date is not None and (query.from_ is not None or query.to is not None):
+        if date is not None and (from_ is not None or to is not None):
             raise InvalidRequest("Use either one date or a range of days, not both.", "Remove the date, or remove from and to.",
                                  [FieldError(name=name, message="Not together with a date range." if name == "date" else "Not together with date.")
                                   for name in ("date", "from", "to") if days[name] is not None])
-        if query.from_ is not None and query.to is not None and query.from_ > query.to:
+        if from_ is not None and to is not None and from_ > to:
             raise InvalidRequest("The first day is after the last day.", "Swap the two days, or change one of them.",
                                  [FieldError(name="from", message="Must not be after the last day."),
                                   FieldError(name="to", message="Must not be before the first day.")])
+
+    def rejected_query(self, raw: Mapping[str, str], paged: bool) -> list[FieldError]:
+        """The fields at fault by this service's rules, for a request whose type check failed on some other field.
+
+        A 400 names every field at fault, so the rules run on whatever passed the type check (plan section 11.2). A
+        value that failed its type check has nothing to judge further and is skipped; Pydantic has already named it.
+
+        Args:
+            raw: The query as sent, by the names on the wire.
+            paged: True for E6, which has a page size; False for E10.
+        """
+        page_size = passed(PAGE_SIZE, raw.get("pageSize")) if paged else None
+        try:
+            self._check_filters(raw.get("date"), raw.get("from"), raw.get("to"),
+                                self._page_size_problems(page_size) if page_size is not None else ())
+        except InvalidRequest as problem:
+            return problem.fields
+        return []
 
     @staticmethod
     def _select(rows: tuple[TransactionRow, ...], query: TransactionFilters) -> list[TransactionRow]:
@@ -280,7 +297,9 @@ class ExplorerService:
         order = query.sort.lstrip("-")
         if order == "time":
             return chosen[::-1] if descending else chosen
-        if order == "amount":  # a stable sort, so rows of equal amount stay oldest first
-            return sorted(chosen, key=lambda r: r.net_sats, reverse=descending)
+        if order == "amount":
+            # By size, whichever way the coins moved, so `-amount` is largest first and does not list every received
+            # transaction before any sent one. Stable even when reversed, so rows of equal size stay oldest first.
+            return sorted(chosen, key=lambda r: abs(r.net_sats), reverse=descending)
         scored = sorted((r for r in chosen if r.score is not None), key=lambda r: cast(float, r.score), reverse=descending)
         return scored + [r for r in chosen if r.score is None]  # rows with no score go last either way

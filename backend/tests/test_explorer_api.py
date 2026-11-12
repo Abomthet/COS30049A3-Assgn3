@@ -206,7 +206,7 @@ def test_e6_defaults_are_the_first_page_oldest_first(client: TestClient, setting
 def test_e6_the_plans_flagged_row_has_its_reason(client: TestClient) -> None:
     row = rows(client, status="flagged", sort="time")["transactions"][0]
     assert row["txid"] == FLAGGED_TX and row["status"] == "flagged" and row["score"] == pytest.approx(5.6071, abs=1e-4)
-    assert row["mainReason"] == "Lower ratio to the usual amount than usual" and row["flaggedBy"] == 1
+    assert row["mainReason"] == "Smaller amount relative to the usual for this direction" and row["flaggedBy"] == 1
     assert row["mainZ"] == pytest.approx(-5.6071, abs=1e-4)
 
 
@@ -224,9 +224,24 @@ def test_e6_pages_cover_the_list_exactly_once_and_a_page_past_the_end_is_empty(c
 @pytest.mark.parametrize("sort", ["time", "-time", "amount", "-amount", "score", "-score"])
 def test_e6_sorts(client: TestClient, sort: str) -> None:
     everything = every_row(client, LARGEST, sort=sort)
-    key = {"time": "time", "amount": "netSats", "score": "score"}[sort.lstrip("-")]
-    values = [r[key] for r in everything if r[key] is not None]
+    key = {"time": "time", "amount": "size", "score": "score"}[sort.lstrip("-")]
+    values = [abs(r["netSats"]) if key == "size" else r[key] for r in everything if key == "size" or r[key] is not None]
     assert values == sorted(values, reverse=sort.startswith("-"))
+
+
+def test_e6_amount_orders_by_size_whichever_way_the_coins_moved_and_ties_stay_oldest_first(client: TestClient) -> None:
+    """`-amount` is largest first: a large sent transaction comes before a small received one, and equal sizes keep their time order."""
+    for sort in ("amount", "-amount"):
+        rows_ = every_row(client, LARGEST, sort=sort)
+        sizes = [abs(r["netSats"]) for r in rows_]
+        assert sizes == sorted(sizes, reverse=sort == "-amount")
+        directions = {r["direction"] for r in rows_[:20]}
+        assert directions != {"in"} and directions != {"out"}, "the first rows mix both directions, so the order is not by sign"
+        for first, second in zip(rows_, rows_[1:]):
+            if abs(first["netSats"]) == abs(second["netSats"]):
+                assert first["time"] <= second["time"]
+    largest_first = every_row(client, LARGEST, sort="-amount")
+    assert abs(largest_first[0]["netSats"]) == max(abs(r["netSats"]) for r in largest_first)
 
 
 def test_e6_unscored_rows_go_last_when_sorting_by_score_in_either_direction(client: TestClient) -> None:
@@ -299,6 +314,22 @@ def test_e6_a_bad_parameter_is_a_400_that_names_it(client: TestClient, params: d
     body = assert_invalid(client.get(f"/api/addresses/{RUNNING_EXAMPLE}/transactions", params=params), *names)
     assert body["message"] == f"{NUMBER_WORDS[len(names)]} {'value needs' if len(names) == 1 else 'values need'} correcting."
     assert all(f["message"] for f in body["fields"])
+
+
+def test_e6_a_400_names_the_type_fault_and_the_page_size_limit_together(client: TestClient) -> None:
+    """Pydantic stops at `status`; the page-size rule is the service's, and still names `pageSize` in the same answer."""
+    body = assert_invalid(client.get(f"/api/addresses/{RUNNING_EXAMPLE}/transactions?pageSize=999&status=bogus"), "status", "pageSize")
+    assert body["message"] == "Two values need correcting."
+    assert body["fields"][1]["message"] == "Must be at most 200."
+
+
+def test_e6_a_400_adds_the_services_rules_for_every_field_that_passed_its_type(client: TestClient) -> None:
+    url = f"/api/addresses/{RUNNING_EXAMPLE}/transactions"
+    assert_invalid(client.get(url, params={"page": 0, "date": "2026-02-30", "pageSize": 999, "sort": "x"}), "sort", "page", "date", "pageSize")
+    # A page size that is not a number has nothing to judge against the limit: only the type fault is named.
+    assert_invalid(client.get(url, params={"pageSize": "many", "status": "bogus"}), "status", "pageSize")
+    # The day rules that need two valid fields run when the other fields are the faulty ones.
+    assert_invalid(client.get(url, params={"date": "2026-01-01", "from": "2026-01-01", "sort": "x"}), "sort", "date", "from")
 
 
 def test_e6_a_date_with_a_range_names_both_fields(client: TestClient) -> None:

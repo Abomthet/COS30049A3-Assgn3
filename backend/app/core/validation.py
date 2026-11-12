@@ -16,8 +16,10 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import TypeVar
 
 from explorer.amounts import SATS_PER_BTC
+from pydantic import TypeAdapter, ValidationError
 
 from ..schemas.common import AddressKind
 from ..schemas.errors import FieldError
@@ -237,6 +239,26 @@ def _check_segwit(value: str) -> AddressCheck:
     if version == 1 and len(program) == 32:
         return _ok(address, "p2tr")
     return _ok(address, "segwit")
+
+
+# ---------------------------------------------------------------- Values that passed the type check
+
+Parsed = TypeVar("Parsed")
+
+
+def passed(adapter: TypeAdapter[Parsed], raw: object) -> Parsed | None:
+    """What `adapter` makes of a raw request value, or None when the value is absent or does not pass.
+
+    A request that fails its type check on one field still has its other fields judged by the service's rules, so one
+    400 can name every field at fault (plan section 11.2). A value that fails here has nothing left to judge, and
+    Pydantic has already named it, so it is skipped rather than guessed at.
+    """
+    if raw is None:
+        return None
+    try:
+        return adapter.validate_python(raw)
+    except ValidationError:
+        return None
 
 
 # ---------------------------------------------------------------- Days

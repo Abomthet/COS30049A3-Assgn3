@@ -110,6 +110,7 @@ def check_curve(predictor: Predictor, service: WhatIfService, address: str, dire
     return len(chosen)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("direction", ["out", "in"])
 @pytest.mark.parametrize("address", ADDRESSES, ids=[a[:10] for a in ADDRESSES])
 def test_the_curve_equals_single_calls_over_the_grid(predictor: Predictor, service: WhatIfService, address: str, direction: str) -> None:
@@ -124,6 +125,7 @@ def test_the_curve_equals_single_calls_over_the_grid(predictor: Predictor, servi
     assert compared == (123 if FULL else 6)
 
 
+@pytest.mark.slow
 def test_every_amount_of_the_running_examples_curve_equals_a_single_call(predictor: Predictor, service: WhatIfService) -> None:
     """The plan's example (0.05 BTC out at 2026-10-20T12:00:00Z), all 41 amounts of its default curve."""
     assert check_curve(predictor, service, RUNNING_EXAMPLE, "out", PLAN_TIME) == 41
@@ -154,6 +156,7 @@ def test_the_running_examples_plan_amounts_flag_the_way_the_plan_says(predictor:
     assert single["flagged"] is True and round(single["score"], 2) == 5.98
 
 
+@pytest.mark.slow
 def test_the_batch_keeps_the_order_of_the_amounts_it_is_given(predictor: Predictor) -> None:
     """Amounts need not be sorted, and a repeated amount repeats its answer."""
     real = predictor.transactions[predictor.transactions["address"] == RUNNING_EXAMPLE]

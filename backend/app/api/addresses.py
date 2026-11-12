@@ -52,6 +52,6 @@ def timeline(address: Annotated[str, Depends(path_address)], explorer: Explorer,
 def transactions(address: Annotated[str, Depends(path_address)], query: Annotated[TransactionsQuery, Query()],
                  explorer: Explorer) -> TransactionsResponse:
     """Filter by one day (`date`) or a range (`from`, `to`), by `status` and `direction` (each may repeat), sort by
-    `time`, `amount` (net, signed) or `score` (a leading minus reverses), and page with `page` and `pageSize`.
+    `time`, `amount` (the size of the net amount, in or out) or `score` (a leading minus reverses), and page with `page` and `pageSize`.
     A filter that matches nothing is a 200 with an empty list."""
     return explorer.rows(address, query)

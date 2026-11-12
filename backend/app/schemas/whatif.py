@@ -9,14 +9,12 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import AwareDatetime, Field, field_validator, model_validator
+from pydantic import AwareDatetime, BeforeValidator, Field, model_validator
 
 from .common import CamelModel, MethodId, RequestModel
 from .transactions import TransactionFacts, Verdict
 
 WhatIfDirection = Literal["in", "out"]
-# Greater than zero is part of what an amount is; the smallest and largest amount come from settings.
-Amount = Annotated[Decimal, Field(gt=0)]
 
 
 def read_amount(value: Any) -> Any:
@@ -37,9 +35,11 @@ def read_amount(value: Any) -> Any:
         raise ValueError("Enter an amount in BTC, such as 0.05.") from None
 
 
-def read_amounts(values: Any) -> Any:
-    """`read_amount` for each item of a list."""
-    return [read_amount(v) for v in values] if isinstance(values, list) else values
+# Greater than zero is part of what an amount is; the smallest and largest amount come from settings. The reader is part
+# of the type, so a list of amounts reads each item, and the service can judge one raw value exactly as a body field is.
+Amount = Annotated[Decimal, BeforeValidator(read_amount), Field(gt=0)]
+# At least two points make a curve.
+Points = Annotated[int, Field(ge=2)]
 
 
 class WhatIfRequest(RequestModel):
@@ -48,8 +48,6 @@ class WhatIfRequest(RequestModel):
     amount_btc: Amount = Field(description="A number or decimal string, in BTC.")
     direction: WhatIfDirection
     time: AwareDatetime = Field(description="ISO 8601 with a zone, such as 2026-10-20T12:00:00Z.")
-
-    _read_amount = field_validator("amount_btc", mode="before")(read_amount)
 
 
 class WhatIfResult(TransactionFacts, Verdict):
@@ -68,10 +66,7 @@ class CurveRequest(RequestModel):
     amounts_btc: list[Amount] | None = None
     min_btc: Amount | None = None
     max_btc: Amount | None = None
-    points: int | None = Field(default=None, ge=2)
-
-    _read_amounts = field_validator("amounts_btc", mode="before")(read_amounts)
-    _read_min_max = field_validator("min_btc", "max_btc", mode="before")(read_amount)
+    points: Points | None = None
 
     @model_validator(mode="after")
     def one_way_of_choosing_amounts(self) -> Self:

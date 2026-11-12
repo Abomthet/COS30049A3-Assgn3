@@ -43,7 +43,7 @@ def test_an_error_body_documents_an_example(settings) -> None:  # type: ignore[n
 
 # The statuses the plan gives each route (section 6.2), besides 200 and the 503 of a service that is still starting.
 PLANNED_STATUSES = {
-    ("get", "/api/health"): set(), ("get", "/api/config"): set(),
+    ("get", "/api/health"): set(), ("get", "/api/config"): {"304"},
     ("get", "/api/addresses"): {"304", "400"},
     ("post", "/api/lookup"): {"400", "404", "413", "415"},
     ("get", "/api/addresses/{address}/timeline"): {"304", "400", "404"},

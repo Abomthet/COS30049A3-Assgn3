@@ -13,8 +13,10 @@ input. The real text of an unexpected error goes to the log under the same reque
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime
+from functools import partial
 from typing import Any
 
 from explorer.predict import InsufficientHistory, Unsupported
@@ -31,6 +33,20 @@ log = logging.getLogger("app.errors")
 
 DEFAULT_HINT = "Check the value and try again."
 NUMBER_WORDS = ("No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten")
+
+
+@dataclass(frozen=True)
+class RawRequest:
+    """What a request carried, before any type check: the path and query parameters and the parsed JSON body, by wire names."""
+
+    path: Mapping[str, str]
+    query: Mapping[str, str]
+    body: Any
+
+
+# The service rules of one route, applied to a request that failed its type check: the fields at fault that Pydantic,
+# which stops at types, could not see (see `handle_validation`). Routes without an entry add nothing.
+FieldRules = Callable[[Runtime, RawRequest], list[FieldError]]
 
 
 class ApiError(Exception):
@@ -141,8 +157,13 @@ def _field_name(location: Sequence[Any]) -> str:
     return ".".join(str(part) for part in location[1:]) or "body"
 
 
-async def handle_validation(request: Request, exc: Exception) -> JSONResponse:
-    """FastAPI's `RequestValidationError`: 400 with the fields at fault (415 when the body is not JSON at all)."""
+async def handle_validation(request: Request, exc: Exception, field_rules: Mapping[tuple[str, str], FieldRules]) -> JSONResponse:
+    """FastAPI's `RequestValidationError`: 400 with every field at fault (415 when the body is not JSON at all).
+
+    Pydantic reports the fields that failed their type check and stops there, before the service's rules (page-size
+    limit, amount range, time limit) run. A 400 should name every field at fault at once, so the route's rules are
+    then applied to the values that did pass; a value that failed its type check has nothing to judge further.
+    """
     assert isinstance(exc, RequestValidationError)
     errors = exc.errors()
     if any(e["type"] == "json_invalid" for e in errors):
@@ -154,6 +175,11 @@ async def handle_validation(request: Request, exc: Exception) -> JSONResponse:
         return error_response(request, 415, "invalid", "The request body must be JSON.",
                               hint="Send the body as JSON with the header Content-Type: application/json.")
     fields = [FieldError(name=_field_name(e["loc"]), message=_describe(e)) for e in errors]
+    route = request.scope.get("route")
+    rules = field_rules.get((request.method, route.path)) if route is not None else None
+    runtime: Runtime = request.app.state.runtime
+    if rules is not None and runtime.ready:
+        fields += rules(runtime, RawRequest(request.path_params, request.query_params, exc.body))
     return error_response(request, 400, "invalid", needs_correcting(len(fields)),
                           hint="Correct the values named below and send the request again.", fields=fields)
 
@@ -216,11 +242,16 @@ async def handle_unexpected(request: Request, exc: Exception) -> JSONResponse:
                           hint="Try again. If it keeps happening, give the request identifier to the team.")
 
 
-def register_handlers(app: FastAPI) -> None:
+def register_handlers(app: FastAPI, field_rules: Mapping[tuple[str, str], FieldRules] | None = None) -> None:
     """Install every handler. Starlette picks the most specific class first, so `InsufficientHistory`
-    (a `ValueError`) is answered before the generic `ValueError` handler."""
+    (a `ValueError`) is answered before the generic `ValueError` handler.
+
+    Args:
+        app: The application.
+        field_rules: Per route, keyed by (method, path template), the service rules `handle_validation` adds to a 400.
+    """
     app.add_exception_handler(ApiError, handle_api_error)
-    app.add_exception_handler(RequestValidationError, handle_validation)
+    app.add_exception_handler(RequestValidationError, partial(handle_validation, field_rules=field_rules or {}))
     app.add_exception_handler(StarletteHTTPException, handle_http_exception)
     app.add_exception_handler(Unsupported, handle_unsupported)
     app.add_exception_handler(InsufficientHistory, handle_insufficient_history)

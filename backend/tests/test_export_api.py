@@ -71,7 +71,7 @@ def test_the_csv_is_plain_utf_8_with_no_byte_order_mark_and_survives_a_round_tri
 
 
 def test_the_csv_rows_are_what_e6_lists_for_the_same_filters(shared_client: TestClient) -> None:
-    for params in ({}, {"status": "flagged"}, {"status": ["flagged", "not-scored"], "sort": "-score"}, {"direction": "out", "sort": "-amount"},
+    for params in ({}, {"status": "flagged"}, {"status": ["flagged", "not-scored"], "sort": "-score"}, {"direction": "out", "sort": "-amount"}, {"sort": "-amount"}, {"sort": "amount"},
                    {"from": "2026-09-01", "to": "2026-09-30", "sort": "-time"}, {"date": "2026-10-19"}, {"method": "regression", "status": "flagged"},
                    {"status": "not-scored"}):
         rows = parse(export(shared_client, **params))
@@ -95,7 +95,7 @@ def test_every_csv_row_carries_the_limitation_line_and_the_flagged_rows_are_comp
     assert {r["limitation"] for r in rows} == {LIMITATION}  # every row, flagged or not (wording rule)
     first = flagged[0]
     assert first["txid"] == "c91d9fbbd396070099f3147822cd6e1eb97b1de376ad353f42007149ddb73140" and first["flagged_by"] == "baseline"
-    assert first["main_reason"] == "Lower ratio to the usual amount than usual" and round(float(first["score"]), 4) == 5.6071
+    assert first["main_reason"] == "Smaller amount relative to the usual for this direction" and round(float(first["score"]), 4) == 5.6071
     assert first["source_url"] == "https://blockstream.info/tx/" + first["txid"]
     assert (first["relative_size_ratio"], first["relative_size_usual_ratio"]) == ("0.38102", "1.38565")
 

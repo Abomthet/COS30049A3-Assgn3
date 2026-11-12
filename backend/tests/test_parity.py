@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 
 from app.core.config import Settings
 from app.services.explorer_service import ExplorerService
+from app.services.reasons import reword
 from app.services.store import SnapshotStore
 
 from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY
@@ -27,17 +28,25 @@ ONE_PAGE = 200
 Reference = Callable[[str], dict[str, Any]]
 SNAPSHOT = sorted(pd.read_csv(Path(__file__).resolve().parents[1] / "data/processed/esplora/features.csv", usecols=["address"])["address"].unique())
 SCORED = [a for a in SNAPSHOT if a not in SHORT_HISTORY]
-per_scored_address = pytest.mark.parametrize("address", SCORED, ids=[a[:10] for a in SCORED])
+# The grid over all 25 scored addresses is slow; a quick run (-m "not slow") keeps the running example.
+QUICK = (RUNNING_EXAMPLE,)
+per_scored_address = pytest.mark.parametrize(
+    "address", [pytest.param(a, id=a[:10], marks=() if a in QUICK else pytest.mark.slow) for a in SCORED])
 
 
 def expected_row(tx: dict[str, Any]) -> dict[str, Any]:
-    """The list row Assignment 2's detail implies (plan section 6.4)."""
+    """The list row Assignment 2's detail implies (plan section 6.4), with its reason worded as Mod-12 words it."""
     scored = tx["scored"]
     reasons = reasons_for(tx["features"])[0] if scored else []
     return {"txid": tx["txid"], "time": tx["time"], "direction": tx["direction"], "netSats": tx["netSats"],
             "status": "not-scored" if not scored else "flagged" if tx["flagged"] else "not-flagged",
-            "score": tx["score"] if scored else None, "mainReason": reasons[0]["headline"] if reasons else None,
+            "score": tx["score"] if scored else None, "mainReason": reword(reasons[0]["headline"]) if reasons else None,
             "mainZ": reasons[0]["z"] if reasons else None, "flaggedBy": sum(tx["flags"].values()) if scored else 0}
+
+
+def expected_detail(tx: dict[str, Any]) -> dict[str, Any]:
+    """Assignment 2's detail as E7 serves it: the same, with the source added and the explanation worded as Mod-12 words it."""
+    return {**tx, "explanation": reword(tx["explanation"]), "source": "snapshot"}
 
 
 def all_rows(client: TestClient, address: str, **params: Any) -> list[dict[str, Any]]:
@@ -88,7 +97,7 @@ def test_every_transaction_detail_is_a_prediction_detail(predictor: Predictor, s
     service = ExplorerService(SnapshotStore(predictor), predictor, settings.web.lists)
     for tx in whole["transactions"]:
         if tx["scored"]:
-            assert service.detail(address, tx["txid"]).model_dump(by_alias=True) == {**tx, "source": "snapshot"}
+            assert service.detail(address, tx["txid"]).model_dump(by_alias=True) == expected_detail(tx)
         else:
             with pytest.raises(InsufficientHistory):
                 service.detail(address, tx["txid"])
@@ -103,7 +112,7 @@ def test_a_sample_of_detail_responses_is_the_prediction_detail(shared_client: Te
         response = shared_client.get(f"/api/transactions/{tx['txid']}", params={"address": address})
         if tx["scored"]:
             assert response.status_code == 200
-            assert response.json() == {**tx, "source": "snapshot"}
+            assert response.json() == expected_detail(tx)
         else:
             assert response.status_code == 422 and response.json()["status"] == "insufficient_history"
 
@@ -172,6 +181,7 @@ def test_each_methods_flags_equal_scores_csv(shared_client: TestClient, predicto
             assert detail["explanation"].startswith(f"Flagged by {detail['method']['name']}.")
 
 
+@pytest.mark.slow
 def test_the_summaries_of_the_list_equal_the_timelines(shared_client: TestClient, addresses: list[str], reference: Reference) -> None:
     listed = {a["address"]: a for a in shared_client.get("/api/addresses").json()["addresses"]}
     assert set(listed) == set(addresses)
