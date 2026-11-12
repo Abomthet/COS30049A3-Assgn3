@@ -216,7 +216,7 @@ export function G2TransactionsOverTime({ address, method, rows, frame, loading, 
       fileName={['transactions-over-time', address, settings.snapshot?.snapshotDate ?? '']}
       title="Transactions over time"
       headingLevel={2}
-      caption={`${snapshotCaption(settings.snapshot)} · times in UTC · flagged by ${methodName}${loading ? ` · loading, ${formatCount(loading.loaded)} of ${formatCount(loading.total)} drawn` : ''}`}
+      caption={`${snapshotCaption(settings.snapshot, address)} · times in UTC · flagged by ${methodName}${loading ? ` · loading, ${formatCount(loading.loaded)} of ${formatCount(loading.total)} drawn` : ''}`}
       summary={summary}
       hint="Select a point to open that transaction. Drag to zoom on the time axis, which also sets the dates above; double-click to reset. Filled marks were received and outlined marks were sent; the orange triangles are unusual."
       figure={figure}

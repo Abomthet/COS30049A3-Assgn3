@@ -137,7 +137,7 @@ export function G3FeatureDeviation({ features, address }: Props) {
     <PlotlyChart
       fileName={['feature-deviation', address, settings.snapshot?.snapshotDate ?? '']}
       title="How this transaction compares with usual"
-      caption={`${snapshotCaption(settings.snapshot)} · compared with this address's own earlier transactions`}
+      caption={`${snapshotCaption(settings.snapshot, address)} · compared with this address's own earlier transactions`}
       summary={`Distance from usual for each feature (robust z-score): ${described}.`}
       hint="Bars to the right are above this address's usual value and bars to the left are below it."
       figure={figure}

@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 
 // The browser sees one origin: Vite hands every /api request to Uvicorn (plan D-A3-11).
-const proxy = { '/api': 'http://127.0.0.1:8000' };
+// VITE_PROXY_TARGET names another back end (a second one on port 8080, say) without editing this file.
+const proxy = { '/api': process.env.VITE_PROXY_TARGET ?? 'http://127.0.0.1:8000' };
 
 export default defineConfig({
   plugins: [react()],

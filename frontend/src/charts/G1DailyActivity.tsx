@@ -190,7 +190,7 @@ export function G1DailyActivity({ timeline, onOpenDay }: Props) {
       fileName={['daily-activity', address, snapshot.snapshotDate]}
       title="Transactions per day"
       headingLevel={2}
-      caption={`${snapshotCaption(snapshot)} · days in UTC · flagged by ${methodName}`}
+      caption={`${snapshotCaption(snapshot, address)} · days in UTC · flagged by ${methodName}`}
       summary={summary}
       hint="Select a bar to open that day. Drag to zoom, double-click to reset. With a keyboard, focus the chart and use the arrow keys."
       figure={figure}
