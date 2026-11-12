@@ -501,3 +501,4 @@ start times) that 96319 was an orphan of the endpoints cook. No stray servers re
 
 **Carried forward:** the About page's generated feature list lacks an "and" ("Size, Burst, Gap,
 Relative size are measured"); the mock-only loading and offline shots were not re-run.
+**frontend-whatif** cook started: T19 V4 what-if lab, T27 G5 (MS2 critical path first), then V5 models page (with thresholds in the verdict table) and T22 export menu. `frontend/` only, back end on port 8010.
