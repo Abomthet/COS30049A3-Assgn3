@@ -1,6 +1,6 @@
 # A3 to-do (Claude's working list)
 
-> **Picking this up in a new session or with another model? Read `docs/HANDOFF.md` first.**
+> **Picking this up in a new session or with another model? Read `docs/HANDOFF.md` first, then `docs/PLAN_SHOULD.md` (waves after MS2).**
 
 Source: `docs/plan/main.pdf` (the full plan, which wins) and `../explainers/a3/a3.pdf` (the briefing).
 Task numbers (T01–T52) and scope IDs (M/S/C) are the plan's. Owners are ignored: Claude does every task
@@ -64,9 +64,9 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T29 **MS2 passed 12 Nov** (`docs/TEST_LOG.md`) **MS2 (Sun 22 Nov)**: minimum viable demonstration on all 28 addresses; test log entry
 
 ## 1.4.5 Should items (23–27 Nov), in build order; cut from the bottom
-- [ ] T30 S-01 method selector (`?method=`), both tiers
-- [ ] T31 S-02 G4 model verdicts (dot plot, ranks); S-03 G6 planted-test recall
-- [ ] T32 S-04 watchlist: SQLite store, E13–E15, dialog, V6; preferences
+- [~] T30 `@A-front` S-01 method selector (`?method=`), both tiers
+- [~] T31 S-02 G4 (ranks `@A-back`, chart in wave B); S-03 G6 `@A-front` planted-test recall
+- [~] T32 `@A-back` (back end; front end wave B) S-04 watchlist: SQLite store, E13–E15, dialog, V6; preferences
 - [ ] T33 S-05 Assistant: service, E12, panel, guardrail, cache, prepared answers (works without the 610 MB weights)
 - [ ] T34 S-06 replay
 - [ ] T35 S-07 linked selection; S-08 scenario table

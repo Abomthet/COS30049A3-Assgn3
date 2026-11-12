@@ -630,3 +630,6 @@ condition, is in **`docs/TEST_LOG.md`**. In short:
 **Why:** until now every cook was Sonnet at high effort, including mechanical work, and two 5-hour
 windows ran out. Matching the model to the work stretches the budget to 5 Dec, and keeps the strongest
 models for the decisions that carry the marks.
+
+## 2026-11-12 — Replanned the Should tier; wave A started
+Plan written on Opus: **`docs/PLAN_SHOULD.md`** (what each Should item needs, dependencies, waves A–D with a model per package, review routine, cut rules, usage trigger, team decisions). Wave A: **A-back** (Sonnet 5.5 medium: S-04 watchlist back end E13–E15 on SQLite; `ranks` per method in E7/E8 for G4) and **A-front** (Sonnet 5.5 medium: S-01 method menu; S-03 G6 on V5).
