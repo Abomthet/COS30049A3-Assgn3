@@ -45,16 +45,16 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 ## 1.4.3 React front end (13–20 Nov)
 - [x] T16 (`271642a`) Shell: navigation, service-status indicator, theme, toasts, error boundary; settings from E2 (M-05, M-10)
 - [x] T17 (`610331d`) V1, V2 and V3 on the real API; fixtures recorded; prototype banner and tools removed (M-05). Also: thresholds only from E2 (D-W-10), E2 `features` into `AppSettings`, Vitest reads `shared/address_vectors.json` (un-skip)
-- [~] T18 `@frontend-explore` Tabs; filter bar (status, direction, date range); transaction table (M-08)
+- [x] T18 (`867c2f9`) Tabs; filter bar (status, direction, date range); transaction table (M-08)
 - [ ] T19 V4 what-if lab: form, rules, feedback, live request with cancellation (M-06, M-11)
-- [~] T20 V5 models and limits; V7 about and help (V7 `@frontend-explore`; V5 waits for E11) (M-13)
+- [~] T20 V5 models and limits; V7 about and help (V7 done `867c2f9`; V5 next) (M-13)
 - [ ] T21 State catalogue in every view; time limits; recovery and retry (M-10)
 - [ ] T22 Export menu; PNG export (M-12)
 
 ## 1.4.4 Charts (15–21 Nov), Plotly.js
 - [x] T23 (`eeefa9c`) Chart wrapper: contract, theme, table view, export, lazy loading (M-07)
 - [x] T24 (`eeefa9c`) G1 daily activity (bar), keyboard control, range slider
-- [~] T25 `@frontend-explore` G2 transactions over time (scatter, log amount), driven by the filters
+- [x] T25 (`867c2f9`) G2 transactions over time (scatter, log amount), driven by the filters
 - [x] T26 (`eeefa9c`) G3 feature deviation (horizontal bar)
 - [ ] T27 G5 what-if response (line, log amount, flag line)
 - [ ] T28 Layouts at 390 / 820 / 1280 px; screenshot script fails on sideways scroll (M-11)
@@ -96,10 +96,12 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] Fix the chart owners in `explainers/a3/t05-people-rules.tex` to match the plan (or drop owners from the briefing)
 
 ## Review findings to fix later
+- [~] E6 `sort=amount` by absolute amount `@backend-hardening` (D-W-12)
+- [ ] About page: generated feature list needs "and"
 - [~] `@backend-hardening` Back-end suite ~2 min: add a `slow` marker for the wording/parity grids (full suite still before every commit)
-- [ ] Kill the stray detached Uvicorn on :8000 once no cook is running
-- [ ] Phone: G3 table's Role column clips (T28)
-- [ ] Amount precision differs between explanation and facts (0.0011126 vs 0.00111260)
+- [x] Stray Uvicorn on :8000 was the explore cook's; stopped
+- [x] Phone: G3 table's Role column clips (`867c2f9`)
+- [~] Amount precision: client done (`867c2f9`); server text `@backend-hardening` (D-W-13)
 - [ ] Verdict table: add each method's threshold once E11 exists; G4 (S-02) explains per-method scales
 - [~] `@backend-hardening` A2's reason text repeats itself ("…ratio to the usual amount than usual"): fix in the web layer, record in `MODIFICATIONS.md`
 - [~] `@backend-hardening` A 400 reports only the first validation layer's faults (`pageSize=999&status=bogus` → only `status`)

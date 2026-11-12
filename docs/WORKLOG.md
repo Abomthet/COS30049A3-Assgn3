@@ -450,3 +450,54 @@ leaves the repository consistent at `9715eea`. After the reset both were resumed
 **Lesson for planning:** high-effort Sonnet cooks cost about 200–300k tokens per package. Two in parallel
 plus the lead's reviews used up a 5-hour window in about 4 hours. Keep at most two cooks at once, and put
 the next wave's most important package first.
+
+## 2026-11-12 — T18, T25, V7 reviewed and committed
+
+**Delegated to** the frontend-explore cook (Sonnet 5.5, high effort; stopped once by the usage limit and
+resumed): 53 tool calls. **Lead review:** index clean; `npm test` **320 passed, 0 skipped**; typecheck
+and build clean; main JS **400.3 kB / 130.9 kB gzip** (+6.5 kB gzip on `610331d`'s 124.4, inside the
+10 kB allowance); no mock in `dist/`; wording clean; `types.ts` unchanged. Looked at the transactions
+tab (desktop) and the About page screenshots against the real back end. Verified in a clean worktree
+of the commit: back end **570 passed**, front end 320 passed, build clean. Commit `867c2f9`.
+
+**Back-end findings passed to the hardening cook** (it was editing that code):
+- (a) E6 `sort=amount` ordered by signed `netSats`, so "largest first" put every received transaction
+  before any sent one. **D-W-12:** sort by absolute amount.
+- (b) A2's `format_btc` strips trailing zeros, so the explanation said "0.0011126 BTC" while the screen
+  says "0.00111260 BTC". **D-W-13:** BTC amounts in server text are normalised to 8 places in the web
+  layer (the plan: "amounts to eight places"); the vendored file is unchanged.
+
+**Server ownership resolved.** The explore cook reports the Uvicorn on :8000 (pid 96319) and the Vite
+on :5173 (pid 98068) as its own, and stopped both by PID. This corrects the lead's earlier guess (from
+start times) that 96319 was an orphan of the endpoints cook. No stray servers remain.
+
+**Design notes for the technical document.**
+- **The URL is the filter state.** One `Filters` object, parsed from the route's query string
+  (`lib/transactionFilters.ts`), feeds the filter bar, G2 and the table; none keeps its own copy.
+  Serialisation uses a fixed key order, so equal filters give equal links and equal request keys. The
+  browser applies the server's rules with the server's wording, and nothing is sent while a date is
+  invalid.
+- **Pages joined for the chart, not for the table.** G2 needs every matching transaction, so
+  `useAllTransactions` fetches E6 pages of 200 in time order (rows cannot move between pages), draws
+  after the first page, keeps the previous rows while refreshing, and is cancelled by a filter change.
+  The table pages 50 at a time.
+- **Zoom and filters stay in step.** Dragging G2's time axis writes `from`/`to`, and reset clears them.
+  Plotly reports its own redraws as relayout events, so the wrapper ignores events during a redraw;
+  without that guard the dates drifted in a loop.
+- **Status and direction never by colour alone.** Orange triangle (unusual), blue circle (not
+  unusual), grey diamond (not scored); filled = received, outlined = sent; the legend names both.
+  (The plan's "hollow grey" for not scored was not used, so direction stays readable on short-history
+  addresses, where every point is not scored.)
+- **No sideways scrolling anywhere.** Tables become cards (rows stack, cells carry `data-label`) below
+  720 px for the transaction table and 560 px for chart tables. The screenshot script enforces it.
+
+**Choices accepted:**
+- Direction labels Received/Sent everywhere.
+- Default sort newest first.
+- Filter changes replace history.
+- The main reason is shown only on unusual rows (a reason on a not-unusual row would read like a flag).
+- "Flagged by n of 9 methods".
+- The plan's "remember last filters" preference left out (filters live in the URL).
+
+**Carried forward:** the About page's generated feature list lacks an "and" ("Size, Burst, Gap,
+Relative size are measured"); the mock-only loading and offline shots were not re-run.
