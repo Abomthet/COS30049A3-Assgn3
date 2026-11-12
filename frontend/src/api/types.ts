@@ -319,8 +319,6 @@ export interface ErrorExtras {
   fields?: FieldError[];
   /** Matches the server's log line; shown with a 500 so it can be quoted. */
   requestId?: string;
-  /** With a 429: the wait the service asks for (its `Retry-After` header, in seconds), added by the client; absent when the answer names none. */
-  retryAfterSeconds?: number;
 }
 
 /** 400, and 415 (a body that is not JSON). */
@@ -368,6 +366,12 @@ export type ServiceStatusCode =
 export interface ServiceBody extends ErrorExtras {
   status: ServiceStatusCode;
   message: string;
+  /**
+   * With a 429: the wait the service asks for (its `Retry-After` header, in seconds), added by the client;
+   * absent when the answer names none. It lives here, not in ErrorExtras, because it is not part of the
+   * JSON body the server sends (the back end's contract test compares those bodies field by field).
+   */
+  retryAfterSeconds?: number;
 }
 
 /**
