@@ -577,3 +577,56 @@ The user can reinstall the tools with `xcode-select --install`.
 - Method names differ between E11 ("Robust z baseline (A1)") and the front end's own list ("Robust z
   baseline"); one source (E11) is to be chosen.
 **frontend-polish** cook started (one cook only: the front end is the only Must work left before MS2): T21 state catalogue, T28 layouts and touch targets with screenshots into `docs/screenshots/`, method names from E11, the About list wording, and a front-end MS2 dry run. Should items wait for MS2 (risk 6).
+
+## 2026-11-12 — Polish reviewed (T21, T28); **MS2 passed**; model allocation policy
+
+### Frontend polish (commits `55c0b98`, `3a83414`)
+**Delegated to** the frontend-polish cook (Sonnet 5.5, high effort; stopped once by the usage limit and
+resumed). **Lead review:**
+- `npm test` **546 passed, 0 skipped**; typecheck and build clean; main **140.6 kB gzip** (+1.5); no mock
+  in `dist/`; wording clean; `docs/screenshots/` 48 files, 13 MB.
+- Looked at the lab (G5's ticks now 0.00001…0.1 with no overlap; "usual" on its line) and the 429 state
+  (countdown plus "Try again now").
+- **Lead change:** CORS also exposes `Retry-After`.
+- **The worktree check then failed 4 contract tests:** the cook had put the client-only
+  `retryAfterSeconds` (read from a header) into `ErrorExtras`, which every contract-checked error body
+  extends. It moved to `ServiceBody`, the body for a 429, which is assembled by the client and not
+  contract-checked (`3a83414`).
+- Verified in a clean worktree: back end **601**, front end **546**, build clean. Pushed.
+
+**Design notes for the technical document.**
+- **One panel, one catalogue.** Every failure leaves the client as an `ApiError` and every view renders it
+  through `ErrorState`. `stateCatalogue.test.tsx` crosses 7 views with 8 failure kinds, so a new status
+  or view is covered by adding one row. The mock reproduces offline, starting, busy, slow and timeout.
+- **Why Plotly's widgets are replaced on touch.** Plotly's range buttons, legend entries and tool bar are
+  19–24 px tall with no setting. The wrapper draws its own 44 px range buttons (on every width, so they are
+  also keyboard-reachable), drops the tool bar on touch, and makes the legend display-only there.
+- **Axis labels fit the room.** `amountTicks` picks the finest log-axis tick set whose widest label fits
+  the measured chart width (1-2-5 per decade, then powers of ten, then every nth power), so nothing
+  depends on a breakpoint.
+- **A slow request says so; a busy service counts down.** One `useSlow` hook, driven by the time limit in
+  settings, so the notice and the timeout cannot drift apart. The 429 panel reads `Retry-After`, counts
+  down visually, announces the wait once to screen readers, and retries by itself.
+
+### MS2 — passed 12 Nov (plan date 22 Nov)
+Run by the lead from a fresh clone with both servers started the README's way. The full record, condition by
+condition, is in **`docs/TEST_LOG.md`**. In short:
+- **API half:** 28 addresses, 7,966 rows, 822 transaction details (all 681 flagged ones carry the
+  limitation line and 9 verdicts), the what-if 5.98 and three invalid bodies refused with 400, 11
+  operations (GET and POST), `/docs` 200, 945 bodies with no banned word.
+- **Screen half:** 48 shots against the real back end with no sideways scrolling at 390/820/1280.
+- Server log clean.
+
+**New tool:** `tools/ms_gate_check.py`, the API half of the gate, re-runnable at MS4 and quoted in the test log.
+
+### Model allocation policy (the user's instruction, 12 Nov) — D-W-14
+| Work | Model |
+|---|---|
+| Replanning, milestone gates (MS2–MS5), architecture, subtle or high-stakes work, final review before submission | **Opus 5.5 or Fable 5.2** (the lead directly, or a Fable/Opus subagent for a big standalone piece), always with a detailed written plan or record first |
+| Routine features that follow an existing pattern | **Sonnet 5.5**, medium effort; high only when the work is subtle |
+| Mechanical work: recording fixtures, screenshot runs, docstring/comment passes, tables from `openapi.json`, log tidying | **Haiku 5.5** |
+| Cheap shell checks (test runs, curl probes, size checks) | the lead directly (low token cost) |
+
+**Why:** until now every cook was Sonnet at high effort, including mechanical work, and two 5-hour
+windows ran out. Matching the model to the work stretches the budget to 5 Dec, and keeps the strongest
+models for the decisions that carry the marks.

@@ -12,6 +12,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 ---
 
 ## Brigade (who does what)
+- **Model policy (D-W-14):** Opus 5.5 / Fable 5.2 for replanning, gates and high-stakes work (with a detailed written plan); Sonnet 5.5 (medium) for routine features; Haiku 5.5 for mechanical work.
 - **Lead (Opus 5.5)**: plans, writes the task specs, reviews every package, runs the checks, commits, signs off the API contract (T05), keeps `docs/WORKLOG.md` and `docs/AI_USE_LOG.md`.
 - **Cooks (Sonnet 5.5, high effort)**: build one bounded package each in their own part of the tree; they never commit.
   - Wave 1 (11 Nov): **backend-core** → T03, T05, T06, T07, T08, T09 · **frontend-port** → T04, T16
@@ -50,7 +51,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T18 (`867c2f9`) Tabs; filter bar (status, direction, date range); transaction table (M-08)
 - [x] T19 (`d57c220`) V4 what-if lab: form, rules, feedback, live request with cancellation (M-06, M-11)
 - [x] T20 V5 models and limits; V7 about and help (`867c2f9`, `d57c220`) (M-13)
-- [~] T21 `@frontend-polish` State catalogue in every view; time limits; recovery and retry (M-10)
+- [x] T21 (`55c0b98`) State catalogue in every view; time limits; recovery and retry (M-10)
 - [x] T22 (`d57c220`) Export menu; PNG export (M-12)
 
 ## 1.4.4 Charts (15–21 Nov), Plotly.js
@@ -59,8 +60,8 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T25 (`867c2f9`) G2 transactions over time (scatter, log amount), driven by the filters
 - [x] T26 (`eeefa9c`) G3 feature deviation (horizontal bar)
 - [x] T27 (`d57c220`) G5 what-if response (line, log amount, flag line)
-- [~] T28 `@frontend-polish` Layouts at 390 / 820 / 1280 px; screenshot script fails on sideways scroll (M-11)
-- [ ] T29 **MS2 (Sun 22 Nov)**: minimum viable demonstration on all 28 addresses; test log entry
+- [x] T28 (`55c0b98`) Layouts at 390 / 820 / 1280 px; screenshot script fails on sideways scroll (M-11)
+- [x] T29 **MS2 passed 12 Nov** (`docs/TEST_LOG.md`) **MS2 (Sun 22 Nov)**: minimum viable demonstration on all 28 addresses; test log entry
 
 ## 1.4.5 Should items (23–27 Nov), in build order; cut from the bottom
 - [ ] T30 S-01 method selector (`?method=`), both tiers
@@ -98,11 +99,11 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] Fix the chart owners in `explainers/a3/t05-people-rules.tex` to match the plan (or drop owners from the briefing)
 
 ## Review findings to fix later
-- [~] `@frontend-polish` G5: log-axis tick labels overlap at desktop width (T28)
-- [~] `@frontend-polish` Method names: E11 vs the front end's `lib/methods.ts`; use E11 everywhere
+- [x] (`55c0b98`) G5: log-axis tick labels overlap at desktop width (T28)
+- [x] (`55c0b98`) Method names: E11 vs the front end's `lib/methods.ts`; use E11 everywhere
 - [ ] Command Line Tools missing on the Mac since 12 Nov 08:24 (user: `xcode-select --install`); git via `~/.local/bin/git` (conda) meanwhile
 - [x] E6 `sort=amount` by absolute amount (`ee858f7`, D-W-12)
-- [~] `@frontend-polish` About page: generated feature list needs "and"
+- [x] (`55c0b98`) About page: generated feature list needs "and"
 - [x] (`ee858f7`) Back-end suite ~2 min: add a `slow` marker for the wording/parity grids (full suite still before every commit)
 - [x] Stray Uvicorn on :8000 was the explore cook's; stopped
 - [x] Phone: G3 table's Role column clips (`867c2f9`)
@@ -110,6 +111,6 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] Verdict table shows each method's flag line (`d57c220`); G4 (S-02) still planned
 - [x] (`ee858f7`) A2's reason text repeats itself ("…ratio to the usual amount than usual"): fix in the web layer, record in `MODIFICATIONS.md`
 - [x] (`ee858f7`) A 400 reports only the first validation layer's faults (`pageSize=999&status=bogus` → only `status`)
-- [ ] Plotly range buttons and legend are under 44 px touch targets (T40)
+- [x] Touch targets: own 44 px range buttons; legend display-only on touch (`55c0b98`); desktop legend stays compact
 - [ ] Phone scroll past a chart not verified on a real device (T38)
 - [ ] Restore `EXPLORER_ASSISTANT` default to `auto` with S-05 (D-W-09)

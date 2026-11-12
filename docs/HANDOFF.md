@@ -32,8 +32,8 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 | Milestone | Date | State |
 |---|---|---|
 | MS1 walking skeleton | Sun 15 Nov | **Passed 11 Nov** (fresh-clone check, `9adf130`) |
-| MS2 minimum viable demonstration (all Must items except M-14…M-16) | Sun 22 Nov | **Polish in progress** (T21, T28); then the MS2 check (T29) |
-| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | not started; Should items wait for MS2 |
+| MS2 minimum viable demonstration (all Must items except M-14…M-16) | Sun 22 Nov | **Passed 12 Nov** (record in `docs/TEST_LOG.md`; re-run with `tools/ms_gate_check.py`) |
+| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | Should items may start now (MS2 passed) |
 | MS4 code freeze, tag `v1.0-rc`, clean install Win + Mac | Sun 29 Nov | |
 | MS5 submit on Canvas | Sat 5 Dec | |
 
@@ -41,15 +41,14 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 - **Back end, all Must endpoints:** E1 health, E2 config, E3 addresses, E4 lookup, E5 timeline,
   E6 transactions (filters, sort, paging), E7 transaction detail with all 9 methods, E8 what-if,
   E9 what-if curve (batched), E10 export CSV/JSON, E11 methods. ETag/304, 413, one error body,
-  validation as 400 with every faulty field. **601 tests.**
+  validation as 400 with every faulty field; CORS exposes `X-Request-ID`, `Content-Disposition`, `Retry-After`. **601 tests.**
 - **Front end:** shell (navigation, service status, theme, toasts, error boundary), Axios client,
   V1 address selection, V2 overview + Transactions tab (filter bar, table, G2) + What-if tab (V4, G5),
   V3 day and transaction (G3, verdict table), V5 models and limits, V7 about, export menu, charts
-  G1/G2/G3/G5 in Plotly. **445 tests.**
-- **In flight when this was written:** the *frontend-polish* package (T21 state catalogue, T28 layouts
-  and touch targets, G5 tick labels, method names from E11, About list wording, screenshots into
-  `docs/screenshots/`, MS2 dry run). It is **uncommitted** in the working tree. See §8 for how to finish
-  it if its agent is gone.
+  G1/G2/G3/G5 in Plotly, the full state catalogue (offline banner, 429 countdown, slow notice) in every
+  view, 44 px touch targets, method names from E11. **546 tests.** 48 screenshots in `docs/screenshots/`.
+- **Nothing in flight** at the last update (12 Nov, after MS2). Check `git status`: uncommitted files mean an
+  agent's package awaiting review.
 
 ## 3. Where everything is
 
@@ -126,6 +125,17 @@ npm run screenshots                   # layouts at 390/820/1280; fails on sidewa
 
 ## 6. Rules that must not be broken
 
+**Model allocation (the user's instruction, D-W-14).** Match the model to the work:
+- **Opus 5.5 or Fable 5.2:** replanning, milestone gates (MS2–MS5), architecture, subtle or high-stakes work,
+  and the final review before submission. **Always write a detailed plan or record first** (in `docs/`).
+- **Sonnet 5.5, medium effort:** routine features that follow an existing pattern (high effort only when subtle).
+- **Haiku 5.5:** mechanical work (recording fixtures, screenshot runs, docstring passes, tables from
+  `openapi.json`, log tidying).
+- Cheap shell checks are done directly by the lead.
+
+If you are a different model (for example DeepSeek), apply the same idea: spend the most capable model's effort on
+planning, gates and review, and the cheapest on mechanical work.
+
 **Content and wording**
 - **Wording rule.** Never use the words in `backend/config/settings.json` → `bannedWords` (fraud,
   criminal, illicit, guilty, suspicious) in any UI string, API message, test name, document or commit
@@ -180,30 +190,9 @@ npm run screenshots                   # layouts at 390/820/1280; fails on sidewa
 
 ## 8. What to do next, in order
 
-1. **Finish the frontend-polish package** (uncommitted in `frontend/` and `docs/screenshots/`). If its
-   agent is gone, finish it yourself:
-   - (a) `cd frontend && npm test && npm run typecheck && npm run build` and fix what fails.
-   - (b) Check the brief items: every view handles the plan's state catalogue (`s11-errors.tex`: invalid,
-     unsupported, loading, empty, insufficient history, network, timeout, server error, unavailable,
-     too large, rate limited, offline banner); G5's log-axis tick labels no longer overlap; method names
-     come from E11 everywhere; the About page's feature list reads "Size, Burst, Gap and Relative size";
-     `docs/screenshots/` holds the useful shots, under 15 MB in total.
-   - (c) Wording check, no mock in `dist/` (`ls dist/assets | grep -i mock` must print nothing), and the
-     main chunk under ~145 kB gzip.
-   - (d) Verify per §5, commit, push, log.
-2. **The MS2 check (T29), run by the lead**, exactly as `docs/plan/sections/s04-scope.tex` §"minimum
-   viable demonstration" states. On all 28 snapshot addresses, with both servers started from the README:
-   - (1) J1, J2, J3 pass (AC-01, AC-02, AC-03 and all five FR-05 states);
-   - (2) J4: a what-if returns every model's verdict, and an invalid value is refused by the browser
-     **and** by the server;
-   - (3) three chart types on screen (G1 bar, G2 scatter, G5 line) with zoom, tooltips, title, units,
-     legend and snapshot date;
-   - (4) the API uses GET and POST and `/docs` lists every endpoint;
-   - (5) the wording test finds no banned word in any response or screen, and every flag shows the
-     limitation line;
-   - (6) layouts at 390/820/1280 with no sideways scrolling.
-
-   Record the result in `docs/WORKLOG.md` and a `docs/TEST_LOG.md` entry (the plan asks for a test log).
+1. **(Done 12 Nov)** frontend polish and the MS2 gate. To re-run the gate: start both servers, then
+   `python tools/ms_gate_check.py` and `cd frontend && npm run screenshots` (see `docs/TEST_LOG.md`).
+2. **Read `docs/PLAN_SHOULD.md`** (the post-MS2 plan, if present) before starting Should items.
 3. **Should items after MS2, in the plan's build order** (cut from the bottom if time runs short):
    - T30 S-01 method selector: the back end already accepts `?method=` on E3/E5/E6/E7/E10; the front-end
      menu is missing.
