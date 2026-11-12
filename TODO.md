@@ -48,7 +48,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T18 (`867c2f9`) Tabs; filter bar (status, direction, date range); transaction table (M-08)
 - [x] T19 (`d57c220`) V4 what-if lab: form, rules, feedback, live request with cancellation (M-06, M-11)
 - [x] T20 V5 models and limits; V7 about and help (`867c2f9`, `d57c220`) (M-13)
-- [ ] T21 State catalogue in every view; time limits; recovery and retry (M-10)
+- [~] T21 `@frontend-polish` State catalogue in every view; time limits; recovery and retry (M-10)
 - [x] T22 (`d57c220`) Export menu; PNG export (M-12)
 
 ## 1.4.4 Charts (15–21 Nov), Plotly.js
@@ -57,7 +57,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T25 (`867c2f9`) G2 transactions over time (scatter, log amount), driven by the filters
 - [x] T26 (`eeefa9c`) G3 feature deviation (horizontal bar)
 - [x] T27 (`d57c220`) G5 what-if response (line, log amount, flag line)
-- [ ] T28 Layouts at 390 / 820 / 1280 px; screenshot script fails on sideways scroll (M-11)
+- [~] T28 `@frontend-polish` Layouts at 390 / 820 / 1280 px; screenshot script fails on sideways scroll (M-11)
 - [ ] T29 **MS2 (Sun 22 Nov)**: minimum viable demonstration on all 28 addresses; test log entry
 
 ## 1.4.5 Should items (23–27 Nov), in build order; cut from the bottom
@@ -96,11 +96,11 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] Fix the chart owners in `explainers/a3/t05-people-rules.tex` to match the plan (or drop owners from the briefing)
 
 ## Review findings to fix later
-- [ ] G5: log-axis tick labels overlap at desktop width (T28)
-- [ ] Method names: E11 vs the front end's `lib/methods.ts`; use E11 everywhere
+- [~] `@frontend-polish` G5: log-axis tick labels overlap at desktop width (T28)
+- [~] `@frontend-polish` Method names: E11 vs the front end's `lib/methods.ts`; use E11 everywhere
 - [ ] Command Line Tools missing on the Mac since 12 Nov 08:24 (user: `xcode-select --install`); git via `~/.local/bin/git` (conda) meanwhile
 - [x] E6 `sort=amount` by absolute amount (`ee858f7`, D-W-12)
-- [ ] About page: generated feature list needs "and"
+- [~] `@frontend-polish` About page: generated feature list needs "and"
 - [x] (`ee858f7`) Back-end suite ~2 min: add a `slow` marker for the wording/parity grids (full suite still before every commit)
 - [x] Stray Uvicorn on :8000 was the explore cook's; stopped
 - [x] Phone: G3 table's Role column clips (`867c2f9`)

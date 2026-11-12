@@ -576,3 +576,4 @@ The user can reinstall the tools with `xcode-select --install`.
 - G5's log-axis tick labels overlap at desktop width.
 - Method names differ between E11 ("Robust z baseline (A1)") and the front end's own list ("Robust z
   baseline"); one source (E11) is to be chosen.
+**frontend-polish** cook started (one cook only: the front end is the only Must work left before MS2): T21 state catalogue, T28 layouts and touch targets with screenshots into `docs/screenshots/`, method names from E11, the About list wording, and a front-end MS2 dry run. Should items wait for MS2 (risk 6).
