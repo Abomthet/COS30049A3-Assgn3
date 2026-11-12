@@ -117,7 +117,9 @@ def create_app(settings: Settings | None = None, loader: Callable[[], Predictor]
     app.add_middleware(GZipMiddleware, minimum_size=GZIP_MIN_BYTES)
     app.add_middleware(BodyLimitMiddleware, max_bytes=settings.web.limits.max_body_bytes)
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins), allow_methods=["GET", "POST", "PUT", "DELETE"],
-                       allow_headers=["Content-Type", REQUEST_ID_HEADER], expose_headers=[REQUEST_ID_HEADER])
+                       allow_headers=["Content-Type", REQUEST_ID_HEADER],
+                       # Content-Disposition carries E10's file name, which a cross-origin page can only read if exposed.
+                       expose_headers=[REQUEST_ID_HEADER, "Content-Disposition"])
     app.add_middleware(RequestContextMiddleware)
     register_handlers(app, FIELD_RULES)
     app.include_router(system.router)

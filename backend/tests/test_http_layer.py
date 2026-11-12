@@ -8,7 +8,7 @@ from dataclasses import replace
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.config import Settings
+from app.core.config import DEFAULT_CORS_ORIGINS, Settings
 
 from .conftest import RUNNING_EXAMPLE, VALID_OUTSIDE_SNAPSHOT
 
@@ -111,3 +111,11 @@ def test_a_413_carries_the_cors_headers_so_the_browser_can_read_it(client: TestC
 
 def test_a_request_without_a_body_is_not_touched_by_the_limit(client: TestClient) -> None:
     assert client.get("/api/addresses").status_code == 200
+
+
+def test_a_cross_origin_page_can_read_the_export_file_name(client: TestClient) -> None:
+    """E10's file name is in Content-Disposition, which CORS must expose to a page on another origin."""
+    origin = DEFAULT_CORS_ORIGINS[0]
+    response = client.get("/api/health", headers={"Origin": origin})
+    exposed = {h.strip().lower() for h in response.headers["access-control-expose-headers"].split(",")}
+    assert {"content-disposition", "x-request-id"} <= exposed

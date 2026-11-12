@@ -53,14 +53,12 @@ def test_an_address_outside_the_snapshot_raises_unsupported(store: SnapshotStore
 
 
 def test_the_second_view_of_an_address_is_served_from_the_cache_and_is_equal(service: ExplorerService) -> None:
-    first_started = time.perf_counter()
     first = service.timeline(LARGEST)
-    cold = time.perf_counter() - first_started
-    second_started = time.perf_counter()
     second = service.timeline(LARGEST)
-    warm = time.perf_counter() - second_started
+    # The hit counter proves the second view came from the cache. A wall-clock ratio (warm < cold / 5)
+    # used to be asserted too, and failed about one run in five on a loaded machine; timings belong to
+    # tools/measure.py (S-12), not to a pass/fail test.
     assert second == first and service.cache_hits == 1 and service.cache_size == 1
-    assert warm < cold / 5
 
 
 def test_the_timeline_rows_and_detail_of_one_address_share_one_scoring(service: ExplorerService) -> None:
