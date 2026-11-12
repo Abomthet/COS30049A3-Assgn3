@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { explanationBlocks } from '../src/lib/explanation';
-import { formatFeatureValue, formatSpanDays } from '../src/lib/format';
+import { formatBtc, formatFeatureValue, formatSpanDays } from '../src/lib/format';
 import { LIMITATION_LINE } from '../src/lib/settings';
 
 describe('formatFeatureValue: units come from E2, not from the feature id', () => {
   test.each([
-    [0.05, 'BTC', '0.05 BTC'],
-    [0.000525, 'BTC', '0.000525 BTC'],
+    [0.05, 'BTC', '0.05000000 BTC'],
+    [0.000525, 'BTC', '0.00052500 BTC'],
+    [1234.5, 'BTC', '1,234.50000000 BTC'],
     [47.92, 'hours', '48 hours'],
     [144.15, 'hours', '6 days'],
     [0.381, 'ratio', '0.4×'],
@@ -21,6 +22,24 @@ describe('formatFeatureValue: units come from E2, not from the feature id', () =
 
   test('no value is a dash', () => {
     expect(formatFeatureValue(null, 'BTC')).toBe('—');
+  });
+});
+
+describe('formatBtc: the one amount format', () => {
+  test('eight decimals always, so the same amount reads the same in every place', () => {
+    expect(formatBtc(111_260)).toBe('0.00111260 BTC');
+    expect(formatBtc(0)).toBe('0.00000000 BTC');
+    expect(formatBtc(150_000_000)).toBe('1.50000000 BTC');
+  });
+
+  test('a net amount keeps its sign, with a real minus; a plus only when asked for', () => {
+    expect(formatBtc(-239_392)).toBe('−0.00239392 BTC');
+    expect(formatBtc(56_497)).toBe('0.00056497 BTC');
+    expect(formatBtc(56_497, { signed: true })).toBe('+0.00056497 BTC');
+  });
+
+  test('a feature value in BTC is printed the same way as the amounts beside it', () => {
+    expect(formatFeatureValue(0.0011126, 'BTC')).toBe(formatBtc(111_260));
   });
 });
 

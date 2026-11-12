@@ -14,16 +14,20 @@ import { formatCount, formatSpanDays, plural, shortAddress } from '../lib/format
 import { navigate, paths } from '../lib/router';
 import { useRequest } from '../hooks/useRequest';
 import { useSettings } from '../hooks/useSettings';
+import { TransactionsTab } from './TransactionsTab';
 
-// Screen 2 — the address's daily timeline (FR-02, AC-01): date range, source and snapshot,
-// counts per day with flagged days marked, and a keyboard path to every flagged day.
-// E5 supplies the days and totals; E6 supplies the strongest reason on each flagged day.
+// Screen 2 — the address overview (FR-02, AC-01): date range, source and snapshot, the four tiles, and two
+// tabs that are routes of their own. The overview tab has the daily timeline, with flagged days marked and
+// a keyboard path to every flagged day; E5 supplies the days and totals, and E6 the strongest reason on each
+// flagged day. The transactions tab (TransactionsTab) has the filter bar, chart G2 and the table.
 
 /** Flagged days listed before "Show all" (plan section 8, V2). */
 const DAYS_SHOWN = 8;
 
-export function TimelineScreen({ address }: { address: string }) {
-  useDocumentTitle(`Activity for ${shortAddress(address)}`);
+export type AddressTab = { name: 'overview' } | { name: 'transactions'; search: string };
+
+export function TimelineScreen({ address, tab }: { address: string; tab: AddressTab }) {
+  useDocumentTitle(`${tab.name === 'overview' ? 'Activity' : 'Transactions'} for ${shortAddress(address)}`);
   const timeline = useRequest(`timeline:${address}`, (signal) => api.timeline(address, { signal }));
 
   return (
@@ -41,12 +45,12 @@ export function TimelineScreen({ address }: { address: string }) {
           <ErrorState error={timeline.error} onRetry={timeline.retry} />
         </>
       ) : null}
-      {timeline.status === 'success' ? <Timeline data={timeline.data} /> : null}
+      {timeline.status === 'success' ? <Timeline data={timeline.data} tab={tab} /> : null}
     </div>
   );
 }
 
-function Timeline({ data }: { data: TimelineResponse }) {
+function Timeline({ data, tab }: { data: TimelineResponse; tab: AddressTab }) {
   const kind = validateAddress(data.address);
   const flaggedDays = data.days.filter((d) => d.flaggedCount > 0);
   const insufficient = data.history.status === 'insufficient';
@@ -102,39 +106,68 @@ function Timeline({ data }: { data: TimelineResponse }) {
         </div>
       </dl>
 
-      {insufficient ? (
-        <StatePanel
-          tone="warning"
-          title="Not enough history to score this address"
-          testId="state-insufficient"
-          actions={
-            <>
-              <a className="btn btn-secondary" href={paths.day(data.address, data.days[0].date)}>
-                Browse its transactions anyway
-              </a>
-              <a className="btn btn-ghost" href={paths.select()}>
-                Choose an address with more history
-              </a>
-            </>
-          }
-        >
-          <p>
-            A transaction is only scored once the address has at least {data.history.required.minTx} earlier transactions
-            over at least {data.history.required.minSpanDays} days. This address has{' '}
-            {plural(data.history.txCount, 'transaction')} spanning {formatSpanDays(data.history.spanDays)}, so there is nothing
-            reliable to compare against yet. Its transactions are listed but none is marked unusual.
-          </p>
-        </StatePanel>
-      ) : null}
+      <AddressTabs address={data.address} tab={tab.name} />
 
-      <div className="timeline-layout">
-        <div className="card">
-          <G1DailyActivity timeline={data} onOpenDay={open} />
-        </div>
+      {tab.name === 'transactions' ? (
+        <TransactionsTab timeline={data} search={tab.search} />
+      ) : (
+        <>
+          {insufficient ? (
+            <StatePanel
+              tone="warning"
+              title="Not enough history to score this address"
+              testId="state-insufficient"
+              actions={
+                <>
+                  <a className="btn btn-secondary" href={paths.transactions(data.address)}>
+                    Browse its transactions anyway
+                  </a>
+                  <a className="btn btn-ghost" href={paths.select()}>
+                    Choose an address with more history
+                  </a>
+                </>
+              }
+            >
+              <p>
+                A transaction is only scored once the address has at least {data.history.required.minTx} earlier transactions
+                over at least {data.history.required.minSpanDays} days. This address has{' '}
+                {plural(data.history.txCount, 'transaction')} spanning {formatSpanDays(data.history.spanDays)}, so there is nothing
+                reliable to compare against yet. Its transactions are listed but none is marked unusual.
+              </p>
+            </StatePanel>
+          ) : null}
 
-        <FlaggedDays address={data.address} days={flaggedDays} insufficient={insufficient} />
-      </div>
+          <div className="timeline-layout">
+            <div className="card">
+              <G1DailyActivity timeline={data} onOpenDay={open} />
+            </div>
+
+            <FlaggedDays address={data.address} days={flaggedDays} insufficient={insufficient} />
+          </div>
+        </>
+      )}
     </>
+  );
+}
+
+/** The two tabs are routes, so they are links; the current one is marked for assistive technology as well as by its look. */
+function AddressTabs({ address, tab }: { address: string; tab: AddressTab['name'] }) {
+  const tabs = [
+    { name: 'overview', label: 'Overview', href: paths.timeline(address) },
+    { name: 'transactions', label: 'Transactions', href: paths.transactions(address) },
+  ] as const;
+  return (
+    <nav className="tabs" aria-label="Views of this address">
+      <ul>
+        {tabs.map((t) => (
+          <li key={t.name}>
+            <a href={t.href} aria-current={t.name === tab ? 'page' : undefined}>
+              {t.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 

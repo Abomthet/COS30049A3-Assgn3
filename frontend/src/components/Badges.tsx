@@ -5,7 +5,7 @@ import { Icon } from './Icon';
 // Flags use a warm "look here" colour, never red: unusual is not the same as wrong.
 // Each badge pairs its colour with an icon and a word, so it reads without colour too.
 
-const STATUS_TEXT: Record<ScoreStatus, string> = {
+export const STATUS_TEXT: Record<ScoreStatus, string> = {
   flagged: 'Unusual',
   'not-flagged': 'Not unusual',
   'not-scored': 'Not scored',

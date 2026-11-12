@@ -48,6 +48,7 @@ if (!browserPath) {
 }
 
 const tl = (a) => `#/address/${a}`;
+const txs = (a, search = '') => `#/address/${a}/transactions${search ? `?${search}` : ''}`;
 const day = (r) => `#/address/${r.address}/day/${r.date}`;
 const tx = (r) => `${day(r)}/tx/${r.txid}`;
 const q = (s) => `#/?q=${encodeURIComponent(s)}`;
@@ -76,6 +77,16 @@ const shots = [
   ['17-flagged-detail-dark', 'theme=dark', tx(t.flagged), DESKTOP, true],
   ['18-select-tablet', '', '#/', TABLET, true],
   ['19-select-desktop-dark', 'theme=dark', '#/', DESKTOP, true],
+  ['20-transactions', '', txs(t.mainAddress), DESKTOP, true],
+  ['21-transactions-sent-unusual', '', txs(t.mainAddress, 'status=flagged&direction=out'), DESKTOP, true],
+  ['22-transactions-invalid-dates', '', txs(t.mainAddress, 'from=2025-06-01&to=2025-01-01'), DESKTOP, false],
+  ['23-transactions-tablet', '', txs(t.mainAddress), TABLET, true],
+  ['24-transactions-mobile', '', txs(t.mainAddress), MOBILE, false],
+  ['24b-transactions-mobile-full-page', '', txs(t.mainAddress, 'status=flagged'), MOBILE, true],
+  ['25-transactions-short-history', '', txs(t.shortHistory), DESKTOP, true],
+  ['26-transactions-dark', 'theme=dark', txs(t.mainAddress, 'status=flagged'), DESKTOP, true],
+  ['27-about', '', '#/about', DESKTOP, true],
+  ['28-about-mobile', '', '#/about', MOBILE, true],
 ];
 
 // ---------------------------------------------------------------- minimal DevTools client

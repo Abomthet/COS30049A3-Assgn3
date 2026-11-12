@@ -82,7 +82,7 @@ describe('the bars', () => {
   test('the hover reads like the plan: feature, value, usual value and z', async () => {
     const f = feature({ id: 'F1', name: 'Size', value: 0.05, usual: 0.000525, z: 5.9, role: 'flag' });
     const { bars } = await draw([f]);
-    expect(bars.hovertext[0]).toBe('Size: 0.05 BTC, against a usual 0.000525 BTC (z +5.9)');
+    expect(bars.hovertext[0]).toBe('Size: 0.05000000 BTC, against a usual 0.00052500 BTC (z +5.9)');
     expect(bars.hoverinfo).toBe('text');
   });
 
@@ -189,6 +189,13 @@ describe('the contract', () => {
       expect(within(rows[i]).getByRole('rowheader')).toHaveTextContent(f.name);
     });
     expect(screen.getByRole('button', { name: 'Download CSV' })).toBeInTheDocument();
+  });
+
+  test('every cell names its column, so the phone layout can stack a row as a card instead of clipping the last column', async () => {
+    const tx = await mockApi.transaction(ex.flagged.txid, ex.flagged.address);
+    await draw(tx.features);
+    const cells = within(screen.getAllByRole('row')[1]).getAllByRole('cell');
+    expect(cells.map((c) => c.getAttribute('data-label'))).toEqual(['This transaction', 'Usual', 'z', 'Role']);
   });
 
   test('units come from E2 by feature, and a unit not yet known shows the bare number', async () => {

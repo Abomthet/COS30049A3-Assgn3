@@ -7,23 +7,26 @@ import { ServiceStatusProvider } from './hooks/useServiceStatus';
 import { SettingsProvider } from './hooks/useSettings';
 import { ToastProvider } from './hooks/useToasts';
 import { paths, useRoute, type Route } from './lib/router';
+import { AboutScreen } from './views/AboutScreen';
 import { DayScreen } from './views/DayScreen';
 import { SelectScreen } from './views/SelectScreen';
 import { TimelineScreen } from './views/TimelineScreen';
 
-// A new screen starts at the top. Selecting a transaction within a day is not a new screen.
+// A new screen starts at the top. Selecting a transaction within a day, or switching between an address's
+// tabs, is not a new screen.
 function screenKey(route: Route): string {
   switch (route.screen) {
     case 'day':
       return `day|${route.address}|${route.date}`;
     case 'timeline':
+    case 'transactions':
       return `tl|${route.address}`;
     default:
       return route.screen;
   }
 }
 
-// Stands in for the views that are not built yet (models, watchlist, about), so the navigation
+// Stands in for the views that are not built yet (models, watchlist), so the navigation
 // never leads to a dead end. Each is replaced by its own view.
 function ComingSoon({ title }: { title: string }) {
   return (
@@ -54,13 +57,16 @@ function Views() {
   return (
     <ErrorBoundary resetKey={key}>
       {route.screen === 'select' ? <SelectScreen query={route.query} /> : null}
-      {route.screen === 'timeline' ? <TimelineScreen key={route.address} address={route.address} /> : null}
+      {route.screen === 'timeline' ? <TimelineScreen key={route.address} address={route.address} tab={{ name: 'overview' }} /> : null}
+      {route.screen === 'transactions' ? (
+        <TimelineScreen key={route.address} address={route.address} tab={{ name: 'transactions', search: route.search }} />
+      ) : null}
       {route.screen === 'day' ? (
         <DayScreen key={`${route.address}|${route.date}`} address={route.address} date={route.date} txid={route.txid} />
       ) : null}
       {route.screen === 'models' ? <ComingSoon title="Models and limits" /> : null}
       {route.screen === 'watchlist' ? <ComingSoon title="Watchlist" /> : null}
-      {route.screen === 'about' ? <ComingSoon title="About and help" /> : null}
+      {route.screen === 'about' ? <AboutScreen /> : null}
       {route.screen === 'not-found' ? (
         <div className="page">
           <PageHeading>Page not found</PageHeading>

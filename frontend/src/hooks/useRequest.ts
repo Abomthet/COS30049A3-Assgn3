@@ -36,12 +36,13 @@ function initial<T>(key: string | null): RequestState<T> {
  * Loads `fetcher(signal)` whenever `key` changes. A null key means "nothing to load" (idle).
  * Leaving the view, or a new key, aborts the request in flight, so an old answer can never overwrite
  * a newer one. A request that failed because the service was down is repeated by itself when the
- * service-status poll sees it come back (R4).
+ * service-status poll sees it come back (R4). `previous` is the last answer this hook received (for
+ * any key), so a list can stay on screen, marked as updating, while the next one loads (plan section 8).
  */
 export function useRequest<T>(
   key: string | null,
   fetcher: (signal: AbortSignal) => Promise<T>,
-): RequestState<T> & { retry: () => void } {
+): RequestState<T> & { retry: () => void; previous: T | undefined } {
   const [attempt, setAttempt] = useState(0);
   // State remembers which key it belongs to, so a new key never shows the previous key's result.
   const [state, setState] = useState<{ key: string | null; value: RequestState<T> }>(() => ({ key, value: initial(key) }));
@@ -80,8 +81,11 @@ export function useRequest<T>(
     if (value.status === 'error' && isTransient(value.error)) setAttempt((n) => n + 1);
   }, [recoveries]);
 
+  const last = useRef<T>(undefined);
+  if (value.status === 'success') last.current = value.data;
+
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
-  return { ...value, retry };
+  return { ...value, retry, previous: last.current };
 }
 
 /** Run a one-off request outside render (form submits). */

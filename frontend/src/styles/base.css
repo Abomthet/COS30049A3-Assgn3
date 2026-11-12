@@ -890,13 +890,40 @@ main.container {
   margin: 0 0 4px;
   color: var(--text-2);
 }
+/* On a phone each row becomes a card, as in the verdict table: a fifth column does not fit a 390 px
+   screen and would clip, and sideways scrolling is not allowed. The cells carry their column name. */
 @media (max-width: 559px) {
   .pchart .cell-sub {
     display: none;
   }
+  .pchart .data-table thead {
+    display: none;
+  }
+  .pchart .data-table,
+  .pchart .data-table tbody,
+  .pchart .data-table tr,
   .pchart .data-table th,
   .pchart .data-table td {
-    padding: 8px 6px;
+    display: block;
+  }
+  .pchart .data-table tr {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pchart .data-table th,
+  .pchart .data-table td {
+    padding: 2px 0;
+    border: 0;
+    text-align: left !important;
+  }
+  .pchart .data-table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .pchart .data-table td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
   }
 }
 .chart-focus {
@@ -1308,5 +1335,333 @@ main.container {
   .state-panel,
   .tx-row {
     border: 1px solid CanvasText;
+  }
+}
+
+/* ------------------------------------------------------------------ Screen 2: tabs, filters, transactions */
+
+/* Tabs are links (each is a route); the current one has a heavier underline as well as its ARIA state. */
+.tabs ul {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--border);
+}
+.tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  margin-bottom: -1px;
+  border-bottom: 3px solid transparent;
+  color: var(--text-2);
+  font-weight: 600;
+  text-decoration: none;
+}
+.tabs a:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.tabs a[aria-current='page'] {
+  color: var(--text);
+  border-bottom-color: var(--series-1);
+}
+
+.transactions-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.transactions-tab > div {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+/* The previous rows stay in place, dimmed, while the next ones load. */
+.is-updating {
+  opacity: 0.6;
+  transition: opacity 150ms;
+}
+
+.filter-bar h2 {
+  margin-bottom: 12px;
+}
+.filter-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  align-items: flex-start;
+}
+.filter-grid .text-input {
+  min-width: 170px;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.filter-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.chip:hover {
+  background: var(--surface-2);
+}
+/* A pressed chip is filled and ticked, so it differs from an unpressed one by more than colour. */
+.chip[aria-pressed='true'] {
+  background: var(--info-bg);
+  border-color: var(--accent);
+  color: var(--info-ink);
+  font-weight: 600;
+}
+.filter-group .field-error {
+  margin-top: 0;
+  font-size: 0.85rem;
+}
+.filter-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.count-line {
+  margin: 0;
+  font-weight: 560;
+}
+
+.chart-card {
+  padding-bottom: 12px;
+}
+
+.tx-table-head {
+  padding: 20px 20px 0;
+}
+.tx-table-head h2 {
+  margin-bottom: 2px;
+}
+.tx-table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.tx-table th,
+.tx-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.tx-table thead th {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.tx-table tbody th {
+  font-weight: 560;
+}
+.tx-table .num {
+  text-align: right;
+}
+.tx-table tbody tr {
+  position: relative;
+}
+.tx-table tbody tr:hover {
+  background: var(--surface-2);
+}
+.tx-table tbody tr.is-flagged {
+  box-shadow: inset 3px 0 0 var(--series-2);
+}
+/* The link covers its whole row, so a click anywhere on it opens the transaction. */
+.row-link {
+  color: var(--text);
+  text-decoration: none;
+}
+.row-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.row-link:hover {
+  text-decoration: underline;
+}
+.row-link:focus-visible {
+  outline: none;
+}
+.row-link:focus-visible::after {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+  border-radius: var(--radius-sm);
+}
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 20px;
+}
+.pager-status {
+  margin: 0;
+  color: var(--text-muted);
+}
+.pager-links {
+  display: flex;
+  gap: 8px;
+}
+/* On a phone a row is a card: time and status on top, amount and direction under them, then the
+   score and how many methods flag it, and the reason when there is one. */
+@media (max-width: 719px) {
+  .tx-table-head,
+  .pager {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .tx-table thead {
+    display: none;
+  }
+  .tx-table,
+  .tx-table tbody {
+    display: block;
+  }
+  .tx-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'time status'
+      'amount direction'
+      'score by'
+      'reason reason';
+    gap: 4px 12px;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tx-table th,
+  .tx-table td {
+    display: block;
+    padding: 0;
+    border: 0;
+    text-align: left !important;
+  }
+  .col-time {
+    grid-area: time;
+  }
+  .col-status {
+    grid-area: status;
+    justify-self: end;
+  }
+  .col-amount {
+    grid-area: amount;
+  }
+  .col-direction {
+    grid-area: direction;
+    justify-self: end;
+  }
+  .col-score {
+    grid-area: score;
+  }
+  .col-by {
+    grid-area: by;
+    justify-self: end;
+  }
+  .col-reason {
+    grid-area: reason;
+  }
+  .col-reason:not(.has-reason) {
+    display: none;
+  }
+  .col-score,
+  .col-by,
+  .col-reason {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  .col-score::before,
+  .col-by::before {
+    content: attr(data-label) ' ';
+  }
+}
+
+/* ------------------------------------------------------------------ About and help */
+
+.page-about .lede {
+  max-width: 68ch;
+  color: var(--text-2);
+  font-size: 1.05rem;
+  margin: 0;
+}
+.about-facts {
+  margin-bottom: 12px;
+}
+.prose > :last-child {
+  margin-bottom: 0;
+}
+.prose p,
+.prose ul {
+  max-width: 72ch;
+}
+.prose ul {
+  padding-left: 1.25rem;
+  margin: 0 0 0.75rem;
+}
+.prose li + li {
+  margin-top: 6px;
+}
+.prose .limitation {
+  margin-top: 0;
+  max-width: 72ch;
+}
+.about-features,
+.key-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.about-features dt,
+.key-list dt {
+  font-weight: 620;
+}
+.about-features dd,
+.key-list dd {
+  margin: 0;
+  color: var(--text-2);
+}
+@media (min-width: 720px) {
+  .about-features > div,
+  .key-list > div {
+    display: grid;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 16px;
   }
 }

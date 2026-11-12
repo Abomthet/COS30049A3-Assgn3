@@ -4,7 +4,7 @@ import { paths } from '../lib/router';
 // The four sections of the application (plan section 8, "The shell around every view"). Each
 // section owns the routes listed, so a day or a transaction keeps "Addresses" marked as current.
 const SECTIONS: Array<{ label: string; href: string; screens: Route['screen'][] }> = [
-  { label: 'Addresses', href: paths.select(), screens: ['select', 'timeline', 'day'] },
+  { label: 'Addresses', href: paths.select(), screens: ['select', 'timeline', 'transactions', 'day'] },
   { label: 'Models', href: paths.models(), screens: ['models'] },
   { label: 'Watchlist', href: paths.watchlist(), screens: ['watchlist'] },
   { label: 'About', href: paths.about(), screens: ['about'] },

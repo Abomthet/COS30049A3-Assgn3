@@ -2,21 +2,13 @@ import type { Direction, FeatureUnit } from '../api/types';
 
 const SATS_PER_BTC = 100_000_000;
 
-/** '1,204.00042100 BTC'. Always 8 decimals so amounts line up in monospace columns. */
+/** The one way every amount is printed: '1,204.00042100 BTC'. Always 8 decimals, so amounts agree everywhere and line up in monospace columns. */
 export function formatBtc(sats: number, opts: { signed?: boolean } = {}): string {
   const sign = sats < 0 ? '−' : opts.signed && sats > 0 ? '+' : '';
   const abs = Math.abs(Math.round(sats));
   const whole = Math.floor(abs / SATS_PER_BTC).toLocaleString('en-US');
   const frac = String(abs % SATS_PER_BTC).padStart(8, '0');
   return `${sign}${whole}.${frac} BTC`;
-}
-
-/** Shorter BTC figure for prose: '0.0421 BTC', '12.5 BTC', '0.00000546 BTC'. */
-export function formatBtcShort(sats: number): string {
-  const btc = Math.abs(sats) / SATS_PER_BTC;
-  if (btc === 0) return '0 BTC';
-  const digits = btc >= 1 ? 2 : Math.min(8, Math.max(4, 1 - Math.floor(Math.log10(btc)) + 2));
-  return `${Number(btc.toFixed(digits)).toLocaleString('en-US', { maximumFractionDigits: 8 })} BTC`;
 }
 
 export function formatCount(n: number): string {
@@ -50,7 +42,7 @@ export function formatFeatureValue(value: number | null, unit: FeatureUnit | und
   if (value === null) return '—';
   switch (unit) {
     case 'BTC':
-      return formatBtcShort(value * SATS_PER_BTC);
+      return formatBtc(value * SATS_PER_BTC);
     case 'hours':
       return formatHours(value);
     case 'ratio':
@@ -82,7 +74,7 @@ export function shortTxid(txid: string): string {
 }
 
 export const DIRECTION_LABEL: Record<Direction, string> = {
-  in: 'In',
-  out: 'Out',
+  in: 'Received',
+  out: 'Sent',
   none: 'No net change',
 };

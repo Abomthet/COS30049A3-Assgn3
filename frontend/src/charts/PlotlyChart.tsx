@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import type { Data, Layout, PlotMouseEvent } from 'plotly.js';
+import type { Data, Layout, PlotMouseEvent, PlotRelayoutEvent } from 'plotly.js';
 import { StatePanel } from '../components/StatePanel';
 import { useSettings } from '../hooks/useSettings';
 import { useToasts } from '../hooks/useToasts';
@@ -66,6 +66,11 @@ interface Props {
   zoomable?: boolean;
   height?: number;
   onPointClick?: (click: PointClick) => void;
+  /**
+   * The user zoomed or panned the time axis: its new range as Plotly's date strings (UTC). A reset
+   * reports the range the figure itself asked for. Not called for a redraw the page itself asks for.
+   */
+  onZoom?: (range: [string, string]) => void;
   keyboard?: KeyboardStops;
   /** Replaces the chart when there is nothing to draw. It always offers a next step. */
   empty?: { title: string; body: string; action?: ReactNode };
@@ -87,6 +92,7 @@ export function PlotlyChart({
   zoomable = true,
   height = 340,
   onPointClick,
+  onZoom,
   keyboard,
   empty,
 }: Props) {
@@ -105,6 +111,9 @@ export function PlotlyChart({
   const listening = useRef(false);
   const tapped = useRef<string | null>(null);
   const clickHandler = useRef<(event: PlotMouseEvent) => void>(() => {});
+  const zoomHandler = useRef<(event: PlotRelayoutEvent) => void>(() => {});
+  /** True while the page itself is redrawing: Plotly reports the new axis range of such a redraw as if the user had zoomed. */
+  const redrawing = useRef(false);
   const compact = width < COMPACT_BELOW_PX;
   const webglMinPoints = settings.web.charts.webglMinPoints;
 
@@ -142,10 +151,14 @@ export function PlotlyChart({
     let current = true;
     (async () => {
       try {
-        const root = await plotly.react(el, drawing.data, drawing.layout, drawing.config);
+        redrawing.current = true;
+        const root = await plotly.react(el, drawing.data, drawing.layout, drawing.config).finally(() => {
+          redrawing.current = false;
+        });
         if (!current) return;
         if (!listening.current) {
           root.on('plotly_click', (event) => clickHandler.current(event));
+          root.on('plotly_relayout', (event) => zoomHandler.current(event));
           listening.current = true;
         }
         setPhase('ready');
@@ -183,6 +196,18 @@ export function PlotlyChart({
       }
       tapped.current = null;
       onPointClick({ curve: hit.curveNumber, point: hit.pointNumber, customdata: hit.customdata });
+    };
+  });
+
+  // Zoom and pan of the time axis, read from the event Plotly sends: a drag gives the two ends as separate
+  // keys, a reset one pair. The ends are typed as numbers, but on a date axis they are text.
+  useEffect(() => {
+    zoomHandler.current = (event) => {
+      if (redrawing.current) return;
+      const pair = (event as { 'xaxis.range'?: [string, string] })['xaxis.range'];
+      const from = event['xaxis.range[0]'] ?? pair?.[0];
+      const to = event['xaxis.range[1]'] ?? pair?.[1];
+      if (from !== undefined && to !== undefined) onZoom?.([String(from), String(to)]);
     };
   });
 
@@ -375,7 +400,7 @@ function DataTable({ table, title, links }: { table: ChartTable; title: string; 
                     {content}
                   </th>
                 ) : (
-                  <td key={c} className={table.columns[c].numeric ? 'num' : undefined}>
+                  <td key={c} data-label={table.columns[c].label} className={table.columns[c].numeric ? 'num' : undefined}>
                     {content}
                   </td>
                 );
