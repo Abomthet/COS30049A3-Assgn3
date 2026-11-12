@@ -21,3 +21,6 @@ docs/plan/*.out
 docs/plan/*.toc
 # local scratch
 *.local.*
+
+# agent worktrees (each cook works on its own branch; the lead merges)
+.claude/
