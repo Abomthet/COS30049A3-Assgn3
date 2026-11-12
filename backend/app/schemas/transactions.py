@@ -71,6 +71,9 @@ class Verdict(CamelModel):
     explanation: str = Field(description="The template's text; it ends with the limitation line on a flagged item.")
     scores: dict[MethodId, float | None] = Field(description="Every method's score.")
     flags: dict[MethodId, bool] = Field(description="Every method's flag.")
+    ranks: dict[MethodId, float | None] = Field(
+        description="Per method, the share (0 to 1) of the address's own scored transactions whose score is at or below this "
+                    "one's; null where the method has no score.")
 
 
 class TransactionDetail(TransactionCore, Verdict):

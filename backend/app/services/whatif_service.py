@@ -24,6 +24,7 @@ from ..core.errors import InvalidRequest, needs_correcting
 from ..core.validation import amount_problem, gap_problem, passed
 from ..schemas.errors import FieldError
 from ..schemas.whatif import Amount, CurveRequest, CurveResponse, Points, WhatIfRequest, WhatIfResult
+from .ranks import rank_among
 from .reasons import reword
 from .store import AddressData, AddressStore
 from .whatif_batch import hypothetical_frame, score_frame, usable_methods
@@ -83,7 +84,18 @@ class WhatIfService:
             raise self._too_early(data, seconds) from None
         if not result["scored"]:  # earlier history exists but is under the minimum: A2 returns the row unscored
             raise self._too_early(data, seconds)
-        return WhatIfResult.model_validate({**result, "explanation": reword(result["explanation"]), "notAvailable": self._not_available})
+        return WhatIfResult.model_validate({**result, "explanation": reword(result["explanation"]), "notAvailable": self._not_available,
+                                            "ranks": self._ranks(data, seconds, result["scores"])})
+
+    def _ranks(self, data: AddressData, seconds: int, scores: Mapping[str, float | None]) -> dict[str, float | None]:
+        """Per method, where the hypothetical score sits among the scores of the address's scored transactions before the time.
+
+        These are the stored scores of the history the transaction is compared with; a method that cannot score new input
+        (`scores` lacks it), or one with no stored score in that history, has a rank of None.
+        """
+        history = data.scores.loc[data.features["scorable"] & (data.features["block_time_utc"] < seconds)]
+        return {name: rank_among(history[f"score_{name}"].tolist(), scores.get(name)) if f"score_{name}" in history else None
+                for name in self._predictor.methods}
 
     # ---------------------------------------------------------------- E9
 

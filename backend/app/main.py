@@ -9,10 +9,12 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import os
 import threading
 import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from explorer.predict import Predictor
 from fastapi import FastAPI
@@ -20,10 +22,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from . import __version__
-from .api import addresses, exports, methods, system, transactions, whatif
+from .api import addresses, exports, methods, system, transactions, watchlist, whatif
 from .api.field_rules import FIELD_RULES
 from .core.body_limit import BodyLimitMiddleware
-from .core.config import Settings, load_settings
+from .core.config import BACKEND_ROOT, Settings, load_settings
 from .core.errors import register_handlers
 from .core.logging import configure_logging
 from .core.middleware import REQUEST_ID_HEADER, ETagMiddleware, RequestContextMiddleware
@@ -34,6 +36,8 @@ from .services.export_service import ExportService
 from .services.methods_service import MethodsService
 from .services.model_service import load_predictor, snapshot_facts
 from .services.store import SnapshotStore
+from .services.watchlist_repo import WatchlistRepo
+from .services.watchlist_service import WatchlistService
 from .services.whatif_service import WhatIfService
 
 log = logging.getLogger("app.main")
@@ -42,7 +46,8 @@ log = logging.getLogger("app.main")
 GZIP_MIN_BYTES = 1000
 
 
-async def load_models(runtime: Runtime, loader: Callable[[], Predictor], warm: bool = True) -> None:
+async def load_models(runtime: Runtime, loader: Callable[[], Predictor], warm: bool = True,
+                      repo: WatchlistRepo | None = None) -> None:
     """Load the Predictor off the event loop so the service can answer E1 with a 503 meanwhile, then warm the cache.
 
     A failure is recorded and logged, and E1 keeps answering 503 with its sentence: the service does
@@ -57,13 +62,14 @@ async def load_models(runtime: Runtime, loader: Callable[[], Predictor], warm: b
         whatif = WhatIfService(store, predictor, runtime.settings.web.what_if)
         exports = ExportService(explorer, predictor.selected, predictor.snapshot_date, runtime.settings.limitation_line)
         methods = MethodsService(predictor)
+        watchlist = WatchlistService(repo, explorer, runtime.settings.web.watchlist) if repo is not None else None
     except Exception as error:  # the cause goes to the log; the response says only that the load failed
         runtime.load_error = f"{error.__class__.__name__}: {error}"
         log.error("The explorer models could not be loaded (%s). Check the installation as the README describes.",
                   runtime.load_error)
         return
     # `explorer` is set last: it is what `Runtime.ready` waits for, so every service exists by then.
-    runtime.whatif, runtime.exports, runtime.methods = whatif, exports, methods
+    runtime.whatif, runtime.exports, runtime.methods, runtime.watchlist = whatif, exports, methods, watchlist
     runtime.predictor, runtime.facts, runtime.explorer = predictor, facts, explorer
     log.info("Explorer ready: %d addresses, %d methods (snapshot %s, %.1f s since start)", facts.address_count,
              facts.method_count, facts.date, runtime.uptime_seconds)
@@ -83,13 +89,18 @@ async def warm_cache(explorer: ExplorerService) -> None:
     log.info("Cache warmed: %d addresses in %.1f s", filled, time.perf_counter() - started)
 
 
-def create_app(settings: Settings | None = None, loader: Callable[[], Predictor] = load_predictor, warm: bool = True) -> FastAPI:
+DEFAULT_DATABASE = BACKEND_ROOT / "var" / "explorer.db"
+
+
+def create_app(settings: Settings | None = None, loader: Callable[[], Predictor] = load_predictor, warm: bool = True,
+               database: Path | str | None = None) -> FastAPI:
     """Build the application.
 
     Args:
         settings: Configuration; read from settings.json and the environment when omitted.
         loader: Returns the Predictor. Tests pass one that returns a shared, already loaded Predictor.
         warm: Fill the per-address cache in the background once ready. Tests that do not measure it turn it off.
+        database: The watchlist's SQLite file, opened when the service starts; `EXPLORER_DB` or backend/var/explorer.db when omitted.
     """
     settings = settings or load_settings()
     configure_logging(settings.log_level)
@@ -97,13 +108,15 @@ def create_app(settings: Settings | None = None, loader: Callable[[], Predictor]
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        task = asyncio.create_task(load_models(runtime, loader, warm))
+        repo = WatchlistRepo(database or os.environ.get("EXPLORER_DB") or DEFAULT_DATABASE, settings.web.watchlist.max_entries)
+        task = asyncio.create_task(load_models(runtime, loader, warm, repo))
         try:
             yield
         finally:
             task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await task
+            repo.close()
 
     app = FastAPI(title="Bitcoin Address Activity Explorer API", version=__version__, lifespan=lifespan,
                   description="Unusual-activity scoring for Bitcoin addresses, from Assignment 2's models. "
@@ -129,6 +142,7 @@ def create_app(settings: Settings | None = None, loader: Callable[[], Predictor]
     app.include_router(whatif.router)
     app.include_router(exports.router)
     app.include_router(methods.router)
+    app.include_router(watchlist.router)
     install_openapi(app)
     return app
 

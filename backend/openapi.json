@@ -1181,6 +1181,209 @@
           }
         }
       }
+    },
+    "/api/watchlist": {
+      "get": {
+        "tags": [
+          "watchlist"
+        ],
+        "summary": "The watched addresses with labels and notes",
+        "description": "Each entry with `address`, `label`, `note`, `addedAt`, `updatedAt` and the address's summary as E3 gives it,\nthe most recently added first.",
+        "operationId": "list_watchlist_api_watchlist_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/watchlist/{address}": {
+      "put": {
+        "tags": [
+          "watchlist"
+        ],
+        "summary": "Adds an address to the watchlist, or replaces its label and note",
+        "description": "Answers 201 for a new entry and 200 for a replaced one. 400 names each field at fault (label and note have\nlength limits); 404 `unsupported` for an address that cannot be opened; 409 `conflict` when the list is full.",
+        "operationId": "put_watchlist_api_watchlist__address__put",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "A Bitcoin address.",
+              "title": "Address"
+            },
+            "description": "A Bitcoin address."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchlistPut"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistEntry"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The address was added.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The watchlist is full.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is over the size limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The request body is not JSON.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "watchlist"
+        ],
+        "summary": "Removes an address from the watchlist",
+        "description": "Answers 204 with no body, or 404 `not_found` when the address is not on the list.",
+        "operationId": "delete_watchlist_api_watchlist__address__delete",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "A Bitcoin address.",
+              "title": "Address"
+            },
+            "description": "A Bitcoin address."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3093,6 +3296,34 @@
             "title": "Flags",
             "description": "Every method's flag."
           },
+          "ranks": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "propertyNames": {
+              "enum": [
+                "baseline",
+                "isolation_forest",
+                "lof",
+                "kmeans",
+                "dbscan",
+                "regression",
+                "regression_interval",
+                "fusion",
+                "txgpt_method"
+              ]
+            },
+            "type": "object",
+            "title": "Ranks",
+            "description": "Per method, the share (0 to 1) of the address's own scored transactions whose score is at or below this one's; null where the method has no score."
+          },
           "address": {
             "type": "string",
             "title": "Address"
@@ -3164,6 +3395,7 @@
           "explanation",
           "scores",
           "flags",
+          "ranks",
           "address",
           "time",
           "direction",
@@ -3315,6 +3547,46 @@
         "title": "TransactionsResponse",
         "description": "E6: a filtered, sorted page of rows."
       },
+      "WatchlistEntry": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "addedAt": {
+            "type": "string",
+            "title": "Addedat",
+            "description": "ISO 8601, UTC."
+          },
+          "updatedAt": {
+            "type": "string",
+            "title": "Updatedat",
+            "description": "ISO 8601, UTC; equals `addedAt` until the entry is replaced."
+          },
+          "summary": {
+            "$ref": "#/components/schemas/AddressSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "label",
+          "note",
+          "addedAt",
+          "updatedAt",
+          "summary"
+        ],
+        "title": "WatchlistEntry",
+        "description": "One watched address with its label and note, and the address's summary as E3 gives it."
+      },
       "WatchlistLimits": {
         "properties": {
           "maxEntries": {
@@ -3339,6 +3611,43 @@
         ],
         "title": "WatchlistLimits",
         "description": "Size limits of the watchlist (S-04)."
+      },
+      "WatchlistPut": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "A short name; at most `web.watchlist.maxLabelChars` characters.",
+            "default": ""
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "description": "A free note; at most `web.watchlist.maxNoteChars` characters.",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "WatchlistPut",
+        "description": "E14's body. The length limits come from settings.json -> web.watchlist and are checked by the watchlist service."
+      },
+      "WatchlistResponse": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/WatchlistEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entries"
+        ],
+        "title": "WatchlistResponse",
+        "description": "E13: the entries, most recently added first."
       },
       "WebSettings": {
         "properties": {
@@ -3567,6 +3876,34 @@
             "title": "Flags",
             "description": "Every method's flag."
           },
+          "ranks": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "propertyNames": {
+              "enum": [
+                "baseline",
+                "isolation_forest",
+                "lof",
+                "kmeans",
+                "dbscan",
+                "regression",
+                "regression_interval",
+                "fusion",
+                "txgpt_method"
+              ]
+            },
+            "type": "object",
+            "title": "Ranks",
+            "description": "Per method, the share (0 to 1) of the address's own scored transactions whose score is at or below this one's; null where the method has no score."
+          },
           "address": {
             "type": "string",
             "title": "Address"
@@ -3650,6 +3987,7 @@
           "explanation",
           "scores",
           "flags",
+          "ranks",
           "address",
           "time",
           "direction",

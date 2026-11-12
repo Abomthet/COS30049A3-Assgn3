@@ -44,9 +44,18 @@ def expected_row(tx: dict[str, Any]) -> dict[str, Any]:
             "mainZ": reasons[0]["z"] if reasons else None, "flaggedBy": sum(tx["flags"].values()) if scored else 0}
 
 
-def expected_detail(tx: dict[str, Any]) -> dict[str, Any]:
-    """Assignment 2's detail as E7 serves it: the same, with the source added and the explanation worded as Mod-12 words it."""
-    return {**tx, "explanation": reword(tx["explanation"]), "source": "snapshot"}
+def expected_ranks(tx: dict[str, Any], transactions: list[dict[str, Any]]) -> dict[str, float | None]:
+    """S-02, worked out the long way: per method, the share of the address's scored transactions at or below this score."""
+    ranks: dict[str, float | None] = {}
+    for method, score in tx["scores"].items():
+        pool = [t["scores"][method] for t in transactions if t["scored"] and t["scores"][method] is not None]
+        ranks[method] = None if score is None or not pool else sum(1 for v in pool if v <= score) / len(pool)
+    return ranks
+
+
+def expected_detail(tx: dict[str, Any], transactions: list[dict[str, Any]]) -> dict[str, Any]:
+    """Assignment 2's detail as E7 serves it: the same, with the source and the ranks added and the explanation worded as Mod-12 words it."""
+    return {**tx, "explanation": reword(tx["explanation"]), "source": "snapshot", "ranks": expected_ranks(tx, transactions)}
 
 
 def all_rows(client: TestClient, address: str, **params: Any) -> list[dict[str, Any]]:
@@ -97,7 +106,7 @@ def test_every_transaction_detail_is_a_prediction_detail(predictor: Predictor, s
     service = ExplorerService(SnapshotStore(predictor), predictor, settings.web.lists)
     for tx in whole["transactions"]:
         if tx["scored"]:
-            assert service.detail(address, tx["txid"]).model_dump(by_alias=True) == expected_detail(tx)
+            assert service.detail(address, tx["txid"]).model_dump(by_alias=True) == expected_detail(tx, whole["transactions"])
         else:
             with pytest.raises(InsufficientHistory):
                 service.detail(address, tx["txid"])
@@ -112,7 +121,7 @@ def test_a_sample_of_detail_responses_is_the_prediction_detail(shared_client: Te
         response = shared_client.get(f"/api/transactions/{tx['txid']}", params={"address": address})
         if tx["scored"]:
             assert response.status_code == 200
-            assert response.json() == expected_detail(tx)
+            assert response.json() == expected_detail(tx, transactions)
         else:
             assert response.status_code == 422 and response.json()["status"] == "insufficient_history"
 

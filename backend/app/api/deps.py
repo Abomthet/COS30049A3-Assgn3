@@ -11,6 +11,7 @@ from ..services.explorer_service import ExplorerService
 from ..services.export_service import ExportService
 from ..services.methods_service import MethodsService
 from ..services.model_service import require_ready
+from ..services.watchlist_service import WatchlistService
 from ..services.whatif_service import WhatIfService
 
 
@@ -61,6 +62,17 @@ def get_methods(runtime: Annotated[Runtime, Depends(get_runtime)]) -> MethodsSer
     require_ready(runtime)
     assert runtime.methods is not None  # `require_ready` passed
     return runtime.methods
+
+
+def get_watchlist(runtime: Annotated[Runtime, Depends(get_runtime)]) -> WatchlistService:
+    """The watchlist service, once the models are loaded.
+
+    Raises:
+        Unavailable: The models are still loading, or failed to load (503).
+    """
+    require_ready(runtime)
+    assert runtime.watchlist is not None  # `require_ready` passed
+    return runtime.watchlist
 
 
 def snapshot_data(response: Response) -> None:

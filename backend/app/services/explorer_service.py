@@ -31,6 +31,7 @@ from ..schemas.addresses import (AddressesResponse, AddressSummary, LookupRespon
 from ..schemas.common import SnapshotInfo
 from ..schemas.errors import FieldError
 from ..schemas.transactions import TransactionDetail
+from .ranks import pools_of, ranks_of
 from .reasons import reword
 from .store import AddressData, AddressStore
 
@@ -115,7 +116,11 @@ class ExplorerService:
             return self._unscored_view(predictor, data)
         result = predictor.score_address(address)
         # The explanation is A2's template text; its repeating phrases are reworded here (Mod-12).
-        transactions = {tx["txid"]: {**tx, "explanation": reword(tx["explanation"])} for tx in result["transactions"]}
+        scored = [tx for tx in result["transactions"] if tx.get("scored", False)]
+        pools = pools_of([tx["scores"] for tx in scored], list(scored[0]["scores"]))
+        transactions = {tx["txid"]: {**tx, "explanation": reword(tx["explanation"]),
+                                     **({"ranks": ranks_of(tx["scores"], pools)} if tx.get("scored", False) else {})}
+                        for tx in result["transactions"]}
         timeline = TimelineResponse.model_validate({key: value for key, value in result.items() if key != "transactions"})
         return AddressView(timeline, tuple(_row(tx) for tx in result["transactions"]), transactions)
 
@@ -154,6 +159,14 @@ class ExplorerService:
         summaries = [self._summary(self._store.get(address), method) for address in self._store.addresses()]
         summaries.sort(key=lambda s: (s.history != "sufficient", -s.tx_count))
         return AddressesResponse(snapshot=self._snapshots[method], addresses=summaries)
+
+    def summary(self, address: str) -> AddressSummary:
+        """An address's summary under the default method (E13 shows it beside each entry).
+
+        Raises:
+            Unsupported: The address is not in the store.
+        """
+        return self._summary(self._store.get(address), self._default)
 
     def lookup(self, address: str) -> LookupResponse:
         """E4: the address is supported, with its summary under the default method.

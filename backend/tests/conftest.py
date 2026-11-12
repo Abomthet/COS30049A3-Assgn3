@@ -1,8 +1,10 @@
 """Shared fixtures. The real Predictor is loaded once per test run (about a second); apps share it."""
 from __future__ import annotations
 
+import os
 import time
 from collections.abc import Callable, Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -17,6 +19,15 @@ LARGEST = "36V7afbhZnvpMpBJmZf7XJKDeL2vtHDB6L"  # 700 transactions
 SHORT_HISTORY = ("bc1qx2stewzm2cel6ytwzraxt9z4d9vlh8e5gdnun6", "bc1q4mj77xnsydlrtkrk092xylkv3cyddwddgp9dvj",
                  "1GqdEHU3qyDvq5BkuuLWQECHoUVRw4rU39")
 VALID_OUTSIDE_SNAPSHOT = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"  # a valid address (Bitcoin's genesis) that the snapshot lacks
+
+
+@pytest.fixture(scope="session", autouse=True)
+def watchlist_file(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
+    """Every app a test builds keeps its watchlist in a temporary file, never in backend/var."""
+    path = tmp_path_factory.mktemp("var") / "explorer.db"
+    os.environ["EXPLORER_DB"] = str(path)
+    yield path
+    del os.environ["EXPLORER_DB"]
 
 
 @pytest.fixture(scope="session")
@@ -67,17 +78,19 @@ def wait_until_ready(client: TestClient, seconds: float = 20.0) -> None:
 
 
 @pytest.fixture
-def make_client(settings: Settings, predictor: Predictor) -> Iterator[Callable[..., TestClient]]:
+def make_client(settings: Settings, predictor: Predictor, tmp_path_factory: pytest.TempPathFactory) -> Iterator[Callable[..., TestClient]]:
     """A factory for test clients. Errors become responses, as they would under Uvicorn."""
     opened: list[TestClient] = []
 
     def build(loader: Callable[[], Predictor] | None = None, app_settings: Settings | None = None,
-              warm: bool = False) -> TestClient:
+              warm: bool = False, database: Path | None = None) -> TestClient:
         """With no loader the shared Predictor is used and the client waits until the service is ready.
 
         The cache warm-up is off unless a test asks for it: it would score all 28 addresses for every test.
         """
-        app = create_app(app_settings or settings, loader or (lambda: predictor), warm)
+        # Each client gets an empty watchlist of its own, unless a test names a file to share.
+        file = database or tmp_path_factory.mktemp("watch") / "explorer.db"
+        app = create_app(app_settings or settings, loader or (lambda: predictor), warm, file)
         client = TestClient(app, raise_server_exceptions=False)
         client.__enter__()  # runs the lifespan
         opened.append(client)

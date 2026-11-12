@@ -17,6 +17,7 @@ if TYPE_CHECKING:  # explorer is imported only where it is used: it takes second
     from ..services.explorer_service import ExplorerService
     from ..services.export_service import ExportService
     from ..services.methods_service import MethodsService
+    from ..services.watchlist_service import WatchlistService
     from ..services.whatif_service import WhatIfService
 
 
@@ -42,6 +43,7 @@ class Runtime:
     whatif: WhatIfService | None = None
     exports: ExportService | None = None
     methods: MethodsService | None = None
+    watchlist: WatchlistService | None = None
     load_error: str | None = None
 
     @property

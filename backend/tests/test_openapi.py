@@ -22,6 +22,9 @@ def test_every_route_has_a_summary_a_response_model_and_documented_errors(settin
     for path, operations in document["paths"].items():
         for method, operation in operations.items():
             assert operation.get("summary"), f"{method} {path} has no summary"
+            if method == "delete":  # E15 answers 204 with no body
+                assert "204" in operation["responses"] and "200" not in operation["responses"]
+                continue
             ok = operation["responses"]["200"]["content"]["application/json"]["schema"]
             assert "$ref" in ok, f"{method} {path} has no response model"
             assert "503" in operation["responses"]
@@ -53,6 +56,9 @@ PLANNED_STATUSES = {
     ("post", "/api/addresses/{address}/what-if/curve"): {"400", "404", "413", "415", "422"},
     ("get", "/api/addresses/{address}/export"): {"304", "400", "404"},
     ("get", "/api/methods"): {"304"},
+    ("get", "/api/watchlist"): set(),
+    ("put", "/api/watchlist/{address}"): {"201", "400", "404", "409", "413", "415"},
+    ("delete", "/api/watchlist/{address}"): {"204", "400", "404"},
 }
 
 
@@ -72,7 +78,7 @@ def test_validation_errors_are_documented_as_the_400_error_body_and_no_422_http_
             if operation.get("parameters") or operation.get("requestBody"):
                 assert operation["responses"]["400"]["content"]["application/json"]["schema"] == error, f"{method} {path}"
             for status, response in operation["responses"].items():
-                if status not in ("200", "304"):
+                if status not in ("200", "201", "204", "304"):
                     assert response["content"]["application/json"]["schema"] == error, f"{method} {path} {status}"
 
 
