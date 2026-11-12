@@ -70,7 +70,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] T33 S-05 Assistant: service, E12, panel, guardrail, cache, prepared answers (works without the 610 MB weights)
 - [ ] T34 S-06 replay
 - [ ] T35 S-07 linked selection; S-08 scenario table
-- [ ] T36 S-09 live lookup, E16–E20, dialog V8 — ⛔ **only if CR-08 is approved by 22 Nov**
+- [ ] T36 S-09 live lookup, E16–E20, dialog V8 — **CR-08 approved by the team (reported 12 Nov)**; package after wave B (Sonnet 5.5 high)
 - [ ] T37 S-10 TS types generated from OpenAPI; CI runs tests and builds on every push
 - [ ] T38 S-11 browser tests at three widths; S-12 `measure.py` (response times, bundle sizes, render times)
 
@@ -101,7 +101,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 ## Review findings to fix later
 - [x] (`55c0b98`) G5: log-axis tick labels overlap at desktop width (T28)
 - [x] (`55c0b98`) Method names: E11 vs the front end's `lib/methods.ts`; use E11 everywhere
-- [ ] Command Line Tools missing on the Mac since 12 Nov 08:24 (user: `xcode-select --install`); git via `~/.local/bin/git` (conda) meanwhile
+- [x] Command Line Tools: back since 12 Nov 08:26 (an update had been mid-reinstall); Apple git in use again, the conda-git link removed
 - [x] E6 `sort=amount` by absolute amount (`ee858f7`, D-W-12)
 - [x] (`55c0b98`) About page: generated feature list needs "and"
 - [x] (`ee858f7`) Back-end suite ~2 min: add a `slow` marker for the wording/parity grids (full suite still before every commit)

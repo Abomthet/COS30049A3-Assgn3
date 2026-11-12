@@ -633,3 +633,15 @@ models for the decisions that carry the marks.
 
 ## 2026-11-12 — Replanned the Should tier; wave A started
 Plan written on Opus: **`docs/PLAN_SHOULD.md`** (what each Should item needs, dependencies, waves A–D with a model per package, review routine, cut rules, usage trigger, team decisions). Wave A: **A-back** (Sonnet 5.5 medium: S-04 watchlist back end E13–E15 on SQLite; `ranks` per method in E7/E8 for G4) and **A-front** (Sonnet 5.5 medium: S-01 method menu; S-03 G6 on V5).
+
+## 2026-11-12 — Decisions from the team and the tutor; developer tools back
+- **CR-08 (live lookup) approved by the team** (reported by the user, 12 Nov). **D-W-15:** S-09 becomes wave B2 in
+  `docs/PLAN_SHOULD.md` (one Sonnet 5.5 high package for both tiers; off by default; the Must tier still needs no
+  network, D-A3-7). The four names belong in the minutes.
+- **Generative AI: the tutor said in person that AI use is acceptable**; an email confirmation is expected (to be
+  saved in `docs/brief/` and quoted in the report's declaration). This lowers risk 32 (rule broken or
+  under-declared). The logging in `docs/AI_USE_LOG.md` continues unchanged, since the declaration is still required.
+- **Command Line Tools:** `/Library/Developer/CommandLineTools` was recreated at 08:26, two minutes after it
+  vanished, so an update was reinstalling them. `xcode-select --install` reported them installed. The
+  `~/.local/bin/git` link to conda's git was removed; Apple's git 2.50.1 is in use again (the conda `tools`
+  environment stays as a fallback).

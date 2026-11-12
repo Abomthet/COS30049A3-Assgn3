@@ -78,10 +78,9 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
   conda-forge). Back-end env **`cos30049-a3`** → `~/miniconda3/envs/cos30049-a3/bin/python`
   (Python 3.11.18, numpy 2.2.6, pandas 2.2.3, scikit-learn 1.6.1, FastAPI 0.162.4, Uvicorn 0.54.0,
   Pydantic 2.14.3, httpx2 2.16.0, pytest 9.2.0). A2's env `cos30049-a2` also exists.
-- **The Apple Command Line Tools disappeared on 12 Nov 08:24**, so `/usr/bin/git` and `/usr/bin/python3`
-  do not work (they ask to install developer tools). Workaround in place: **git 2.56.1 from conda**
-  (`~/miniconda3/envs/tools/bin/git`, linked as `~/.local/bin/git`). Use the conda Python for every
-  Python command. The user can restore the tools with `xcode-select --install` (needs their password).
+- **Apple's Command Line Tools** vanished briefly on 12 Nov (08:24–08:26, an update reinstalling them) and are
+  back: `/usr/bin/git` works again. If `git` ever asks to install developer tools, a fallback exists:
+  `~/miniconda3/envs/tools/bin/git` (conda-forge git 2.56.1). Use the conda Python for project work in any case.
 - **GitHub CLI:** `~/.local/bin/gh`, logged in as `Defaul119`. Pushing over HTTPS works.
 - **No sudo, no Homebrew.** Never try to use either.
 
@@ -222,13 +221,11 @@ planning, gates and review, and the cheapest on mechanical work.
 
 ## 9. Things only the user or the team can do
 
-- **Ask the tutor** whether A2's generative-AI arrangement (allowed, with a separate declaration) covers
-  A3; the brief alone says AI must not generate content. All use is logged in `docs/AI_USE_LOG.md` either
-  way. (Also: the downloaded A2 submission contained no separate AI declaration; worth checking with
+- **Generative AI:** the tutor said in person that AI use is acceptable (12 Nov); **an email is expected**: save it to
+  `docs/brief/` and quote it in the report's AI declaration. All use stays logged in `docs/AI_USE_LOG.md`. (Also: the downloaded A2 submission contained no separate AI declaration; worth checking with
   the team.)
-- **CR-07** (scope) and **CR-08** (live lookup) need all four members' recorded votes (plan Appendix A).
-  CR-08 by 22 Nov, or T36 never starts.
-- **Restore the Command Line Tools:** `xcode-select --install`.
+- **CR-08 (live lookup) approved** by the team (12 Nov): S-09 is wave B2 in `docs/PLAN_SHOULD.md`. Record the
+  names in the minutes; CR-07 (scope) votes also belong there.
 - **Push A2's `v1.0` tag** if wanted (`git -C ~/Desktop/COS30049/COS30049A2 push origin v1.0`; that repo is public).
 - **Usability sessions, the Windows clean install, the video (recording and narration), report writing,
   minutes, the contribution form, the Canvas upload.**

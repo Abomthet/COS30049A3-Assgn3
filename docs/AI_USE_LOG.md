@@ -2,8 +2,8 @@
 
 Source for the report's AI acknowledgement (appendix). One row per session, written the same day.
 Status of the rule: the A3 brief limits generative AI to learning, idea generation and debugging,
-with all use acknowledged; the tutor's answer on whether A2's arrangement (allowed, declared) applies
-was requested and is outstanding as of 11 Nov 2026.
+with all use acknowledged. **12 Nov 2026: the tutor said in person that AI use is acceptable** (reported by
+Cao Tri Tran); a written confirmation by email is expected and will be saved in `docs/brief/`.
 
 | Date | Member | Tool and model | What it was used for | Output used in | Checked by |
 |---|---|---|---|---|---|

@@ -51,9 +51,12 @@ after the API stops changing. S-11 and S-12 come last, because they record the f
 | — | Mechanical jobs between waves | **Haiku 5.5** | Re-record fixtures after back-end changes (`npm run fixtures`); screenshot runs; tables from `openapi.json` for the report; tidy `docs/WORKLOG.md` headings | Mechanical |
 | — | **MS3 gate and freeze** | **Opus 5.5 (the lead) or Fable 5.2** | Each Should item finished *and tested*, or cut and recorded; re-run the MS2 gate (no regression); the cut list; a detailed MS3 record in `docs/TEST_LOG.md` | A gate |
 
-S-09 (live lookup) is not in a wave: if the team approves CR-08 by 22 Nov, a **Sonnet 5.5 high**
-package (network, rate limits, server-sent events, cancellation) is added after wave B and the plan is
-updated here. Otherwise it is recorded as cut on 22 Nov.
+**S-09 (live lookup): CR-08 was approved by the team (the user reported it on 12 Nov).** It becomes wave
+**B2**, after wave B: one **Sonnet 5.5 high** package for both tiers (E16–E20 against Blockstream's public
+Esplora API: a background job, server-sent progress events with polling as the fallback, cancellation,
+rate limits from `web.live`, a cache under `backend/var/`, a live `AddressStore`, and the V8 dialog over
+V1). It stays off by default (`EXPLORER_LIVE_LOOKUP=off`), and the Must tier never needs the network
+(D-A3-7). Its place in the cut order is unchanged (third from the bottom of the Should list).
 
 ## 4. The review routine for every package (unchanged)
 
@@ -89,9 +92,9 @@ and move up the cut list rather than delay MS3.
 
 ## 6. What the team must decide (owner: the user)
 
-- **CR-08 (live lookup): approve or reject by Sun 22 Nov.** Without a decision, S-09 is cut.
+- ~~CR-08 (live lookup)~~ **approved by the team** (reported 12 Nov). Record the four names in the minutes.
 - **CR-07 (scope):** record the four members' votes in the minutes (it covers the Should list built here).
-- **Tutor on generative AI:** still unanswered as far as this repository records. All use is in
-  `docs/AI_USE_LOG.md`.
+- **Tutor on generative AI:** said in person that AI use is acceptable (reported 12 Nov); **an email is expected**.
+  Save it to `docs/brief/` when it arrives. All use stays logged in `docs/AI_USE_LOG.md`.
 - **People for T39** (the usability walkthrough, two sessions, from 25 Nov): book them now. The lead can
   prepare the script and recording sheets (a Haiku/Sonnet job) once the Should items settle.
