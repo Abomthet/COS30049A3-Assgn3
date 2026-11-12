@@ -1271,6 +1271,47 @@ main.container {
   margin-top: 3px;
   color: var(--text-2);
 }
+/* The explanation and the Assistant's control (components/AssistantPanel.tsx). */
+.explanation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.explanation p {
+  margin: 0;
+}
+.explanation-card {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.explanation-card h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+.explanation-label,
+.assistant-note {
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+.explanation-label {
+  font-style: italic;
+}
+.assistant-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.assistant-control:empty {
+  display: none;
+}
+.assistant-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .not-flagged-note {
   margin: 0;
   padding: 12px 14px;

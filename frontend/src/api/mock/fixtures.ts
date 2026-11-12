@@ -5,6 +5,7 @@ import addressMain from './fixtures/address-main.json';
 import addressShort from './fixtures/address-short.json';
 import addresses from './fixtures/addresses.json';
 import config from './fixtures/config.json';
+import explanationsMain from './fixtures/explanations-main.json';
 import exportMain from './fixtures/export-main.json';
 import health from './fixtures/health.json';
 import methods from './fixtures/methods.json';
@@ -14,6 +15,8 @@ import whatIfMain from './fixtures/whatif-main.json';
 import type {
   AddressesResponse,
   ConfigResponse,
+  ExplanationRequest,
+  ExplanationResponse,
   ExportFile,
   HealthResponse,
   InsufficientHistoryBody,
@@ -60,3 +63,9 @@ export const WHAT_IF_RECORDED = whatIfMain as unknown as {
 
 /** The running example's flagged transactions, exported: the one filtered view the mock has a file for. */
 export const EXPORT_RECORDED = exportMain as { address: string; query: TransactionQuery; csv: ExportFile; json: ExportFile };
+
+/** E12 for the running example: the Assistant's prepared answers for its flagged transactions, and the template for a scored transaction that is not flagged and for two what-ifs. */
+export const EXPLANATIONS_RECORDED = explanationsMain as unknown as {
+  address: string;
+  results: Array<{ request: ExplanationRequest; status: 200; body: ExplanationResponse }>;
+};

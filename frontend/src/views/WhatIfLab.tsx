@@ -1,11 +1,12 @@
 import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { api } from '../api/client';
-import type { ApiError, InsufficientHistoryBody, MethodId, TimelineResponse, WhatIfDirection, WhatIfRequest, WhatIfResult } from '../api/types';
+import type { ApiError, ExplanationRequest, InsufficientHistoryBody, MethodId, TimelineResponse, WhatIfDirection, WhatIfRequest, WhatIfResult } from '../api/types';
 import { G3FeatureDeviation } from '../charts/G3FeatureDeviation';
 import { LazyG4 } from '../charts/LazyG4';
 import { G5WhatIfResponse } from '../charts/G5WhatIfResponse';
 import { StatusBadge } from '../components/Badges';
 import { ErrorState } from '../components/ErrorState';
+import { NotFlaggedExplanation } from '../components/Explanation';
 import { FlagCallout } from '../components/FlagCallout';
 import { Icon } from '../components/Icon';
 import { Loading, StatePanel } from '../components/StatePanel';
@@ -386,6 +387,8 @@ function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView
   }
 
   const tx = view;
+  // E12 is asked about the values the answer is for: the amount as eight decimals, the direction and the time E8 echoes.
+  const request: ExplanationRequest = { address: tx.address, whatIf: { amountBtc: (Math.abs(tx.netSats) / 1e8).toFixed(8), direction: tx.direction as WhatIfDirection, time: tx.time } };
   return (
     <section className="card verdict-card" aria-labelledby="verdict-title" data-testid="verdict-card">
       <header className="verdict-head">
@@ -400,11 +403,14 @@ function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView
         </span>
       </p>
       {tx.flagged ? (
-        <FlagCallout tx={tx} title="Why this amount stands out" />
+        <FlagCallout tx={tx} title="Why this amount stands out" request={request} />
       ) : (
-        <p className="not-flagged-note">
-          <strong>Not flagged.</strong> No feature was {tx.method.flagAbsZ} or more from this address's usual pattern.
-        </p>
+        <>
+          <p className="not-flagged-note">
+            <strong>Not flagged.</strong> No feature was {tx.method.flagAbsZ} or more from this address's usual pattern.
+          </p>
+          <NotFlaggedExplanation request={request} tx={tx} />
+        </>
       )}
       <p className="muted small">{tx.note}</p>
     </section>

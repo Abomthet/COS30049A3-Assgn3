@@ -9,7 +9,8 @@
 // E5, every E6 page and a few E7 answers (the flagged ones, one scored but not flagged, and
 // unscored ones, whose 422 bodies are what V3 shows for them). For the running example it also records
 // E8 and E9 for a few what-ifs (whatif-main.json: the mock answers exactly these requests), one E10
-// export of the flagged transactions as CSV and as JSON (export-main.json) and E11 (methods.json).
+// export of the flagged transactions as CSV and as JSON (export-main.json), E11 (methods.json) and E12 (explanations-main.json:
+// the prepared answers of the flagged transactions, and the template for a transaction and for two what-ifs).
 // For the running example it also records what two other deciding methods say (methods-main.json): the
 // whole of E5 and E6 and a few E7 answers under Regression residual (many flags) and under TxGPT surprisal
 // (a language model, which cannot score a new amount); the mock answers exactly these.
@@ -110,6 +111,23 @@ async function recordWhatIf(config) {
   return { address: MAIN, results, curves };
 }
 
+/**
+ * E12 for the running example: each flagged transaction (the back end serves the Assistant's prepared answer, `source` text150m),
+ * the scored transaction that is not flagged and two what-ifs (the template, or the Assistant's answer where its weights are installed).
+ * Record it from a back end whose Assistant is not installed, so the template answers carry the reason in `skippedWriters`.
+ */
+async function recordExplanations(rows, whatIf) {
+  const url = '/api/explanations';
+  const flagged = rows.filter((r) => r.status === 'flagged').map((r) => ({ address: MAIN, txid: r.txid }));
+  const nearest = rows.filter((r) => r.status === 'not-flagged').sort((a, b) => b.score - a.score)[0];
+  const lab = (index) => ({ address: MAIN, whatIf: whatIf.results[index].request });
+  const results = [];
+  for (const body of [...flagged, { address: MAIN, txid: nearest.txid }, lab(5), lab(1)]) results.push(await post(url, body));
+  if (results.some((r) => r.status !== 200)) throw new Error('E12 did not answer 200 to every recorded request.');
+  if (!results.slice(0, flagged.length).every((r) => r.body.source === 'text150m')) throw new Error('A flagged transaction of the running example has no prepared answer.');
+  return { address: MAIN, results };
+}
+
 /** E10 for the flagged transactions of the running example, in both formats, with the names the service gave them. */
 async function recordExport() {
   const file = async (format) => {
@@ -156,6 +174,7 @@ async function main() {
   const otherMethods = await recordMethods(main.rows);
   const whatIf = await recordWhatIf(config);
   const exported = await recordExport();
+  const explanations = await recordExplanations(main.rows, whatIf);
   const shortRun = await recordAddress(short, (rows) => rows.map((r) => r.txid));
 
   const row = (rows, pick) => rows.filter((r) => pick(r)).sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
@@ -184,6 +203,7 @@ async function main() {
   save('methods-main.json', otherMethods);
   save('whatif-main.json', whatIf);
   save('export-main.json', exported);
+  save('explanations-main.json', explanations);
   save('examples.json', examples);
   console.log(`Recorded ${MAIN} (${main.rows.length} rows, ${Object.keys(main.record.details).length} details) and ${short} (${shortRun.rows.length} rows) from ${base}.`);
 }

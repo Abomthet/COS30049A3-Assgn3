@@ -11,6 +11,8 @@
 // For the running example, E8 and E9 answer the requests that were recorded (after the same checks of
 // the body as the service makes) and E10 the file of its flagged transactions; any other what-if or
 // export answers 404 `not_found`.
+// E12 answers the requests that were recorded for the running example (its flagged transactions with the Assistant's prepared
+// answer, a scored transaction that is not flagged and two what-ifs with the template); any other request answers 404 `not_found`.
 // The watchlist (E13 to E15) lives in memory and starts empty; it keeps what the page saves until it reloads,
 // as the service keeps it in its database. It checks the body and the capacity as the service does.
 
@@ -24,6 +26,7 @@ import {
   type AddressSummary,
   type AddressesResponse,
   type ConfigResponse,
+  type ExplanationResponse,
   type ExplorerApi,
   type ExportFile,
   type ExportFormat,
@@ -47,7 +50,7 @@ import {
   type WhatIfRequest,
   type WhatIfResult,
 } from '../types';
-import { ADDRESSES, CONFIG, EXPORT_RECORDED, HEALTH, METHODS_ANSWER, METHOD_RUNS, RECORDED, UNSUPPORTED, WHAT_IF_RECORDED, type RecordedAddress } from './fixtures';
+import { ADDRESSES, CONFIG, EXPLANATIONS_RECORDED, EXPORT_RECORDED, HEALTH, METHODS_ANSWER, METHOD_RUNS, RECORDED, UNSUPPORTED, WHAT_IF_RECORDED, type RecordedAddress } from './fixtures';
 
 /** Mutable so the tests and the screenshot script can change behaviour at run time. */
 export const mockControls = {
@@ -268,6 +271,17 @@ export const mockApi: ExplorerApi = {
         throw new ApiError(404, { status: 'not_found', message: 'The mock has a file only for the flagged transactions of the running example.' });
       }
       return EXPORT_RECORDED[format];
+    }, opts),
+
+  // The answers recorded for the running example, whose Assistant was not installed: its flagged transactions have the prepared answer, the rest the template.
+  explain: (body, opts) =>
+    respond<ExplanationResponse>(() => {
+      requireAddress(body.address);
+      if (body.whatIf) checkBody(body.whatIf, ['amountBtc', 'direction', 'time']);
+      const sats = (btc: string) => (checkAmount(btc) as { value: { sats: number } }).value.sats;
+      const found = body.address === EXPLANATIONS_RECORDED.address ? EXPLANATIONS_RECORDED.results.find(({ request: r }) => (body.whatIf ? r.whatIf?.direction === body.whatIf.direction && r.whatIf.time === body.whatIf.time && sats(r.whatIf.amountBtc) === sats(body.whatIf.amountBtc) : r.txid === body.txid?.toLowerCase())) : undefined;
+      if (!found) throw new ApiError(404, { status: 'not_found', message: 'The mock has no recorded explanation for this request.' });
+      return found.body;
     }, opts),
 
   methods: (opts) => respond<MethodsResponse>(() => METHODS_ANSWER, opts),
