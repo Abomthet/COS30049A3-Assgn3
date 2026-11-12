@@ -106,15 +106,15 @@ export function baseLayout(palette: ChartPalette, { compact, touch, zoomable, re
 }
 
 /**
- * Plotly's own tool bar is cut down to zoom, pan and reset. Download is the wrapper's own button,
+ * Plotly's own tool bar is cut down to zoom, pan and reset (and, for a chart whose points can be selected, the box and lasso tools). Download is the wrapper's own button,
  * because it has to be reachable by keyboard and add the title and caption to the image. On touch
  * the tool bar is dropped altogether; a phone's tools move into the wrapper's menu.
  */
-export function plotlyConfig({ touch, zoomable }: Pick<LayoutOptions, 'touch' | 'zoomable'>): Partial<Config> {
+export function plotlyConfig({ touch, zoomable, selectable = false }: Pick<LayoutOptions, 'touch' | 'zoomable'> & { selectable?: boolean }): Partial<Config> {
   return {
     displaylogo: false,
     displayModeBar: zoomable && !touch,
-    modeBarButtons: [['zoom2d', 'pan2d', 'resetScale2d']],
+    modeBarButtons: [selectable ? ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'resetScale2d'] : ['zoom2d', 'pan2d', 'resetScale2d']],
     scrollZoom: false,
     doubleClick: 'reset',
     showTips: false,

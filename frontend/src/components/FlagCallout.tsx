@@ -1,28 +1,23 @@
-import type { TransactionDetail } from '../api/types';
+import type { ExplanationRequest, TransactionDetail } from '../api/types';
 import { dayKey, formatDayRange } from '../lib/dates';
-import { explanationBlocks } from '../lib/explanation';
+import { Explanation, ExplanationBlocks } from './Explanation';
 import { Icon } from './Icon';
 
 /**
  * Why a transaction stands out: the service's explanation, what each feature was compared with and
- * the fixed limitation line. Shared by a real transaction (V3) and a hypothetical one (V4).
+ * the fixed limitation line. Shared by a real transaction (V3) and a hypothetical one (V4). With a `request` the explanation
+ * is the Assistant's panel (the template, and the Assistant's answer when asked for); without one it is the template alone.
  */
-export function FlagCallout({ tx, title }: { tx: Pick<TransactionDetail, 'explanation' | 'comparison' | 'limitation'>; title: string }) {
+export function FlagCallout({ tx, title, request }: { tx: Pick<TransactionDetail, 'explanation' | 'comparison' | 'limitation'>; title: string; request?: ExplanationRequest }) {
   return (
     <section className="flag-callout" aria-labelledby="why-title" data-testid="flag-explanation">
       <h3 id="why-title">
         <Icon name="flag" className="flag-icon" /> {title}
       </h3>
-      {explanationBlocks(tx.explanation, tx.limitation).map((block, i) =>
-        block.kind === 'text' ? (
-          <p key={i}>{block.text}</p>
-        ) : (
-          <ul key={i} className="reasons">
-            {block.items.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        ),
+      {request ? (
+        <Explanation request={request} template={tx.explanation} flagged limitation={tx.limitation} />
+      ) : (
+        <ExplanationBlocks text={tx.explanation} limitation={tx.limitation} />
       )}
       <h4>Compared with</h4>
       <ul className="bases">

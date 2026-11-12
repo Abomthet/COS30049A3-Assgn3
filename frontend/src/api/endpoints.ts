@@ -3,7 +3,8 @@
 
 import type { AxiosInstance } from 'axios';
 import { fileStem } from '../charts/chartTable';
-import type { ExplorerApi, RequestOptions, WatchlistEntry } from './types';
+import { WEB } from '../lib/settings';
+import type { ExplanationResponse, ExplorerApi, RequestOptions, WatchlistEntry } from './types';
 
 /** The name in `Content-Disposition: attachment; filename="1Bbcsfxj-2026-10-22.csv"`, or null when the header is missing or unreadable. */
 export function attachmentName(header: unknown): string | null {
@@ -29,6 +30,8 @@ export function createHttpApi(client: AxiosInstance): ExplorerApi {
     transaction: (txid, address, opts) => get(`/api/transactions/${enc(txid)}`, opts, { address, method: opts?.method }),
     whatIf: (address, body, opts) => post(`/api/addresses/${enc(address)}/what-if`, body, opts),
     whatIfCurve: (address, body, opts) => post(`/api/addresses/${enc(address)}/what-if/curve`, body, opts),
+    explain: (body, opts) =>
+      client.post<ExplanationResponse>('/api/explanations', body, { signal: opts?.signal, timeout: WEB.requests.assistantTimeoutMs }).then((r) => r.data),
     methods: (opts) => get('/api/methods', opts),
     watchlist: (opts) => get('/api/watchlist', opts),
     putWatchlist: (address, body, opts) =>

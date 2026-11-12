@@ -49,6 +49,13 @@ interface Props {
   onOpenTransaction: (row: TransactionRow) => void;
   /** The time axis was zoomed to these days (inclusive), or reset (null). */
   onZoomDays: (days: { from: string; to: string } | null) => void;
+  /**
+   * With `onSelect` the tool bar has a box and a lasso tool, and the chart draws `selection` (the transactions picked,
+   * and a number that changes with each new selection, so Plotly lets go of the one it holds). Left out, the chart cannot select.
+   */
+  selection?: { ids: ReadonlySet<string>; epoch: number } | null;
+  /** The transactions inside a box or lasso, or null when the selection is cleared. */
+  onSelect?: (rows: TransactionRow[] | null) => void;
 }
 
 const axisTime = (iso: string) => iso.slice(0, 19).replace('T', ' ');
@@ -129,7 +136,7 @@ function timeRange(model: Model): [string, string] {
 /** A reset (double-click, or the reset button) puts the axis back on the range the figure asked for, which is no zoom at all. */
 const isReset = (range: [string, string], model: Model): boolean => timeRange(model).every((end, i) => end.slice(0, 19) === range[i].slice(0, 19));
 
-function buildFigure(model: Model, { palette, compact }: FigureContext): Figure {
+function buildFigure(model: Model, selection: Props['selection'], { palette, compact }: FigureContext): Figure {
   const colour: Record<ScoreStatus, string> = { flagged: palette.unusual, 'not-flagged': palette.ordinary, 'not-scored': palette.neutral };
   const data = model.kinds.map((kind): Data => {
     const [status, direction] = kind.split('|') as [ScoreStatus, Direction];
@@ -146,6 +153,8 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
       marker: { symbol: direction === 'in' ? SYMBOL[status] : `${SYMBOL[status]}-open`, color: colour[status], size: rows.map(markSize), line: { width: 1.5, color: colour[status] } },
       hovertext: rows.map(hoverText),
       hoverinfo: 'text',
+      // Without a selection every point is drawn in full; Plotly dims the others once some are selected.
+      ...(selection ? { selectedpoints: rows.flatMap((r, i) => (selection.ids.has(r.txid) ? [i] : [])) } : {}),
     } as Data;
   });
 
@@ -153,6 +162,7 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
     data,
     layout: {
       hovermode: 'closest',
+      selectionrevision: selection ? `selected-${selection.epoch}` : 'none',
       // The axes do not glide: a glide to a new range sends zoom events of its own, which would be read as the user zooming.
       transition: { duration: 0, easing: 'linear' },
       showlegend: true, // Plotly leaves the legend out for a single trace, and it is what names the marks
@@ -175,11 +185,11 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
   };
 }
 
-export function G2TransactionsOverTime({ address, method, rows, frame, loading, revision, onOpenTransaction, onZoomDays }: Props) {
+export function G2TransactionsOverTime({ address, method, rows, frame, loading, revision, onOpenTransaction, onZoomDays, selection, onSelect }: Props) {
   const { settings } = useSettings();
   const methodName = useMethodLabels()[method].name;
   const model = useMemo(() => buildModel(rows, frame), [rows, frame]);
-  const figure = useCallback((context: FigureContext) => buildFigure(model, context), [model]);
+  const figure = useCallback((context: FigureContext) => buildFigure(model, selection, context), [model, selection]);
 
   const table = useMemo<ChartTable>(
     () => ({
@@ -218,12 +228,13 @@ export function G2TransactionsOverTime({ address, method, rows, frame, loading, 
       headingLevel={2}
       caption={`${snapshotCaption(settings.snapshot)} · times in UTC · flagged by ${methodName}${loading ? ` · loading, ${formatCount(loading.loaded)} of ${formatCount(loading.total)} drawn` : ''}`}
       summary={summary}
-      hint="Select a point to open that transaction. Drag to zoom on the time axis, which also sets the dates above; double-click to reset. Filled marks were received and outlined marks were sent; the orange triangles are unusual."
+      hint={`Select a point to open that transaction. Drag to zoom on the time axis, which also sets the dates above; double-click to reset.${onSelect ? ' The box and lasso tools in the tool bar select points instead, and the table then shows only those.' : ''} Filled marks were received and outlined marks were sent; the orange triangles are unusual.`}
       figure={figure}
       table={table}
       revision={revision}
       height={460}
       onPointClick={({ curve, point }) => onOpenTransaction(model.byKind.get(model.kinds[curve])![point])}
+      onSelect={onSelect && ((points) => onSelect(points && points.map(({ curve, point }) => model.byKind.get(model.kinds[curve])![point])))}
       onZoom={(range) => onZoomDays(isReset(range, model) ? null : { from: range[0].slice(0, 10), to: range[1].slice(0, 10) })}
       keyboard={keyboard}
     />

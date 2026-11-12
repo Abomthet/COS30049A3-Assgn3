@@ -1,10 +1,11 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import { api } from '../api/client';
-import type { InsufficientHistoryBody, MethodId, TransactionCore, TransactionDetail } from '../api/types';
+import type { ExplanationRequest, InsufficientHistoryBody, MethodId, TransactionCore, TransactionDetail } from '../api/types';
 import { G3FeatureDeviation } from '../charts/G3FeatureDeviation';
 import { LazyG4 } from '../charts/LazyG4';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { CopyButton } from '../components/CopyButton';
+import { NotFlaggedExplanation } from '../components/Explanation';
 import { ErrorState } from '../components/ErrorState';
 import { FlagCallout } from '../components/FlagCallout';
 import { Icon } from '../components/Icon';
@@ -123,6 +124,8 @@ function Facts({ tx }: { tx: TransactionCore }) {
 function Detail({ tx, headingRef, method, updating }: { tx: TransactionDetail; headingRef: HeadingRef; method: MethodId; updating: boolean }) {
   const methodName = useMethodLabels()[tx.method.id].name;
   const flagLine = useThresholds()[tx.method.id];
+  // The Assistant explains the default method's flag, which is what the prepared answers and E12 are about.
+  const request: ExplanationRequest | undefined = tx.method.id === DEFAULT_METHOD ? { address: tx.address, txid: tx.txid } : undefined;
   return (
     <article className={`detail${updating ? ' is-updating' : ''}`} aria-labelledby="detail-title" aria-busy={updating}>
       <header className="detail-head">
@@ -134,7 +137,7 @@ function Detail({ tx, headingRef, method, updating }: { tx: TransactionDetail; h
       <Facts tx={tx} />
 
       {tx.flagged ? (
-        <FlagCallout tx={tx} title="Why this transaction stands out" />
+        <FlagCallout tx={tx} title="Why this transaction stands out" request={request} />
       ) : (
         <p className="not-flagged-note">
           <strong>Not unusual.</strong>{' '}
@@ -144,6 +147,7 @@ function Detail({ tx, headingRef, method, updating }: { tx: TransactionDetail; h
         </p>
       )}
 
+      {!tx.flagged && request ? <NotFlaggedExplanation request={request} tx={tx} /> : null}
       <G3FeatureDeviation features={tx.features} address={tx.address} />
       <Verdicts tx={tx} />
       <p className="method-note">

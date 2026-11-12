@@ -242,6 +242,42 @@ export interface WhatIfResult
   note: string;
 }
 
+// ------------------------------------------------------------------ the Assistant (E12)
+
+/**
+ * E12's body: an address and either one of its snapshot transactions or a hypothetical one as E8 takes it.
+ * The service also rejects a body that has both.
+ */
+export type ExplanationRequest =
+  | { address: string; txid: string; whatIf?: undefined }
+  | { address: string; txid?: undefined; whatIf: WhatIfRequest };
+
+/** Who wrote an explanation: the Explorer Assistant (`text150m`) or the fixed template. */
+export type ExplanationSource = 'text150m' | 'template';
+
+/** One writer's try and the guardrail checks its answer failed (the answer itself is never sent). */
+export interface WriterAttempt {
+  source: ExplanationSource;
+  failedChecks: string[];
+}
+
+/** E12: the explanation to show, and how it came about. */
+export interface ExplanationResponse {
+  /** The transaction ID, or "what-if" for a hypothetical transaction. */
+  txid: string;
+  flagged: boolean;
+  /** The Assistant's answer when it passed every check; otherwise the template. */
+  explanation: string;
+  source: ExplanationSource;
+  /** True when the answer came from memory or from the prepared answers, not from a fresh writing. */
+  cached: boolean;
+  attempts: WriterAttempt[];
+  /** A writer this computer cannot run, and why. */
+  skippedWriters: Record<string, string>;
+  limitation: string;
+  seconds: number;
+}
+
 /** E9's body: the server spaces its default amounts around the address's usual one, or `minBtc` to `maxBtc` is spaced evenly on a log scale. */
 export interface WhatIfCurveRequest {
   direction: WhatIfDirection;
@@ -535,6 +571,8 @@ export interface ExplorerApi {
   whatIfCurve(address: string, body: WhatIfCurveRequest, opts?: RequestOptions): Promise<WhatIfCurve>;
   /** E10 with E6's filters; `page` and `pageSize` do not apply to a file. */
   exportFile(address: string, format: ExportFormat, query: Omit<TransactionQuery, 'page' | 'pageSize'>, opts?: RequestOptions): Promise<ExportFile>;
+  /** E12, the Assistant's guarded explanation or the template; it can take longer than the other calls (`web.requests.assistantTimeoutMs`). */
+  explain(body: ExplanationRequest, opts?: RequestOptions): Promise<ExplanationResponse>;
   methods(opts?: RequestOptions): Promise<MethodsResponse>;
   watchlist(opts?: RequestOptions): Promise<WatchlistResponse>;
   /** E14: adds the address, or replaces its label and note. */

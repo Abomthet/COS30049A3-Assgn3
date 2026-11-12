@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import type { Data, Layout, PlotMouseEvent, PlotRelayoutEvent } from 'plotly.js';
+import type { Data, Layout, PlotMouseEvent, PlotRelayoutEvent, PlotSelectionEvent } from 'plotly.js';
 import { StatePanel } from '../components/StatePanel';
 import { useSettings } from '../hooks/useSettings';
 import { useToasts } from '../hooks/useToasts';
@@ -71,6 +71,11 @@ interface Props {
    * reports the range the figure itself asked for. Not called for a redraw the page itself asks for.
    */
   onZoom?: (range: [string, string]) => void;
+  /**
+   * Gives the tool bar its box and lasso tools. The points inside a selection, or null when it is cleared (a double-click,
+   * or a drag that takes in nothing). A click while a selection tool is chosen selects and never opens a point.
+   */
+  onSelect?: (points: Array<{ curve: number; point: number }> | null) => void;
   keyboard?: KeyboardStops;
   /**
    * Buttons that set the time axis to a period (Plotly's own range buttons are 19 px tall and cannot be resized,
@@ -98,6 +103,7 @@ export function PlotlyChart({
   height = 340,
   onPointClick,
   onZoom,
+  onSelect,
   keyboard,
   rangeButtons,
   empty,
@@ -118,6 +124,7 @@ export function PlotlyChart({
   const tapped = useRef<string | null>(null);
   const clickHandler = useRef<(event: PlotMouseEvent) => void>(() => {});
   const zoomHandler = useRef<(event: PlotRelayoutEvent) => void>(() => {});
+  const selectHandler = useRef<(event: PlotSelectionEvent | undefined) => void>(() => {});
   /** True while the page itself is redrawing: Plotly reports the new axis range of such a redraw as if the user had zoomed. */
   const redrawing = useRef(false);
   const compact = width < COMPACT_BELOW_PX;
@@ -131,9 +138,9 @@ export function PlotlyChart({
     return {
       data: chooseTraceTypes(built.data, webglMinPoints, webglAvailable),
       layout: mergeLayout(baseLayout(palette, { compact, touch, zoomable, revision, animate }), built.layout),
-      config: plotlyConfig({ touch, zoomable }),
+      config: plotlyConfig({ touch, zoomable, selectable: onSelect !== undefined }),
     };
-  }, [figure, palette, compact, width, zoomable, revision, webglMinPoints]);
+  }, [figure, palette, compact, width, zoomable, revision, webglMinPoints, onSelect !== undefined]);
 
   // Fetch Plotly when the first chart mounts. A chart with nothing to draw never needs it.
   const hasChart = !empty;
@@ -166,6 +173,8 @@ export function PlotlyChart({
         if (!listening.current) {
           root.on('plotly_click', (event) => clickHandler.current(event));
           root.on('plotly_relayout', (event) => zoomHandler.current(event));
+          root.on('plotly_selected', (event) => selectHandler.current(event));
+          root.on('plotly_deselect', () => selectHandler.current(undefined));
           listening.current = true;
         }
         setPhase('ready');
@@ -196,6 +205,9 @@ export function PlotlyChart({
     clickHandler.current = (event) => {
       const hit = event.points[0];
       if (!hit || !onPointClick) return;
+      // With a selection tool chosen a click selects; it must not also leave the page.
+      const tool = (plotRef.current as (HTMLDivElement & { layout?: Partial<Layout> }) | null)?.layout?.dragmode;
+      if (onSelect && (tool === 'select' || tool === 'lasso')) return;
       const key = `${hit.curveNumber}:${hit.pointNumber}`;
       if (window.matchMedia('(pointer: coarse)').matches && tapped.current !== key) {
         tapped.current = key;
@@ -215,6 +227,16 @@ export function PlotlyChart({
       const from = event['xaxis.range[0]'] ?? pair?.[0];
       const to = event['xaxis.range[1]'] ?? pair?.[1];
       if (from !== undefined && to !== undefined) onZoom?.([String(from), String(to)]);
+    };
+  });
+
+  // A selection: the points Plotly reports, or none when it was cleared.
+  useEffect(() => {
+    selectHandler.current = (event) => {
+      // Drawing the selection we were given makes Plotly report an empty one; that is not the user clearing it.
+      if (redrawing.current) return;
+      const points = event?.points ?? [];
+      onSelect?.(points.length > 0 ? points.map((p) => ({ curve: p.curveNumber, point: p.pointNumber })) : null);
     };
   });
 

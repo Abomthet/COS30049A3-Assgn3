@@ -103,6 +103,65 @@ const replay20 = drive(`
   (await button('20 a second')).click();
   (await button('Play')).click();
 `);
+// Chooses the box tool in G2's tool bar and draws a box over the middle of the plot with the mouse, as a person does.
+async function boxSelect(send) {
+  await send('Runtime.evaluate', {
+    expression: `(() => {
+      document.querySelector('.modebar-btn[data-title="Box Select"]').click();
+      const plot = document.querySelector('.pchart-plot .nsewdrag');
+      plot.scrollIntoView({ block: 'center', behavior: 'instant' });
+      return 'ok';
+    })()`,
+    returnByValue: true,
+  });
+  await sleep(700);
+  const { result } = await send('Runtime.evaluate', {
+    expression: `(() => {
+      const r = document.querySelector('.pchart-plot .nsewdrag').getBoundingClientRect();
+      return JSON.stringify({ left: r.left, top: r.top, width: r.width, height: r.height });
+    })()`,
+    returnByValue: true,
+  });
+  const { left, top, width, height } = JSON.parse(result.value);
+  const at = (fx, fy, type) => send('Input.dispatchMouseEvent', { type, x: left + width * fx, y: top + height * fy, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1 });
+  await at(0.55, 0.15, 'mouseMoved');
+  await sleep(150);
+  await at(0.55, 0.15, 'mousePressed');
+  for (let i = 1; i <= 8; i++) {
+    await at(0.55 + 0.03 * i, 0.15 + 0.08 * i, 'mouseMoved');
+    await sleep(40);
+  }
+  await at(0.79, 0.79, 'mouseReleased');
+  await sleep(300);
+}
+// Selects a span of days with the form beside the table, which is how a keyboard or a finger selects.
+const selectSpan = drive(`
+  const field = (label) => until(() => [...document.querySelectorAll('label')].find((l) => l.textContent === label)?.control);
+  for (const [label, value] of [['First day to select', '2026-07-01'], ['Last day to select', '2026-10-22']]) {
+    const input = await field(label);
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  (await button('Select these days')).click();
+  await until(() => document.querySelector('.selection-summary')?.textContent.includes(' selected'));
+`);
+// Keeps three what-ifs of the running example in the lab's scenario table.
+const keepThree = drive(`
+  const amount = document.querySelector('input[inputmode="decimal"]');
+  for (const value of ['0.0005', '0.05', '0.5']) {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(amount, value);
+    amount.dispatchEvent(new Event('input', { bubbles: true }));
+    await wait(300);
+    const keep = await until(() => { const b = [...document.querySelectorAll('button')].find((x) => x.textContent === 'Keep this scenario'); return b && !b.disabled ? b : null; });
+    keep.click();
+  }
+  await until(() => document.querySelectorAll('.scenario-table tbody tr').length === 3);
+  const boxes = document.querySelectorAll('.scenario-table input[type=checkbox]');
+  boxes[0].click();
+  boxes[2].click();
+  for (const dismiss of [...document.querySelectorAll('.toast-button[aria-label]')]) dismiss.click();
+`);
 const DESKTOP = 1280;
 const TABLET = 820;
 const MOBILE = 390;
@@ -169,6 +228,12 @@ const shots = [
   ['55-replay', '', tl(t.mainAddress), DESKTOP, true, false, replay20, 3],
   ['56-replay-mobile', '', tl(t.mainAddress), MOBILE, true, false, replay20, 3],
   ['57-watchlist-undo', '', '#/', DESKTOP, false, false, watchRemoved],
+  ['58-assistant-prepared', '', tx(t.flagged), DESKTOP, false, false, null, 0.5],
+  ['59-assistant-prepared-mobile', '', tx(t.flagged), MOBILE, false, false, null, 0.5],
+  ['60-selection', '', txs(t.mainAddress), DESKTOP, true, false, boxSelect],
+  ['61-selection-mobile', '', txs(t.mainAddress), MOBILE, true, false, selectSpan],
+  ['62-scenarios', '', lab(t.mainAddress, t.whatIf.direction), DESKTOP, true, false, keepThree],
+  ['63-scenarios-mobile', '', lab(t.mainAddress, t.whatIf.direction), MOBILE, true, false, keepThree],
 ];
 
 async function main() {
