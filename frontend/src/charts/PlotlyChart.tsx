@@ -233,6 +233,8 @@ export function PlotlyChart({
   // A selection: the points Plotly reports, or none when it was cleared.
   useEffect(() => {
     selectHandler.current = (event) => {
+      // Drawing the selection we were given makes Plotly report an empty one; that is not the user clearing it.
+      if (redrawing.current) return;
       const points = event?.points ?? [];
       onSelect?.(points.length > 0 ? points.map((p) => ({ curve: p.curveNumber, point: p.pointNumber })) : null);
     };

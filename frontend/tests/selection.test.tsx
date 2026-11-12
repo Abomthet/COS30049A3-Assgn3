@@ -95,6 +95,22 @@ describe('selecting in the chart', () => {
     expect((fakePlotly.lastChartDraw().data as Array<{ selectedpoints?: number[] }>).some((t) => t.selectedpoints)).toBe(false);
   });
 
+  test('the empty selection Plotly reports while the chart draws the selection it was given does not clear it', async () => {
+    await openTab();
+    const react = vi.mocked(fakePlotly.api.react);
+    const draw = react.getMockImplementation()!;
+    let reported = false;
+    react.mockImplementationOnce(async (...args) => {
+      fakePlotly.emit('plotly_selected', { points: [] });
+      reported = true;
+      return draw(...args);
+    });
+    act(() => fakePlotly.emit('plotly_selected', { points: unusualPoints() }));
+    expect(await screen.findByText(/^3 selected/)).toBeInTheDocument();
+    await waitFor(() => expect(reported).toBe(true));
+    expect(screen.getByText(/^3 selected/)).toBeInTheDocument();
+  });
+
   test('a double-click, which Plotly reports as a deselect, clears the selection', async () => {
     await openTab();
     act(() => fakePlotly.emit('plotly_selected', { points: unusualPoints() }));
