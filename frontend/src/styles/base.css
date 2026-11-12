@@ -1271,6 +1271,24 @@ main.container {
   margin-top: 3px;
   color: var(--text-2);
 }
+/* The selection above the transaction table (views/SelectionBar.tsx). */
+.selection-bar {
+  margin-bottom: 16px;
+}
+.selection-bar h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+.selection-summary {
+  margin: 0 0 12px;
+}
+.selection-span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
 /* The explanation and the Assistant's control (components/AssistantPanel.tsx). */
 .explanation {
   display: flex;

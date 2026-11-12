@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import type { TimelineResponse, TransactionRow } from '../api/types';
 import { G2TransactionsOverTime } from '../charts/G2TransactionsOverTime';
@@ -8,6 +8,7 @@ import { FilterBar } from '../components/FilterBar';
 import { Loading, StatePanel } from '../components/StatePanel';
 import { dayKey } from '../lib/dates';
 import { plural } from '../lib/format';
+import { selectionPage } from '../lib/selection';
 import { navigate, paths } from '../lib/router';
 import {
   NO_FILTERS,
@@ -22,6 +23,9 @@ import { useAllTransactions } from '../hooks/useAllTransactions';
 import { useRequest } from '../hooks/useRequest';
 import { useSettings } from '../hooks/useSettings';
 import { TransactionTable } from './TransactionTable';
+
+// The selection's summary and its date-span form, fetched with the tab.
+const SelectionBar = lazy(() => import('./SelectionBar'));
 
 // The transactions tab of V2 (plan section 8): the filter bar, chart G2 and the transaction table,
 // all driven by the filters in the address bar. A change of filter writes the address bar, which
@@ -54,6 +58,13 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
     if (next.from !== filters.from || next.to !== filters.to) change(next);
   };
   const open = (row: TransactionRow) => navigate(paths.tx(address, dayKey(row.time), row.txid, filters.method));
+
+  // A selection (S-07) is some of the rows the chart draws, kept here and not in the address; any change of the filters ends it.
+  const [selection, setSelection] = useState<{ ids: ReadonlySet<string>; epoch: number } | null>(null);
+  const chartRevision = `${address}|${filters.from}|${filters.to}|${filters.status}|${filters.direction}`;
+  useEffect(() => setSelection(null), [chartRevision]);
+  const select = (rows: TransactionRow[] | null) => setSelection((before) => (rows ? { ids: new Set(rows.map((r) => r.txid)), epoch: (before?.epoch ?? 0) + 1 } : null));
+  const selectedRows = selection && chart.rows ? chart.rows.filter((r) => selection.ids.has(r.txid)) : null;
 
   // A new page starts at the top of the table; the first render does not scroll.
   const tableTop = useRef<HTMLDivElement>(null);
@@ -119,13 +130,20 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
               revision={`${address}|${filters.from}|${filters.to}`}
               onOpenTransaction={open}
               onZoomDays={zoomDays}
+              selection={selection}
+              onSelect={select}
             />
           ) : (
             <Loading label="Loading the chart…" block />
           )}
         </div>
+        {chart.rows ? (
+          <Suspense fallback={null}>
+            <SelectionBar rows={chart.rows} selected={selectedRows} onSelect={select} onClear={() => select(null)} />
+          </Suspense>
+        ) : null}
         <div ref={tableTop}>
-          <TransactionTable page={page} method={filters.method} pageHref={(n) => paths.transactions(address, filtersToSearch({ ...filters, page: n }))} />
+          <TransactionTable page={selectedRows ? selectionPage(address, selectedRows, filters.sort) : page} method={filters.method} pageHref={(n) => paths.transactions(address, filtersToSearch({ ...filters, page: n }))} />
         </div>
       </>
     );
