@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { MethodId } from '../api/types';
 import { METHODS } from '../lib/methods';
+import { parseScenarios, type Scenario } from '../lib/scenarios';
 
 // The user's remembered choices live in local storage under one versioned key (plan section 8,
 // "State and data"). A change reaches every component that reads them, and other tabs.
@@ -12,12 +13,14 @@ export interface Preferences {
   method: MethodId | null;
   /** The addresses opened last, newest first (V1's "Recently opened"); at most `RECENT_MAX`. */
   recent: string[];
+  /** The what-if scenarios kept in the lab (V4's table), for each address, at most ten. */
+  scenarios: Record<string, Scenario[]>;
 }
 
 export const RECENT_MAX = 5;
 
 const KEY = 'explorer.preferences.v1';
-const DEFAULTS: Preferences = { theme: null, method: null, recent: [] };
+const DEFAULTS: Preferences = { theme: null, method: null, recent: [], scenarios: {} };
 
 // Storage can throw (blocked, private window). The choice then lasts until the page closes.
 let fallbackRaw: string | null = null;
@@ -38,6 +41,7 @@ function parse(raw: string | null): Preferences {
       theme: stored.theme === 'light' || stored.theme === 'dark' ? stored.theme : null,
       method: METHODS.find((m) => m.id === stored.method)?.id ?? null,
       recent: Array.isArray(stored.recent) ? stored.recent.filter((a): a is string => typeof a === 'string').slice(0, RECENT_MAX) : [],
+      scenarios: parseScenarios(stored.scenarios),
     };
   } catch {
     return DEFAULTS;

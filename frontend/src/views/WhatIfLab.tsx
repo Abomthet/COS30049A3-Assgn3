@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { Suspense, lazy, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { api } from '../api/client';
 import type { ApiError, ExplanationRequest, InsufficientHistoryBody, MethodId, TimelineResponse, WhatIfDirection, WhatIfRequest, WhatIfResult } from '../api/types';
 import { G3FeatureDeviation } from '../charts/G3FeatureDeviation';
@@ -28,6 +28,9 @@ import { amountText, checkAmount, checkWhen, splitTime } from '../lib/whatIf';
 // once all three are valid the request goes after `web.whatIf.debounceMs` of quiet, the request before
 // it is cancelled, and the previous result stays in place, dimmed and marked "Updating", until the next
 // arrives. The curve of chart G5 is drawn for the direction and time alone.
+
+// The scenario table (S-08) is fetched with the lab.
+const ScenarioPanel = lazy(() => import('./ScenarioPanel'));
 
 const DIRECTIONS: WhatIfDirection[] = ['out', 'in'];
 /** The quiet stretches the time chips jump to, in days after the address's last transaction. */
@@ -291,6 +294,10 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
           {!insufficient && !curveShown && curve.status === 'loading' ? <Loading label="Drawing the curve…" block /> : null}
         </div>
       </div>
+
+      <Suspense fallback={null}>
+        <ScenarioPanel address={address} current={answered && amount.ok ? { amountBtc: amount.value.btc, result: answered } : null} />
+      </Suspense>
 
       {details ? (
         <>

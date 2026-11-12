@@ -2265,3 +2265,33 @@ main.container {
 .replay-card h2 {
   margin-top: 0;
 }
+
+/* The kept scenarios of the what-if lab (views/ScenarioPanel.tsx). */
+.scenarios-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.scenarios-head h2 {
+  margin: 0;
+}
+.scenarios-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.scenario-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-weight: 600;
+}
+.scenario-compare {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
