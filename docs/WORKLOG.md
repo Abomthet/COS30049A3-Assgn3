@@ -645,3 +645,24 @@ Plan written on Opus: **`docs/PLAN_SHOULD.md`** (what each Should item needs, de
   vanished, so an update was reinstalling them. `xcode-select --install` reported them installed. The
   `~/.local/bin/git` link to conda's git was removed; Apple's git 2.50.1 is in use again (the conda `tools`
   environment stays as a fallback).
+
+## 2026-11-12 — Wave A back end reviewed (S-04 watchlist back end, S-02 ranks)
+**Delegated to** the A-back cook (**Sonnet 5.5, medium effort**): 30 tool calls, ~12 min, **~130k tokens** (the
+high-effort packages cost 250–380k; the cheaper policy, D-W-14, works). **Lead review:** index clean; vendored
+files unchanged; wording clean. Live probe on a scratch database (`EXPLORER_DB`): PUT 201 then 200; one 400
+naming `label` (41 characters) and `note` (a number); PUT for an address outside the snapshot 404; DELETE 204
+then 404; E7 `ranks` for all nine methods on a flagged transaction (baseline 1.0, regression range 0.485);
+E7 body 3,041 bytes (budget 6 kB); clean log. Verified in a clean worktree: back end **646 passed**, front end
+546, build clean. Commit `a411820`.
+**Design notes:**
+- **An exact cap under concurrency.** One SQLite connection behind a lock; the count check and the insert
+  run in one `BEGIN IMMEDIATE` transaction, so the 200-entry limit holds when requests arrive in parallel on
+  the thread pool (tested with 100 threads against a limit of 10).
+- **Ranks without rescoring.** A rank is the share of the address's own scored transactions at or below
+  this score, found by `searchsorted` in one sorted pool per address and method, built from the cached
+  `score_address` result. For a what-if, the pool is the stored scores strictly before its time, the same
+  history it is judged against.
+- **No file at import.** The database opens in the lifespan (`create_app(database=…)`, then `EXPLORER_DB`,
+  then `backend/var/explorer.db`), so tests and tools that build the app write nothing.
+**Minor, for polish:** a non-text `note` gets "Must be text of an acceptable length", which reads oddly for a
+wrong type.
