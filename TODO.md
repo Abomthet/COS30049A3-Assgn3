@@ -72,8 +72,8 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T34 (`0f4febf`) S-06 replay
 - [~] T35 `@C-front` S-07 linked selection; S-08 scenario table
 - [~] T36 `@B2-live` S-09 live lookup, E16–E20, dialog V8 (CR-08 approved)
-- [~] T37 S-10: CI `@C-tools`; generated types deferred until the API settles
-- [~] T38 S-11 browser tests (wave D); S-12 `measure.py` `@C-tools` (response times, bundle sizes, render times)
+- [~] T37 S-10: CI done (`75eaf5a`); generated types deferred until the API settles
+- [~] T38 S-11 browser tests (wave D); S-12 `measure.py` done (`75eaf5a`, every budget passes) (response times, bundle sizes, render times)
 
 ## 1.4.6 Test and fix (25–29 Nov)
 - [~] T39 **[you]** Usability walkthrough, two sessions: pack ready in `docs/usability/` (`7c3dd25`); book participants

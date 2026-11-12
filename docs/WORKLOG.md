@@ -799,3 +799,47 @@ The Assistant-panel cook (hit by the limit, not stopped by hand) was resumed dir
 Housekeeping: `.claude/` (where agent worktrees live) is now git-ignored (`588deba`).
 **Lesson:** five cooks in parallel used up a 5-hour window in about 1.5 hours. Parallel work speeds up progress,
 but each window now buys less work.
+
+## 2026-11-13 — S-12 measure.py and CI merged (first branch merged from a worktree)
+**Delegated to** the C-tools cook (Sonnet 5.5, medium; continued after an accidental stop and a usage limit) in worktree
+branch `worktree-agent-a0670ebff94dc37ab`. Commits `0f69f02`, `c5d3f84`; **merged** as `75eaf5a`.
+**Lead review:**
+- commits carry no attribution;
+- the Vite proxy change only adds an optional `EXPLORER_API` override (default still :8000);
+- the CI file is read-only, cancels older runs and uses the README's own commands;
+- the new scripts pass `node --check`;
+- `measure.py` compiles;
+- a clean worktree of the merge: back end 677 + 1 skipped, front end 610, build clean.
+
+**The quoted measurement run** (`docs/report-material/measured/measure.md`; Apple M5, a freshly started back end,
+15 repeats, production build) — **every budget passes**:
+
+| Measure | Budget | Running example | Largest |
+|---|---|---|---|
+| E5 cold / warm | 150 / 20 ms | 1.9 / 1.5 ms | 1.6 / 1.3 ms |
+| E6 200 rows cold / warm | 150 ms | 2.8 / 2.9 ms | 2.8 / 2.6 ms |
+| E7 cold / warm | 150 ms | 2.7 / 1.5 ms | 1.4 / 1.2 ms |
+| E8 cold / warm | 700 ms | 327 / 274 ms | 332 / 372 ms |
+| E9 41 points cold / warm | 1.5 s | 214 / 210 ms | 341 / 436 ms |
+| E5 / E7 plain bodies | 60 / 6 kB | 11.6 / 3.0 kB | 18.4 / 2.9 kB |
+| First-screen JS (gzip -9) | 150 kB | 145.3 kB | |
+| Page open → first chart (G1 / G2 / G5) | 1.5 s | 333 / 370 / 934 ms | |
+| Chart redraw (G1 / G2 / G5) | 300 ms | 72 / 44 / 35 ms | |
+
+Caveats stated in the script: cold E5 is a cache hit (the cache warms at start); times are client-side on
+loopback; the 50,000-point WebGL and "first view usable in 2 s" budgets are not scripted.
+
+**CI dry run** (from a `git archive`, fresh venv, no torch):
+- back end: `pip install`, `vendor_a2.py --check`, pytest **677 passed, 1 skipped** (219 s wall);
+- front end: `npm ci`, 610 tests, typecheck and build.
+
+**Design notes:**
+- **One script, one table.** The report quotes `measure.py`'s generated table (date, commit, machine, repeats) rather
+  than hand-copied numbers. Each figure with a plan budget gets pass/fail, and the script exits 1 on a failure.
+- **CI as the README's commands.** Two independent jobs (back end without PyTorch, so the Assistant's tests skip;
+  front end from the lock file), caches keyed on the dependency files, and a newer push cancels the older run to save
+  private-repo minutes.
+
+**Note:** `chart-timings.mjs` missed a draw about once in 40 runs (cause unknown), so it retries up to 3 times and
+reports retries on stderr.
+**Push blocked (13 Nov):** GitHub refused `75eaf5a` because the login token lacks the `workflow` scope ("refusing to allow an OAuth App to create or update workflow `.github/workflows/ci.yml`"). Local `main` is ahead of `origin/main` until the user grants the scope (`gh auth refresh -h github.com -s workflow`, then `gh auth setup-git`).
