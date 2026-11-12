@@ -5,11 +5,13 @@ from typing import Annotated
 
 from fastapi import Depends, Path, Query, Request, Response
 
+from ..core.errors import Disabled
 from ..core.runtime import Runtime
 from ..core.validation import require_address, require_txid
 from ..services.assistant_service import AssistantService
 from ..services.explorer_service import ExplorerService
 from ..services.export_service import ExportService
+from ..services.live_service import LiveService
 from ..services.methods_service import MethodsService
 from ..services.model_service import require_ready
 from ..services.watchlist_service import WatchlistService
@@ -85,6 +87,22 @@ def get_assistant(runtime: Annotated[Runtime, Depends(get_runtime)]) -> Assistan
     require_ready(runtime)
     assert runtime.assistant is not None  # built by `create_app`
     return runtime.assistant
+
+
+def get_live(runtime: Annotated[Runtime, Depends(get_runtime)]) -> LiveService:
+    """The live lookup service.
+
+    Raises:
+        Disabled: Live lookup is switched off on this server (403); asked before anything else, so a server with it off never
+            reports on its models.
+        Unavailable: The models are still loading, or failed to load (503).
+    """
+    if not runtime.settings.live_lookup:
+        raise Disabled("Live lookup is switched off on this server.",
+                       "Start the server with EXPLORER_LIVE_LOOKUP=on to fetch addresses outside the snapshot, or pick a snapshot address.")
+    require_ready(runtime)
+    assert runtime.live is not None  # built with the explorer whenever the setting is on
+    return runtime.live
 
 
 def snapshot_data(response: Response) -> None:

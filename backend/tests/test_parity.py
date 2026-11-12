@@ -76,7 +76,8 @@ def test_the_timeline_is_the_scored_result_without_its_transactions(shared_clien
     whole = reference(address)
     response = shared_client.get(f"/api/addresses/{address}/timeline")
     assert response.status_code == 200
-    assert response.json() == {key: value for key, value in whole.items() if key != "transactions"}
+    # A snapshot address has no `live` block (null); everything else is A2's result.
+    assert response.json() == {**{key: value for key, value in whole.items() if key != "transactions"}, "live": None}
 
 
 @per_scored_address

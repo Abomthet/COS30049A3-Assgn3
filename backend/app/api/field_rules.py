@@ -56,11 +56,17 @@ def _watchlist(runtime: Runtime, raw: RawRequest) -> list[FieldError]:
     return runtime.watchlist.rejected_put(_body(raw))
 
 
+def _live(runtime: Runtime, raw: RawRequest) -> list[FieldError]:
+    """E16's body."""
+    return [] if runtime.live is None else runtime.live.rejected_lookup(_body(raw))
+
+
 # Keyed by (method, path template), as FastAPI names a route.
 FIELD_RULES: dict[tuple[str, str], FieldRules] = {
     ("GET", "/api/addresses/{address}/transactions"): _rows,
     ("GET", "/api/addresses/{address}/export"): _export,
     ("PUT", "/api/watchlist/{address}"): _watchlist,
+    ("POST", "/api/live/lookups"): _live,
     ("POST", "/api/addresses/{address}/what-if"): _what_if,
     ("POST", "/api/addresses/{address}/what-if/curve"): _curve,
 }

@@ -22,10 +22,14 @@ def test_every_route_has_a_summary_a_response_model_and_documented_errors(settin
     for path, operations in document["paths"].items():
         for method, operation in operations.items():
             assert operation.get("summary"), f"{method} {path} has no summary"
-            if method == "delete":  # E15 answers 204 with no body
+            if method == "delete":  # E15, E19 and E20 answer 204 with no body
                 assert "204" in operation["responses"] and "200" not in operation["responses"]
                 continue
-            ok = operation["responses"]["200"]["content"]["application/json"]["schema"]
+            content = operation["responses"]["200"]["content"]
+            if "text/event-stream" in content:  # E18 streams server-sent events
+                assert "503" in operation["responses"]
+                continue
+            ok = content["application/json"]["schema"]
             assert "$ref" in ok, f"{method} {path} has no response model"
             assert "503" in operation["responses"]
 
@@ -60,6 +64,11 @@ PLANNED_STATUSES = {
     ("put", "/api/watchlist/{address}"): {"201", "400", "404", "409", "413", "415"},
     ("delete", "/api/watchlist/{address}"): {"204", "400", "404"},
     ("post", "/api/explanations"): {"400", "404", "413", "415", "422", "429"},
+    ("delete", "/api/addresses/{address}"): {"204", "400", "403", "404", "409"},
+    ("post", "/api/live/lookups"): {"202", "400", "403", "404", "409", "413", "415", "429", "502", "504"},
+    ("get", "/api/live/lookups/{lookup_id}"): {"403", "404"},
+    ("get", "/api/live/lookups/{lookup_id}/events"): {"403", "404"},
+    ("delete", "/api/live/lookups/{lookup_id}"): {"204", "403", "404"},
 }
 
 
@@ -76,10 +85,11 @@ def test_validation_errors_are_documented_as_the_400_error_body_and_no_422_http_
     error = {"$ref": "#/components/schemas/ErrorBody"}
     for path, operations in document["paths"].items():
         for method, operation in operations.items():
-            if operation.get("parameters") or operation.get("requestBody"):
+            # A lookup's identifier is any text: E17 to E19 have no value that could fail a check, so no 400.
+            if (operation.get("parameters") or operation.get("requestBody")) and not path.startswith("/api/live/lookups/{"):
                 assert operation["responses"]["400"]["content"]["application/json"]["schema"] == error, f"{method} {path}"
             for status, response in operation["responses"].items():
-                if status not in ("200", "201", "204", "304"):
+                if status not in ("200", "201", "202", "204", "304"):
                     assert response["content"]["application/json"]["schema"] == error, f"{method} {path} {status}"
 
 

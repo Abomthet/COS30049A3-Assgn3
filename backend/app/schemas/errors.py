@@ -58,11 +58,14 @@ class ErrorBody(CamelModel):
 
 def error_responses(*codes: int) -> dict[int | str, dict[str, Any]]:
     """The `responses=` entry that documents the given error statuses with the one body."""
-    meanings = {400: "A value is malformed or out of range.", 404: "The address, transaction or path is unknown.",
-                409: "The watchlist is full.",
+    meanings = {400: "A value is malformed or out of range.", 403: "Live lookup is switched off on this server.",
+                404: "The address, transaction, lookup or path is unknown.",
+                409: "The watchlist is full; a lookup for that address is already running; a snapshot address cannot be forgotten.",
                 413: "The request body is over the size limit.", 415: "The request body is not JSON.",
                 422: "Too little earlier history to score.",
-                429: "The Assistant is writing another answer; wait `Retry-After` seconds and ask again.", 503: "The service is starting or a file is missing."}
+                429: "The Assistant is writing another answer, or too many live lookups; wait `Retry-After` seconds and ask again.",
+                502: "The public blockchain service answered with an error.",
+                503: "The service is starting or a file is missing.", 504: "The public blockchain service did not answer in time."}
     return {code: {"model": ErrorBody, "description": meanings[code]} for code in codes}
 
 

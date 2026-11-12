@@ -116,10 +116,11 @@ class ExportService:
         """
         rows, details = self._explorer.matching(address, query)
         method = query.method or self._default
-        records = [self._record(address, method, row, details[row.txid]) for row in rows]
+        date = self._explorer.data_date(address, self._snapshot_date)  # a fetched address's data is dated by its fetch
+        records = [self._record(address, method, row, details[row.txid], date) for row in rows]
         if query.format == "json":
             document = ExportDocument.model_validate({
-                "address": address, "snapshotDate": self._snapshot_date, "method": method, "limitation": self._limitation,
+                "address": address, "snapshotDate": date, "method": method, "limitation": self._limitation,
                 "count": len(records), "transactions": records})
             content = document.model_dump_json(by_alias=True, indent=2).encode("utf-8")
         else:
@@ -128,9 +129,9 @@ class ExportService:
             writer.writerow(csv_header())
             writer.writerows(csv_cells(record, self._limitation) for record in records)
             content = buffer.getvalue().encode("utf-8")
-        return ExportFile(content, MEDIA_TYPES[query.format], f"{address[:8]}-{self._snapshot_date}.{query.format}")
+        return ExportFile(content, MEDIA_TYPES[query.format], f"{address[:8]}-{date}.{query.format}")
 
-    def _record(self, address: str, method: str, row: TransactionRow, detail: dict[str, Any]) -> ExportRow:
+    def _record(self, address: str, method: str, row: TransactionRow, detail: dict[str, Any], date: str) -> ExportRow:
         """One row of the file, from E6's row and the transaction's detail."""
         scored = row.status != "not-scored"
         flagged_by = [name for name, flag in detail.get("flags", {}).items() if flag] if scored else []
@@ -141,4 +142,4 @@ class ExportService:
             "receivedSats": detail["receivedSats"], "sentSats": detail["sentSats"], "netSats": row.net_sats, "scored": scored,
             "flagged": row.status == "flagged", "method": method, "score": row.score, "features": features,
             "mainReason": row.main_reason, "flaggedBy": flagged_by, "sourceUrl": detail["sourceUrl"],
-            "snapshotDate": self._snapshot_date, "limitation": self._limitation if row.status == "flagged" else None})
+            "snapshotDate": date, "limitation": self._limitation if row.status == "flagged" else None})

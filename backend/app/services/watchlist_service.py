@@ -8,21 +8,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from explorer.predict import Unsupported
+
 from ..core.config import WatchlistLimits
-from ..core.errors import ApiError, InvalidRequest, NotFound, needs_correcting
+from ..core.errors import Conflict, InvalidRequest, NotFound, needs_correcting
 from ..schemas.errors import FieldError
 from ..schemas.watchlist import WatchlistEntry, WatchlistPut, WatchlistResponse
 from .explorer_service import ExplorerService
 from .watchlist_repo import WatchEntry, WatchlistFull, WatchlistRepo
 
 CORRECT_HINT = "Correct the values named below and send the request again."
-
-
-class Conflict(ApiError):
-    """The request cannot be carried out in the list's present state (409)."""
-
-    status_code = 409
-    status = "conflict"
 
 
 class WatchlistService:
@@ -43,9 +38,17 @@ class WatchlistService:
         return WatchlistEntry(address=stored.address, label=stored.label, note=stored.note, added_at=stored.added_at,
                               updated_at=stored.updated_at, summary=self._explorer.summary(stored.address))
 
+    def _can_open(self, address: str) -> bool:
+        """False for a fetched address that has since expired or been forgotten: its entry stays in the file, unlisted."""
+        try:
+            self._explorer.summary(address)
+        except Unsupported:
+            return False
+        return True
+
     def entries(self) -> WatchlistResponse:
         """E13: every entry with its summary, most recently added first."""
-        return WatchlistResponse(entries=[self._entry(stored) for stored in self._repo.list()])
+        return WatchlistResponse(entries=[self._entry(stored) for stored in self._repo.list() if self._can_open(stored.address)])
 
     def put(self, address: str, body: WatchlistPut) -> tuple[WatchlistEntry, bool]:
         """E14: add or replace an entry.
@@ -75,6 +78,10 @@ class WatchlistService:
         """
         if not self._repo.delete(address):
             raise NotFound("This address is not on the watchlist.", "Reload the list to see what it holds now.")
+
+    def discard(self, address: str) -> None:
+        """Remove an entry if there is one: a forgotten address is no longer on the list, and that is not an error."""
+        self._repo.delete(address)
 
     def problems(self, label: object, note: object) -> list[FieldError]:
         """The fields at fault by the length limits; a value that is not text is left to the type check."""

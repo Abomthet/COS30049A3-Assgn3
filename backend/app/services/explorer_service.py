@@ -20,20 +20,20 @@ from functools import lru_cache
 from typing import Any, cast
 
 from explorer.explain import reasons_for
-from explorer.predict import InsufficientHistory, Predictor, iso
+from explorer.predict import PRECOMPUTED_ONLY, InsufficientHistory, Predictor, iso
 from pydantic import TypeAdapter
 
 from ..core.config import ListLimits
 from ..core.errors import InvalidRequest, NotFound, needs_correcting
 from ..core.validation import is_day, passed, validate_address
-from ..schemas.addresses import (AddressesResponse, AddressSummary, LookupResponse, PageSize, TimelineResponse,
+from ..schemas.addresses import (AddressesResponse, AddressSummary, LiveInfo, LookupResponse, PageSize, TimelineResponse,
                                  TransactionFilters, TransactionRow, TransactionsQuery, TransactionsResponse)
-from ..schemas.common import SnapshotInfo
+from ..schemas.common import DataSource, SnapshotInfo
 from ..schemas.errors import FieldError
 from ..schemas.transactions import TransactionDetail
 from .ranks import pools_of, ranks_of
 from .reasons import reword
-from .store import AddressData, AddressStore
+from .store import AddressData, AddressStore, predictor_for
 
 PAGE_SIZE = TypeAdapter(PageSize)
 NOT_SCORED_MESSAGE = "This transaction could not be scored: the address had too little earlier history to compare it with."
@@ -66,12 +66,14 @@ def _row(tx: dict[str, Any]) -> TransactionRow:
 class ExplorerService:
     """Serves E3 to E7 from an address store and the Predictor, through the per-address cache."""
 
-    def __init__(self, store: AddressStore, predictor: Predictor, lists: ListLimits) -> None:
+    def __init__(self, store: AddressStore, predictor: Predictor, lists: ListLimits, live_slots: int = 0) -> None:
         """
         Args:
             store: Where an address's tables come from.
             predictor: Assignment 2's loaded Predictor, which does all the scoring.
             lists: Paging limits (settings.json -> web.lists).
+            live_slots: Cache entries to keep beyond one set for the store's addresses: room for the addresses a live lookup
+                will fetch (S-09), which the store does not hold yet.
         """
         self._store = store
         self._lists = lists
@@ -81,7 +83,7 @@ class ExplorerService:
         self._snapshots = {name: SnapshotInfo.model_validate(view.snapshot()) for name, view in self._predictors.items()}
         # Thread-safe, but two requests for the same cold address may both score it: the results are equal, and the
         # later one replaces the earlier. Not worth a lock around 60 ms of work.
-        self._view = lru_cache(maxsize=len(store.addresses()))(self._build_view)
+        self._view = lru_cache(maxsize=len(store.addresses()) + live_slots)(self._build_view)
 
     # ---------------------------------------------------------------- the cache
 
@@ -95,7 +97,7 @@ class ExplorerService:
         for address in self._store.addresses():
             if stop.is_set():
                 break
-            self._view(self._default, address)
+            self._cached(self._default, address)
             filled += 1
         return filled
 
@@ -109,9 +111,47 @@ class ExplorerService:
         """How many entries the cache holds."""
         return self._view.cache_info().currsize
 
-    def _build_view(self, method: str, address: str) -> AddressView:
+    def _cached(self, method: str, address: str) -> AddressView:
+        """The address's view under the method, from the cache. The cache key carries the data's version, so a fetched address
+        that was fetched again is never served from its older entry."""
+        return self._view(method, address, self._data(address, method).version)
+
+    def _data(self, address: str, method: str | None = None) -> AddressData:
+        """The address's tables, for a request that asks under `method`.
+
+        Raises:
+            Unsupported: The address is not in the store.
+            InvalidRequest: The method is TxGPT and the address was fetched: TxGPT's scores are computed in advance for the
+                snapshot, so a fetched address has none.
+        """
+        data = self._store.get(address)
+        if data.source == "live" and method in PRECOMPUTED_ONLY:
+            raise InvalidRequest("This method has no scores for a fetched address.",
+                                 "TxGPT's scores are prepared in advance for the snapshot; choose another method.",
+                                 [FieldError(name="method", message="Not available for a fetched address.")])
+        return data
+
+    def source_of(self, address: str) -> DataSource:
+        """Where the address's data came from.
+
+        Raises:
+            Unsupported: The address is not in the store.
+        """
+        return self._store.get(address).source
+
+    def data_date(self, address: str, snapshot_date: str) -> str:
+        """The day the address's data is dated: the snapshot's date, or for a fetched address the day it was fetched.
+
+        Raises:
+            Unsupported: The address is not in the store.
+        """
+        fetch = self._store.get(address).fetched
+        return snapshot_date if fetch is None else fetch.fetched_at[:10]
+
+    def _build_view(self, method: str, address: str, version: str) -> AddressView:
         """Score an address once and cut the result into the pieces the endpoints serve."""
-        predictor, data = self._predictors[method], self._store.get(address)
+        data = self._store.get(address)
+        predictor = predictor_for(self._predictors[method], data)
         if not data.features["scorable"].any():
             return self._unscored_view(predictor, data)
         result = predictor.score_address(address)
@@ -121,8 +161,19 @@ class ExplorerService:
         transactions = {tx["txid"]: {**tx, "explanation": reword(tx["explanation"]),
                                      **({"ranks": ranks_of(tx["scores"], pools)} if tx.get("scored", False) else {})}
                         for tx in result["transactions"]}
-        timeline = TimelineResponse.model_validate({key: value for key, value in result.items() if key != "transactions"})
+        timeline = TimelineResponse.model_validate({
+            **{key: value for key, value in result.items() if key != "transactions"},
+            "snapshot": self._snapshots[method], "live": self._live_info(data)})
         return AddressView(timeline, tuple(_row(tx) for tx in result["transactions"]), transactions)
+
+    @staticmethod
+    def _live_info(data: AddressData) -> LiveInfo | None:
+        """What the screen says about a fetched address's data: when it was read and how much of the history it holds."""
+        fetch = data.fetched
+        if fetch is None:
+            return None
+        return LiveInfo(fetched_at=fetch.fetched_at, transactions=fetch.transactions, total=fetch.total, max_tx=fetch.max_tx,
+                        truncated=fetch.truncated)
 
     def _unscored_view(self, predictor: Predictor, data: AddressData) -> AddressView:
         """The view of an address with too little history to score, built from its feature table (Mod-4).
@@ -132,7 +183,7 @@ class ExplorerService:
         facts = [predictor.core(row) for _, row in data.features.iterrows()]
         per_day = Counter(fact["time"][:10] for fact in facts)
         timeline = TimelineResponse.model_validate({
-            "address": data.address, "snapshot": self._snapshots[predictor.selected],
+            "address": data.address, "snapshot": self._snapshots[predictor.selected], "live": self._live_info(data),
             "range": {"start": facts[0]["time"], "end": facts[-1]["time"]},
             "days": [{"date": date, "txCount": count, "flaggedCount": 0} for date, count in sorted(per_day.items())],
             "totals": {"txCount": len(facts), "scoredCount": 0, "flaggedCount": 0, "flaggedDays": 0},
@@ -185,8 +236,8 @@ class ExplorerService:
         Raises:
             Unsupported: The address is not in the store.
         """
-        self._store.get(address)  # raises for an unknown address before anything is scored
-        return self._view(method or self._default, address).timeline
+        self._data(address, method)  # raises for an unknown address before anything is scored
+        return self._cached(method or self._default, address).timeline
 
     def rows(self, address: str, query: TransactionsQuery) -> TransactionsResponse:
         """E6: a filtered, sorted page of rows.
@@ -198,8 +249,8 @@ class ExplorerService:
         """
         page_size = query.page_size or self._lists.page_size
         self._check_filters(query.date, query.from_, query.to, self._page_size_problems(page_size))
-        self._store.get(address)
-        selected = self._select(self._view(query.method or self._default, address).rows, query)
+        self._data(address, query.method)
+        selected = self._select(self._cached(query.method or self._default, address).rows, query)
         start = (query.page - 1) * page_size
         return TransactionsResponse(address=address, date=query.date, transactions=selected[start:start + page_size],
                                     page=query.page, page_size=page_size, total=len(selected))
@@ -212,7 +263,7 @@ class ExplorerService:
             NotFound: The transaction is not one of the address's.
             InsufficientHistory: The transaction could not be scored; the error carries its facts.
         """
-        data = self._store.get(address)
+        data = self._data(address, method)
         return TransactionDetail.model_validate({**self.scored_transaction(address, txid, method), "source": data.source})
 
     def scored_transaction(self, address: str, txid: str, method: str | None = None) -> dict[str, Any]:
@@ -223,12 +274,12 @@ class ExplorerService:
             NotFound: The transaction is not one of the address's.
             InsufficientHistory: The transaction could not be scored; the error carries its facts.
         """
-        data = self._store.get(address)
+        data = self._data(address, method)
         if txid not in data.features.index:
             raise NotFound("This transaction is not one of this address's transactions in the snapshot.",
                            "Check the link, or pick a transaction from the address's list.")
         method = method or self._default
-        view = self._view(method, address)
+        view = self._cached(method, address)
         transaction = view.transactions[txid]
         if not transaction.get("scored", False):
             raise self._not_scored(self._predictors[method], data, view, txid)
@@ -242,8 +293,8 @@ class ExplorerService:
             Unsupported: The address is not in the store.
         """
         self._check_filters(query.date, query.from_, query.to)
-        self._store.get(address)
-        view = self._view(query.method or self._default, address)
+        self._data(address, query.method)
+        view = self._cached(query.method or self._default, address)
         return self._select(view.rows, query), view.transactions
 
     @staticmethod

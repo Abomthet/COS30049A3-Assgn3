@@ -26,7 +26,7 @@ from ..schemas.errors import FieldError
 from ..schemas.whatif import Amount, CurveRequest, CurveResponse, Points, WhatIfRequest, WhatIfResult
 from .ranks import rank_among
 from .reasons import reword
-from .store import AddressData, AddressStore
+from .store import AddressData, AddressStore, predictor_for
 from .whatif_batch import hypothetical_frame, score_frame, usable_methods
 
 # Each judges one raw value as the body's own field is, for a body that failed its type check elsewhere (`rejected_*`).
@@ -93,7 +93,7 @@ class WhatIfService:
         self._raise_for(self._problems(data, time_utc, [("amountBtc", request.amount_btc)]))
         seconds = int(time_utc.timestamp())
         try:
-            result = self._predictor.score_what_if(address, amount, request.direction, iso(seconds))
+            result = predictor_for(self._predictor, data).score_what_if(address, amount, request.direction, iso(seconds))
         except InsufficientHistory:  # no real transaction before the time: A2's body lacks the first scorable day
             raise self._too_early(data, seconds) from None
         if not result["scored"]:  # earlier history exists but is under the minimum: A2 returns the row unscored
@@ -132,10 +132,11 @@ class WhatIfService:
         else:
             amounts = self._default_amounts(data, request.direction, seconds)
         frame = self._frame(data, amounts, request.direction, seconds)
-        scored = score_frame(self._predictor, frame)
+        predictor = predictor_for(self._predictor, data)  # a fetched address's regression has its own residual scale
+        scored = score_frame(predictor, frame)
         usual = finite(frame["usual_F1"].iloc[0])  # the size window holds only earlier transactions, so one value serves every amount
         methods = [{"id": name, "name": self._predictor.method_info(name)["name"],
-                    "threshold": float(self._predictor.methods[name].threshold), "scores": scored.scores[name],
+                    "threshold": float(predictor.methods[name].threshold), "scores": scored.scores[name],
                     "flags": scored.flags[name]} for name in scored.scores]
         return CurveResponse.model_validate({
             "address": address, "direction": request.direction, "time": iso(seconds),
