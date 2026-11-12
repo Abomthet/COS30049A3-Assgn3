@@ -784,3 +784,18 @@ confirmed six refusals, and direction cannot be mistyped (two buttons). Fixed.
 
 **Gaps for the report (T47):** **no architecture figure has been drawn yet**; the Week 9 minutes (recording D-A3-1…11,
 CR-07/CR-08 by name) are the team's.
+
+## 2026-11-12 — Four cooks interrupted (usage limit; three stopped by hand) and continued
+The usage limit hit again (5-hour window; the message also cites the monthly spend limit) while four cooks ran,
+and three were then stopped by hand by accident. The system will not resume an agent stopped by hand, so at the
+user's request the lead started **new cooks that continue inside their predecessors' worktrees**, so no work was lost:
+- **live lookup** (S-09, Sonnet high): on branch `worktree-agent-a93f6e580f3925d66`, from commit `6ef05fd` (A2's
+  `explorer/transactions.py` vendored);
+- **measure.py and CI** (Sonnet medium): on branch `worktree-agent-a0670ebff94dc37ab`, reviewing and keeping the 4
+  uncommitted files;
+- **architecture figures** (Fable 5.2): restarted from scratch (nothing had been written).
+
+The Assistant-panel cook (hit by the limit, not stopped by hand) was resumed directly.
+Housekeeping: `.claude/` (where agent worktrees live) is now git-ignored (`588deba`).
+**Lesson:** five cooks in parallel used up a 5-hour window in about 1.5 hours. Parallel work speeds up progress,
+but each window now buys less work.
