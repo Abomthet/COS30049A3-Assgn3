@@ -1,5 +1,7 @@
 # A3 to-do (Claude's working list)
 
+> **Picking this up in a new session or with another model? Read `docs/HANDOFF.md` first.**
+
 Source: `docs/plan/main.pdf` (the full plan, which wins) and `../explainers/a3/a3.pdf` (the briefing).
 Task numbers (T01–T52) and scope IDs (M/S/C) are the plan's. Owners are ignored: Claude does every task
 it can, and **[you]** marks what needs a person (sending messages, meetings, people, signatures, recording, Canvas).
@@ -19,8 +21,8 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 ## 0. Blockers found on 11 Nov
 - [x] **Node.js is not installed on the Mac** → Node v24.22.2 LTS installed into `~/.local/node` (checksum verified), on PATH via `~/.local/bin`
 - [x] Repository initialised (`main`, local only); baseline commit `0f6e1e3`
-- [ ] **[you]** Which A2 commit was submitted? (no `v1.0` tag; head of `from-scratch` is `aa56a26`) → needed for T02/T03
-- [ ] **[you]** OK to create the **private** GitHub repo `Defaul119/COS30049A3` and push?
+- [x] Which A2 commit was submitted → `aa56a26` (matched against the submitted zip; tagged `v1.0`, local)
+- [x] Private repo `Defaul119/COS30049A3` (was public and empty; made private before the first push)
 
 ## 1.4.1 Set-up and contract (11–12 Nov)
 - [ ] T01 **[you]** Send the tutor questions and CR-07/CR-08 to the team (Claude drafts them from Appendix A)
