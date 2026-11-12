@@ -64,11 +64,11 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T29 **MS2 passed 12 Nov** (`docs/TEST_LOG.md`) **MS2 (Sun 22 Nov)**: minimum viable demonstration on all 28 addresses; test log entry
 
 ## 1.4.5 Should items (23–27 Nov), in build order; cut from the bottom
-- [~] T30 `@A-front` S-01 method selector (`?method=`), both tiers
-- [~] T31 S-02 G4 (ranks done `a411820`, chart in wave B); S-03 G6 `@A-front` planted-test recall
-- [~] T32 (back end done `a411820`; front end wave B) S-04 watchlist: SQLite store, E13–E15, dialog, V6; preferences
+- [x] T30 (`2411243`) S-01 method selector (`?method=`), both tiers
+- [~] T31 S-02 G4 (ranks `a411820`; chart `@B-front`); S-03 G6 done (`2411243`) planted-test recall
+- [~] T32 (back end `a411820`; front end `@B-front`) S-04 watchlist: SQLite store, E13–E15, dialog, V6; preferences
 - [~] T33 `@B-back` (back end) S-05 Assistant: service, E12, panel, guardrail, cache, prepared answers (works without the 610 MB weights)
-- [ ] T34 S-06 replay
+- [~] T34 `@B-front` S-06 replay
 - [ ] T35 S-07 linked selection; S-08 scenario table
 - [ ] T36 S-09 live lookup, E16–E20, dialog V8 — **CR-08 approved by the team (reported 12 Nov)**; package after wave B (Sonnet 5.5 high)
 - [ ] T37 S-10 TS types generated from OpenAPI; CI runs tests and builds on every push

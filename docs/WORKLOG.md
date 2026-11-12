@@ -666,3 +666,21 @@ E7 body 3,041 bytes (budget 6 kB); clean log. Verified in a clean worktree: back
   then `backend/var/explorer.db`), so tests and tools that build the app write nothing.
 **Minor, for polish:** a non-text `note` gets "Must be text of an acceptable length", which reads oddly for a
 wrong type.
+
+## 2026-11-12 — Wave A front end reviewed (S-01 method selector, S-03 G6)
+**Delegated to** the A-front cook (Sonnet 5.5, medium effort): 81 tool calls, ~18 min, ~236k tokens. **Lead review:**
+`npm test` 575, typecheck and build clean, main **142.4 kB gzip** (budget 150), no mock in `dist/`, wording clean;
+looked at V5 with G6. The cook reported one flaky test it had not caused; the lead reproduced and **fixed the race**:
+`g5WhatIfResponse` read the first chart draw, but the method's E11 name (via `useMethods`) can arrive after it, so
+under load the test saw the fallback name. It now waits for the redraw. Three consecutive full runs under load:
+575 passed. Verified in a clean worktree: back end 646, front end 575, build clean. Commit `2411243`.
+**Measured** (production build via `vite preview` on the real back end): method-switch feedback 8–24 ms; overview
+updated in 32–36 ms warm (worst 46 ms), 175 ms (running example) to 349 ms (largest) cold. The plan's target is 0.5 s.
+**Design notes:**
+- **The link decides the method.** `method=` is in the URL (left out for the default), so a shared link reproduces the
+  view exactly; the remembered preference only seeds links out of V1. Requests and caches are keyed by method.
+- **G6 is honest about what it measures.** Recall per planted pattern with 95 % intervals, straight from E11,
+  captioned as measured on planted test transactions, which says nothing about accuracy on real activity.
+- **Waiting for the state, not the first event.** Tests of charts whose words come from a second request wait for
+  the redraw that carries them; reading the first draw raced under load.
+**Choices accepted:** the what-if lab keeps the baseline (E8/E9 take no `method`) and says so; the method menu is on V3 too.
