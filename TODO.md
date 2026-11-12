@@ -86,7 +86,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 
 ## 1.4.7 Report, video, submission (28 Nov–5 Dec)
 - [ ] T46 **[you/team]** Report sections (8 pages max) — Claude supplies generated material only
-- [ ] T47 Figures, screenshots, API tables from `openapi.json`, measured table from `measure.py`
+- [~] T47 Figures, screenshots, API tables from `openapi.json` (done: `docs/report-material/`), measured table from `measure.py` (`@C-tools`); **architecture figure still to draw**
 - [ ] T48 **[you/team]** Video (7 min): Claude drafts the shot list and checks timing; recording, narration and unlisted upload are yours
 - [ ] T49 Report review against the rubric; page count; Harvard references; AI acknowledgement from the log
 - [ ] T50 Tag `v1.0`; build the zip from the tag (no `node_modules`); checksums; unzip and run clean

@@ -760,3 +760,27 @@ Running now:
 The tool refused the cook's write of `findings-template.md`; the cook did not work around it, and the lead saved its
 text. **For the team:** check the consent template; book two participants; pick Task 3's flagged day in rehearsal;
 confirm Task 5's threshold on the build.
+
+## 2026-11-12 — Report material reviewed (Haiku); clarifications
+**Delegated to** a Haiku 5.5 cook (~194k tokens): `docs/report-material/` with:
+- `api-reference.md`/`.tex` **generated** from `openapi.json` by `make_api_reference.py` (15 operations on 14 paths,
+  55 schemas; it refuses banned words in its output; the lead re-ran it);
+- `measurements.md` (every figure copied with its source, and a list of what is "not measured yet");
+- `decisions.md`;
+- `design-notes.md` (55 notes, generated from this log);
+- `screenshot-index.md` (58 files, generated);
+- `video-shotlist.md` (6:35).
+
+**Lead correction:** the shot list thought only `0.123456789` was refused in the browser. The MS2 dry run had
+confirmed six refusals, and direction cannot be mistyped (two buttons). Fixed.
+**Clarifications the cook asked for** (this log is append-only, so they are recorded here):
+- In the 11 Nov E5–E7 timing table, the body column reads "plain size (gzip size)".
+- **D-W-11 supersedes the plan's E10 line** ("on flagged rows, the limitation line"): every CSV row carries it, as the
+  wording rule requires. The plan itself is not edited.
+- The 48 screenshots of the MS2 record grew to 58 with wave A/B. Shots 53 = 08 and 54 = 16 are byte-identical (the G4
+  shots capture the same transaction page, which now holds G4): use one of each in the report.
+- "Ready" times differ by run and machine load: 0.7 s (11 Nov), 1.3 s (MS1 clone), 0.8 s (MS2 clone). The report
+  should quote `tools/measure.py`'s run when it lands.
+
+**Gaps for the report (T47):** **no architecture figure has been drawn yet**; the Week 9 minutes (recording D-A3-1…11,
+CR-07/CR-08 by name) are the team's.

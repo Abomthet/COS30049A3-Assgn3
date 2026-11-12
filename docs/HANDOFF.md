@@ -41,12 +41,15 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 - **Back end, all Must endpoints:** E1 health, E2 config, E3 addresses, E4 lookup, E5 timeline,
   E6 transactions (filters, sort, paging), E7 transaction detail with all 9 methods, E8 what-if,
   E9 what-if curve (batched), E10 export CSV/JSON, E11 methods. ETag/304, 413, one error body,
-  validation as 400 with every faulty field; CORS exposes `X-Request-ID`, `Content-Disposition`, `Retry-After`. **601 tests.**
+  validation as 400 with every faulty field; CORS exposes `X-Request-ID`, `Content-Disposition`, `Retry-After`;
+  Should items so far: watchlist E13–E15, `ranks`, the Assistant E12 (677 prepared answers). **677 tests + 1 skipped without the weights.**
 - **Front end:** shell (navigation, service status, theme, toasts, error boundary), Axios client,
   V1 address selection, V2 overview + Transactions tab (filter bar, table, G2) + What-if tab (V4, G5),
   V3 day and transaction (G3, verdict table), V5 models and limits, V7 about, export menu, charts
   G1/G2/G3/G5 in Plotly, the full state catalogue (offline banner, 429 countdown, slow notice) in every
-  view, 44 px touch targets, method names from E11. **546 tests.** 48 screenshots in `docs/screenshots/`.
+  view, 44 px touch targets, method names from E11; Should items so far: method selector, G4, G6, watchlist screen, replay.
+  **610 tests.** 58 screenshots in `docs/screenshots/`. Report material (generated API reference, measurements, decisions,
+  design notes, screenshot index, video shot list) in `docs/report-material/`; usability pack in `docs/usability/`.
 - **Nothing in flight** at the last update (12 Nov, after MS2). Check `git status`: uncommitted files mean an
   agent's package awaiting review.
 
