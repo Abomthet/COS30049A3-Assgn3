@@ -488,7 +488,7 @@ describe('the export menu (E10)', () => {
     const user = start(`${base}?status=flagged`);
     await open(user);
     await user.click(screen.getByRole('button', { name: 'Download JSON' }));
-    expect(await screen.findByText('The export could not be made. The explorer service did not respond.')).toBeInTheDocument();
+    expect(await screen.findByText('The export could not be made. The explorer service did not respond. Try again.')).toBeInTheDocument();
     expect(files).toHaveLength(0);
   });
 

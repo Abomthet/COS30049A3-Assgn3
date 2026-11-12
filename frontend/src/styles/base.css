@@ -231,7 +231,10 @@ a:hover {
   left: 16px;
   top: -48px;
   z-index: 20;
-  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
@@ -260,6 +263,7 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  min-height: 44px;
   color: var(--text);
   font-weight: 650;
   text-decoration: none;
@@ -618,8 +622,10 @@ main.container {
   gap: 8px;
 }
 .example-list a {
-  display: inline-block;
-  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
   border-radius: var(--radius-sm);
   background: var(--surface);
   border: 1px solid var(--border-strong);
@@ -680,6 +686,23 @@ main.container {
 .address-link {
   font-weight: 600;
   font-size: 0.95rem;
+}
+/* The link covers its whole row, as the transaction table's does: a row is a far larger target than the 18 px of a line of text. */
+.address-table tbody tr {
+  position: relative;
+}
+.address-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.address-link:focus-visible {
+  outline: none;
+}
+.address-link:focus-visible::after {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+  border-radius: var(--radius-sm);
 }
 .cell-sub {
   display: block;
@@ -1935,5 +1958,30 @@ main.container {
   .export-entries {
     right: auto;
     left: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ touch targets */
+
+/* The plan's 44 px rule (section 8, "Layouts and touch") for a phone, a tablet and any screen that can be touched. A
+   mouse on a desktop keeps the denser header, since a pointer needs far less. Chart widgets are handled in PlotlyChart.tsx. */
+@media (any-pointer: coarse), (max-width: 899px) {
+  .icon-button {
+    min-height: 44px;
+  }
+  .breadcrumbs li {
+    display: inline-flex;
+    align-items: center;
+  }
+  .breadcrumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .fact dd a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
   }
 }

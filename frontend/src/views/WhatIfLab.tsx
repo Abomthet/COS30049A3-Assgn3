@@ -11,8 +11,10 @@ import { Loading, StatePanel } from '../components/StatePanel';
 import { VerdictTable } from '../components/VerdictTable';
 import { useCurve } from '../hooks/useCurve';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { useMethodLabels } from '../hooks/useMethods';
 import { useRequest } from '../hooks/useRequest';
 import { useSettings } from '../hooks/useSettings';
+import { useSlow } from '../hooks/useSlow';
 import { addDays, dayKey, formatDay } from '../lib/dates';
 import { DIRECTION_LABEL, formatBtc, formatHours, formatSpanDays, plural } from '../lib/format';
 import { paths } from '../lib/router';
@@ -34,6 +36,8 @@ const USUAL_MULTIPLES = [
   { times: 10, label: '10 × usual' },
   { times: 100, label: '100 × usual' },
 ];
+/** What the form's status line and the result's mark say once an answer is taking longer than expected. */
+const STILL_WORKING = 'Still working, this is taking longer than usual…';
 /** The slider has this many steps from the smallest amount of the curve to the largest. */
 const SLIDER_STEPS = 1000;
 
@@ -104,6 +108,7 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
   const curveShown = curve.status === 'success' ? curve.data : curve.previous;
   // Anything the user has typed that the screen does not yet answer: dimmed, and marked.
   const pending = !verdictKey.settled || verdict.status === 'loading' || !curveKey.settled || curve.status === 'loading';
+  const slow = useSlow(pending);
   // E8's answer is exact only for the amount in the form, which is what the marker on G5 wants.
   const answered = verdictKey.settled && verdict.status === 'success' ? verdict.data : null;
 
@@ -130,7 +135,7 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
   // The last result stays up while the next loads or the form is being corrected; after a failure it would be out of date.
   const view: VerdictView = verdict.status === 'error' ? { error: verdict.error, retry: verdict.retry } : (shown ?? (verdict.status === 'loading' ? 'loading' : null));
   const details = verdict.status === 'error' || insufficient ? null : shown;
-  const status = request === null ? 'Correct the marked fields and the verdict will update.' : pending ? 'Updating…' : 'The verdict below is for these values.';
+  const status = request === null ? 'Correct the marked fields and the verdict will update.' : pending ? (slow ? STILL_WORKING : 'Updating…') : 'The verdict below is for these values.';
 
   // What helps fill the amount in: the slider along the curve, the usual-amount chips, and what the answer says about it.
   const amountHelp = (
@@ -257,7 +262,7 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
         </form>
 
         <div className={pending ? 'whatif-result is-updating' : 'whatif-result'} aria-busy={pending}>
-          <Verdict view={view} insufficient={insufficient} onUseDate={(day) => edit({ date: day })} pending={pending} />
+          <Verdict view={view} insufficient={insufficient} onUseDate={(day) => edit({ date: day })} pending={pending ? (slow ? STILL_WORKING : 'Updating…') : null} />
           {!insufficient && curveShown ? (
             <>
               {curve.aroundTypedAmount ? (
@@ -324,7 +329,8 @@ function GapFeedback({ result }: { result: WhatIfResult }) {
 
 type VerdictView = WhatIfResult | 'loading' | { error: ApiError; retry: () => void } | null;
 
-function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView; insufficient: InsufficientHistoryBody | undefined; onUseDate: (day: string) => void; pending: boolean }) {
+function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView; insufficient: InsufficientHistoryBody | undefined; onUseDate: (day: string) => void; pending: string | null }) {
+  const labels = useMethodLabels();
   if (insufficient) {
     const h = insufficient.history;
     return (
@@ -377,9 +383,9 @@ function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView
   return (
     <section className="card verdict-card" aria-labelledby="verdict-title" data-testid="verdict-card">
       <header className="verdict-head">
-        <h2 id="verdict-title">{tx.flagged ? `Flagged by ${tx.method.name}` : 'Not flagged'}</h2>
+        <h2 id="verdict-title">{tx.flagged ? `Flagged by ${labels[tx.method.id].name}` : 'Not flagged'}</h2>
         <StatusBadge status={tx.flagged ? 'flagged' : 'not-flagged'} />
-        {pending ? <span className="updating-mark">Updating…</span> : null}
+        {pending ? <span className="updating-mark">{pending}</span> : null}
       </header>
       <p className="verdict-score">
         Score <strong className="mono">{tx.score.toFixed(2)}</strong> against a flag line of <span className="mono">{tx.method.flagAbsZ.toFixed(2)}</span>.{' '}

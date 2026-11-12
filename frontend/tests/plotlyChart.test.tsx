@@ -92,6 +92,36 @@ describe('what the wrapper hands to Plotly', () => {
     expect(screen.getByText('Chart tools')).toBeInTheDocument();
   });
 
+  test('a touch screen of any width drops the tool bar and pans, and the legend only names the marks', async () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation(
+      (query) => ({ matches: query.includes('pointer: coarse'), media: query, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList,
+    );
+    render(chart());
+    const { layout, config } = await drawn();
+    // Plotly's tool bar buttons and legend entries are smaller than a finger needs and cannot be enlarged.
+    expect(config.displayModeBar).toBe(false);
+    expect(layout.dragmode).toBe('pan');
+    expect(layout.legend).toMatchObject({ itemclick: false, itemdoubleclick: false });
+    // The wrapper's own tools are ordinary buttons, in the row rather than a menu, on a screen this wide.
+    expect(screen.queryByText('Chart tools')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download PNG' })).toBeInTheDocument();
+  });
+
+  test('with a mouse, the legend toggles marks and the tool bar is there', async () => {
+    render(chart());
+    const { layout, config } = await drawn();
+    expect(layout.legend.itemclick).toBeUndefined();
+    expect(config.displayModeBar).toBe(true);
+  });
+
+  test('a chart is told how wide it is, to choose labels that fit', async () => {
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ width: 777 } as DOMRect);
+    const seen: number[] = [];
+    render(chart({ figure: (context) => (seen.push(context.width), figure(context)) }));
+    await drawn();
+    expect(seen).toContain(777);
+  });
+
   test('the shared layout starts with no animation when the system asks for reduced motion', async () => {
     const matches = (query: string) => query.includes('reduced-motion');
     vi.spyOn(window, 'matchMedia').mockImplementation(

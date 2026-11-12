@@ -22,7 +22,7 @@ function toApiError(err: unknown): ApiError {
 }
 
 /** Failures that say nothing about the request itself: the service did not answer, or is still starting. */
-function isTransient(error: ApiError): boolean {
+export function isTransient(error: ApiError): boolean {
   return error.body.status === 'network' || error.body.status === 'timeout' || error.body.status === 'unavailable';
 }
 

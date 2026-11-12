@@ -118,4 +118,4 @@ def test_a_cross_origin_page_can_read_the_export_file_name(client: TestClient) -
     origin = DEFAULT_CORS_ORIGINS[0]
     response = client.get("/api/health", headers={"Origin": origin})
     exposed = {h.strip().lower() for h in response.headers["access-control-expose-headers"].split(",")}
-    assert {"content-disposition", "x-request-id"} <= exposed
+    assert {"content-disposition", "x-request-id", "retry-after"} <= exposed

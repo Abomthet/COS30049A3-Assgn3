@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { explanationBlocks } from '../src/lib/explanation';
-import { formatBtc, formatFeatureValue, formatSpanDays } from '../src/lib/format';
+import { formatBtc, formatFeatureValue, formatList, formatSpanDays } from '../src/lib/format';
 import { LIMITATION_LINE } from '../src/lib/settings';
 
 describe('formatFeatureValue: units come from E2, not from the feature id', () => {
@@ -65,5 +65,17 @@ describe('explanationBlocks', () => {
 
   test('an explanation without the limitation line (not flagged) is kept whole', () => {
     expect(explanationBlocks('Not flagged by X.\n- One thing.', LIMITATION_LINE)).toHaveLength(2);
+  });
+});
+
+describe('formatList', () => {
+  test('joins with commas and a final "and", with no comma before it', () => {
+    expect(formatList(['Size', 'Burst', 'Gap', 'Relative size'])).toBe('Size, Burst, Gap and Relative size');
+    expect(formatList(['Size', 'Burst'])).toBe('Size and Burst');
+  });
+
+  test('one item stands alone, and none is empty', () => {
+    expect(formatList(['Size'])).toBe('Size');
+    expect(formatList([])).toBe('');
   });
 });

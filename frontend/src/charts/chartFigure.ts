@@ -17,6 +17,8 @@ export interface FigureContext {
   palette: ChartPalette;
   /** True on a phone-sized container: fewer ticks, no tool bar. */
   compact: boolean;
+  /** The chart container's width in pixels, for choices that depend on how much room the labels have. */
+  width: number;
 }
 
 /** Containers narrower than this are treated as a phone (plan section 8, "Layouts and touch"). */
@@ -42,6 +44,12 @@ export function mergeLayout(base: Partial<Layout>, extra: Partial<Layout> = {}):
 
 interface LayoutOptions {
   compact: boolean;
+  /**
+   * Fingers, not a mouse: a phone-sized chart or a coarse pointer. Plotly draws its own tool bar and legend
+   * entries a few pixels tall, below the 44 px a finger needs and with no setting to enlarge them, so on touch the
+   * tool bar is dropped (the wrapper's own buttons replace it) and the legend only names the marks.
+   */
+  touch: boolean;
   /** False for charts with nothing to zoom (G3, G4): axes are fixed and there is no drag. */
   zoomable: boolean;
   /** Plotly keeps the user's zoom across redraws while this stays the same. */
@@ -51,7 +59,7 @@ interface LayoutOptions {
 }
 
 /** The theme- and size-dependent layout every chart starts from. */
-export function baseLayout(palette: ChartPalette, { compact, zoomable, revision, animate }: LayoutOptions): Partial<Layout> {
+export function baseLayout(palette: ChartPalette, { compact, touch, zoomable, revision, animate }: LayoutOptions): Partial<Layout> {
   const size = compact ? 11 : 12;
   const axis = {
     automargin: true,
@@ -75,14 +83,22 @@ export function baseLayout(palette: ChartPalette, { compact, zoomable, revision,
     plot_bgcolor: 'rgba(0,0,0,0)',
     margin: { l: 48, r: 16, t: 36, b: 40 },
     // On a touch screen a drag pans (a box zoom is not possible with a finger); on a desktop it zooms.
-    dragmode: zoomable ? (compact ? 'pan' : 'zoom') : false,
+    dragmode: zoomable ? (touch ? 'pan' : 'zoom') : false,
     hoverlabel: {
       bgcolor: palette.surface,
       bordercolor: palette.borderStrong,
       font: { color: palette.text, family: palette.fontFamily, size: 13 },
       align: 'left',
     },
-    legend: { orientation: 'h', x: 0, xanchor: 'left', y: 1.02, yanchor: 'bottom', font: { color: palette.text, size } },
+    legend: {
+      orientation: 'h',
+      x: 0,
+      xanchor: 'left',
+      y: 1.02,
+      yanchor: 'bottom',
+      font: { color: palette.text, size },
+      ...(touch ? { itemclick: false, itemdoubleclick: false } : {}),
+    },
     modebar: { bgcolor: 'rgba(0,0,0,0)', color: palette.axisInk, activecolor: palette.ordinary },
     xaxis: axis,
     yaxis: axis,
@@ -91,13 +107,13 @@ export function baseLayout(palette: ChartPalette, { compact, zoomable, revision,
 
 /**
  * Plotly's own tool bar is cut down to zoom, pan and reset. Download is the wrapper's own button,
- * because it has to be reachable by keyboard and add the title and caption to the image. On a
- * phone the tool bar is dropped altogether; the tools move into the wrapper's menu.
+ * because it has to be reachable by keyboard and add the title and caption to the image. On touch
+ * the tool bar is dropped altogether; a phone's tools move into the wrapper's menu.
  */
-export function plotlyConfig({ compact, zoomable }: Pick<LayoutOptions, 'compact' | 'zoomable'>): Partial<Config> {
+export function plotlyConfig({ touch, zoomable }: Pick<LayoutOptions, 'touch' | 'zoomable'>): Partial<Config> {
   return {
     displaylogo: false,
-    displayModeBar: zoomable && !compact,
+    displayModeBar: zoomable && !touch,
     modeBarButtons: [['zoom2d', 'pan2d', 'resetScale2d']],
     scrollZoom: false,
     doubleClick: 'reset',

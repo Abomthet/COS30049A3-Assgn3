@@ -113,7 +113,7 @@ def test_cors_allows_the_vite_origins_and_nothing_else(client: TestClient) -> No
     for origin in ("http://localhost:5173", "http://127.0.0.1:5173"):
         response = client.get("/api/health", headers={"Origin": origin})
         assert response.headers["access-control-allow-origin"] == origin
-        assert response.headers["access-control-expose-headers"] == "X-Request-ID, Content-Disposition"
+        assert response.headers["access-control-expose-headers"] == "X-Request-ID, Content-Disposition, Retry-After"
     other = client.get("/api/health", headers={"Origin": "http://evil.test"})
     assert "access-control-allow-origin" not in other.headers
     preflight = client.options("/api/config", headers={"Origin": "http://localhost:5173", "Access-Control-Request-Method": "POST"})

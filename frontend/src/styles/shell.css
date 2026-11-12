@@ -196,7 +196,8 @@
   transform: translateX(16px);
 }
 
-@media (pointer: coarse) {
+/* The 44 px touch rule for the header's own controls; the condition is the same as in base.css. */
+@media (any-pointer: coarse), (max-width: 899px) {
   .status-button,
   .theme-switch {
     min-height: 44px;
@@ -292,4 +293,26 @@
   .service-status {
     display: none;
   }
+}
+
+/* ------------------------------------------------------------------ offline banner */
+
+/* Stays at the top of the window while the page scrolls, since the connection can drop at any point of a long page. */
+.offline-banner {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  background: var(--warn-bg);
+  border-bottom: 1px solid var(--warn-border);
+  color: var(--warn-ink);
+}
+.offline-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.offline-banner p {
+  margin: 0;
 }

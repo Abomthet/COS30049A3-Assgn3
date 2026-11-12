@@ -46,12 +46,15 @@ export const mockControls = {
   offline: false,
   /** Answers 503 "unavailable" to everything, as the back end does while its models load. */
   starting: false,
+  /** Answers 429 "rate_limited" to everything, asking for this many seconds' wait (0: off), as the service does when it is busy. */
+  busyForSeconds: 0,
 };
 
 const cancelled = () => new ApiError(0, { status: 'cancelled', message: 'The request was cancelled.' });
 
-/** Answers after the configured delay, like the real service, and honours cancellation. */
+/** Answers after the configured delay, like the real service, and honours cancellation. A delay beyond the client's time limit ends as a timeout, as it does through Axios. */
 function respond<T>(work: () => T, opts?: RequestOptions): Promise<T> {
+  const timedOut = mockControls.latencyMs > WEB.requests.timeoutMs;
   return new Promise((resolve, reject) => {
     const signal = opts?.signal;
     if (signal?.aborted) {
@@ -59,10 +62,14 @@ function respond<T>(work: () => T, opts?: RequestOptions): Promise<T> {
       return;
     }
     const timer = setTimeout(() => {
-      if (mockControls.offline) {
+      if (timedOut) {
+        reject(new ApiError(0, { status: 'timeout', message: 'This is taking longer than it should.' }));
+      } else if (mockControls.offline) {
         reject(new ApiError(0, { status: 'network', message: 'The explorer service did not respond.' }));
       } else if (mockControls.starting) {
         reject(new ApiError(503, { status: 'unavailable', message: 'The service is starting. This page will load by itself.' }));
+      } else if (mockControls.busyForSeconds > 0) {
+        reject(new ApiError(429, { status: 'rate_limited', message: 'The service is busy.', retryAfterSeconds: mockControls.busyForSeconds }));
       } else {
         try {
           resolve(work());
@@ -70,7 +77,7 @@ function respond<T>(work: () => T, opts?: RequestOptions): Promise<T> {
           reject(err);
         }
       }
-    }, mockControls.latencyMs);
+    }, Math.min(mockControls.latencyMs, WEB.requests.timeoutMs));
     signal?.addEventListener(
       'abort',
       () => {

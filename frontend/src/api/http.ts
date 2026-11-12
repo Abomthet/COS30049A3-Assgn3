@@ -28,6 +28,12 @@ function isErrorBody(body: unknown): body is ApiErrorBody {
   return typeof body === 'object' && body !== null && typeof (body as { status?: unknown }).status === 'string';
 }
 
+/** A 429 (`rate_limited`) carries the wait it asks for in a header, not in the body; whole seconds are the form the service uses. */
+function withRetryAfter(body: ApiErrorBody, header: unknown): ApiErrorBody {
+  const seconds = Number(header);
+  return body.status === 'rate_limited' && Number.isInteger(seconds) && seconds > 0 ? { ...body, retryAfterSeconds: seconds } : body;
+}
+
 /** Turns anything Axios can throw into the ApiError the views handle. */
 function toApiError(error: unknown): unknown {
   if (axios.isCancel(error)) {
@@ -41,7 +47,7 @@ function toApiError(error: unknown): unknown {
   // A response without one of our bodies did not come from the service: with the dev proxy and
   // the back end stopped, Vite itself answers 502 with an empty body. That is "no answer".
   const body = parseBody(response?.data);
-  if (response && isErrorBody(body)) return new ApiError(response.status, body);
+  if (response && isErrorBody(body)) return new ApiError(response.status, withRetryAfter(body, response.headers['retry-after']));
   return new ApiError(response?.status ?? 0, { status: 'network', message: 'The explorer service did not respond.' });
 }
 

@@ -29,6 +29,7 @@ beforeEach(() => {
   mockControls.latencyMs = 0;
   mockControls.offline = false;
   mockControls.starting = false;
+  mockControls.busyForSeconds = 0;
   clearRequestCache();
   fakePlotly.reset();
   localStorage.clear();

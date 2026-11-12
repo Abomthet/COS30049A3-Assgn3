@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { crossings, describeCurve, flagNear, flaggedRuns, runBounds, scoreAt, type CurveLine } from '../src/lib/curve';
+import { amountTicks, crossings, describeCurve, flagNear, flaggedRuns, runBounds, scoreAt, type CurveLine } from '../src/lib/curve';
 import { formatBtcRounded } from '../src/lib/format';
 
 // Five amounts a decade apart, so every position between two of them is easy to check by hand.
@@ -81,4 +81,42 @@ describe('formatBtcRounded', () => {
     [1234, '1,234 BTC'],
     [0.05, '0.05 BTC'],
   ])('%s is written %s', (btc, text) => expect(formatBtcRounded(btc)).toBe(text));
+});
+
+describe('amountTicks: labels on the log axis of amounts never touch', () => {
+  const plain = (a: number) => a.toLocaleString('en-US', { maximumFractionDigits: 8 });
+
+  test('five decades on a desktop chart label the powers of ten (the 1, 2, 5 labels collided there)', () => {
+    expect(amountTicks(0.00001, 1, 700, 12)).toEqual([0.00001, 0.0001, 0.001, 0.01, 0.1, 1]);
+  });
+
+  test('a narrow range has room for 1, 2 and 5 of each power of ten', () => {
+    expect(amountTicks(0.01, 1, 700, 12)).toEqual([0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1]);
+  });
+
+  test('a phone keeps every other power of ten', () => {
+    expect(amountTicks(0.00001, 1, 260, 11)).toEqual([0.00001, 0.001, 0.1]);
+  });
+
+  test.each([
+    [0.000001, 10],
+    [0.00001, 1],
+    [0.0001, 0.5],
+    [0.000011, 2.5],
+    [0.00000001, 21000000],
+  ])('from %s to %s BTC, at every width from a phone to a wide screen, no two labels overlap', (low, high) => {
+    for (const [width, fontSize] of [[300, 11], [340, 11], [420, 11], [560, 12], [780, 12], [1000, 12], [1180, 12], [1600, 12]]) {
+      const plotWidth = width - 80;
+      const ticks = amountTicks(low, high, plotWidth, fontSize);
+      const longest = Math.max(...ticks.map((t) => plain(t).length));
+      expect(ticks.every((t) => t >= low && t <= high)).toBe(true);
+      expect(ticks.every((t, i) => i === 0 || t > ticks[i - 1])).toBe(true);
+      // Each label needs its own width plus a gap, in the space the plot has.
+      expect(ticks.length * longest * fontSize * 0.6).toBeLessThanOrEqual(plotWidth);
+    }
+  });
+
+  test('a range with no power of ten in it has no ticks of its own, and Plotly is left to choose', () => {
+    expect(amountTicks(0.0006, 0.0009, 700, 12)).toEqual([]);
+  });
 });

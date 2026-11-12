@@ -70,6 +70,13 @@ describe('About and help', () => {
     expect(method.getByText(`Explorer service version ${HEALTH.version}.`)).toBeInTheDocument();
   });
 
+  test('the measured features are listed with "and" before the last, and no comma before it', async () => {
+    open();
+    const method = await section('The method in one paragraph');
+    const names = CONFIG.features.map((f) => f.name);
+    await waitFor(() => expect(method.getByText(new RegExp(`${names.slice(0, -1).join(', ')} and ${names[names.length - 1]} are measured`))).toBeInTheDocument());
+  });
+
   test('with the service unreachable the page still reads, without a figure it cannot know', async () => {
     mockControls.offline = true;
     open();

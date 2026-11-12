@@ -72,6 +72,11 @@ interface Props {
    */
   onZoom?: (range: [string, string]) => void;
   keyboard?: KeyboardStops;
+  /**
+   * Buttons that set the time axis to a period (Plotly's own range buttons are 19 px tall and cannot be resized,
+   * so the wrapper draws these as ordinary 44 px buttons). A range is Plotly's date strings, in UTC.
+   */
+  rangeButtons?: Array<{ label: string; range: [string, string] }>;
   /** Replaces the chart when there is nothing to draw. It always offers a next step. */
   empty?: { title: string; body: string; action?: ReactNode };
 }
@@ -94,6 +99,7 @@ export function PlotlyChart({
   onPointClick,
   onZoom,
   keyboard,
+  rangeButtons,
   empty,
 }: Props) {
   const id = useId();
@@ -119,14 +125,15 @@ export function PlotlyChart({
 
   // What Plotly is given, rebuilt only when the figure, the theme or the size changes.
   const drawing = useMemo(() => {
-    const built = figure({ palette, compact });
+    const built = figure({ palette, compact, width });
     const animate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const touch = compact || window.matchMedia('(pointer: coarse)').matches;
     return {
       data: chooseTraceTypes(built.data, webglMinPoints, webglAvailable),
-      layout: mergeLayout(baseLayout(palette, { compact, zoomable, revision, animate }), built.layout),
-      config: plotlyConfig({ compact, zoomable }),
+      layout: mergeLayout(baseLayout(palette, { compact, touch, zoomable, revision, animate }), built.layout),
+      config: plotlyConfig({ touch, zoomable }),
     };
-  }, [figure, palette, compact, zoomable, revision, webglMinPoints]);
+  }, [figure, palette, compact, width, zoomable, revision, webglMinPoints]);
 
   // Fetch Plotly when the first chart mounts. A chart with nothing to draw never needs it.
   const hasChart = !empty;
@@ -334,6 +341,21 @@ export function PlotlyChart({
       </header>
 
       <div className="pchart-stage" ref={stageRef} hidden={tableOpen && tableView === 'toggle' && !failed} aria-busy={phase === 'loading'}>
+        {rangeButtons && !failed ? (
+          <div className="pchart-ranges chips" role="group" aria-label="Zoom to a period">
+            {rangeButtons.map(({ label, range }) => (
+              <button
+                key={label}
+                type="button"
+                className="chip"
+                disabled={phase !== 'ready'}
+                onClick={() => plotly && plotRef.current && void plotly.relayout(plotRef.current, { 'xaxis.range': range })}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        ) : null}
         {/* A box of the chart's final size from the first paint, so nothing jumps when Plotly arrives. */}
         <div className="pchart-box" style={{ height }}>
           <div className="chart-focus" hidden={failed} {...focusProps}>

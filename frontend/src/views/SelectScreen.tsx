@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api } from '../api/client';
-import type { AddressSummary } from '../api/types';
+import type { AddressSummary, ApiError } from '../api/types';
+import { ErrorState } from '../components/ErrorState';
 import { Icon } from '../components/Icon';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Loading, StatePanel } from '../components/StatePanel';
@@ -8,7 +9,9 @@ import { KIND_LABEL, validateAddress } from '../lib/address';
 import { dayKey, formatDay, formatDayRange } from '../lib/dates';
 import { formatCount, plural, shortAddress } from '../lib/format';
 import { navigate, paths } from '../lib/router';
-import { runRequest, useRequest } from '../hooks/useRequest';
+import { isTransient, runRequest, useRequest } from '../hooks/useRequest';
+import { useServiceStatus } from '../hooks/useServiceStatus';
+import { useSlow } from '../hooks/useSlow';
 
 // Screen 1 — choose an address: a lookup box plus the list of addresses in the snapshot.
 // The lookup validates in the browser first (invalid never reaches the API), then asks the
@@ -19,7 +22,7 @@ type Lookup =
   | { status: 'checking' }
   | { status: 'invalid'; message: string; hint: string }
   | { status: 'unsupported'; message: string; examples: string[] }
-  | { status: 'network'; message: string };
+  | { status: 'failed'; error: ApiError };
 
 export function SelectScreen({ query }: { query: string | null }) {
   useDocumentTitle('');
@@ -44,8 +47,21 @@ export function SelectScreen({ query }: { query: string | null }) {
     const body = res.error.body;
     if (body.status === 'invalid') setLookup({ status: 'invalid', message: body.message, hint: body.hint ?? '' });
     else if (body.status === 'unsupported') setLookup({ status: 'unsupported', message: body.message, examples: body.examples });
-    else setLookup({ status: 'network', message: body.message });
+    else {
+      // Like a page's own request, a failure that says nothing about the address asks the status dot to look again at once.
+      if (isTransient(res.error)) recheck();
+      setLookup({ status: 'failed', error: res.error });
+    }
   }
+
+  // A lookup that failed because the service was down is repeated when the service is back, as a page's own request is (R4).
+  const { recoveries, recheck } = useServiceStatus();
+  const seenRecoveries = useRef(recoveries);
+  useEffect(() => {
+    if (seenRecoveries.current === recoveries) return;
+    seenRecoveries.current = recoveries;
+    if (lookup.status === 'failed' && isTransient(lookup.error)) void check(value);
+  }, [recoveries]);
 
   useEffect(() => {
     // Run once for a ?q= link (used by screenshots and the walkthrough); later submits go through the form.
@@ -64,6 +80,7 @@ export function SelectScreen({ query }: { query: string | null }) {
   }
 
   const invalid = lookup.status === 'invalid';
+  const slowLookup = useSlow(lookup.status === 'checking');
   const snapshot = list.status === 'success' ? list.data.snapshot : null;
 
   return (
@@ -124,8 +141,8 @@ export function SelectScreen({ query }: { query: string | null }) {
             </p>
           ) : null}
           {lookup.status === 'checking' ? (
-            <p className="sr-only" role="status">
-              Checking whether this address is in the snapshot…
+            <p className={slowLookup ? 'field-help' : 'sr-only'} role="status">
+              {slowLookup ? 'Still checking, this is taking a little longer.' : 'Checking whether this address is in the snapshot…'}
             </p>
           ) : null}
         </form>
@@ -156,22 +173,7 @@ export function SelectScreen({ query }: { query: string | null }) {
             </ul>
           </StatePanel>
         ) : null}
-        {lookup.status === 'network' ? (
-          <StatePanel
-            tone="error"
-            icon="offline"
-            title="Couldn't reach the explorer service"
-            headingLevel={3}
-            live="alert"
-            actions={
-              <button type="button" className="btn btn-secondary" onClick={() => void check(value)}>
-                Try again
-              </button>
-            }
-          >
-            <p>{lookup.message} Check your connection, then try again.</p>
-          </StatePanel>
-        ) : null}
+        {lookup.status === 'failed' ? <ErrorState error={lookup.error} onRetry={() => void check(value)} headingLevel={3} /> : null}
       </section>
 
       <section className="snapshot-section" aria-labelledby="snapshot-title">
@@ -185,21 +187,7 @@ export function SelectScreen({ query }: { query: string | null }) {
           ) : null}
         </div>
         {list.status === 'loading' ? <Loading label="Loading the address list…" block /> : null}
-        {list.status === 'error' ? (
-          <StatePanel
-            tone="error"
-            icon="offline"
-            title="Couldn't load the address list"
-            live="alert"
-            actions={
-              <button type="button" className="btn btn-secondary" onClick={list.retry}>
-                Try again
-              </button>
-            }
-          >
-            <p>{list.error.message} Check your connection, then try again.</p>
-          </StatePanel>
-        ) : null}
+        {list.status === 'error' ? <ErrorState error={list.error} onRetry={list.retry} /> : null}
         {list.status === 'success' && list.data.addresses.length === 0 ? (
           <StatePanel tone="empty" title="The snapshot has no addresses yet">
             <p>Build the snapshot first (see the README), then reload this page.</p>

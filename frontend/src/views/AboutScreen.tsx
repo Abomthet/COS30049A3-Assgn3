@@ -1,9 +1,10 @@
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Icon } from '../components/Icon';
+import { useMethodLabels } from '../hooks/useMethods';
 import { useServiceStatus } from '../hooks/useServiceStatus';
 import { useSettings } from '../hooks/useSettings';
 import { formatDay } from '../lib/dates';
-import { formatCount, plural } from '../lib/format';
+import { formatCount, formatList, plural } from '../lib/format';
 import { METHODS } from '../lib/methods';
 import { settings as bundled } from '../lib/settings';
 
@@ -26,6 +27,7 @@ export function AboutScreen() {
   const { health } = useServiceStatus();
   const { snapshot, thresholds, features, history } = settings;
   const deciding = snapshot?.method;
+  const labels = useMethodLabels();
 
   return (
     <div className="page page-about">
@@ -160,12 +162,12 @@ export function AboutScreen() {
         <h2 id="method-title">The method in one paragraph</h2>
         <p>
           Each transaction is compared only with the transactions the same address confirmed strictly before it, so a score never uses the
-          future. {features.length > 0 ? `${features.map((f) => f.name).join(', ')} are measured` : 'Its size, pace and gap are measured'} and each is turned into a
+          future. {features.length > 0 ? `${formatList(features.map((f) => f.name))} are measured` : 'Its size, pace and gap are measured'} and each is turned into a
           robust z-score: how far the value is from the address's median, in units of that address's own usual spread.
           {thresholds
             ? ` A transaction is flagged when a score reaches ${thresholds.flagAbsZ} in either direction, and a feature counts as contributing from ${thresholds.contributingAbsZ}.`
             : ''}
-          {deciding ? ` ${deciding.name} decides which transactions are flagged.` : ''} Alongside it, {METHODS.length - 1} further methods score every transaction on their
+          {deciding ? ` ${labels[deciding.id].name} decides which transactions are flagged.` : ''} Alongside it, {METHODS.length - 1} further methods score every transaction on their
           own scales and are shown beside it for comparison.
         </p>
         {health ? <p className="muted">Explorer service version {health.version}.</p> : null}

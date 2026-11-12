@@ -88,3 +88,10 @@ export const DIRECTION_LABEL: Record<Direction, string> = {
   out: 'Sent',
   none: 'No net change',
 };
+
+const LIST = new Intl.ListFormat('en-GB', { style: 'long', type: 'conjunction' });
+
+/** Items in a sentence: 'Size, Burst, Gap and Relative size'. British style, with no comma before the "and", as in the rest of the text. */
+export const formatList = (items: string[]): string => LIST.format(items);
+
+export const capitalised = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);

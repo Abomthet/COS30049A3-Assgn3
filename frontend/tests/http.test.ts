@@ -33,6 +33,10 @@ beforeAll(async () => {
           return json(res, 415, { status: 'invalid', message: 'The request body must be JSON.', requestId: 'nj1' });
         case '/api/starting':
           return json(res, 503, { status: 'unavailable', message: 'Loading.' });
+        case '/api/busy': // a 429 asks for a wait in a header
+          return void res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': '7' }).end(JSON.stringify({ status: 'rate_limited', message: 'Busy.' }));
+        case '/api/busy-no-wait':
+          return json(res, 429, { status: 'rate_limited', message: 'Busy.' });
         case '/api/proxy-error': // what Vite answers when the back end is stopped
           return void res.writeHead(500).end();
         case '/api/slow': // never answers; the client's time limit has to end it
@@ -96,6 +100,12 @@ describe('createHttpClient', () => {
   test('keeps a 503 unavailable, which means "starting"', async () => {
     const error = await failureOf(client().get('/api/starting'));
     expect(error).toMatchObject({ status: 503, body: { status: 'unavailable' } });
+  });
+
+  test('a 429 keeps the wait it asks for, in whole seconds, and leaves it out when the answer names none', async () => {
+    expect(await failureOf(client().get('/api/busy'))).toMatchObject({ status: 429, body: { status: 'rate_limited', retryAfterSeconds: 7 } });
+    const unasked = await failureOf(client().get('/api/busy-no-wait'));
+    expect(unasked.body).toEqual({ status: 'rate_limited', message: 'Busy.' });
   });
 
   test('an answer without our body is "no answer from the service" (the dev proxy with the back end stopped)', async () => {

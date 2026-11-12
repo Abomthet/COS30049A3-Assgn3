@@ -93,3 +93,41 @@ export function describeCurve(line: CurveLine, direction: WhatIfDirection): stri
   const lower = runs.filter((r) => r.from === 0).map((r) => `below about ${formatBtcRounded(runBounds(line, r).end)}`);
   return `On this address, a ${kind} amount would be flagged ${[...upper, ...inner, ...lower].join(', and ')}.`;
 }
+
+/** The width of one character, as a share of the font size, in the sans-serif the charts use. */
+const CHAR_EM = 0.6;
+/** The gap left between two tick labels, in pixels. */
+const TICK_GAP_PX = 24;
+
+const plain = (amount: number) => amount.toLocaleString('en-US', { maximumFractionDigits: 8 });
+
+/**
+ * Where to label a log axis of amounts from `low` to `high` BTC, so that no two labels touch in
+ * `plotWidth` pixels. Amounts are written in full ('0.000005', never '5e-6'), so their labels are long:
+ * the finest set that fits is chosen, 1, 2 and 5 of each power of ten, then the powers of ten, then every
+ * second power, every third, and so on. An empty list means no power of ten lies in the range, and the
+ * caller leaves the ticks to Plotly.
+ */
+export function amountTicks(low: number, high: number, plotWidth: number, fontSize: number): number[] {
+  const [first, last] = [Math.floor(Math.log10(low)), Math.ceil(Math.log10(high))];
+  const ticksOf = (mantissas: number[], every: number) => {
+    const found: number[] = [];
+    for (let power = first; power <= last; power += every) {
+      for (const m of mantissas) {
+        // Built from text so that 1e-5 is exactly the double the label names.
+        const amount = Number(`${m}e${power}`);
+        if (amount >= low && amount <= high) found.push(amount);
+      }
+    }
+    return found;
+  };
+  const fits = (ticks: number[]) => ticks.length * (Math.max(0, ...ticks.map((t) => plain(t).length)) * fontSize * CHAR_EM + TICK_GAP_PX) <= plotWidth;
+
+  for (const mantissas of [[1, 2, 5], [1]]) {
+    const ticks = ticksOf(mantissas, 1);
+    if (fits(ticks)) return ticks;
+  }
+  let every = 2;
+  while (!fits(ticksOf([1], every)) && every < last - first) every++;
+  return ticksOf([1], every);
+}

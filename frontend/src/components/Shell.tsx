@@ -6,6 +6,7 @@ import { formatDay } from '../lib/dates';
 import { paths, useRoute } from '../lib/router';
 import { Icon } from './Icon';
 import { MainNav } from './MainNav';
+import { OfflineBanner } from './OfflineBanner';
 import { ServiceStatus } from './ServiceStatus';
 import { ThemeSwitch } from './ThemeSwitch';
 
@@ -54,6 +55,7 @@ export function Shell({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
+      <OfflineBanner />
       <header className="app-header">
         <div className="container header-inner">
           <a className="brand" href={paths.select()}>

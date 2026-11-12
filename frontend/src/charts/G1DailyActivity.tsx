@@ -21,6 +21,13 @@ const MIN_AXIS_DAYS = 21;
 /** On a phone the chart opens on this many days; the range slider shows the rest. */
 const PHONE_WINDOW_DAYS = 183;
 const TRIANGLE = '▲';
+/** The periods the range buttons zoom to, counted back from the end of the axis. */
+const PERIODS = [
+  { label: '1 month', months: 1 },
+  { label: '3 months', months: 3 },
+  { label: '6 months', months: 6 },
+  { label: '1 year', months: 12 },
+];
 
 interface Props {
   timeline: TimelineResponse;
@@ -37,6 +44,13 @@ const groupOf = (day: TimelineDay): Group => (day.flaggedCount > 0 ? 'unusual' :
 const hoverText = (day: TimelineDay) =>
   `${formatDay(day.date)} (UTC)<br>${plural(day.txCount, 'transaction')}, ` +
   `${day.flaggedCount > 0 ? `${day.flaggedCount} unusual` : 'none unusual'}<br>Select to open this day`;
+
+/** The axis time `months` months before `time`, in the same text form. */
+function monthsBefore(time: string, months: number): string {
+  const date = new Date(`${time.replace(' ', 'T')}Z`);
+  date.setUTCMonth(date.getUTCMonth() - months);
+  return date.toISOString().slice(0, 19).replace('T', ' ');
+}
 
 /** Everything about the data that does not depend on the theme or the size. */
 function buildModel({ days, range }: Pick<TimelineResponse, 'days' | 'range'>) {
@@ -60,7 +74,13 @@ function buildModel({ days, range }: Pick<TimelineResponse, 'days' | 'range'>) {
       label: `${formatDay(day.date)}: ${plural(day.txCount, 'transaction')}, ${day.flaggedCount} unusual.`,
     };
   });
-  return { start, end, kinds, byKind, stops, maxCount: Math.max(1, ...days.map((d) => d.txCount)) };
+  // A period longer than the history stops at its start, as Plotly's own buttons did.
+  const fullRange: [string, string] = [axisTime(start, -DAY_MS / 2), axisTime(end, DAY_MS / 2)];
+  const rangeButtons = [
+    ...PERIODS.map(({ label, months }) => ({ label, range: [monthsBefore(fullRange[1], months) < fullRange[0] ? fullRange[0] : monthsBefore(fullRange[1], months), fullRange[1]] as [string, string] })),
+    { label: 'All', range: fullRange },
+  ];
+  return { start, end, kinds, byKind, stops, fullRange, rangeButtons, maxCount: Math.max(1, ...days.map((d) => d.txCount)) };
 }
 
 type Model = ReturnType<typeof buildModel>;
@@ -103,18 +123,16 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
     });
   }
 
-  const fullRange: [string, string] = [axisTime(model.start, -DAY_MS / 2), axisTime(model.end, DAY_MS / 2)];
+  const { fullRange } = model;
   const opening: [string, string] =
     compact && dayCount(model.start, model.end) > PHONE_WINDOW_DAYS ? [axisTime(addDays(model.end, 1 - PHONE_WINDOW_DAYS), -DAY_MS / 2), fullRange[1]] : fullRange;
-  const button = (count: number, step: 'month' | 'year', label: string) => ({ count, step, stepmode: 'backward' as const, label });
-
   return {
     data,
     layout: {
       hovermode: 'x',
       bargap: 0,
-      // Room above the plot for the range buttons and the legend, which sit on separate lines on a phone.
-      margin: { t: compact ? 84 : 52, r: 16 },
+      // Room above the plot for the legend, which wraps onto a second line on a phone, and below Plotly's tool bar on a desktop.
+      margin: { t: compact ? 64 : 52, r: 16 },
       legend: compact ? { y: 1.02 } : { x: 1, xanchor: 'right', y: 1.02 },
       xaxis: {
         type: 'date',
@@ -122,18 +140,6 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
         title: { text: 'Date (UTC)' },
         hoverformat: '%-d %b %Y',
         rangeslider: { visible: true, range: fullRange, thickness: 0.1, bgcolor: palette.surfaceRaised, bordercolor: palette.axis, borderwidth: 1 },
-        rangeselector: {
-          buttons: [button(1, 'month', '1 month'), button(3, 'month', '3 months'), button(6, 'month', '6 months'), button(1, 'year', '1 year'), { step: 'all', label: 'All' }],
-          x: 0,
-          xanchor: 'left',
-          y: compact ? 1.3 : 1.02,
-          yanchor: 'bottom',
-          bgcolor: palette.surface,
-          bordercolor: palette.borderStrong,
-          borderwidth: 1,
-          activecolor: palette.axis,
-          font: { color: palette.text, size: compact ? 11 : 12 },
-        },
       },
       yaxis: {
         title: { text: 'Transactions per day' },
@@ -191,6 +197,7 @@ export function G1DailyActivity({ timeline, onOpenDay }: Props) {
       height={430}
       onPointClick={(click) => onOpenDay(click.customdata as string)}
       keyboard={keyboard}
+      rangeButtons={model.rangeButtons}
       empty={
         days.length === 0
           ? {

@@ -1,5 +1,5 @@
 import type { MethodId } from '../api/types';
-import { useThresholds } from '../hooks/useMethods';
+import { useMethodLabels, useThresholds } from '../hooks/useMethods';
 import { METHODS } from '../lib/methods';
 import { Icon } from './Icon';
 
@@ -18,8 +18,9 @@ interface Props {
 }
 
 export function VerdictTable({ scores, flags, deciding, unavailableText = 'Not available', caption }: Props) {
-  // Each flag line comes from E11; until it answers the column shows a dash.
+  // The names, families and flag lines come from E11; until it answers the flag column shows a dash.
   const thresholds = useThresholds();
+  const labels = useMethodLabels();
   return (
     <table className="verdict-table">
       <caption className="sr-only">{caption}</caption>
@@ -43,10 +44,10 @@ export function VerdictTable({ scores, flags, deciding, unavailableText = 'Not a
           return (
             <tr key={m.id} className={m.id === deciding ? 'is-deciding' : undefined}>
               <th scope="row" data-label="Method">
-                {m.name}
+                {labels[m.id].name}
                 {m.id === deciding ? <span className="cell-sub">Deciding method</span> : null}
               </th>
-              <td data-label="Family">{m.family}</td>
+              <td data-label="Family">{labels[m.id].family}</td>
               <td data-label="Score" className="num mono">
                 {score == null ? '—' : score.toFixed(2)}
               </td>

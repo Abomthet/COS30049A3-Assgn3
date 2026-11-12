@@ -1,6 +1,7 @@
-// The nine methods in the order the verdict tables (V3 and V4) list them, with the names and families the plan
-// uses. E11 names two of them with a suffix ("(A1)", "(two methods, one flag budget)") that these leave out; V5 shows
-// E11's names, and the verdict tables take each method's flag line from E11.
+// The nine methods in the order the verdict tables (V3 and V4) list them. The names and families here are
+// the short ones the screens show until E11 answers, or when the service cannot be reached; once E11 has
+// answered, its names and families replace them everywhere (useMethodLabels), so a method is never
+// named two ways.
 
 import type { MethodId } from '../api/types';
 

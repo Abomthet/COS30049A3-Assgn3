@@ -8,9 +8,10 @@
 //   (backend/)   python -m uvicorn app.main:app --port 8000
 //   (frontend/)  npm run dev                  (or npm run build && npm run preview)
 //   (frontend/)  npm run screenshots          (writes ../docs/screenshots/)
-// On the mock, which can also show the loading and network-failure states the real service cannot be
-// asked to produce:
-//   VITE_API_MODE=mock npm run dev   and   MOCK=1 npm run screenshots
+// On the mock, which can also show the states the real service cannot be asked to produce (loading, still
+// working, timeout, network failure, starting, busy):
+//   VITE_API_MODE=mock npm run dev   and   MOCK=1 ONLY='^(04|11|4[0-4])' npm run screenshots
+// (The offline banner, shot 39, needs no mock: the browser itself is told to go offline.)
 //
 // Options: BASE_URL (default http://localhost:5173), BROWSER_PATH, ONLY=<regex of names>,
 // MOCK=1 (also take the mock-only shots), and an output folder as the first argument.
@@ -65,7 +66,9 @@ const DESKTOP = 1280;
 const TABLET = 820;
 const MOBILE = 390;
 
-// [file name, extra query, hash route, width, full page?, mock only?, script to run once the page has loaded]
+// [file name, extra query, hash route, width, full page?, mock only?, what to do once the page has loaded, seconds to wait after that]
+// "what to do" is a script for the page, or a function of the DevTools connection.
+const goOffline = (send) => send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
 const shots = [
   ['01-select', '', '#/', DESKTOP, true],
   ['02-invalid', '', q(t.typo), DESKTOP, false],
@@ -106,6 +109,15 @@ const shots = [
   ['36-models', '', '#/models', DESKTOP, true],
   ['37-models-tablet', '', '#/models', TABLET, true],
   ['38-models-mobile', '', '#/models', MOBILE, true],
+  ['39-offline-banner', '', tl(t.mainAddress), DESKTOP, false, false, goOffline],
+  ['40-service-starting', 'starting=1', tl(t.mainAddress), DESKTOP, false, true],
+  ['41-busy-countdown', 'busy=30', tl(t.mainAddress), DESKTOP, false, true],
+  ['42-timeout', 'latency=11000', tl(t.mainAddress), DESKTOP, false, true, null, 10.5],
+  ['43-still-working', 'latency=600000', tl(t.mainAddress), DESKTOP, false, true, null, 5],
+  ['44-offline-banner-mobile', '', tl(t.mainAddress), MOBILE, false, false, goOffline],
+  ['45-about-tablet', '', '#/about', TABLET, true],
+  ['46-timeline-mobile-dark', 'theme=dark', tl(t.mainAddress), MOBILE, true],
+  ['47-what-if-tablet-dark', 'theme=dark', lab(t.mainAddress, t.whatIf.direction), TABLET, true, false, typeAmount(t.whatIf.amountBtc)],
 ];
 
 // ---------------------------------------------------------------- minimal DevTools client
@@ -175,8 +187,9 @@ async function main() {
     const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
     const send = (m, p) => cdp.send(m, p, sessionId);
     await send('Page.enable');
+    await send('Network.enable');
 
-    for (const [name, extra, hash, width, fullPage, mockOnly, after] of shots) {
+    for (const [name, extra, hash, width, fullPage, mockOnly, after, settle = 0] of shots) {
       if ((only && !only.test(name)) || (mockOnly && !mock)) continue;
       const params = new URLSearchParams(extra);
       if (mock && !params.has('latency')) params.set('latency', '0');
@@ -184,6 +197,7 @@ async function main() {
       const url = `${base}/?${params}${hash}`;
       const mobile = width < 700;
       const viewHeight = mobile ? 844 : width < 1000 ? 1180 : 900;
+      await send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
       await send('Emulation.setDeviceMetricsOverride', { width, height: viewHeight, deviceScaleFactor: 1, mobile });
       await send('Page.navigate', { url: 'about:blank' });
       const loaded = cdp.waitFor('Page.loadEventFired', sessionId);
@@ -191,9 +205,11 @@ async function main() {
       await loaded;
       await sleep(900); // let requests settle and charts measure themselves
       if (after) {
-        await send('Runtime.evaluate', { expression: after });
+        if (typeof after === 'function') await after(send);
+        else await send('Runtime.evaluate', { expression: after });
         await sleep(1200); // the lab waits for the typing to stop, asks, and draws
       }
+      await sleep(settle * 1000);
 
       const { result } = await send('Runtime.evaluate', {
         expression: 'JSON.stringify({ w: document.documentElement.scrollWidth, h: document.documentElement.scrollHeight, vw: window.innerWidth })',

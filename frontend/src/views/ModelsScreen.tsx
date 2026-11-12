@@ -5,7 +5,7 @@ import { Loading } from '../components/StatePanel';
 import { useMethods } from '../hooks/useMethods';
 import { useSettings } from '../hooks/useSettings';
 import { formatDay } from '../lib/dates';
-import { formatShare, plural } from '../lib/format';
+import { capitalised, formatShare, plural } from '../lib/format';
 
 // V5, models and limits (plan section 8): a card for each of the nine methods, then what a flag means
 // and what it does not. Every figure on the page is E11's (or E2's, for the snapshot); none is typed
@@ -17,7 +17,6 @@ const PATTERNS: Array<{ id: PlantedPattern; label: string }> = [
   { id: 'dormant', label: 'Dormant' },
 ];
 
-const capitalised = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const interval = ({ value, ciLow, ciHigh }: Interval) => `${formatShare(value)} (${formatShare(ciLow)} to ${formatShare(ciHigh)})`;
 
 function MethodCard({ method }: { method: MethodDescription }) {

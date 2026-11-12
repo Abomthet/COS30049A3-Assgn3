@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import type { Annotations, Data, Shape } from 'plotly.js';
 import type { AppSettings, FeatureDetail, FeatureRole, FeatureUnit } from '../api/types';
 import { useSettings } from '../hooks/useSettings';
-import { formatFeatureValue, formatZ } from '../lib/format';
+import { formatFeatureValue, formatList, formatZ } from '../lib/format';
 import { snapshotCaption } from './caption';
 import type { Figure, FigureContext } from './chartFigure';
 import type { ChartTable } from './chartTable';
@@ -131,7 +131,7 @@ export function G3FeatureDeviation({ features, address }: Props) {
     [features, units],
   );
 
-  const described = features.map((f) => (f.z === null ? `${f.name}: no comparison data` : `${f.name} ${formatZ(f.z)}`)).join(', ');
+  const described = formatList(features.map((f) => (f.z === null ? `${f.name}: no comparison data` : `${f.name} ${formatZ(f.z)}`)));
 
   return (
     <PlotlyChart

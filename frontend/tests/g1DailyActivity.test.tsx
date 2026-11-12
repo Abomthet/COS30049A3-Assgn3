@@ -88,17 +88,43 @@ describe('the axes and range controls', () => {
     expect(layout.yaxis).toMatchObject({ title: { text: 'Transactions per day' }, rangemode: 'tozero', fixedrange: true, tickformat: ',d' });
   });
 
-  test('a range slider and the five range buttons are drawn, the slider showing the whole history', async () => {
+  test('a range slider shows the whole history, and Plotly draws no range buttons of its own', async () => {
     const data = await timeline();
     const { layout } = await draw(data);
     const { rangeslider, rangeselector, range } = layout.xaxis;
-    expect(rangeselector.buttons.map((b: any) => b.label)).toEqual(['1 month', '3 months', '6 months', '1 year', 'All']);
-    expect(rangeselector.buttons.map((b: any) => [b.count, b.step])).toEqual([[1, 'month'], [3, 'month'], [6, 'month'], [1, 'year'], [undefined, 'all']]);
+    expect(rangeselector).toBeUndefined();
     expect(rangeslider.visible).toBe(true);
     expect(rangeslider.range).toEqual(range);
     // E5 gives the range as times; the axis is drawn from their days.
     expect(range[0] <= `${dayKey(data.range.start)} 00:00:00`).toBe(true);
     expect(range[1] >= `${dayKey(data.range.end)} 00:00:00`).toBe(true);
+  });
+
+  test('five range buttons count back from the end of the axis, as ordinary buttons', async () => {
+    const user = userEvent.setup();
+    const { layout } = await draw(withDays(await timeline(), [['2024-01-10', 1, 0], ['2026-08-14', 2, 0]]));
+    const group = screen.getByRole('group', { name: 'Zoom to a period' });
+    const buttons = within(group).getAllByRole('button');
+    expect(buttons.map((b) => b.textContent)).toEqual(['1 month', '3 months', '6 months', '1 year', 'All']);
+    await waitFor(() => expect(buttons[0]).toBeEnabled());
+
+    const end = layout.xaxis.range[1];
+    const relayout = fakePlotly.api.relayout as ReturnType<typeof vi.fn>;
+    await user.click(buttons[3]);
+    expect(relayout).toHaveBeenLastCalledWith(expect.anything(), { 'xaxis.range': ['2025-08-14 12:00:00', end] });
+    await user.click(buttons[0]);
+    expect(relayout).toHaveBeenLastCalledWith(expect.anything(), { 'xaxis.range': ['2026-07-14 12:00:00', end] });
+    await user.click(buttons[4]);
+    expect(relayout).toHaveBeenLastCalledWith(expect.anything(), { 'xaxis.range': layout.xaxis.rangeslider.range });
+  });
+
+  test('a period longer than the history stops at the first day', async () => {
+    const user = userEvent.setup();
+    const { layout } = await draw(withDays(await timeline(), [['2026-07-01', 1, 0], ['2026-08-14', 2, 0]]));
+    const buttons = within(screen.getByRole('group', { name: 'Zoom to a period' })).getAllByRole('button');
+    await waitFor(() => expect(buttons[0]).toBeEnabled());
+    await user.click(buttons[3]);
+    expect((fakePlotly.api.relayout as ReturnType<typeof vi.fn>).mock.lastCall![1]['xaxis.range'][0]).toBe(layout.xaxis.range[0]);
   });
 
   test('a history shorter than 21 days is padded to 21 days, as in the prototype', async () => {
@@ -186,7 +212,7 @@ describe('click-through and keyboard', () => {
     const data = withDays(await timeline(), [['2026-08-01', 1, 0], ['2026-08-05', 4, 2], ['2026-08-09', 2, 0]]);
     const { onOpenDay } = await draw(data);
     const hover = fakePlotly.api.Fx.hover as ReturnType<typeof vi.fn>;
-    act(() => screen.getByRole('group').focus());
+    act(() => screen.getByRole('group', { name: /Bar chart of transactions per day/ }).focus());
     await user.keyboard('{Home}');
     await waitFor(() => expect(hover).toHaveBeenLastCalledWith(expect.anything(), [{ curveNumber: 0, pointNumber: 0 }]));
     // The second active day is the one with an unusual transaction: the second bar series.
@@ -204,7 +230,7 @@ describe('click-through and keyboard', () => {
     const user = userEvent.setup();
     const data = withDays(await timeline(), [['2026-01-01', 1, 0], ['2026-12-31', 1, 0]]);
     const { onOpenDay } = await draw(data);
-    act(() => screen.getByRole('group').focus());
+    act(() => screen.getByRole('group', { name: /Bar chart of transactions per day/ }).focus());
     await user.keyboard('{Home}{ArrowRight}{Enter}');
     expect(onOpenDay).toHaveBeenCalledWith('2026-12-31');
   });

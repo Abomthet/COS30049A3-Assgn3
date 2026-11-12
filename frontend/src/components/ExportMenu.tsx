@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import type { ExportFormat, TransactionQuery } from '../api/types';
 import { downloadText } from '../charts/chartTable';
 import { runRequest } from '../hooks/useRequest';
+import { useSlow } from '../hooks/useSlow';
 import { useToasts } from '../hooks/useToasts';
 import { plural } from '../lib/format';
 
@@ -28,6 +29,7 @@ export function ExportMenu({ address, query, rows }: Props) {
   const { notify } = useToasts();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const slow = useSlow(busy);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
 
@@ -40,7 +42,7 @@ export function ExportMenu({ address, query, rows }: Props) {
       downloadText(answer.data.filename, answer.data.text, type);
       notify({ message: `Exported ${plural(rows, 'row')} to ${answer.data.filename}`, tone: 'success' });
     } else {
-      notify({ message: `The export could not be made. ${answer.error.message}`, tone: 'error' });
+      notify({ message: `The export could not be made. ${answer.error.message} Try again.`, tone: 'error' });
     }
   }
 
@@ -58,7 +60,7 @@ export function ExportMenu({ address, query, rows }: Props) {
   return (
     <div className="export-menu" ref={root} onKeyDown={onKeyDown} onBlur={onBlur}>
       <button ref={trigger} type="button" className="btn btn-secondary" aria-expanded={open} aria-haspopup="true" aria-controls="export-entries" disabled={busy} onClick={() => setOpen(!open)}>
-        {busy ? 'Exporting…' : 'Export'}
+        {busy ? (slow ? 'Still exporting…' : 'Exporting…') : 'Export'}
       </button>
       <div id="export-entries" className="export-entries" hidden={!open}>
         {FORMATS.map((entry) => (

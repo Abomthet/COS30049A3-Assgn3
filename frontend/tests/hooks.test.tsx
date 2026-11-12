@@ -1,6 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { usePolling } from '../src/hooks/usePolling';
+import { useSlow } from '../src/hooks/useSlow';
+import { settings } from '../src/lib/settings';
 import { useRequest } from '../src/hooks/useRequest';
 
 afterEach(() => vi.useRealTimers());
@@ -64,5 +66,31 @@ describe('useRequest cancellation', () => {
     rerender({ id: 'b' });
     expect(signals.a.aborted).toBe(true);
     await vi.waitFor(() => expect(result.current).toMatchObject({ status: 'success', data: 'b' }));
+  });
+});
+
+describe('useSlow', () => {
+  const half = settings.web.requests.timeoutMs / 2;
+
+  test('turns true halfway to the time limit, and false again when the wait ends', () => {
+    vi.useFakeTimers();
+    const { result, rerender } = renderHook(({ active }) => useSlow(active), { initialProps: { active: true } });
+    expect(result.current).toBe(false);
+    act(() => vi.advanceTimersByTime(half - 1));
+    expect(result.current).toBe(false);
+    act(() => vi.advanceTimersByTime(1));
+    expect(result.current).toBe(true);
+    rerender({ active: false });
+    expect(result.current).toBe(false);
+  });
+
+  test('a new wait starts its own clock', () => {
+    vi.useFakeTimers();
+    const { result, rerender } = renderHook(({ active }) => useSlow(active), { initialProps: { active: true } });
+    act(() => vi.advanceTimersByTime(half - 1000));
+    rerender({ active: false });
+    rerender({ active: true });
+    act(() => vi.advanceTimersByTime(half - 1000));
+    expect(result.current).toBe(false);
   });
 });

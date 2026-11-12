@@ -48,6 +48,32 @@ describe('the curve', () => {
     expect(layout.showlegend).toBe(true);
   });
 
+  test('the amount labels are chosen for the room there is, and the same labels are never crowded at any width', async () => {
+    // A phone, and the chart card beside the form on a desktop, where it is about 700 px wide.
+    const widths = [340, 700, 1280];
+    const ticks: number[][] = [];
+    for (const width of widths) {
+      vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ width } as DOMRect);
+      fakePlotly.reset();
+      document.body.innerHTML = '';
+      const { layout } = await draw();
+      expect(layout.xaxis.tickmode).toBe('array');
+      ticks.push(layout.xaxis.tickvals);
+      vi.restoreAllMocks();
+    }
+    // A wider chart has at least as many labels as a narrower one; the five decades in a 700 px card get only the powers of ten
+    // (1, 2 and 5 of each is what collided), and a phone fewer still.
+    expect(ticks[0].length).toBeLessThan(ticks[1].length);
+    expect(ticks[1].length).toBeLessThanOrEqual(ticks[2].length);
+    expect(ticks[1]).toEqual([0.00001, 0.0001, 0.001, 0.01, 0.1]);
+  });
+
+  test('a crossing near either end of the curve labels itself towards the middle, so it is not cut off', async () => {
+    const { data } = await draw();
+    const marks = data.find((t) => t.name === 'Crosses the flag line');
+    expect(marks.textposition).toEqual(['top right', 'top left']);
+  });
+
   test('flagged amounts are orange triangles and the others blue circles, so the shape says it as well as the colour', async () => {
     const { data } = await draw();
     expect(data[0].marker.symbol).toEqual(baseline.flags.map((f) => (f ? 'triangle-up' : 'circle')));
@@ -77,6 +103,8 @@ describe('the curve', () => {
   test('the usual amount is a dotted vertical line, and is left out when the amounts were given', async () => {
     const { layout } = await draw();
     expect(layout.shapes.find((s: any) => s.x0 === curve.usualBtc && s.line.dash === 'dot')).toBeDefined();
+    // The label sits on the line: an annotation on a log axis is placed by the logarithm.
+    expect(layout.annotations.find((a: any) => a.text === 'usual').x).toBeCloseTo(Math.log10(curve.usualBtc!), 10);
     fakePlotly.reset();
     document.body.innerHTML = '';
     const ranged = WHAT_IF_RECORDED.curves[4].body as WhatIfCurve;

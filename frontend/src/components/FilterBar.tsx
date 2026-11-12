@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react';
 import type { Direction, ScoreStatus } from '../api/types';
+import { useSlow } from '../hooks/useSlow';
 import { isDayKey } from '../lib/dates';
 import { DIRECTION_LABEL, formatCount, plural } from '../lib/format';
 import { DIRECTIONS, SORTS, STATUSES, isFiltered, type FilterErrors, type Filters, type SortValue } from '../lib/transactionFilters';
@@ -84,6 +85,7 @@ function DateField({ label, value, min, max, error, onChange }: { label: string;
 export function FilterBar({ filters, errors, period, count, updating, onChange, onReset, actions }: Props) {
   const sortId = useId();
   const invalid = errors.from !== undefined || errors.to !== undefined;
+  const slow = useSlow(updating);
   return (
     <section className="card filter-bar" aria-labelledby="filter-title">
       <h2 id="filter-title">Filter transactions</h2>
@@ -110,7 +112,7 @@ export function FilterBar({ filters, errors, period, count, updating, onChange, 
           {invalid
             ? 'Nothing is shown until the dates are corrected.'
             : count
-              ? `Showing ${formatCount(count.matching)} of ${plural(count.all, 'transaction')}${updating ? ' · Updating…' : ''}`
+              ? `Showing ${formatCount(count.matching)} of ${plural(count.all, 'transaction')}${updating ? (slow ? ' · Still working…' : ' · Updating…') : ''}`
               : 'Loading the transactions…'}
         </p>
         <div className="filter-actions">

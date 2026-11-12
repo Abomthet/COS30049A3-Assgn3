@@ -12,6 +12,7 @@ import { VerdictTable } from '../components/VerdictTable';
 import { formatDateTime, formatDay } from '../lib/dates';
 import { formatBtc, formatSpanDays, plural } from '../lib/format';
 import { paths } from '../lib/router';
+import { useMethodLabels } from '../hooks/useMethods';
 import { useRequest } from '../hooks/useRequest';
 
 // The detail panel of Screen 3 (FR-03, FR-04, AC-03, M-13). For a flagged transaction it shows the
@@ -115,6 +116,7 @@ function Facts({ tx }: { tx: TransactionCore }) {
 }
 
 function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: HeadingRef }) {
+  const methodName = useMethodLabels()[tx.method.id].name;
   return (
     <article className="detail" aria-labelledby="detail-title">
       <header className="detail-head">
@@ -136,7 +138,7 @@ function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: Heading
       <G3FeatureDeviation features={tx.features} address={tx.address} />
       <Verdicts tx={tx} />
       <p className="method-note">
-        <strong>Method:</strong> {tx.method.name}. {tx.method.note}
+        <strong>Method:</strong> {methodName}. {tx.method.note}
       </p>
       {tx.direction === 'none' ? null : (
         <p>
@@ -151,11 +153,12 @@ function Detail({ tx, headingRef }: { tx: TransactionDetail; headingRef: Heading
 
 /** What each of the nine methods says about this transaction (M-13). The deciding one sets the status above. */
 function Verdicts({ tx }: { tx: TransactionDetail }) {
+  const methodName = useMethodLabels()[tx.method.id].name;
   return (
     <section className="verdicts" aria-labelledby="verdicts-title">
       <h3 id="verdicts-title">What each model says</h3>
       <p className="card-sub">
-        Nine methods score every transaction on its own scale. The deciding method ({tx.method.name}) sets the status above;
+        Nine methods score every transaction on its own scale. The deciding method ({methodName}) sets the status above;
         the others are shown for comparison.
       </p>
       <VerdictTable scores={tx.scores} flags={tx.flags} deciding={tx.method.id} caption="Score, flag line and verdict of each of the nine methods for this transaction" />

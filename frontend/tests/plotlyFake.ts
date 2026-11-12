@@ -36,6 +36,7 @@ export const fakePlotly = {
         Object.assign(el, { data, layout, on: (name: string, cb: Handler) => handlers.set(name, cb) });
         return el;
       }),
+      relayout: vi.fn(async (el: HTMLElement) => el),
       purge: vi.fn(),
       downloadImage: vi.fn(async () => 'download'),
       Plots: { resize: vi.fn() },

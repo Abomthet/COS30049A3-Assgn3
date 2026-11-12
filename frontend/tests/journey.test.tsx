@@ -260,7 +260,7 @@ describe('FR-05 states', () => {
 
   test('not found: a transaction that is not the address\'s', async () => {
     start(detailHash({ address: ex.mainAddress, date: ex.flagged.date, txid: '0'.repeat(64) }));
-    expect(await screen.findByText('Not found')).toBeInTheDocument();
+    expect(await screen.findByText("There's nothing at this link")).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Back to 11 Jul 2024/ })).toBeInTheDocument();
   });
 

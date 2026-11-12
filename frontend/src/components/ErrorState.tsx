@@ -1,14 +1,60 @@
+import { useEffect, useState } from 'react';
 import type { ApiError } from '../api/types';
+import { useOnline } from '../hooks/useOnline';
 import { paths } from '../lib/router';
-import { shortAddress } from '../lib/format';
+import { plural, shortAddress } from '../lib/format';
 import { CopyButton } from './CopyButton';
 import { StatePanel } from './StatePanel';
 
-// Maps an API error to its feedback state (FR-05). The 422 insufficient-history case has its
-// own panel in the transaction detail, because it still shows the transaction's facts.
+// Maps an API error to its feedback state (FR-05; the catalogue in plan section 11): every state says what
+// happened and offers a next action. The 422 insufficient-history case has its own panel in the transaction
+// detail, because it still shows the transaction's facts.
+
+/** The wait before trying again when a 429 does not say how long (it normally carries `Retry-After`). */
+const DEFAULT_WAIT_SECONDS = 5;
+
+/** A wait in words: whole seconds up to two minutes, then minutes, so a long `Retry-After` does not read as a ticking number. */
+const formatWait = (seconds: number) => (seconds <= 120 ? plural(seconds, 'second') : plural(Math.ceil(seconds / 60), 'minute'));
+
+/**
+ * The catalogue's "Busy" state: the wait, counting down, and a retry when it ends. The announcement for a
+ * screen reader gives the whole wait once; the ticking number is for the eyes only, so nothing is read out every second.
+ */
+function BusyPanel({ seconds, onRetry, headingLevel }: { seconds: number; onRetry: () => void; headingLevel: 2 | 3 }) {
+  const [left, setLeft] = useState(seconds);
+  useEffect(() => {
+    if (left <= 0) {
+      onRetry();
+      return;
+    }
+    const timer = setTimeout(() => setLeft(left - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [left]);
+
+  return (
+    <StatePanel
+      tone="warning"
+      icon="history"
+      title="The service is busy"
+      headingLevel={headingLevel}
+      testId="state-rate-limited"
+      actions={
+        <button type="button" className="btn btn-secondary" onClick={onRetry}>
+          Try again now
+        </button>
+      }
+    >
+      <p>Too many requests came in at once. This page tries again in <strong aria-hidden="true">{formatWait(left)}</strong>.</p>
+      <p className="sr-only" role="status">
+        The service is busy. This page tries again by itself in {formatWait(seconds)}.
+      </p>
+    </StatePanel>
+  );
+}
 
 export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiError; onRetry: () => void; headingLevel?: 2 | 3 }) {
   const body = error.body;
+  const online = useOnline();
   const retry = (
     <button type="button" className="btn btn-secondary" onClick={onRetry}>
       Try again
@@ -58,14 +104,56 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
       );
     case 'not_found':
       return (
-        <StatePanel tone="info" title="Not found" headingLevel={headingLevel} live="alert">
+        <StatePanel
+          tone="info"
+          title="There's nothing at this link"
+          headingLevel={headingLevel}
+          live="alert"
+          actions={<a className="btn btn-secondary" href={paths.select()}>Go to the address list</a>}
+        >
           <p>{body.message}</p>
         </StatePanel>
       );
     case 'network':
       return (
         <StatePanel tone="error" icon="offline" title="Couldn't reach the explorer service" headingLevel={headingLevel} live="alert" actions={retry}>
-          <p>{body.message} This page reloads by itself when the service is back, or you can try again now.</p>
+          <p>
+            {online ? body.message : "Your browser is offline."} This page reloads by itself when {online ? 'the service is back' : 'your connection returns'}, or you can try again now.
+          </p>
+        </StatePanel>
+      );
+    case 'insufficient_history':
+      return (
+        <StatePanel
+          tone="warning"
+          title="Not enough history to score this"
+          headingLevel={headingLevel}
+          live="alert"
+          testId="state-insufficient"
+          actions={<a className="btn btn-secondary" href={paths.select()}>Choose an address with more history</a>}
+        >
+          <p>{body.message}</p>
+        </StatePanel>
+      );
+    case 'rate_limited':
+      return <BusyPanel seconds={body.retryAfterSeconds ?? DEFAULT_WAIT_SECONDS} onRetry={onRetry} headingLevel={headingLevel} />;
+    case 'upstream_error':
+    case 'upstream_timeout':
+      return (
+        <StatePanel
+          tone="error"
+          icon="offline"
+          title="The public blockchain service did not answer"
+          headingLevel={headingLevel}
+          live="alert"
+          actions={
+            <>
+              {retry}
+              <a className="btn btn-ghost" href={paths.select()}>Pick a snapshot address</a>
+            </>
+          }
+        >
+          <p>{body.message}</p>
         </StatePanel>
       );
     case 'too_large':
