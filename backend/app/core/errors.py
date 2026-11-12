@@ -86,6 +86,20 @@ class TooLarge(ApiError):
     status = "too_large"
 
 
+class RateLimited(ApiError):
+    """Another request holds the one place there is, such as the Assistant's single answer at a time (429).
+
+    `retry_after` is the whole seconds the client should wait; it goes into the `Retry-After` header.
+    """
+
+    status_code = 429
+    status = "rate_limited"
+
+    def __init__(self, message: str, retry_after: int, hint: str | None = None) -> None:
+        super().__init__(message, hint)
+        self.retry_after = retry_after
+
+
 class Unavailable(ApiError):
     """The service cannot answer yet or a file it needs is missing (503)."""
 
@@ -93,12 +107,16 @@ class Unavailable(ApiError):
     status = "unavailable"
 
 
-def error_response(request: Request, status_code: int, status: ErrorStatus, message: str, **extras: Any) -> JSONResponse:
-    """Build the one error body. Only the keys given are sent, so an unused extra is absent and an explicit null stays."""
+def error_response(request: Request, status_code: int, status: ErrorStatus, message: str, headers: Mapping[str, str] | None = None,
+                   **extras: Any) -> JSONResponse:
+    """Build the one error body. Only the keys given are sent, so an unused extra is absent and an explicit null stays.
+
+    `headers` are added to the request identifier, which every error carries (`Retry-After` on a 429).
+    """
     request_id = request_id_of(request)
     body = ErrorBody(status=status, message=message, request_id=request_id, **extras)
     return JSONResponse(body.model_dump(by_alias=True, exclude_unset=True), status_code=status_code,
-                        headers={REQUEST_ID_HEADER: request_id})
+                        headers={**(headers or {}), REQUEST_ID_HEADER: request_id})
 
 
 # ---------------------------------------------------------------- the handlers
@@ -110,7 +128,8 @@ async def handle_api_error(request: Request, exc: Exception) -> JSONResponse:
     extras: dict[str, Any] = {} if exc.hint is None else {"hint": exc.hint}
     if isinstance(exc, InvalidRequest) and exc.fields:
         extras["fields"] = exc.fields
-    return error_response(request, exc.status_code, exc.status, exc.message, **extras)
+    headers = {"Retry-After": str(exc.retry_after)} if isinstance(exc, RateLimited) else None
+    return error_response(request, exc.status_code, exc.status, exc.message, headers, **extras)
 
 
 def _describe(error: dict[str, Any]) -> str:

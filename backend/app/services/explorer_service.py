@@ -213,6 +213,17 @@ class ExplorerService:
             InsufficientHistory: The transaction could not be scored; the error carries its facts.
         """
         data = self._store.get(address)
+        return TransactionDetail.model_validate({**self.scored_transaction(address, txid, method), "source": data.source})
+
+    def scored_transaction(self, address: str, txid: str, method: str | None = None) -> dict[str, Any]:
+        """One scored transaction as Assignment 2's `score_address` gives it (with `explanation` reworded), for E7 and E12.
+
+        Raises:
+            Unsupported: The address is not in the store.
+            NotFound: The transaction is not one of the address's.
+            InsufficientHistory: The transaction could not be scored; the error carries its facts.
+        """
+        data = self._store.get(address)
         if txid not in data.features.index:
             raise NotFound("This transaction is not one of this address's transactions in the snapshot.",
                            "Check the link, or pick a transaction from the address's list.")
@@ -221,7 +232,7 @@ class ExplorerService:
         transaction = view.transactions[txid]
         if not transaction.get("scored", False):
             raise self._not_scored(self._predictors[method], data, view, txid)
-        return TransactionDetail.model_validate({**transaction, "source": data.source})
+        return transaction
 
     def matching(self, address: str, query: TransactionFilters) -> tuple[list[TransactionRow], dict[str, dict[str, Any]]]:
         """E10's input: every row that matches E6's filters, in the order asked for, and the details to describe them.

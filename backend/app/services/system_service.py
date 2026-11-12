@@ -4,7 +4,6 @@ from __future__ import annotations
 from explorer.explain import FEATURE_DESCRIPTIONS, FEATURE_NAMES
 
 from .. import __version__
-from ..core.config import Settings
 from ..core.runtime import Runtime
 from ..schemas.system import (AssistantStatus, Capabilities, ConfigResponse, FeatureInfo, HealthResponse, Thresholds,
                               WhatIfDefaults)
@@ -14,14 +13,10 @@ from .model_service import require_ready
 FEATURE_UNITS = {"F1": "BTC", "F2": "count", "F3": "hours", "F4": "ratio"}
 
 
-def assistant_status(settings: Settings) -> AssistantStatus:
-    """Whether the Explorer Assistant's weights are installed and allowed.
-
-    Only presence is checked: the Assistant itself is loaded on first use (S-05), which will add `loading`.
-    """
-    if settings.assistant_mode == "off":
-        return "off"
-    return "ready" if settings.assistant_weights.is_file() else "not_installed"
+def assistant_status(runtime: Runtime) -> AssistantStatus:
+    """E1's `assistant`: `off`, `loading` while the model loads on first use, `not_installed` or `ready` (S-05)."""
+    assert runtime.assistant is not None  # built by `create_app`
+    return runtime.assistant.status()
 
 
 def build_health(runtime: Runtime) -> HealthResponse:
@@ -34,7 +29,7 @@ def build_health(runtime: Runtime) -> HealthResponse:
     facts = runtime.facts
     assert facts is not None  # `require_ready` passed
     return HealthResponse(status="ok", version=__version__, snapshot_date=facts.date, address_count=facts.address_count,
-                          method_count=facts.method_count, assistant=assistant_status(runtime.settings),
+                          method_count=facts.method_count, assistant=assistant_status(runtime),
                           live_lookup=runtime.settings.live_lookup, uptime_seconds=round(runtime.uptime_seconds, 1))
 
 
@@ -57,5 +52,5 @@ def build_config(runtime: Runtime) -> ConfigResponse:
         default_method=predictor.selected,
         web=settings.web,
         what_if=WhatIfDefaults(default_time=f"{facts.date}T12:00:00Z"),
-        capabilities=Capabilities(assistant=assistant_status(settings) == "ready", live_lookup=settings.live_lookup),
+        capabilities=Capabilities(assistant=assistant_status(runtime) in ("ready", "loading"), live_lookup=settings.live_lookup),
     )

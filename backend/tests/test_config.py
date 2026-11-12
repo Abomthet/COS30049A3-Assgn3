@@ -14,7 +14,7 @@ SETTINGS_FILE = Path(__file__).resolve().parents[1] / "config" / "settings.json"
 def test_defaults_come_from_the_plan() -> None:
     settings = load_settings({})
     assert settings.cors_origins == DEFAULT_CORS_ORIGINS == ("http://localhost:5173", "http://127.0.0.1:5173")
-    assert (settings.live_lookup, settings.assistant_mode, settings.log_level) == (False, "off", "INFO")  # Assistant "off" until S-05 (E12)
+    assert (settings.live_lookup, settings.assistant_mode, settings.log_level) == (False, "auto", "INFO")  # the plan's default: on when the weights are present (D-W-09 ended with E12)
 
 
 def test_the_web_block_is_the_plans() -> None:

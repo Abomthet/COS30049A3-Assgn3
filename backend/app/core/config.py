@@ -20,6 +20,8 @@ from ..schemas.common import CamelModel
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 SETTINGS_PATH = BACKEND_ROOT / "config" / "settings.json"
+# The Assistant's prepared answers for the snapshot's flagged transactions (tools/precompute_assistant.py); they ship in the zip.
+ASSISTANT_ANSWERS_PATH = BACKEND_ROOT / "data" / "assistant_answers.json"
 
 DEFAULT_CORS_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")
 LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
@@ -118,6 +120,7 @@ class Settings:
     limitation_line: str
     contributing_abs_z: float
     assistant_weights: Path
+    assistant_answers: Path
     cors_origins: tuple[str, ...]
     live_lookup: bool
     assistant_mode: Literal["auto", "off"]
@@ -161,9 +164,9 @@ def load_settings(environ: Mapping[str, str] | None = None, path: Path = SETTING
         limitation_line=raw["limitationLine"],
         contributing_abs_z=raw["baseline"]["contributingAbsZ"],
         assistant_weights=BACKEND_ROOT / raw["assistant"]["text150mCheckpoint"],
+        assistant_answers=ASSISTANT_ANSWERS_PATH,
         cors_origins=tuple(o.strip() for o in origins.split(",") if o.strip()) if origins else DEFAULT_CORS_ORIGINS,
         live_lookup=_choice(environ, "EXPLORER_LIVE_LOOKUP", "off", ("on", "off")) == "on",
-        # "off" until S-05 adds E12: E1 and E2 must not advertise an Assistant that has no endpoint yet.
-        assistant_mode=cast(Literal["auto", "off"], _choice(environ, "EXPLORER_ASSISTANT", "off", ("auto", "off"))),
+        assistant_mode=cast(Literal["auto", "off"], _choice(environ, "EXPLORER_ASSISTANT", "auto", ("auto", "off"))),
         log_level=_choice(environ, "EXPLORER_LOG_LEVEL", "INFO", LOG_LEVELS, fold=str.upper),
     )

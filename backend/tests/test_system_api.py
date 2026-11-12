@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from app import __version__
 from app.core.config import Settings
+from app.services import assistant_service
 from explorer.predict import Predictor, check_outputs
 from tests.conftest import wait_until_ready
 
@@ -77,9 +78,11 @@ def test_config_is_what_the_front_end_needs(client: TestClient, settings: Settin
     assert body["web"]["lists"] == {"pageSize": 50, "maxPageSize": 200}
 
 
-def test_capabilities_follow_the_switches(make_client: Callable[..., TestClient], settings: Settings, tmp_path: Path) -> None:
+def test_capabilities_follow_the_switches(make_client: Callable[..., TestClient], settings: Settings, tmp_path: Path,
+                                          monkeypatch: pytest.MonkeyPatch) -> None:
     weights = tmp_path / "model.pt"
     weights.write_bytes(b"x")
+    monkeypatch.setattr(assistant_service, "libraries_installed", lambda: True)  # the same answer with or without torch
     on = make_client(app_settings=replace(settings, live_lookup=True, assistant_weights=weights, assistant_mode="auto"))
     assert on.get("/api/config").json()["capabilities"] == {"assistant": True, "liveLookup": True}
     assert on.get("/api/health").json()["assistant"] == "ready"
@@ -90,6 +93,11 @@ def test_capabilities_follow_the_switches(make_client: Callable[..., TestClient]
 
     absent = make_client(app_settings=replace(settings, assistant_weights=tmp_path / "missing.pt", assistant_mode="auto"))
     assert absent.get("/api/health").json()["assistant"] == "not_installed"
+    assert absent.get("/api/config").json()["capabilities"]["assistant"] is False
+
+    monkeypatch.setattr(assistant_service, "libraries_installed", lambda: False)
+    no_torch = make_client(app_settings=replace(settings, assistant_weights=weights, assistant_mode="auto"))
+    assert no_torch.get("/api/health").json()["assistant"] == "not_installed"
 
 
 def test_every_response_carries_a_request_id_and_a_good_one_is_kept(client: TestClient) -> None:

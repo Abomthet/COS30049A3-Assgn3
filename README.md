@@ -20,7 +20,7 @@ and export what the table shows.
 | `backend/` | The FastAPI service (`app/`), Assignment 2's runtime copied unchanged (`explorer/`, `lm/`, `models/`, `data/`, `reports/`), `config/settings.json`, the tests, `MODIFICATIONS.md` (every change made for the web) |
 | `frontend/` | The React + TypeScript application (Vite) and its tests |
 | `shared/` | Test vectors read by both tiers (`address_vectors.json`, `whatif_vectors.json`) |
-| `tools/` | `vendor_a2.py`, which copies Assignment 2's runtime in with a SHA-256 for every file |
+| `tools/` | `vendor_a2.py`, which copies Assignment 2's runtime in with a SHA-256 for every file; `precompute_assistant.py`, which writes the Assistant's prepared answers |
 | `docs/` | The delivery plan and the engineering log |
 
 ## What you need
@@ -28,7 +28,7 @@ and export what the table shows.
 - macOS or Windows 10/11 (Linux should work and has not been tried), about 2 GB of disk, no GPU.
 - **conda** (Miniforge or Miniconda) for the back end's Python 3.11 environment.
 - **Node.js 22 or later** (`frontend/package.json` says `"node": ">=22"`) with npm.
-- Optional: the Explorer Assistant's weights (610 MB); see below. Nothing in the application uses them yet.
+- Optional: the Explorer Assistant (its weights, 610 MB, and PyTorch); see "The optional Assistant" below. Without it every explanation is the template text.
 
 ## Set-up
 
@@ -71,9 +71,14 @@ Windows. **None of this block has been run on Windows.**
 tested route). The pins are Assignment 2's exact library versions, because the saved models are pickles and a
 different scikit-learn warns on every load.
 
-## The optional Assistant weights
+## The optional Assistant
 
-The Assistant's model (`model.pt`, 610 MB, and `tokenizer.json`) is not in the repository. Copy both files into
+The Explorer Assistant is a 152-million-parameter language model that Assignment 2 trained. It rephrases the template
+explanation in plain words; a code check (six checks: numbers, limitation line, banned words, comparison direction,
+verdict, not empty) decides whether its answer may be shown, and a rejected answer is replaced by the template. The
+application never needs it: without the weights or PyTorch every explanation is the template.
+
+**1. The weights.** `model.pt` (610 MB) and `tokenizer.json` are not in the repository. Copy both files into
 `backend/models/assistant/` (the folder is git-ignored) and check them:
 
 ```bash
@@ -89,8 +94,36 @@ c8f4509cc0951d00426ae6bae99a34b8639c2f20c8c32e05b9d0bce1cc3e5d45  tokenizer.json
 
 (On Windows: `certutil -hashfile backend\models\assistant\model.pt SHA256`, not run.) `tools/vendor_a2.py
 --assistant-weights <folder>` copies and verifies them from a folder that holds Assignment 2's
-`models/assistant/` and its `SHA256SUMS.txt`; it also re-copies Assignment 2's runtime, so it was **not run**
-here. `EXPLORER_ASSISTANT` stays `off` until the Assistant has an endpoint.
+`models/assistant/` and its `SHA256SUMS.txt`; it also re-copies Assignment 2's runtime.
+
+**2. PyTorch.** With the environment active, from `backend/`:
+
+```bash
+pip install -r requirements-assistant.txt     # torch 2.7.1 and tokenizers 0.21.1, Assignment 2's versions; the CPU build on macOS and Windows
+```
+
+(Linux: add `--index-url https://download.pytorch.org/whl/cpu` for the CPU-only build, a smaller download.) Restart the
+back end. `GET /api/health` then says `"assistant": "ready"`; it says `"not_installed"` while either part is missing
+and `"off"` when `EXPLORER_ASSISTANT=off`. PyTorch is imported only when an answer is first asked for.
+
+**How it behaves.** `POST /api/explanations` (E12) answers with the template or the Assistant's guarded answer.
+
+- The first answer loads the model (about 8 seconds, `assistant` reads `loading` meanwhile) and writes in about 3; later
+  answers take about 3 seconds each on a laptop CPU. The request's time limit is 90 seconds
+  (`web.requests.assistantTimeoutMs`).
+- One answer is written at a time. A second request that would have to write gets `429 rate_limited` with a
+  `Retry-After` header; answers already written (the cache) or prepared are never kept waiting.
+- Decoding is greedy, so the same facts always give the same answer, and answers are cached by a SHA-256 of the facts.
+- **Prepared answers.** `backend/data/assistant_answers.json` holds the guarded answers for the snapshot's flagged
+  transactions under the baseline (681 transactions; equal facts share an answer). E12 serves from it first, so a computer
+  without the weights still reads the Assistant's explanations for those transactions. A what-if transaction needs the
+  weights. Regenerate the file (about 30 minutes on a laptop CPU, resumable) with:
+
+  ```bash
+  python tools/precompute_assistant.py        # from anywhere, with PyTorch and the weights; --limit 5 --out x.json to try it
+  ```
+
+- With the Assistant off or not installed, E12 answers 200 with the template and `skippedWriters` says why.
 
 ## Run it: two terminals
 
@@ -159,7 +192,7 @@ Environment variables only choose what a machine may do:
 |---|---|---|
 | `EXPLORER_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Origins allowed to call the API directly (comma-separated) |
 | `EXPLORER_LIVE_LOOKUP` | `off` | `on` turns the live address lookup on (not built yet) |
-| `EXPLORER_ASSISTANT` | `off` | `auto` uses the Assistant when its weights are present; `off` shows the template text only. The plan's default is `auto`; it is `off` until the Assistant has an endpoint |
+| `EXPLORER_ASSISTANT` | `auto` | `auto` uses the Assistant when its weights and PyTorch are installed (and serves the prepared answers); `off` shows the template text only |
 | `EXPLORER_LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` or `CRITICAL` |
 | `VITE_API_BASE` (front end) | empty | Empty: same origin, through Vite's proxy. Otherwise the back end's address, such as `http://127.0.0.1:8001` |
 | `VITE_API_MODE` (front end) | `http` | `mock` runs the screens on the in-browser mock, which the tests use |

@@ -8,7 +8,7 @@
     ],
     "subject": "Team review checklist for main.pdf (report/REVIEW_CHECKLIST.md: file, data name, printed page, owner and what to check; each row's numbers compared with the built PDF); cover note says bibliography; results unchanged"
   },
-  "copiedUtc": "2026-11-11T15:04:24Z",
+  "copiedUtc": "2026-11-12T06:27:35Z",
   "files": {
     "data/processed/esplora/features.csv": "391d06c37f83c20a80852bbd7f2c8ba3e982c1bb389b7131ab340ac274be6da0",
     "data/processed/esplora/manifest.json": "2f564d94d3e787e44d889a19a118bd12c1cde9a7115e76449ebc455542be06f3",
@@ -40,7 +40,12 @@
     "explorer/stages.py": "9197d003570c3f24e09120c5a8b8e58fa5c3717287ce998ebeb994be7a981ffe",
     "explorer/txgpt.py": "e37ad8a440ea8270a3806b7a34fb4c9415fa0e45cec920943a373532012ad7f9",
     "lm/__init__.py": "290ed32d244eb358aa5b0d4e47b30b7d2ea39db7c9027b365693674048e0bbf4",
+    "lm/chat.py": "af2d9fd3a4fe728a72c6267618b928f59bf6cd7a250b792ee5e28901bacc9912",
+    "lm/generate.py": "a60623a6e353140849308d635f97f26ad82bba182fb85d3dca06c7a7b1889971",
+    "lm/model.py": "3e5e5c541f3d17c3367772cf229f18da0c90e02f9aa4f964771e130d5856a20b",
+    "lm/tokenizer.py": "07e21ca124e514bd8bbd9ec61afa004c599838b800ecc7295996e58bd253d5c4",
     "lm/tx_tokens.py": "7a897401066405afb1a734157018b213b2f1acc33ec422fccd7111a8f21216d9",
+    "lm/writers.py": "7043ea7ac17e1b7c72e28d6c5b1155649bad34e0022039271fd025054ea20536",
     "models/baseline.json": "227f53a76086184d265f50819591d4e9ed0b8888673a0dff148f0979ada5af6c",
     "models/fusion.joblib": "8a6dbaa69cfd416276600dbfc0e01f555a57bbe3da050655179d5fde46171641",
     "models/isolation_forest.joblib": "aa2e850af1c2f7344be556fc0d20b395c7d62ee4eaddf3690bd1decfa21fac79",

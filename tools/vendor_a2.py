@@ -18,7 +18,7 @@ evaluation tables, the profile model) are added from EXTRA_FILES.
 The Assistant's weights (models/assistant/model.pt, 610 MB, and tokenizer.json) are not in git. With
 --assistant-weights they are copied from a folder holding that layout plus the submission's
 SHA256SUMS.txt, and checked against it before and after the copy. backend/models/assistant/ is
-git-ignored. Nothing loads them yet (S-05).
+git-ignored. The Assistant's five lm modules (ASSISTANT_MODULES) are copied with the runtime; backend/app/services/assistant_service.py loads them.
 
 The saved models are pickles that name their classes by module path, so the package keeps its name
 and no copied file is edited. config/settings.json is the one file that is extended (the "web"
@@ -49,6 +49,16 @@ EXTRA_FILES = (
     "models/profiles.joblib",
     "reports/tables/eval_selection.csv",
     "reports/tables/eval_significance.csv",
+)
+
+# The Assistant's writer and what it imports. They need torch and tokenizers, which the web application's entry
+# points never import (the Assistant loads lazily, S-05), so the discovery run cannot find them.
+ASSISTANT_MODULES = (
+    "lm/writers.py",
+    "lm/chat.py",
+    "lm/generate.py",
+    "lm/model.py",
+    "lm/tokenizer.py",
 )
 
 # What the discovery run needs besides the python files: the snapshot and the models are found by
@@ -179,7 +189,7 @@ def copy_runtime(repo: Path, commit: str, python: str) -> dict:
     """Copy every discovered file into backend/ and return the manifest."""
     sha = git(repo, "rev-parse", f"{commit}^{{commit}}").decode().strip()  # a tag name becomes its commit
     modules, data_files = discover(repo, sha, python)
-    wanted = sorted({*modules, *data_files, *EXTRA_FILES})
+    wanted = sorted({*modules, *data_files, *EXTRA_FILES, *ASSISTANT_MODULES})
     in_commit = set(committed_files(repo, sha, ("",)))
     missing = [p for p in wanted if p not in in_commit]
     if missing:

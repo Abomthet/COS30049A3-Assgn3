@@ -61,7 +61,8 @@ def error_responses(*codes: int) -> dict[int | str, dict[str, Any]]:
     meanings = {400: "A value is malformed or out of range.", 404: "The address, transaction or path is unknown.",
                 409: "The watchlist is full.",
                 413: "The request body is over the size limit.", 415: "The request body is not JSON.",
-                422: "Too little earlier history to score.", 503: "The service is starting or a file is missing."}
+                422: "Too little earlier history to score.",
+                429: "The Assistant is writing another answer; wait `Retry-After` seconds and ask again.", 503: "The service is starting or a file is missing."}
     return {code: {"model": ErrorBody, "description": meanings[code]} for code in codes}
 
 

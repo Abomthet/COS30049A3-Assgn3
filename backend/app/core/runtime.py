@@ -14,6 +14,7 @@ from .config import Settings
 if TYPE_CHECKING:  # explorer is imported only where it is used: it takes seconds to import
     from explorer.predict import Predictor
 
+    from ..services.assistant_service import AssistantService
     from ..services.explorer_service import ExplorerService
     from ..services.export_service import ExportService
     from ..services.methods_service import MethodsService
@@ -40,6 +41,7 @@ class Runtime:
     predictor: Predictor | None = None
     facts: SnapshotFacts | None = None
     explorer: ExplorerService | None = None
+    assistant: AssistantService | None = None
     whatif: WhatIfService | None = None
     exports: ExportService | None = None
     methods: MethodsService | None = None

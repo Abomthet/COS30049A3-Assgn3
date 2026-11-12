@@ -7,6 +7,7 @@ from fastapi import Depends, Path, Query, Request, Response
 
 from ..core.runtime import Runtime
 from ..core.validation import require_address, require_txid
+from ..services.assistant_service import AssistantService
 from ..services.explorer_service import ExplorerService
 from ..services.export_service import ExportService
 from ..services.methods_service import MethodsService
@@ -73,6 +74,17 @@ def get_watchlist(runtime: Annotated[Runtime, Depends(get_runtime)]) -> Watchlis
     require_ready(runtime)
     assert runtime.watchlist is not None  # `require_ready` passed
     return runtime.watchlist
+
+
+def get_assistant(runtime: Annotated[Runtime, Depends(get_runtime)]) -> AssistantService:
+    """The Assistant service, once the models are loaded (it is built with the application, but E12 needs the explorer too).
+
+    Raises:
+        Unavailable: The models are still loading, or failed to load (503).
+    """
+    require_ready(runtime)
+    assert runtime.assistant is not None  # built by `create_app`
+    return runtime.assistant
 
 
 def snapshot_data(response: Response) -> None:

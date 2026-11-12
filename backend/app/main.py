@@ -22,7 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from . import __version__
-from .api import addresses, exports, methods, system, transactions, watchlist, whatif
+from .api import addresses, explanations, exports, methods, system, transactions, watchlist, whatif
 from .api.field_rules import FIELD_RULES
 from .core.body_limit import BodyLimitMiddleware
 from .core.config import BACKEND_ROOT, Settings, load_settings
@@ -31,6 +31,7 @@ from .core.logging import configure_logging
 from .core.middleware import REQUEST_ID_HEADER, ETagMiddleware, RequestContextMiddleware
 from .core.openapi import install_openapi
 from .core.runtime import Runtime
+from .services.assistant_service import AssistantService
 from .services.explorer_service import ExplorerService
 from .services.export_service import ExportService
 from .services.methods_service import MethodsService
@@ -104,7 +105,7 @@ def create_app(settings: Settings | None = None, loader: Callable[[], Predictor]
     """
     settings = settings or load_settings()
     configure_logging(settings.log_level)
-    runtime = Runtime(settings=settings)
+    runtime = Runtime(settings=settings, assistant=AssistantService(settings))
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -143,6 +144,7 @@ def create_app(settings: Settings | None = None, loader: Callable[[], Predictor]
     app.include_router(exports.router)
     app.include_router(methods.router)
     app.include_router(watchlist.router)
+    app.include_router(explanations.router)
     install_openapi(app)
     return app
 

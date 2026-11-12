@@ -74,6 +74,20 @@ class WhatIfService:
             InsufficientHistory: Too little history lay before the chosen time.
         """
         data = self._store.get(address)
+        result = self.scored_what_if(address, request)
+        seconds = int(request.time.astimezone(timezone.utc).timestamp())
+        return WhatIfResult.model_validate({**result, "explanation": reword(result["explanation"]), "notAvailable": self._not_available,
+                                            "ranks": self._ranks(data, seconds, result["scores"])})
+
+    def scored_what_if(self, address: str, request: WhatIfRequest) -> dict[str, Any]:
+        """The hypothetical transaction as `Predictor.score_what_if` gives it, for E8 and E12 (the explanation is A2's text).
+
+        Raises:
+            Unsupported: The address is not in the store.
+            InvalidRequest: The amount is out of range or the time is too far after the last transaction.
+            InsufficientHistory: Too little history lay before the chosen time.
+        """
+        data = self._store.get(address)
         amount = float(request.amount_btc)
         time_utc = request.time.astimezone(timezone.utc)
         self._raise_for(self._problems(data, time_utc, [("amountBtc", request.amount_btc)]))
@@ -84,8 +98,7 @@ class WhatIfService:
             raise self._too_early(data, seconds) from None
         if not result["scored"]:  # earlier history exists but is under the minimum: A2 returns the row unscored
             raise self._too_early(data, seconds)
-        return WhatIfResult.model_validate({**result, "explanation": reword(result["explanation"]), "notAvailable": self._not_available,
-                                            "ranks": self._ranks(data, seconds, result["scores"])})
+        return result
 
     def _ranks(self, data: AddressData, seconds: int, scores: Mapping[str, float | None]) -> dict[str, float | None]:
         """Per method, where the hypothetical score sits among the scores of the address's scored transactions before the time.

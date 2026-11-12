@@ -1384,6 +1384,108 @@
           }
         }
       }
+    },
+    "/api/explanations": {
+      "post": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "The Assistant's guarded explanation of a transaction, or the template",
+        "description": "Body: `address` and either `txid` (a snapshot transaction) or `whatIf` (`amountBtc`, `direction`, `time`, as E8).\n200 with the explanation to show: the Assistant's answer when it passed every guardrail check, otherwise the template,\nwith `attempts` naming the checks a rejected answer failed (the rejected text is never sent). Prepared and cached\nanswers come back at once (`cached`). With the Assistant off or not installed the template comes back and\n`skippedWriters` says why. 400 names each field at fault; 404 for an unknown address or transaction; 422 when the\ntransaction could not be scored; 429 with `Retry-After` while another answer is being written. A first answer takes\nabout 10 seconds with the model's load; later ones about 3.",
+        "operationId": "explain_api_explanations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExplanationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplanationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is over the size limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The request body is not JSON.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Too little earlier history to score.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The Assistant is writing another answer; wait `Retry-After` seconds and ask again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2084,6 +2186,129 @@
         ],
         "title": "Evaluation",
         "description": "How a method did on Assignment 2's tests."
+      },
+      "ExplanationRequest": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "txid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Txid",
+            "description": "A snapshot transaction of the address."
+          },
+          "whatIf": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WhatIfRequest"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A hypothetical transaction, as E8's body."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "address"
+        ],
+        "title": "ExplanationRequest",
+        "description": "E12's body: an address, and either one of its snapshot transactions or a what-if transaction as E8 takes it."
+      },
+      "ExplanationResponse": {
+        "properties": {
+          "txid": {
+            "type": "string",
+            "title": "Txid",
+            "description": "The transaction ID, or \"what-if\" for a hypothetical transaction."
+          },
+          "flagged": {
+            "type": "boolean",
+            "title": "Flagged"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "description": "The Assistant's answer when it passed every guardrail check; otherwise the template."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "text150m",
+              "template"
+            ],
+            "title": "Source"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "description": "True when the answer came from memory or from the prepared answers, not from a fresh writing."
+          },
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/WriterAttempt"
+            },
+            "type": "array",
+            "title": "Attempts",
+            "description": "Each writer tried and the guardrail checks it failed; empty when none wrote."
+          },
+          "skippedWriters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Skippedwriters",
+            "description": "A writer this computer cannot run, and why. The template is shown instead."
+          },
+          "limitation": {
+            "type": "string",
+            "title": "Limitation"
+          },
+          "seconds": {
+            "type": "number",
+            "title": "Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "txid",
+          "flagged",
+          "explanation",
+          "source",
+          "cached",
+          "attempts",
+          "skippedWriters",
+          "limitation",
+          "seconds"
+        ],
+        "title": "ExplanationResponse",
+        "description": "E12: the explanation to show, and how it came about.",
+        "example": {
+          "attempts": [
+            {
+              "failedChecks": [],
+              "source": "text150m"
+            }
+          ],
+          "cached": false,
+          "explanation": "Robust z baseline (A1) marks this transaction as unusual for its address.\nUnusual activity requires investigation; it does not indicate wrongdoing.",
+          "flagged": true,
+          "limitation": "Unusual activity requires investigation; it does not indicate wrongdoing.",
+          "seconds": 2.6,
+          "skippedWriters": {},
+          "source": "text150m",
+          "txid": "61aced15690314e5ca7056fb742fb004f233a6c006e5fe0622d092b492396a8c"
+        }
       },
       "ExportDocument": {
         "properties": {
@@ -4001,6 +4226,32 @@
         ],
         "title": "WhatIfResult",
         "description": "E8: a transaction detail without an ID or block, from the methods that can score new input."
+      },
+      "WriterAttempt": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "text150m",
+              "template"
+            ],
+            "title": "Source"
+          },
+          "failedChecks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failedchecks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "failedChecks"
+        ],
+        "title": "WriterAttempt",
+        "description": "One writer's try: which writer, and the guardrail checks its answer failed (none when it passed).\n\nThe rejected text is never part of a response."
       }
     }
   }

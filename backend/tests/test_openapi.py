@@ -59,6 +59,7 @@ PLANNED_STATUSES = {
     ("get", "/api/watchlist"): set(),
     ("put", "/api/watchlist/{address}"): {"201", "400", "404", "409", "413", "415"},
     ("delete", "/api/watchlist/{address}"): {"204", "400", "404"},
+    ("post", "/api/explanations"): {"400", "404", "413", "415", "422", "429"},
 }
 
 
