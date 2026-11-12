@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PageHeading } from './components/PageHeading';
 import { Shell } from './components/Shell';
-import { StatePanel } from './components/StatePanel';
+import { Loading, StatePanel } from './components/StatePanel';
 import { ServiceStatusProvider } from './hooks/useServiceStatus';
 import { SettingsProvider } from './hooks/useSettings';
 import { ToastProvider } from './hooks/useToasts';
@@ -12,6 +12,9 @@ import { DayScreen } from './views/DayScreen';
 import { ModelsScreen } from './views/ModelsScreen';
 import { SelectScreen } from './views/SelectScreen';
 import { TimelineScreen } from './views/TimelineScreen';
+
+// The watchlist is a screen of its own, fetched when it is first opened.
+const WatchlistScreen = lazy(() => import('./views/WatchlistScreen'));
 
 // A new screen starts at the top. Selecting a transaction within a day, or switching between an address's
 // tabs, is not a new screen.
@@ -26,27 +29,6 @@ function screenKey(route: Route): string {
     default:
       return route.screen;
   }
-}
-
-// Stands in for the views that are not built yet (watchlist), so the navigation
-// never leads to a dead end. Each is replaced by its own view.
-function ComingSoon({ title }: { title: string }) {
-  return (
-    <div className="page">
-      <PageHeading>{title}</PageHeading>
-      <StatePanel
-        tone="info"
-        title="This page is not available yet"
-        actions={
-          <a className="btn btn-secondary" href={paths.select()}>
-            Go to the address list
-          </a>
-        }
-      >
-        <p>It will be added in a later version of the Explorer.</p>
-      </StatePanel>
-    </div>
-  );
 }
 
 function Views() {
@@ -70,7 +52,11 @@ function Views() {
         <DayScreen key={`${route.address}|${route.date}`} address={route.address} date={route.date} txid={route.txid} method={route.method} />
       ) : null}
       {route.screen === 'models' ? <ModelsScreen /> : null}
-      {route.screen === 'watchlist' ? <ComingSoon title="Watchlist" /> : null}
+      {route.screen === 'watchlist' ? (
+        <Suspense fallback={<Loading label="Loading the watchlist…" block />}>
+          <WatchlistScreen />
+        </Suspense>
+      ) : null}
       {route.screen === 'about' ? <AboutScreen /> : null}
       {route.screen === 'not-found' ? (
         <div className="page">

@@ -166,7 +166,8 @@ describe('the transaction detail (V3)', () => {
     const tx = await mockApi.transaction(ex.flagged.txid, ex.flagged.address);
     vi.spyOn(mockApi, 'transaction').mockResolvedValue({ ...tx, scores: { ...tx.scores, txgpt_method: null }, flags: { ...tx.flags, txgpt_method: false } });
     start(detailHash(ex.flagged));
-    const row = (await screen.findByRole('rowheader', { name: /TxGPT surprisal/ })).closest('tr')!;
+    const verdicts = await screen.findByRole('table', { name: /nine methods/ });
+    const row = within(verdicts).getByRole('rowheader', { name: /TxGPT surprisal/ }).closest('tr')!;
     expect(row).toHaveTextContent('Not available');
     expect(row).not.toHaveTextContent('Flag');
   });

@@ -10,10 +10,14 @@ export interface Preferences {
   theme: 'light' | 'dark' | null;
   /** The deciding method last chosen (V2's method menu); null until the user chooses, and then the default applies. */
   method: MethodId | null;
+  /** The addresses opened last, newest first (V1's "Recently opened"); at most `RECENT_MAX`. */
+  recent: string[];
 }
 
+export const RECENT_MAX = 5;
+
 const KEY = 'explorer.preferences.v1';
-const DEFAULTS: Preferences = { theme: null, method: null };
+const DEFAULTS: Preferences = { theme: null, method: null, recent: [] };
 
 // Storage can throw (blocked, private window). The choice then lasts until the page closes.
 let fallbackRaw: string | null = null;
@@ -33,6 +37,7 @@ function parse(raw: string | null): Preferences {
     return {
       theme: stored.theme === 'light' || stored.theme === 'dark' ? stored.theme : null,
       method: METHODS.find((m) => m.id === stored.method)?.id ?? null,
+      recent: Array.isArray(stored.recent) ? stored.recent.filter((a): a is string => typeof a === 'string').slice(0, RECENT_MAX) : [],
     };
   } catch {
     return DEFAULTS;
@@ -76,4 +81,10 @@ function update(patch: Partial<Preferences>): void {
 
 export function usePreferences(): [Preferences, (patch: Partial<Preferences>) => void] {
   return [useSyncExternalStore(subscribe, getSnapshot), update];
+}
+
+/** Puts an address first among the recently opened, once, and keeps the last few. */
+export function rememberAddress(address: string): void {
+  const { recent } = getSnapshot();
+  if (recent[0] !== address) update({ recent: [address, ...recent.filter((a) => a !== address)].slice(0, RECENT_MAX) });
 }

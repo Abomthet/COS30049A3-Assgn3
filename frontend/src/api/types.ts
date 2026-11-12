@@ -14,6 +14,9 @@
 //   POST /api/addresses/{address}/what-if/curve       -> WhatIfCurve | 400 | 404 | 422 InsufficientHistoryBody
 //   GET  /api/addresses/{address}/export?format=...   -> a CSV or JSON file (ExportFile) | 400 | 404
 //   GET  /api/methods                                 -> MethodsResponse
+//   GET  /api/watchlist                               -> WatchlistResponse
+//   PUT  /api/watchlist/{address}  {label?, note?}    -> WatchlistEntry (201 added, 200 replaced) | 400 | 404 UnsupportedBody | 409 ServiceBody (full)
+//   DELETE /api/watchlist/{address}                   -> 204 | 404 NotFoundBody
 //
 // Times are ISO 8601 in UTC; days are 'YYYY-MM-DD' in UTC; amounts are integer satoshis.
 
@@ -205,6 +208,11 @@ export interface TransactionDetail extends TransactionCore {
   scores: Record<MethodId, number | null>;
   /** Every method's flag. */
   flags: Record<MethodId, boolean>;
+  /**
+   * Where each method's score sits among this address's own scored transactions: the share, 0 to 1, at or
+   * below it. Null where a method has no score. All nine keys are present.
+   */
+  ranks: Record<MethodId, number | null>;
   source: DataSource;
 }
 
@@ -304,6 +312,37 @@ export interface MethodDescription {
 export interface MethodsResponse {
   defaultMethod: MethodId;
   methods: MethodDescription[];
+}
+
+// ------------------------------------------------------------------ watchlist (E13 to E15)
+
+/** One watched address: the user's own label and note (shown as typed) and the address's summary as E3 gives it. */
+export interface WatchlistEntry {
+  address: string;
+  label: string;
+  note: string;
+  /** ISO 8601, UTC. */
+  addedAt: string;
+  /** ISO 8601, UTC; equals `addedAt` until the entry is replaced. */
+  updatedAt: string;
+  summary: AddressSummary;
+}
+
+/** E13: the entries, most recently added first. */
+export interface WatchlistResponse {
+  entries: WatchlistEntry[];
+}
+
+/** E14's body; a field left out is saved as empty. */
+export interface WatchlistBody {
+  label?: string;
+  note?: string;
+}
+
+/** E14's answer: the entry, and whether it is new (201) or replaced one (200). */
+export interface SavedWatchlistEntry {
+  entry: WatchlistEntry;
+  created: boolean;
 }
 
 // ------------------------------------------------------------------ error bodies
@@ -497,4 +536,9 @@ export interface ExplorerApi {
   /** E10 with E6's filters; `page` and `pageSize` do not apply to a file. */
   exportFile(address: string, format: ExportFormat, query: Omit<TransactionQuery, 'page' | 'pageSize'>, opts?: RequestOptions): Promise<ExportFile>;
   methods(opts?: RequestOptions): Promise<MethodsResponse>;
+  watchlist(opts?: RequestOptions): Promise<WatchlistResponse>;
+  /** E14: adds the address, or replaces its label and note. */
+  putWatchlist(address: string, body: WatchlistBody, opts?: RequestOptions): Promise<SavedWatchlistEntry>;
+  /** E15: resolves when the entry is gone; a 404 `not_found` means it was not there. */
+  deleteWatchlist(address: string, opts?: RequestOptions): Promise<void>;
 }

@@ -2,6 +2,7 @@ import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { api } from '../api/client';
 import type { ApiError, InsufficientHistoryBody, MethodId, TimelineResponse, WhatIfDirection, WhatIfRequest, WhatIfResult } from '../api/types';
 import { G3FeatureDeviation } from '../charts/G3FeatureDeviation';
+import { LazyG4 } from '../charts/LazyG4';
 import { G5WhatIfResponse } from '../charts/G5WhatIfResponse';
 import { StatusBadge } from '../components/Badges';
 import { ErrorState } from '../components/ErrorState';
@@ -304,6 +305,9 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
               unavailableText="Not available for a hypothetical transaction"
               caption="Score, flag line and verdict of each method for this hypothetical transaction"
             />
+            <div className="card chart-card">
+              <LazyG4 ranks={details.ranks} scores={details.scores} flags={details.flags} deciding={details.method.id} subject="what-if" address={address} />
+            </div>
           </section>
         </>
       ) : null}

@@ -1,7 +1,8 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
-import { mockControls } from '../src/api/mock/mockApi';
+import { mockControls, resetMockWatchlist } from '../src/api/mock/mockApi';
+import { resetWatchlistStore } from '../src/hooks/useWatchlist';
 import { clearRequestCache } from '../src/hooks/useRequest';
 import { fakePlotly } from './plotlyFake';
 
@@ -30,6 +31,8 @@ beforeEach(() => {
   mockControls.offline = false;
   mockControls.starting = false;
   mockControls.busyForSeconds = 0;
+  resetMockWatchlist();
+  resetWatchlistStore();
   clearRequestCache();
   fakePlotly.reset();
   localStorage.clear();

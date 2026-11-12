@@ -2005,3 +2005,204 @@ main.container {
     min-height: 44px;
   }
 }
+
+/* ------------------------------------------------------------------ Watchlist (S-04): star, dialog, V6 */
+
+/* The star sits above a row's whole-row link (see .address-link::after), so it takes its own click. */
+.star-button {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.star-button .icon {
+  font-size: 1.35rem;
+}
+.star-button:hover {
+  background: var(--surface-2);
+}
+.star-button.has-text {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+.star-button.is-watched {
+  color: var(--accent);
+}
+.address-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.address-cell .star-button {
+  margin: -8px 0 -8px -12px;
+}
+.recent-section h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  background: rgba(11, 11, 11, 0.5);
+}
+.dialog {
+  width: min(100%, 560px);
+  padding: 20px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(11, 11, 11, 0.3);
+}
+.dialog:focus {
+  outline: none;
+}
+.dialog-title {
+  margin: 0 0 4px;
+  font-size: 1.2rem;
+}
+.dialog-address {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.dialog-form,
+.dialog-form .field {
+  display: flex;
+  flex-direction: column;
+}
+.dialog-form {
+  gap: 14px;
+}
+.dialog-form .text-input {
+  flex: none;
+  width: 100%;
+}
+.text-area {
+  min-height: 96px;
+  padding: 10px 12px;
+  font-family: inherit;
+  line-height: 1.4;
+  resize: vertical;
+}
+.char-count {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+.char-count.is-over {
+  color: var(--error-ink);
+  font-weight: 600;
+}
+.dialog-form .field-error {
+  margin-top: 4px;
+  font-size: 0.85rem;
+}
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.watch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.watch-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+.watch-label {
+  margin: 0;
+  font-size: 1.1rem;
+  overflow-wrap: anywhere;
+}
+.watch-address {
+  font-size: 0.9rem;
+}
+.watch-head .cell-sub {
+  display: inline;
+}
+/* The note is the user's own text, kept as typed: line breaks stay, long words wrap. */
+.watch-note {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.watch-counts {
+  margin: 8px 0 0;
+}
+.watch-entry .card-sub {
+  margin: 4px 0 0;
+}
+.watch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ------------------------------------------------------------------ Replay (S-06) */
+
+.replay {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.replay-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.replay-speed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.replay-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+.replay-progress progress {
+  flex: 1 1 220px;
+  min-width: 0;
+  height: 10px;
+  accent-color: var(--accent);
+}
+.replay-latest {
+  margin: 0;
+}
+.replay-card h2 {
+  margin-top: 0;
+}

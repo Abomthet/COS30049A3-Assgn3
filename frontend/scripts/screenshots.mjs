@@ -62,6 +62,60 @@ const typeAmount = (amount) => `(() => {
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(amount)});
   input.dispatchEvent(new Event('input', { bubbles: true }));
 })()`;
+// Drives the page the way a person does: the helpers wait for an element, fill a field (React listens for the input
+// event) and press a button, so the same steps work on the real service and on the mock.
+const drive = (steps) => `(async () => {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const until = async (find) => { for (let i = 0; i < 80; i++) { const el = find(); if (el) return el; await wait(100); } throw new Error('not found: ' + find); };
+  const button = (name) => until(() => [...document.querySelectorAll('button')].find((b) => (b.getAttribute('aria-label') ?? b.textContent).trim().startsWith(name)));
+  const fill = async (label, value) => {
+    const field = await until(() => document.querySelector('[role="dialog"]')?.querySelector('label[for]') && [...document.querySelectorAll('[role="dialog"] label')].find((l) => l.textContent === label)?.control);
+    const proto = field.tagName === 'TEXTAREA' ? HTMLTextAreaElement : HTMLInputElement;
+    Object.getOwnPropertyDescriptor(proto.prototype, 'value').set.call(field, value);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  ${steps}
+})()`;
+// The service keeps the watchlist, so each shot that fills it starts from an empty one (the mock starts empty by itself).
+async function emptyWatchlist() {
+  try {
+    const { entries } = await (await fetch(`${base}/api/watchlist`)).json();
+    for (const { address } of entries) await fetch(`${base}/api/watchlist/${address}`, { method: 'DELETE' });
+  } catch {
+    // No service to ask: nothing to empty.
+  }
+}
+// Watches two addresses from V1 (so V6 has entries), then opens V6.
+const watchTwoSteps = `
+  for (const [address, label, note] of [[${JSON.stringify(t.shortHistory)}, 'Short history', 'Too few transactions to score yet.'], [${JSON.stringify(t.mainAddress)}, 'Running example', 'Three unusual transactions, worth a look.']]) {
+    (await button('Add ' + address)).click();
+    await fill('Label', label);
+    await fill('Note', note);
+    (await button('Add to the watchlist')).click();
+    await until(() => !document.querySelector('[role="dialog"]'));
+  }
+  location.hash = '#/watchlist';
+  await until(() => document.querySelector('.watch-list'));
+  for (const dismiss of [...document.querySelectorAll('.toast-button[aria-label]')]) dismiss.click();
+`;
+const watchTwo = drive(watchTwoSteps);
+// The same, then removes the newest entry, so the shot shows the toast with Undo.
+const watchRemoved = drive(`${watchTwoSteps}
+  (await button('Remove')).click();
+  await until(() => [...document.querySelectorAll('.toast-button')].find((b) => b.textContent === 'Undo'));
+`);
+// Opens the star's dialog on V1 with a label and a note typed in.
+const watchDialog = drive(`
+  (await button('Add ${t.mainAddress}')).click();
+  await fill('Label', 'Running example');
+  await fill('Note', 'Three unusual transactions, worth a look.');
+`);
+// Opens the replay on V2 at 20 a second and lets it run; the shot is taken part of the way through.
+const replay20 = drive(`
+  (await button('Open the replay')).click();
+  (await button('20 a second')).click();
+  (await button('Play')).click();
+`);
 const DESKTOP = 1280;
 const TABLET = 820;
 const MOBILE = 390;
@@ -119,6 +173,15 @@ const shots = [
   ['46-timeline-mobile-dark', 'theme=dark', tl(t.mainAddress), MOBILE, true],
   ['47-what-if-tablet-dark', 'theme=dark', lab(t.mainAddress, t.whatIf.direction), TABLET, true, false, typeAmount(t.whatIf.amountBtc)],
   ['48-timeline-other-method', '', `${tl(t.mainAddress)}?method=regression`, DESKTOP, true],
+  ['49-watchlist', '', '#/', DESKTOP, true, false, watchTwo],
+  ['50-watchlist-mobile', '', '#/', MOBILE, true, false, watchTwo],
+  ['51-watch-dialog', '', '#/', DESKTOP, false, false, watchDialog],
+  ['52-watch-dialog-mobile', '', '#/', MOBILE, false, false, watchDialog],
+  ['53-model-verdicts', '', tx(t.flagged), DESKTOP, true],
+  ['54-model-verdicts-mobile', '', tx(t.flagged), MOBILE, true],
+  ['55-replay', '', tl(t.mainAddress), DESKTOP, true, false, replay20, 3],
+  ['56-replay-mobile', '', tl(t.mainAddress), MOBILE, true, false, replay20, 3],
+  ['57-watchlist-undo', '', '#/', DESKTOP, false, false, watchRemoved],
 ];
 
 // ---------------------------------------------------------------- minimal DevTools client
@@ -193,6 +256,7 @@ async function main() {
     for (const [name, extra, hash, width, fullPage, mockOnly, after, settle = 0] of shots) {
       if ((only && !only.test(name)) || (mockOnly && !mock)) continue;
       const params = new URLSearchParams(extra);
+      if (after === watchTwo || after === watchDialog || after === watchRemoved) await emptyWatchlist();
       if (mock && !params.has('latency')) params.set('latency', '0');
       if (!params.has('theme')) params.set('theme', 'light'); // don't depend on the machine's theme
       const url = `${base}/?${params}${hash}`;
@@ -207,7 +271,7 @@ async function main() {
       await sleep(900); // let requests settle and charts measure themselves
       if (after) {
         if (typeof after === 'function') await after(send);
-        else await send('Runtime.evaluate', { expression: after });
+        else await send('Runtime.evaluate', { expression: after, awaitPromise: true });
         await sleep(1200); // the lab waits for the typing to stop, asks, and draws
       }
       await sleep(settle * 1000);

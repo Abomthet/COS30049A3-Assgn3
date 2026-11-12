@@ -5,6 +5,7 @@ import { ErrorState } from '../components/ErrorState';
 import { Icon } from '../components/Icon';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Loading, StatePanel } from '../components/StatePanel';
+import { WatchStar } from '../components/WatchStar';
 import { KIND_LABEL, validateAddress } from '../lib/address';
 import { dayKey, formatDay, formatDayRange } from '../lib/dates';
 import { formatCount, plural, shortAddress } from '../lib/format';
@@ -32,7 +33,7 @@ export function SelectScreen({ query }: { query: string | null }) {
   const [lookup, setLookup] = useState<Lookup>({ status: 'idle' });
   const inputRef = useRef<HTMLInputElement>(null);
   // An address opens with the method the user chose last (V2's method menu remembers it).
-  const [{ method }] = usePreferences();
+  const [{ method, recent }] = usePreferences();
 
   async function check(text: string) {
     const local = validateAddress(text);
@@ -179,6 +180,21 @@ export function SelectScreen({ query }: { query: string | null }) {
         {lookup.status === 'failed' ? <ErrorState error={lookup.error} onRetry={() => void check(value)} headingLevel={3} /> : null}
       </section>
 
+      {recent.length > 0 ? (
+        <section className="recent-section" aria-labelledby="recent-title">
+          <h2 id="recent-title">Recently opened</h2>
+          <ul className="example-list">
+            {recent.map((a) => (
+              <li key={a}>
+                <a className="mono" href={paths.timeline(a, method ?? undefined)} aria-label={`Open activity for ${a}`}>
+                  {shortAddress(a, 12, 8)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="snapshot-section" aria-labelledby="snapshot-title">
         <div className="section-head">
           <h2 id="snapshot-title">Addresses in the snapshot</h2>
@@ -229,10 +245,15 @@ function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
             return (
               <tr key={a.address}>
                 <th scope="row" data-label="Address">
-                  <a className="address-link mono" href={paths.timeline(a.address, method ?? undefined)} aria-label={`Open activity for ${a.address}`}>
-                    {shortAddress(a.address, 12, 8)}
-                  </a>
-                  <span className="cell-sub">{KIND_LABEL[a.kind]}</span>
+                  <span className="address-cell">
+                    <WatchStar address={a.address} />
+                    <span>
+                      <a className="address-link mono" href={paths.timeline(a.address, method ?? undefined)} aria-label={`Open activity for ${a.address}`}>
+                        {shortAddress(a.address, 12, 8)}
+                      </a>
+                      <span className="cell-sub">{KIND_LABEL[a.kind]}</span>
+                    </span>
+                  </span>
                 </th>
                 <td data-label="Active (UTC)">{formatDayRange(dayKey(a.firstSeen), dayKey(a.lastSeen))}</td>
                 <td data-label="Transactions" className="num">

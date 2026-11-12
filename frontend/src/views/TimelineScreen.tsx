@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import type { MethodId, TimelineDay, TimelineResponse } from '../api/types';
 import { G1DailyActivity } from '../charts/G1DailyActivity';
@@ -9,14 +9,17 @@ import { Icon } from '../components/Icon';
 import { MethodMenu } from '../components/MethodMenu';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Loading, StatePanel } from '../components/StatePanel';
+import { WatchStar } from '../components/WatchStar';
 import { KIND_LABEL, validateAddress } from '../lib/address';
 import { dayCount, dayKey, formatDay, formatDayRange } from '../lib/dates';
 import { formatCount, formatSpanDays, plural, shortAddress } from '../lib/format';
 import { navigate, paths } from '../lib/router';
 import { methodSearch } from '../lib/methods';
 import { useMethodLabels } from '../hooks/useMethods';
+import { rememberAddress } from '../hooks/usePreferences';
 import { useRequest } from '../hooks/useRequest';
 import { useSettings } from '../hooks/useSettings';
+import { ReplayPanel } from './ReplayPanel';
 import { TransactionsTab } from './TransactionsTab';
 import { WhatIfLab } from './WhatIfLab';
 
@@ -37,6 +40,11 @@ export function TimelineScreen({ address, tab, method }: { address: string; tab:
   const timeline = useRequest(`timeline:${address}:${method}`, (signal) => api.timeline(address, { signal, method }));
   // After a change of method the answer for the old one stays on screen, dimmed, until the new one arrives.
   const shown = timeline.status === 'success' ? timeline.data : timeline.previous;
+  // An address counts as opened once its page has loaded, so V1's "Recently opened" never lists one that failed.
+  const opened = timeline.status === 'success';
+  useEffect(() => {
+    if (opened) rememberAddress(address);
+  }, [opened, address]);
 
   return (
     <div className="page page-timeline">
@@ -75,6 +83,7 @@ function Timeline({ data, tab, method, updating }: { data: TimelineResponse; tab
         <div className="address-heading">
           <PageHeading className="address-title mono">{data.address}</PageHeading>
           <CopyButton value={data.address} label="address" />
+          <WatchStar address={data.address} showText />
         </div>
         <p className="source-line">
           Source: {data.snapshot.source} · snapshot of {formatDay(data.snapshot.snapshotDate)} · days in UTC
@@ -157,6 +166,8 @@ function Timeline({ data, tab, method, updating }: { data: TimelineResponse; tab
 
             <FlaggedDays address={data.address} days={flaggedDays} insufficient={insufficient} method={method} />
           </div>
+
+          <ReplayPanel timeline={data} method={method} />
         </>
       ) : null}
     </>

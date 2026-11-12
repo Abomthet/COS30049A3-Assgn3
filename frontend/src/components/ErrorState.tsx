@@ -170,6 +170,21 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
           </p>
         </StatePanel>
       );
+    case 'conflict':
+      return (
+        <StatePanel
+          tone="warning"
+          title="The watchlist is full"
+          headingLevel={headingLevel}
+          live="alert"
+          testId="state-conflict"
+          actions={<a className="btn btn-secondary" href={paths.watchlist()}>Open the watchlist</a>}
+        >
+          <p>
+            {body.message} {body.hint}
+          </p>
+        </StatePanel>
+      );
     case 'timeout':
       return (
         <StatePanel tone="error" icon="history" title="This is taking longer than it should" headingLevel={headingLevel} live="alert" actions={retry}>

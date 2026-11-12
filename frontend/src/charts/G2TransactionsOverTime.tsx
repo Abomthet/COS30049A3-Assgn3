@@ -37,6 +37,11 @@ interface Props {
   /** The deciding method the rows were scored by; links to a transaction keep it. */
   method: MethodId;
   rows: TransactionRow[];
+  /**
+   * Every row the address has, when `rows` is only part of them (the replay draws them one at a time): the axes
+   * keep the extent of all of them, so the points fall into place instead of the axes stretching at every step.
+   */
+  frame?: TransactionRow[];
   /** Pages still arriving: the chart already draws what has come. */
   loading: { loaded: number; total: number } | null;
   /** Changes when the date filter does, so the chart's own zoom starts afresh with the new range. */
@@ -64,8 +69,8 @@ const hoverText = (row: TransactionRow) =>
   `${formatDateTime(row.time)}<br>${DIRECTION_LABEL[row.direction]} ${formatBtc(Math.abs(row.netSats))}<br>${statusLine(row)}` +
   `${row.score === null ? '' : `<br>Score ${row.score.toFixed(2)}`}<br>Select to open`;
 
-/** Everything about the data that does not depend on the theme or the size. */
-function buildModel(rows: TransactionRow[]) {
+/** Everything about the data that does not depend on the theme or the size. `frame` is what the axes must fit; it is the rows themselves unless the caller says otherwise. */
+function buildModel(rows: TransactionRow[], frame: TransactionRow[] = rows) {
   // The keyboard visits transactions oldest first, each a point of its trace.
   const ordered = [...rows].sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
   const kinds = STATUSES.flatMap((s) => ALL_DIRECTIONS.map((d): Kind => `${s}|${d}`)).filter((kind) => ordered.some((r) => `${r.status}|${r.direction}` === kind));
@@ -81,18 +86,34 @@ function buildModel(rows: TransactionRow[]) {
       label: `${formatDateTime(row.time)}: ${DIRECTION_LABEL[row.direction]} ${formatBtc(Math.abs(row.netSats))}, ${STATUS_TEXT[row.status]}.`,
     };
   });
-  const amounts = ordered.filter((r) => r.netSats !== 0).map((r) => Math.abs(r.netSats));
+  const amounts = frame.filter((r) => r.netSats !== 0).map((r) => Math.abs(r.netSats));
   const decades = amounts.length > 0 ? Math.log10(Math.max(...amounts) / Math.min(...amounts)) : 0;
-  return { ordered, kinds, byKind, stops, decades, floor: floorBtc(ordered), hasZero: ordered.some((r) => r.netSats === 0) };
+  const times = frame.map((r) => Date.parse(r.time));
+  return {
+    ordered,
+    kinds,
+    byKind,
+    stops,
+    decades,
+    floor: floorBtc(frame),
+    hasZero: frame.some((r) => r.netSats === 0),
+    bounds: { first: Math.min(...times), last: Math.max(...times), top: Math.max(...frame.map((r) => Math.abs(r.netSats) / SATS_PER_BTC)), fixed: frame !== rows },
+  };
 }
 
 type Model = ReturnType<typeof buildModel>;
 
 const markSize = (row: TransactionRow) => MARK_MIN_PX + Math.min(Math.max(row.score ?? 0, 0), SIZE_SCORE_CAP) * MARK_SCORE_PX;
 
+/** The amount axis of a log scale, in powers of ten, with a little room above and below the extremes. */
+function amountRange(model: Model): [number, number] {
+  const bottom = model.hasZero ? model.floor : Math.min(1, model.floor * 3);
+  return [Math.log10(bottom) - 0.15, Math.log10(model.bounds.top) + 0.15];
+}
+
 /** Ticks for a log axis whose floor stands for zero: the floor is labelled 0 and each power of ten above it is named. */
 function floorTicks(model: Model) {
-  const top = Math.max(...model.ordered.map((r) => Math.abs(r.netSats) / SATS_PER_BTC));
+  const { top } = model.bounds;
   const powers: number[] = [];
   for (let p = Math.ceil(Math.log10(model.floor)); 10 ** p <= top * 1.001; p++) powers.push(p);
   return { tickmode: 'array' as const, tickvals: [model.floor, ...powers.map((p) => 10 ** p)], ticktext: ['0', ...powers.map((p) => (10 ** p).toFixed(Math.max(0, -p)))] };
@@ -100,7 +121,7 @@ function floorTicks(model: Model) {
 
 /** The time axis, padded so one transaction, or a few on one day, does not stretch a second across the plot. */
 function timeRange(model: Model): [string, string] {
-  const [first, last] = [Date.parse(model.ordered[0].time), Date.parse(model.ordered[model.ordered.length - 1].time)];
+  const { first, last } = model.bounds;
   const pad = Math.max((last - first) * 0.03, DAY_MS);
   return [axisTime(new Date(first - pad).toISOString()), axisTime(new Date(last + pad).toISOString())];
 }
@@ -142,6 +163,8 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
       yaxis: {
         type: 'log',
         title: { text: 'Amount (BTC, log scale)' },
+        // A part of the rows is drawn against the axis of all of them; Plotly would otherwise fit the part.
+        ...(model.bounds.fixed ? { range: amountRange(model) } : {}),
         // Plain decimals, trailing zeros trimmed, never 1e-5.
         tickformat: ',.8~f',
         // Over a narrow span Plotly labels every digit (2, 3, 4 ...), which crowds; label 1, 2 and 5 instead.
@@ -152,10 +175,10 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
   };
 }
 
-export function G2TransactionsOverTime({ address, method, rows, loading, revision, onOpenTransaction, onZoomDays }: Props) {
+export function G2TransactionsOverTime({ address, method, rows, frame, loading, revision, onOpenTransaction, onZoomDays }: Props) {
   const { settings } = useSettings();
   const methodName = useMethodLabels()[method].name;
-  const model = useMemo(() => buildModel(rows), [rows]);
+  const model = useMemo(() => buildModel(rows, frame), [rows, frame]);
   const figure = useCallback((context: FigureContext) => buildFigure(model, context), [model]);
 
   const table = useMemo<ChartTable>(

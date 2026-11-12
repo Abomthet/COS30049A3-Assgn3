@@ -155,7 +155,7 @@ describe('theme', () => {
     await user.click(toggle);
     expect(toggle).toHaveAttribute('aria-checked', 'true');
     expect(document.documentElement.dataset.theme).toBe('dark');
-    expect(JSON.parse(localStorage.getItem('explorer.preferences.v1')!)).toEqual({ theme: 'dark', method: null });
+    expect(JSON.parse(localStorage.getItem('explorer.preferences.v1')!)).toEqual({ theme: 'dark', method: null, recent: [] });
     await user.click(toggle);
     expect(document.documentElement.dataset.theme).toBe('light');
   });

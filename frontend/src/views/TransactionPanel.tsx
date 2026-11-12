@@ -2,6 +2,7 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { api } from '../api/client';
 import type { InsufficientHistoryBody, MethodId, TransactionCore, TransactionDetail } from '../api/types';
 import { G3FeatureDeviation } from '../charts/G3FeatureDeviation';
+import { LazyG4 } from '../charts/LazyG4';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { CopyButton } from '../components/CopyButton';
 import { ErrorState } from '../components/ErrorState';
@@ -170,6 +171,9 @@ function Verdicts({ tx }: { tx: TransactionDetail }) {
         the others are shown for comparison.
       </p>
       <VerdictTable scores={tx.scores} flags={tx.flags} deciding={tx.method.id} caption="Score, flag line and verdict of each of the nine methods for this transaction" />
+      <div className="card chart-card">
+        <LazyG4 ranks={tx.ranks} scores={tx.scores} flags={tx.flags} deciding={tx.method.id} subject="transaction" address={tx.address} txid={tx.txid} />
+      </div>
     </section>
   );
 }

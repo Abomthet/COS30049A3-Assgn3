@@ -14,6 +14,12 @@ export type IconName =
   | 'external'
   | 'copy'
   | 'check'
+  | 'star'
+  | 'star-filled'
+  | 'play'
+  | 'pause'
+  | 'step'
+  | 'restart'
   | 'chevron-left'
   | 'chevron-right';
 
@@ -30,6 +36,12 @@ const PATHS: Record<IconName, string> = {
   external: 'M14 3h7v7h-2V6.4l-8.3 8.3-1.4-1.4L17.6 5H14ZM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z',
   copy: 'M8 3h11a2 2 0 0 1 2 2v11h-2V5H8Zm-3 4h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Zm0 2v11h10V9Z',
   check: 'M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4Z',
+  star: 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8ZM12 6.6l-1.7 3.6-3.9.5 2.9 2.7-.8 3.9 3.5-2 3.5 2-.8-3.9 2.9-2.7-3.9-.5Z',
+  'star-filled': 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8Z',
+  play: 'M7 4.5v15l12.5-7.5Z',
+  pause: 'M6 4h4v16H6Zm8 0h4v16h-4Z',
+  step: 'M5 4.5v15l10-7.5ZM17 4h2.5v16H17Z',
+  restart: 'M12 4a8 8 0 1 0 7.7 10h-2.1A6 6 0 1 1 12 6c1.7 0 3.2.7 4.2 1.8L13 11h7V4l-2.4 2.4A8 8 0 0 0 12 4Z',
   'chevron-left': 'M15.4 6.4 14 5l-7 7 7 7 1.4-1.4L9.8 12Z',
   'chevron-right': 'M8.6 6.4 10 5l7 7-7 7-1.4-1.4 5.6-5.6Z',
 };

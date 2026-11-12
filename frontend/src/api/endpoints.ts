@@ -3,7 +3,7 @@
 
 import type { AxiosInstance } from 'axios';
 import { fileStem } from '../charts/chartTable';
-import type { ExplorerApi, RequestOptions } from './types';
+import type { ExplorerApi, RequestOptions, WatchlistEntry } from './types';
 
 /** The name in `Content-Disposition: attachment; filename="1Bbcsfxj-2026-10-22.csv"`, or null when the header is missing or unreadable. */
 export function attachmentName(header: unknown): string | null {
@@ -30,6 +30,10 @@ export function createHttpApi(client: AxiosInstance): ExplorerApi {
     whatIf: (address, body, opts) => post(`/api/addresses/${enc(address)}/what-if`, body, opts),
     whatIfCurve: (address, body, opts) => post(`/api/addresses/${enc(address)}/what-if/curve`, body, opts),
     methods: (opts) => get('/api/methods', opts),
+    watchlist: (opts) => get('/api/watchlist', opts),
+    putWatchlist: (address, body, opts) =>
+      client.put<WatchlistEntry>(`/api/watchlist/${enc(address)}`, body, { signal: opts?.signal }).then((r) => ({ entry: r.data, created: r.status === 201 })),
+    deleteWatchlist: (address, opts) => client.delete(`/api/watchlist/${enc(address)}`, { signal: opts?.signal }).then(() => undefined),
     // A file is read as text, so the client does not parse the JSON export. The name is the service's;
     // a browser on another origin cannot read the header (the service lists only X-Request-ID as exposed), so the format names the file then.
     exportFile: (address, format, query, opts) =>

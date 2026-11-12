@@ -11,6 +11,8 @@
 // For the running example, E8 and E9 answer the requests that were recorded (after the same checks of
 // the body as the service makes) and E10 the file of its flagged transactions; any other what-if or
 // export answers 404 `not_found`.
+// The watchlist (E13 to E15) lives in memory and starts empty; it keeps what the page saves until it reloads,
+// as the service keeps it in its database. It checks the body and the capacity as the service does.
 
 import { validateAddress } from '../../lib/address';
 import { dayKey, isDayKey } from '../../lib/dates';
@@ -36,6 +38,10 @@ import {
   type TransactionQuery,
   type TransactionRow,
   type TransactionsResponse,
+  type SavedWatchlistEntry,
+  type WatchlistBody,
+  type WatchlistEntry,
+  type WatchlistResponse,
   type WhatIfCurve,
   type WhatIfCurveRequest,
   type WhatIfRequest,
@@ -52,7 +58,18 @@ export const mockControls = {
   starting: false,
   /** Answers 429 "rate_limited" to everything, asking for this many seconds' wait (0: off), as the service does when it is busy. */
   busyForSeconds: 0,
+  /** How many entries the watchlist holds before it answers 409 `conflict`; a test lowers it to reach the full state. */
+  watchlistCapacity: WEB.watchlist.maxEntries,
 };
+
+/** The watchlist, most recently added first. */
+let watched: WatchlistEntry[] = [];
+
+/** Empties the watchlist and restores the capacity, for the tests and the screenshot script. */
+export function resetMockWatchlist(): void {
+  watched = [];
+  mockControls.watchlistCapacity = WEB.watchlist.maxEntries;
+}
 
 const cancelled = () => new ApiError(0, { status: 'cancelled', message: 'The request was cancelled.' });
 
@@ -187,6 +204,19 @@ function recordedAnswer<Request, Ok>(address: string, list: Array<{ request: Req
   return found.body as Ok;
 }
 
+/** E14's 400: each field over its limit, with the service's words. */
+function checkWatchlistBody(body: WatchlistBody): void {
+  const { maxLabelChars, maxNoteChars } = WEB.watchlist;
+  const limits = [
+    { name: 'label', value: body.label, max: maxLabelChars },
+    { name: 'note', value: body.note, max: maxNoteChars },
+  ];
+  const fields = limits.filter((f) => [...(f.value ?? '')].length > f.max).map((f): FieldError => ({ name: f.name, message: `Must be at most ${f.max} characters.` }));
+  if (fields.length > 0) {
+    throw new ApiError(400, { status: 'invalid', message: fields.length === 1 ? 'One value needs correcting.' : 'Some values need correcting.', hint: 'Correct the values named below and send the request again.', fields });
+  }
+}
+
 const filterKey = ({ date, from, to, status, direction }: Omit<TransactionQuery, 'page' | 'pageSize'>) => JSON.stringify({ date, from, to, status, direction });
 
 export const mockApi: ExplorerApi = {
@@ -241,4 +271,32 @@ export const mockApi: ExplorerApi = {
     }, opts),
 
   methods: (opts) => respond<MethodsResponse>(() => METHODS_ANSWER, opts),
+
+  watchlist: (opts) => respond<WatchlistResponse>(() => ({ entries: watched }), opts),
+
+  putWatchlist: (address, body, opts) =>
+    respond<SavedWatchlistEntry>(() => {
+      const summary = listed(address);
+      checkWatchlistBody(body);
+      const now = new Date().toISOString().slice(0, 19) + 'Z';
+      const before = watched.find((e) => e.address === summary.address);
+      if (!before && watched.length >= mockControls.watchlistCapacity) {
+        throw new ApiError(409, {
+          status: 'conflict',
+          message: `The watchlist is full: it holds ${mockControls.watchlistCapacity} addresses.`,
+          hint: 'Remove an address from the watchlist, then add this one.',
+        });
+      }
+      const entry: WatchlistEntry = { address: summary.address, label: body.label ?? '', note: body.note ?? '', addedAt: before?.addedAt ?? now, updatedAt: now, summary };
+      watched = before ? watched.map((e) => (e === before ? entry : e)) : [entry, ...watched];
+      return { entry, created: !before };
+    }, opts),
+
+  deleteWatchlist: (address, opts) =>
+    respond<void>(() => {
+      const check = validateAddress(address);
+      const found = check.ok ? watched.find((e) => e.address === check.address) : undefined;
+      if (!found) throw new ApiError(404, { status: 'not_found', message: 'This address is not on the watchlist.', hint: 'Reload the list to see what it holds now.' });
+      watched = watched.filter((e) => e !== found);
+    }, opts),
 };
