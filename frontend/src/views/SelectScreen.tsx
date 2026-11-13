@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import type { AddressSummary, ApiError } from '../api/types';
 import { ErrorState } from '../components/ErrorState';
@@ -15,6 +15,9 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useServiceStatus } from '../hooks/useServiceStatus';
 import { useSlow } from '../hooks/useSlow';
 
+// The live lookup's dialog (V8) is fetched only when the user asks for it.
+const LiveLookupDialog = lazy(() => import('./LiveLookupDialog'));
+
 // Screen 1 — choose an address: a lookup box plus the list of addresses in the snapshot.
 // The lookup validates in the browser first (invalid never reaches the API), then asks the
 // API whether the address is in the snapshot (supported / unsupported).
@@ -23,7 +26,7 @@ type Lookup =
   | { status: 'idle' }
   | { status: 'checking' }
   | { status: 'invalid'; message: string; hint: string }
-  | { status: 'unsupported'; message: string; examples: string[] }
+  | { status: 'unsupported'; address: string; message: string; examples: string[]; canLookupLive: boolean }
   | { status: 'failed'; error: ApiError };
 
 export function SelectScreen({ query }: { query: string | null }) {
@@ -31,6 +34,7 @@ export function SelectScreen({ query }: { query: string | null }) {
   const list = useRequest('addresses', (signal) => api.listAddresses({ signal }));
   const [value, setValue] = useState(query ?? '');
   const [lookup, setLookup] = useState<Lookup>({ status: 'idle' });
+  const [fetching, setFetching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   // An address opens with the method the user chose last (V2's method menu remembers it).
   const [{ method, recent }] = usePreferences();
@@ -50,7 +54,7 @@ export function SelectScreen({ query }: { query: string | null }) {
     }
     const body = res.error.body;
     if (body.status === 'invalid') setLookup({ status: 'invalid', message: body.message, hint: body.hint ?? '' });
-    else if (body.status === 'unsupported') setLookup({ status: 'unsupported', message: body.message, examples: body.examples });
+    else if (body.status === 'unsupported') setLookup({ status: 'unsupported', address: local.address, message: body.message, examples: body.examples, canLookupLive: body.canLookupLive });
     else {
       // Like a page's own request, a failure that says nothing about the address asks the status dot to look again at once.
       if (isTransient(res.error)) recheck();
@@ -159,12 +163,24 @@ export function SelectScreen({ query }: { query: string | null }) {
             live="alert"
             testId="state-unsupported"
             actions={
-              <button type="button" className="btn btn-secondary" onClick={reset}>
-                Clear and try another address
-              </button>
+              <>
+                {lookup.canLookupLive ? (
+                  <button type="button" className="btn btn-primary" aria-haspopup="dialog" onClick={() => setFetching(true)}>
+                    Fetch this address's public history
+                  </button>
+                ) : null}
+                <button type="button" className="btn btn-secondary" onClick={reset}>
+                  Clear and try another address
+                </button>
+              </>
             }
           >
             <p>{lookup.message}</p>
+            {lookup.canLookupLive ? (
+              <p>
+                Or fetch its most recent confirmed transactions from the public blockchain service. Only the address is sent to it, and the result is marked as live data.
+              </p>
+            ) : null}
             <p>The explorer only covers a fixed set of addresses chosen before any analysis. Try one of these instead:</p>
             <ul className="example-list">
               {lookup.examples.map((a) => (
@@ -176,6 +192,11 @@ export function SelectScreen({ query }: { query: string | null }) {
               ))}
             </ul>
           </StatePanel>
+        ) : null}
+        {fetching && lookup.status === 'unsupported' ? (
+          <Suspense fallback={null}>
+            <LiveLookupDialog address={lookup.address} method={method ?? undefined} onClose={() => setFetching(false)} />
+          </Suspense>
         ) : null}
         {lookup.status === 'failed' ? <ErrorState error={lookup.error} onRetry={() => void check(value)} headingLevel={3} /> : null}
       </section>
@@ -251,7 +272,7 @@ function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
                       <a className="address-link mono" href={paths.timeline(a.address, method ?? undefined)} aria-label={`Open activity for ${a.address}`}>
                         {shortAddress(a.address, 12, 8)}
                       </a>
-                      <span className="cell-sub">{KIND_LABEL[a.kind]}</span>
+                      <span className="cell-sub">{KIND_LABEL[a.kind]}{a.source === 'live' ? ' · live data' : ''}</span>
                     </span>
                   </span>
                 </th>

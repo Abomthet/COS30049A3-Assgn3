@@ -79,6 +79,35 @@ class NotFound(ApiError):
     status = "not_found"
 
 
+class Conflict(ApiError):
+    """The request cannot be carried out in the present state: a full watchlist, a lookup already running, a snapshot address
+    that cannot be forgotten (409)."""
+
+    status_code = 409
+    status = "conflict"
+
+
+class Disabled(ApiError):
+    """Live lookup is switched off on this server (403): `EXPLORER_LIVE_LOOKUP` is not `on`."""
+
+    status_code = 403
+    status = "disabled"
+
+
+class UpstreamError(ApiError):
+    """The public blockchain service answered with an error, or with something this service cannot use (502)."""
+
+    status_code = 502
+    status = "upstream_error"
+
+
+class UpstreamTimeout(ApiError):
+    """The public blockchain service did not answer in time (504)."""
+
+    status_code = 504
+    status = "upstream_timeout"
+
+
 class TooLarge(ApiError):
     """A request body over `web.limits.maxBodyBytes` (413)."""
 

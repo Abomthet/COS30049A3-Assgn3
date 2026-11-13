@@ -69,6 +69,17 @@ class TimelineHistory(CamelModel):
     first_scored_date: str | None
 
 
+class LiveInfo(CamelModel):
+    """For a fetched address (S-09): when its history was read, and how much of it is held."""
+
+    fetched_at: str = Field(description="ISO 8601, UTC.")
+    transactions: int = Field(description="How many of the address's most recent confirmed transactions were fetched.")
+    total: int = Field(description="How many confirmed transactions the address has on the chain when the lookup began.")
+    max_tx: int = Field(description="The cap the lookup was started with.")
+    truncated: bool = Field(description="True when the address has more transactions than were fetched: the oldest fetched ones "
+                                        "have little history behind them and are shown unscored.")
+
+
 class TimelineResponse(CamelModel):
     """E5: per-day counts, totals, range and history status of one address."""
 
@@ -78,6 +89,7 @@ class TimelineResponse(CamelModel):
     days: list[TimelineDay] = Field(description="Only days with transactions, oldest first.")
     totals: TimelineTotals
     history: TimelineHistory
+    live: LiveInfo | None = Field(default=None, description="Set for a fetched address (`source: \"live\"`); null for the snapshot's.")
 
 
 class TransactionRow(CamelModel):

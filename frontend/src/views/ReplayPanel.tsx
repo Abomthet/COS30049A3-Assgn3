@@ -14,8 +14,8 @@ export function ReplayPanel({ timeline, method }: { timeline: TimelineResponse; 
     <section className="card replay-card" aria-labelledby="replay-title">
       <h2 id="replay-title">Replay of recorded history</h2>
       <p className="card-sub">
-        Watch this address's transactions again in the order they happened, from the snapshot of {formatDay(timeline.snapshot.snapshotDate)}. Nothing here is arriving now: it is recorded history played forward.
-        Each transaction shows the verdict it has in the snapshot, which never used later transactions, so a flag appears when its transaction does, as it would have on the day.
+        Watch this address's transactions again in the order they happened, from {timeline.live ? `the history fetched on ${formatDay(timeline.live.fetchedAt.slice(0, 10))}` : `the snapshot of ${formatDay(timeline.snapshot.snapshotDate)}`}. Nothing here is arriving now: it is recorded history played forward.
+        Each transaction shows the verdict it has in the data, which never used later transactions, so a flag appears when its transaction does, as it would have on the day.
       </p>
       {started ? (
         <Suspense fallback={<Loading label="Loading the replay…" block />}>

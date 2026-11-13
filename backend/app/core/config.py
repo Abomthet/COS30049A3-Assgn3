@@ -81,6 +81,7 @@ class LiveSettings(ConfigBlock):
     """Limits of a live lookup (S-09)."""
 
     default_max_tx: int
+    min_max_tx: int
     max_tx_limit: int
     lookups_per_hour: int
     cache_days: int

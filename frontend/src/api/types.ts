@@ -17,6 +17,11 @@
 //   GET  /api/watchlist                               -> WatchlistResponse
 //   PUT  /api/watchlist/{address}  {label?, note?}    -> WatchlistEntry (201 added, 200 replaced) | 400 | 404 UnsupportedBody | 409 ServiceBody (full)
 //   DELETE /api/watchlist/{address}                   -> 204 | 404 NotFoundBody
+//   POST /api/live/lookups  {address, maxTx?}         -> LiveLookup (202 started, 200 from the cache) | 400 | 403 | 404 | 409 | 429 | 502 | 504 ServiceBody
+//   GET  /api/live/lookups/{id}                       -> LiveLookup | 404 NotFoundBody
+//   GET  /api/live/lookups/{id}/events                -> server-sent events `status`, `progress`, `done`, `failed`, each a LiveLookup
+//   DELETE /api/live/lookups/{id}                     -> 204 | 404 NotFoundBody
+//   DELETE /api/addresses/{address}                   -> 204 | 404 UnsupportedBody | 409 ServiceBody (a snapshot address, or one being fetched)
 //
 // Times are ISO 8601 in UTC; days are 'YYYY-MM-DD' in UTC; amounts are integer satoshis.
 
@@ -92,9 +97,24 @@ export interface TimelineDay {
   flaggedCount: number;
 }
 
+/** For a fetched address (S-09): when its history was read and how much of it is held. */
+export interface LiveInfo {
+  /** ISO 8601, UTC. */
+  fetchedAt: string;
+  /** How many of the most recent confirmed transactions were fetched. */
+  transactions: number;
+  /** How many confirmed transactions the address has on the chain. */
+  total: number;
+  maxTx: number;
+  /** True when the address has more transactions than were fetched: the oldest fetched ones are shown unscored. */
+  truncated: boolean;
+}
+
 export interface TimelineResponse {
   address: string;
   snapshot: SnapshotInfo;
+  /** Set for a fetched address (`source: 'live'`); null for a snapshot address. */
+  live: LiveInfo | null;
   /** The first and last transaction time (ISO 8601), not day keys. */
   range: { start: string; end: string };
   /** Only days with at least one transaction, oldest first. */
@@ -381,6 +401,29 @@ export interface SavedWatchlistEntry {
   created: boolean;
 }
 
+// ------------------------------------------------------------------ live lookup (S-09)
+
+export type LookupStatus = 'queued' | 'fetching' | 'scoring' | 'done' | 'failed' | 'cancelled';
+
+/** E16's answer, E17's, and the data of every event of E18. */
+export interface LiveLookup {
+  id: string;
+  address: string;
+  status: LookupStatus;
+  progress: { pages: number; transactions: number; cap: number; total: number | null };
+  maxTx: number;
+  startedAt: string;
+  finishedAt: string | null;
+  /** Set when `status` is `failed`. */
+  error: { status: string; message: string; hint?: string | null } | null;
+  /** True when a fresh fetch was already held and no request left this computer. */
+  cached: boolean;
+  links: { status: string; events: string };
+}
+
+/** A lookup that has ended, one way or another. */
+export const LOOKUP_ENDED: readonly LookupStatus[] = ['done', 'failed', 'cancelled'];
+
 // ------------------------------------------------------------------ error bodies
 
 export interface FieldError {
@@ -509,7 +552,7 @@ export interface WebSettings {
   requests: { timeoutMs: number; assistantTimeoutMs: number; healthPollSeconds: number };
   charts: { webglMinPoints: number };
   watchlist: { maxEntries: number; maxLabelChars: number; maxNoteChars: number };
-  live: { defaultMaxTx: number; maxTxLimit: number; lookupsPerHour: number; cacheDays: number };
+  live: { defaultMaxTx: number; minMaxTx: number; maxTxLimit: number; lookupsPerHour: number; cacheDays: number };
   replay: { speeds: number[] };
   limits: { maxBodyBytes: number; maxAddressChars: number };
 }
@@ -579,4 +622,17 @@ export interface ExplorerApi {
   putWatchlist(address: string, body: WatchlistBody, opts?: RequestOptions): Promise<SavedWatchlistEntry>;
   /** E15: resolves when the entry is gone; a 404 `not_found` means it was not there. */
   deleteWatchlist(address: string, opts?: RequestOptions): Promise<void>;
+  /** E16: starts a lookup of an address outside the snapshot (200 and `cached` when a fresh fetch is held). */
+  startLiveLookup(address: string, opts?: RequestOptions): Promise<LiveLookup>;
+  /** E17. */
+  liveLookup(id: string, opts?: RequestOptions): Promise<LiveLookup>;
+  /** E19: stops a running lookup. */
+  cancelLiveLookup(id: string, opts?: RequestOptions): Promise<void>;
+  /**
+   * E18: calls `onLookup` with each event's lookup, from the first, and `onError` once if the stream fails (the caller then polls E17).
+   * Returns the function that closes the stream.
+   */
+  openLiveEvents(id: string, onLookup: (lookup: LiveLookup) => void, onError: () => void): () => void;
+  /** E20: forgets a fetched address. */
+  forgetAddress(address: string, opts?: RequestOptions): Promise<void>;
 }

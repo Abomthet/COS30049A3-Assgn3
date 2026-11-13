@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { api } from '../api/client';
 import type { MethodId, TimelineDay, TimelineResponse } from '../api/types';
 import { G1DailyActivity } from '../charts/G1DailyActivity';
@@ -22,6 +22,9 @@ import { useSettings } from '../hooks/useSettings';
 import { ReplayPanel } from './ReplayPanel';
 import { TransactionsTab } from './TransactionsTab';
 import { WhatIfLab } from './WhatIfLab';
+
+// The mark of a fetched address (S-09), with "Forget this address"; a snapshot address never loads it.
+const LiveBanner = lazy(() => import('./LiveBanner'));
 
 // Screen 2 — the address overview (FR-02, AC-01): date range, source and snapshot, the four tiles, and three
 // tabs that are routes of their own. The overview tab has the daily timeline, with flagged days marked and
@@ -85,10 +88,19 @@ function Timeline({ data, tab, method, updating }: { data: TimelineResponse; tab
           <CopyButton value={data.address} label="address" />
           <WatchStar address={data.address} showText />
         </div>
-        <p className="source-line">
-          Source: {data.snapshot.source} · snapshot of {formatDay(data.snapshot.snapshotDate)} · days in UTC
-          {data.snapshot.illustrative ? ' · illustrative data' : ''}
-        </p>
+        {data.live ? (
+          <p className="source-line">Source: {data.snapshot.source} · live data · days in UTC</p>
+        ) : (
+          <p className="source-line">
+            Source: {data.snapshot.source} · snapshot of {formatDay(data.snapshot.snapshotDate)} · days in UTC
+            {data.snapshot.illustrative ? ' · illustrative data' : ''}
+          </p>
+        )}
+        {data.live ? (
+          <Suspense fallback={null}>
+            <LiveBanner address={data.address} live={data.live} />
+          </Suspense>
+        ) : null}
         <MethodMenu method={method} updating={updating} />
       </header>
 

@@ -8,7 +8,7 @@
     ],
     "subject": "Team review checklist for main.pdf (report/REVIEW_CHECKLIST.md: file, data name, printed page, owner and what to check; each row's numbers compared with the built PDF); cover note says bibliography; results unchanged"
   },
-  "copiedUtc": "2026-11-12T06:27:35Z",
+  "copiedUtc": "2026-11-12T07:10:51Z",
   "files": {
     "data/processed/esplora/features.csv": "391d06c37f83c20a80852bbd7f2c8ba3e982c1bb389b7131ab340ac274be6da0",
     "data/processed/esplora/manifest.json": "2f564d94d3e787e44d889a19a118bd12c1cde9a7115e76449ebc455542be06f3",
@@ -38,6 +38,7 @@
     "explorer/split.py": "fe322c1122835862b9263fe67b9f7790e3250da1bf209157af90932694c39d34",
     "explorer/stage_search.py": "01111af50f38f2938dd9de048a27b0651a29cd472bef1976c93f50a874e12222",
     "explorer/stages.py": "9197d003570c3f24e09120c5a8b8e58fa5c3717287ce998ebeb994be7a981ffe",
+    "explorer/transactions.py": "59005548cf0a0438e71590ef4a52c2237cfa714def1557839e7c49ae6f6ffec7",
     "explorer/txgpt.py": "e37ad8a440ea8270a3806b7a34fb4c9415fa0e45cec920943a373532012ad7f9",
     "lm/__init__.py": "290ed32d244eb358aa5b0d4e47b30b7d2ea39db7c9027b365693674048e0bbf4",
     "lm/chat.py": "af2d9fd3a4fe728a72c6267618b928f59bf6cd7a250b792ee5e28901bacc9912",

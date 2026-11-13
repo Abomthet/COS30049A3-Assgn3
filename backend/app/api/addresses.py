@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from explorer.predict import Unsupported
+from fastapi import APIRouter, Depends, Query, Response
 
+from ..core.errors import Conflict
 from ..core.runtime import Runtime
 from ..core.validation import require_address
 from ..schemas.addresses import (AddressesResponse, LookupRequest, LookupResponse, TimelineResponse, TransactionsQuery,
@@ -12,7 +14,8 @@ from ..schemas.addresses import (AddressesResponse, LookupRequest, LookupRespons
 from ..schemas.common import MethodId
 from ..schemas.errors import SNAPSHOT_GET, error_responses
 from ..services.explorer_service import ExplorerService
-from .deps import get_explorer, get_runtime, path_address, snapshot_data
+from ..services.live_service import LiveService
+from .deps import get_explorer, get_live, get_runtime, path_address, snapshot_data
 
 router = APIRouter(prefix="/api", tags=["addresses"])
 
@@ -55,3 +58,22 @@ def transactions(address: Annotated[str, Depends(path_address)], query: Annotate
     `time`, `amount` (the size of the net amount, in or out) or `score` (a leading minus reverses), and page with `page` and `pageSize`.
     A filter that matches nothing is a 200 with an empty list."""
     return explorer.rows(address, query)
+
+
+@router.delete("/addresses/{address}", status_code=204, summary="Forgets a fetched address",
+               responses=error_responses(400, 403, 404, 409, 503))
+def forget_address(address: Annotated[str, Depends(path_address)], live: Annotated[LiveService, Depends(get_live)],
+                   explorer: Explorer, runtime: Annotated[Runtime, Depends(get_runtime)]) -> Response:
+    """Removes an address a live lookup fetched, with its cache file and its watchlist entry (S-09). Answers 204; 403 when live
+    lookup is off; 404 `unsupported` when the address was never fetched (or has expired); 409 for a snapshot address, which
+    cannot be forgotten, and while a lookup for the address is still running."""
+    try:
+        source = explorer.source_of(address)
+    except Unsupported:  # never fetched, or fetching now: the live service tells which
+        source = None
+    if source == "snapshot":
+        raise Conflict("This address is part of the snapshot, which cannot be changed.", "Only addresses fetched with a live lookup can be forgotten.")
+    live.forget(address)
+    if runtime.watchlist is not None:
+        runtime.watchlist.discard(address)
+    return Response(status_code=204)

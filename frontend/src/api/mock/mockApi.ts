@@ -17,6 +17,7 @@
 // as the service keeps it in its database. It checks the body and the capacity as the service does.
 
 import { validateAddress } from '../../lib/address';
+import { noteOrigin } from '../../lib/liveOrigin';
 import { dayKey, isDayKey } from '../../lib/dates';
 import { DEFAULT_METHOD, METHODS } from '../../lib/methods';
 import { WEB } from '../../lib/settings';
@@ -32,6 +33,7 @@ import {
   type ExportFormat,
   type FieldError,
   type HealthResponse,
+  type LiveLookup,
   type LookupResponse,
   type MethodId,
   type MethodsResponse,
@@ -63,6 +65,14 @@ export const mockControls = {
   busyForSeconds: 0,
   /** How many entries the watchlist holds before it answers 409 `conflict`; a test lowers it to reach the full state. */
   watchlistCapacity: WEB.watchlist.maxEntries,
+  /** Live lookup (S-09) is on: E2 says so, E4's 404 offers it, and E16 to E20 work. Off by default, as on the service. */
+  liveLookup: false,
+  /** How long the mock job takes to fetch one page, so a test can run it fast and a screenshot can catch it half way. */
+  liveStepMs: 400,
+  /** The event stream (E18) fails at once, so the dialog has to poll E17. */
+  liveStreamBroken: false,
+  /** The job fails after this many pages with an `upstream_error` (0: never); E16 itself answers 502 when it is -1. */
+  liveFailAfterPages: 0,
 };
 
 /** The watchlist, most recently added first. */
@@ -72,6 +82,96 @@ let watched: WatchlistEntry[] = [];
 export function resetMockWatchlist(): void {
   watched = [];
   mockControls.watchlistCapacity = WEB.watchlist.maxEntries;
+  mockControls.liveLookup = false;
+  mockControls.liveStepMs = 400;
+  mockControls.liveStreamBroken = false;
+  mockControls.liveFailAfterPages = 0;
+  for (const job of jobs.values()) clearTimeout(job.timer);
+  jobs.clear();
+  fetchedWorld.clear();
+}
+
+// ---------------------------------------------------------------- live lookup (S-09)
+// A fetched address in the mock is the running example's recorded history under the typed address, marked live; a job pages
+// through it 25 at a time, as the service pages Esplora, and ends after the same states. The address list then holds it.
+
+interface MockJob {
+  lookup: LiveLookup;
+  events: Array<(l: LiveLookup) => void>;
+  log: LiveLookup[];
+  timer?: ReturnType<typeof setTimeout>;
+}
+const jobs = new Map<string, MockJob>();
+const fetchedWorld = new Map<string, RecordedAddress & { summary: AddressSummary }>();
+const MOCK_TOTAL = 1157;
+let jobCounter = 0;
+
+function worldFor(address: string): RecordedAddress & { summary: AddressSummary } {
+  const base = RECORDED[0];
+  const source = ADDRESSES.addresses.find((a) => a.address === base.address)!;
+  const live = { fetchedAt: new Date().toISOString().slice(0, 19) + 'Z', transactions: source.txCount, total: MOCK_TOTAL, maxTx: WEB.live.defaultMaxTx, truncated: true };
+  const swap = <T,>(value: T): T => JSON.parse(JSON.stringify(value).split(base.address).join(address));
+  return { ...swap(base), timeline: { ...swap(base.timeline), live }, summary: { ...swap(source), source: 'live' } };
+}
+
+function publish(job: MockJob, patch: Partial<LiveLookup>): void {
+  job.lookup = { ...job.lookup, ...patch, progress: { ...job.lookup.progress, ...patch.progress } };
+  job.log.push(job.lookup);
+  for (const listener of job.events) listener(job.lookup);
+}
+
+function stepJob(job: MockJob): void {
+  const { lookup } = job;
+  if (['done', 'failed', 'cancelled'].includes(lookup.status)) return;
+  const cap = lookup.progress.cap;
+  if (lookup.status === 'fetching') {
+    const pages = lookup.progress.pages + 1;
+    if (mockControls.liveFailAfterPages > 0 && pages > mockControls.liveFailAfterPages) {
+      publish(job, { status: 'failed', finishedAt: new Date().toISOString(), error: { status: 'upstream_error', message: 'The public blockchain service answered with an error.', hint: 'Try again in a minute, or pick one of the snapshot addresses.' } });
+      return;
+    }
+    publish(job, { progress: { pages, transactions: Math.min(pages * 25, cap), cap, total: MOCK_TOTAL } });
+    if (pages * 25 >= cap) publish(job, { status: 'scoring' });
+  } else {
+    fetchedWorld.set(lookup.address, worldFor(lookup.address));
+    publish(job, { status: 'done', finishedAt: new Date().toISOString() });
+    return;
+  }
+  job.timer = setTimeout(() => stepJob(job), mockControls.liveStepMs);
+}
+
+function startJob(address: string): LiveLookup {
+  const check = validateAddress(address);
+  if (!check.ok) throw invalid(check.message, check.hint, 'address');
+  if (!mockControls.liveLookup) throw new ApiError(403, { status: 'disabled', message: 'Live lookup is switched off on this server.', hint: 'Start the server with EXPLORER_LIVE_LOOKUP=on.' });
+  if (ADDRESSES.addresses.some((a) => a.address === check.address) && !fetchedWorld.has(check.address)) {
+    throw new ApiError(409, { status: 'conflict', message: 'This address is part of the snapshot.' });
+  }
+  if (mockControls.liveFailAfterPages < 0) throw new ApiError(502, { status: 'upstream_error', message: 'The public blockchain service answered with an error.', hint: 'Try again in a minute, or pick one of the snapshot addresses.' });
+  const now = new Date().toISOString().slice(0, 19) + 'Z';
+  const id = `mock${++jobCounter}`;
+  const cap = Math.min(WEB.live.defaultMaxTx, RECORDED[0].timeline.totals.txCount);
+  const cached = fetchedWorld.has(check.address);
+  const lookup: LiveLookup = {
+    id, address: check.address, status: cached ? 'done' : 'fetching', maxTx: WEB.live.defaultMaxTx, startedAt: now, finishedAt: cached ? now : null, error: null, cached,
+    progress: { pages: cached ? Math.ceil(cap / 25) : 0, transactions: cached ? cap : 0, cap, total: MOCK_TOTAL },
+    links: { status: `/api/live/lookups/${id}`, events: `/api/live/lookups/${id}/events` },
+  };
+  const job: MockJob = { lookup, events: [], log: [lookup] };
+  jobs.set(id, job);
+  if (!cached) job.timer = setTimeout(() => stepJob(job), mockControls.liveStepMs);
+  return lookup;
+}
+
+function jobOf(id: string): MockJob {
+  const job = jobs.get(id);
+  if (!job) throw new ApiError(404, { status: 'not_found', message: 'There is no lookup with this identifier.', hint: 'Start a new lookup.' });
+  return job;
+}
+
+/** What the mock knows of an address: the recorded ones, and the ones a lookup has fetched. */
+function worldOf(address: string): (RecordedAddress & { summary?: AddressSummary }) | undefined {
+  return fetchedWorld.get(address) ?? RECORDED.find((r) => r.address === address);
 }
 
 const cancelled = () => new ApiError(0, { status: 'cancelled', message: 'The request was cancelled.' });
@@ -120,15 +220,15 @@ const invalid = (message: string, hint: string, field: string) =>
 function listed(input: string): AddressSummary {
   const check = validateAddress(input);
   if (!check.ok) throw invalid(check.message, check.hint, 'address');
-  const summary = ADDRESSES.addresses.find((a) => a.address === check.address);
-  if (!summary) throw new ApiError(404, UNSUPPORTED);
+  const summary = ADDRESSES.addresses.find((a) => a.address === check.address) ?? fetchedWorld.get(check.address)?.summary;
+  if (!summary) throw new ApiError(404, { ...UNSUPPORTED, canLookupLive: mockControls.liveLookup });
   return summary;
 }
 
 /** Listed, and recorded: the only addresses with a timeline and rows. */
 function requireAddress(input: string): RecordedAddress {
   const { address } = listed(input);
-  const recorded = RECORDED.find((r) => r.address === address);
+  const recorded = worldOf(address);
   if (!recorded) throw new ApiError(404, { status: 'not_found', message: 'The mock has no recorded data for this address.' });
   return recorded;
 }
@@ -225,9 +325,11 @@ const filterKey = ({ date, from, to, status, direction }: Omit<TransactionQuery,
 export const mockApi: ExplorerApi = {
   health: (opts) => respond<HealthResponse>(() => HEALTH, opts),
 
-  config: (opts) => respond<ConfigResponse>(() => CONFIG, opts),
+  config: (opts) =>
+    respond<ConfigResponse>(() => (mockControls.liveLookup ? { ...CONFIG, capabilities: { ...CONFIG.capabilities, liveLookup: true } } : CONFIG), opts),
 
-  listAddresses: (opts) => respond<AddressesResponse>(() => ADDRESSES, opts),
+  listAddresses: (opts) =>
+    respond<AddressesResponse>(() => ({ ...ADDRESSES, addresses: [...ADDRESSES.addresses, ...[...fetchedWorld.values()].map((w) => w.summary)] }), opts),
 
   lookup: (address, opts) =>
     respond<LookupResponse>(() => {
@@ -236,7 +338,7 @@ export const mockApi: ExplorerApi = {
     }, opts),
 
   timeline: (address, opts) =>
-    respond<TimelineResponse>(() => recordedFor(requireAddress(address), opts?.method).timeline, opts),
+    respond<TimelineResponse>(() => noteOrigin(recordedFor(requireAddress(address), opts?.method).timeline), opts),
 
   transactions: (address, query, opts) => respond<TransactionsResponse>(() => page(requireAddress(address), query), opts),
 
@@ -285,6 +387,49 @@ export const mockApi: ExplorerApi = {
     }, opts),
 
   methods: (opts) => respond<MethodsResponse>(() => METHODS_ANSWER, opts),
+
+  startLiveLookup: (address, opts) => respond<LiveLookup>(() => startJob(address), opts),
+
+  liveLookup: (id, opts) => respond<LiveLookup>(() => jobOf(id).lookup, opts),
+
+  cancelLiveLookup: (id, opts) =>
+    respond<void>(() => {
+      const job = jobOf(id);
+      if (!['done', 'failed', 'cancelled'].includes(job.lookup.status)) {
+        clearTimeout(job.timer);
+        publish(job, { status: 'cancelled', finishedAt: new Date().toISOString() });
+      }
+    }, opts),
+
+  // The stream replays every event so far, then follows the job, as the service's does.
+  openLiveEvents: (id, onLookup, onError) => {
+    let open = true;
+    const timer = setTimeout(() => {
+      if (!open) return;
+      if (mockControls.liveStreamBroken || !jobs.has(id)) {
+        open = false;
+        onError();
+        return;
+      }
+      const job = jobOf(id);
+      for (const seen of job.log) onLookup(seen);
+      job.events.push((l) => open && onLookup(l));
+    }, 0);
+    return () => {
+      open = false;
+      clearTimeout(timer);
+    };
+  },
+
+  forgetAddress: (address, opts) =>
+    respond<void>(() => {
+      const check = validateAddress(address);
+      if (!mockControls.liveLookup) throw new ApiError(403, { status: 'disabled', message: 'Live lookup is switched off on this server.' });
+      if (!check.ok) throw invalid(check.message, check.hint, 'address');
+      if (ADDRESSES.addresses.some((a) => a.address === check.address)) throw new ApiError(409, { status: 'conflict', message: 'This address is part of the snapshot, which cannot be changed.' });
+      if (!fetchedWorld.delete(check.address)) throw new ApiError(404, { ...UNSUPPORTED, canLookupLive: true });
+      watched = watched.filter((e) => e.address !== check.address);
+    }, opts),
 
   watchlist: (opts) => respond<WatchlistResponse>(() => ({ entries: watched }), opts),
 

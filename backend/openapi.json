@@ -189,7 +189,7 @@
             }
           },
           "404": {
-            "description": "The address, transaction or path is unknown.",
+            "description": "The address, transaction, lookup or path is unknown.",
             "content": {
               "application/json": {
                 "schema": {
@@ -306,7 +306,7 @@
             }
           },
           "404": {
-            "description": "The address, transaction or path is unknown.",
+            "description": "The address, transaction, lookup or path is unknown.",
             "content": {
               "application/json": {
                 "schema": {
@@ -553,7 +553,85 @@
             }
           },
           "404": {
-            "description": "The address, transaction or path is unknown.",
+            "description": "The address, transaction, lookup or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/addresses/{address}": {
+      "delete": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "Forgets a fetched address",
+        "description": "Removes an address a live lookup fetched, with its cache file and its watchlist entry (S-09). Answers 204; 403 when live\nlookup is off; 404 `unsupported` when the address was never fetched (or has expired); 409 for a snapshot address, which\ncannot be forgotten, and while a lookup for the address is still running.",
+        "operationId": "forget_address_api_addresses__address__delete",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "A Bitcoin address.",
+              "title": "Address"
+            },
+            "description": "A Bitcoin address."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Live lookup is switched off on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction, lookup or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The watchlist is full; a lookup for that address is already running; a snapshot address cannot be forgotten.",
             "content": {
               "application/json": {
                 "schema": {
@@ -661,7 +739,7 @@
             }
           },
           "404": {
-            "description": "The address, transaction or path is unknown.",
+            "description": "The address, transaction, lookup or path is unknown.",
             "content": {
               "application/json": {
                 "schema": {
@@ -746,7 +824,7 @@
             }
           },
           "404": {
-            "description": "The address, transaction or path is unknown.",
+            "description": "The address, transaction, lookup or path is unknown.",
             "content": {
               "application/json": {
                 "schema": {
@@ -851,7 +929,7 @@
             }
           },
           "404": {
-            "description": "The address, transaction or path is unknown.",
+            "description": "The address, transaction, lookup or path is unknown.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1125,7 +1203,7 @@
             }
           },
           "404": {
-            "description": "The address, transaction or path is unknown.",
+            "description": "The address, transaction, lookup or path is unknown.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1277,7 +1355,7 @@
             }
           },
           "404": {
-            "description": "The address, transaction or path is unknown.",
+            "description": "The address, transaction, lookup or path is unknown.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1287,7 +1365,7 @@
             }
           },
           "409": {
-            "description": "The watchlist is full.",
+            "description": "The watchlist is full; a lookup for that address is already running; a snapshot address cannot be forgotten.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1363,7 +1441,7 @@
             }
           },
           "404": {
-            "description": "The address, transaction or path is unknown.",
+            "description": "The address, transaction, lookup or path is unknown.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1425,7 +1503,7 @@
             }
           },
           "404": {
-            "description": "The address, transaction or path is unknown.",
+            "description": "The address, transaction, lookup or path is unknown.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1465,7 +1543,329 @@
             }
           },
           "429": {
-            "description": "The Assistant is writing another answer; wait `Retry-After` seconds and ask again.",
+            "description": "The Assistant is writing another answer, or too many live lookups; wait `Retry-After` seconds and ask again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/lookups": {
+      "post": {
+        "tags": [
+          "live"
+        ],
+        "summary": "Starts a live lookup of an address outside the snapshot",
+        "description": "Reads the address's most recent confirmed transactions (`maxTx`, 50 to 1,000; default 500) from the public blockchain\nservice in the background and scores them. Answers 202 with the lookup, whose `links` give E17 and E18, and a `Location`\nheader; 200 with a `done` lookup when a fetch under `web.live.cacheDays` old is held. 400 names each field at fault; 403\nwhen live lookup is off; 404 `not_found` for an address with no confirmed transactions; 409 while a lookup for this address\nruns; 429 with `Retry-After` while another lookup runs or the hour's allowance is spent; 502 and 504 when the public\nservice answers with an error or not at all. Only the address is sent to it.",
+        "operationId": "start_lookup_api_live_lookups_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveLookupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveLookup"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "A fresh fetch of this address was already held: the lookup is `done` at once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveLookup"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A value is malformed or out of range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Live lookup is switched off on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction, lookup or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The watchlist is full; a lookup for that address is already running; a snapshot address cannot be forgotten.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is over the size limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The request body is not JSON.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The Assistant is writing another answer, or too many live lookups; wait `Retry-After` seconds and ask again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The public blockchain service answered with an error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "The public blockchain service did not answer in time.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/lookups/{lookup_id}": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "summary": "A live lookup's status and progress",
+        "description": "`status` is one of `queued`, `fetching`, `scoring`, `done`, `failed`, `cancelled`; `progress` counts pages and\ntransactions against `cap`; a failed lookup carries `error` with the same `status`, `message` and `hint` words an error body\nhas. This is what E18 streams, and what a client polls (every 2 seconds) when the stream fails.",
+        "operationId": "lookup_status_api_live_lookups__lookup_id__get",
+        "parameters": [
+          {
+            "name": "lookup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lookup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveLookup"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Live lookup is switched off on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction, lookup or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "live"
+        ],
+        "summary": "Cancels a live lookup",
+        "description": "Answers 204. The fetch ends at the next page and nothing is stored; a lookup that has already finished is left as it is.",
+        "operationId": "cancel_lookup_api_live_lookups__lookup_id__delete",
+        "parameters": [
+          {
+            "name": "lookup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lookup Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Live lookup is switched off on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction, lookup or path is unknown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is starting or a file is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/lookups/{lookup_id}/events": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "summary": "A live lookup's progress as server-sent events",
+        "description": "The same body as E17 on every event: `status` when the lookup changes state, `progress` after each page fetched,\nthen `done` or `failed`. A cancelled lookup ends with a `status` event whose `status` is `cancelled`. A client that\nconnects late is replayed every event so far, so it never misses the end.",
+        "operationId": "lookup_events_api_live_lookups__lookup_id__events_get",
+        "parameters": [
+          {
+            "name": "lookup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lookup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent events named `status`, `progress`, `done` and `failed`; each carries the body of E17 as its data. A comment line follows every 15 seconds of silence. The stream ends after the last event.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Live lookup is switched off on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The address, transaction, lookup or path is unknown.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2862,11 +3262,163 @@
         "title": "ListLimits",
         "description": "Paging of every list."
       },
+      "LiveInfo": {
+        "properties": {
+          "fetchedAt": {
+            "type": "string",
+            "title": "Fetchedat",
+            "description": "ISO 8601, UTC."
+          },
+          "transactions": {
+            "type": "integer",
+            "title": "Transactions",
+            "description": "How many of the address's most recent confirmed transactions were fetched."
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "How many confirmed transactions the address has on the chain when the lookup began."
+          },
+          "maxTx": {
+            "type": "integer",
+            "title": "Maxtx",
+            "description": "The cap the lookup was started with."
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated",
+            "description": "True when the address has more transactions than were fetched: the oldest fetched ones have little history behind them and are shown unscored."
+          }
+        },
+        "type": "object",
+        "required": [
+          "fetchedAt",
+          "transactions",
+          "total",
+          "maxTx",
+          "truncated"
+        ],
+        "title": "LiveInfo",
+        "description": "For a fetched address (S-09): when its history was read, and how much of it is held."
+      },
+      "LiveLookup": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "fetching",
+              "scoring",
+              "done",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/LookupProgress"
+          },
+          "maxTx": {
+            "type": "integer",
+            "title": "Maxtx"
+          },
+          "startedAt": {
+            "type": "string",
+            "title": "Startedat",
+            "description": "ISO 8601, UTC."
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finishedat",
+            "description": "ISO 8601, UTC; null while the lookup runs."
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LookupFailure"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set when `status` is `failed`."
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "description": "True when a fresh fetch of this address was already held and no request left this computer."
+          },
+          "links": {
+            "$ref": "#/components/schemas/LookupLinks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "address",
+          "status",
+          "progress",
+          "maxTx",
+          "startedAt",
+          "finishedAt",
+          "error",
+          "cached",
+          "links"
+        ],
+        "title": "LiveLookup",
+        "description": "A lookup's identity, status and progress."
+      },
+      "LiveLookupRequest": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "maxTx": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxtx",
+            "description": "How many of the address's most recent confirmed transactions to fetch: `web.live.minMaxTx` to `web.live.maxTxLimit`; default `web.live.defaultMaxTx`."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "address"
+        ],
+        "title": "LiveLookupRequest",
+        "description": "E16's body."
+      },
       "LiveSettings": {
         "properties": {
           "defaultMaxTx": {
             "type": "integer",
             "title": "Defaultmaxtx"
+          },
+          "minMaxTx": {
+            "type": "integer",
+            "title": "Minmaxtx"
           },
           "maxTxLimit": {
             "type": "integer",
@@ -2885,12 +3437,118 @@
         "type": "object",
         "required": [
           "defaultMaxTx",
+          "minMaxTx",
           "maxTxLimit",
           "lookupsPerHour",
           "cacheDays"
         ],
         "title": "LiveSettings",
         "description": "Limits of a live lookup (S-09)."
+      },
+      "LookupFailure": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "invalid",
+              "disabled",
+              "unsupported",
+              "not_found",
+              "conflict",
+              "too_large",
+              "insufficient_history",
+              "rate_limited",
+              "server_error",
+              "upstream_error",
+              "unavailable",
+              "upstream_timeout"
+            ],
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message"
+        ],
+        "title": "LookupFailure",
+        "description": "Why a lookup failed: `status` is for code, `message` and `hint` are words safe to show."
+      },
+      "LookupLinks": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "E17."
+          },
+          "events": {
+            "type": "string",
+            "title": "Events",
+            "description": "E18."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "events"
+        ],
+        "title": "LookupLinks",
+        "description": "Where to follow the lookup."
+      },
+      "LookupProgress": {
+        "properties": {
+          "pages": {
+            "type": "integer",
+            "title": "Pages",
+            "description": "Pages of 25 transactions fetched so far."
+          },
+          "transactions": {
+            "type": "integer",
+            "title": "Transactions",
+            "description": "Transactions fetched so far."
+          },
+          "cap": {
+            "type": "integer",
+            "title": "Cap",
+            "description": "Where the fetch stops: `maxTx`, or the address's own count when that is smaller."
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total",
+            "description": "The address's confirmed transactions on the chain; null before the service has said."
+          }
+        },
+        "type": "object",
+        "required": [
+          "pages",
+          "transactions",
+          "cap",
+          "total"
+        ],
+        "title": "LookupProgress",
+        "description": "How far the fetch has got."
       },
       "LookupRequest": {
         "properties": {
@@ -3320,6 +3978,17 @@
           },
           "history": {
             "$ref": "#/components/schemas/TimelineHistory"
+          },
+          "live": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LiveInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set for a fetched address (`source: \"live\"`); null for the snapshot's."
           }
         },
         "type": "object",

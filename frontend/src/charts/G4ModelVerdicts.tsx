@@ -179,7 +179,7 @@ export function G4ModelVerdicts({ ranks, scores, flags, deciding, subject, addre
       fileName={['model-verdicts', address, txid ?? 'what-if', settings.snapshot?.snapshotDate ?? '']}
       title="Where each model ranks it"
       headingLevel={3}
-      caption={`${snapshotCaption(settings.snapshot)} · Each model is compared on its own scale: a dot is ${what}'s rank among the address's own scored transactions for that model, not its score, so the nine can share one axis.`}
+      caption={`${snapshotCaption(settings.snapshot, address)} · Each model is compared on its own scale: a dot is ${what}'s rank among the address's own scored transactions for that model, not its score, so the nine can share one axis.`}
       summary={summary}
       hint="Hover a dot for its score and rank. The table view lists every method in words."
       figure={figure}
