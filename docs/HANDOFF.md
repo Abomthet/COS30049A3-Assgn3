@@ -27,31 +27,53 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 - **Brief and rubric:** `docs/brief/` (Markdown). 40 of the 45 marks are judged from the running app and
   the 7-minute video; the report (8 pages) is 5 marks.
 
-## 2. Status on 12 Nov 2026
+## 2. Status — **PAUSED on 13 Nov 2026** at the user's request
 
 | Milestone | Date | State |
 |---|---|---|
-| MS1 walking skeleton | Sun 15 Nov | **Passed 11 Nov** (fresh-clone check, `9adf130`) |
-| MS2 minimum viable demonstration (all Must items except M-14…M-16) | Sun 22 Nov | **Passed 12 Nov** (record in `docs/TEST_LOG.md`; re-run with `tools/ms_gate_check.py`) |
-| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | Should items may start now (MS2 passed) |
-| MS4 code freeze, tag `v1.0-rc`, clean install Win + Mac | Sun 29 Nov | |
+| MS1 walking skeleton | Sun 15 Nov | **Passed 11 Nov** (`docs/TEST_LOG.md`) |
+| MS2 minimum viable demonstration | Sun 22 Nov | **Passed 12 Nov** (`docs/TEST_LOG.md`; re-run with `tools/ms_gate_check.py`) |
+| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | **11 of 12 Should items built**; left: S-11 browser tests, the S-10 generated-types half |
+| MS4 code freeze, `v1.0-rc`, clean install Win + Mac | Sun 29 Nov | |
 | MS5 submit on Canvas | Sat 5 Dec | |
 
-**Built and committed** (all on `origin/main`, private repo `github.com/Defaul119/COS30049A3`):
-- **Back end, all Must endpoints:** E1 health, E2 config, E3 addresses, E4 lookup, E5 timeline,
-  E6 transactions (filters, sort, paging), E7 transaction detail with all 9 methods, E8 what-if,
-  E9 what-if curve (batched), E10 export CSV/JSON, E11 methods. ETag/304, 413, one error body,
-  validation as 400 with every faulty field; CORS exposes `X-Request-ID`, `Content-Disposition`, `Retry-After`;
-  Should items so far: watchlist E13–E15, `ranks`, the Assistant E12 (677 prepared answers). **677 tests + 1 skipped without the weights.**
-- **Front end:** shell (navigation, service status, theme, toasts, error boundary), Axios client,
-  V1 address selection, V2 overview + Transactions tab (filter bar, table, G2) + What-if tab (V4, G5),
-  V3 day and transaction (G3, verdict table), V5 models and limits, V7 about, export menu, charts
-  G1/G2/G3/G5 in Plotly, the full state catalogue (offline banner, 429 countdown, slow notice) in every
-  view, 44 px touch targets, method names from E11; Should items so far: method selector, G4, G6, watchlist screen, replay.
-  **610 tests.** 58 screenshots in `docs/screenshots/`. Report material (generated API reference, measurements, decisions,
-  design notes, screenshot index, video shot list) in `docs/report-material/`; usability pack in `docs/usability/`.
-- **Nothing in flight** at the last update (12 Nov, after MS2). Check `git status`: uncommitted files mean an
-  agent's package awaiting review.
+**`main` (local) = `8ff1519` plus log commits, all merged and verified.**
+- Clean worktree: back end **724 passed, 2 skipped** (the real-model and opt-in network tests), front end **650**,
+  build clean, no mock in `dist/`, first-screen JS **147.8 kB gzip** (budget 150; keep new screens lazy).
+- `tools/ms_gate_check.py` passes on the running app.
+
+**Built:**
+- **Back end, 20 operations:** E1–E11 (Must); E12 Assistant; E13–E15 watchlist (SQLite); E16–E20 live lookup (off by
+  default, `EXPLORER_LIVE_LOOKUP=on`).
+- **Must-tier features:** ETag/304, 413, 429 with `Retry-After`, one error body, two-layer validation (one 400 names
+  every faulty field).
+- **Should-tier features:** per-method `ranks`, 677 prepared Assistant answers (all passed A2's guardrail).
+- **Front end:** V1–V8:
+  - address selection with watch star and recent addresses;
+  - overview with method menu, G1, flagged days, replay;
+  - Transactions tab with filter bar, G2 with linked selection, table, export;
+  - What-if lab with G5, G4, scenarios and the Assistant panel;
+  - transaction view with G3, G4, verdict table with flag lines, Assistant panel;
+  - V5 models with G6; V6 watchlist; V7 about; V8 live-lookup dialog.
+- **Front end, everywhere:** the full state catalogue, 44 px touch targets, light and dark.
+- **Tools and docs:**
+  - `tools/measure.py` (every plan budget passes; `docs/report-material/measured/`);
+  - CI workflow `.github/workflows/ci.yml`;
+  - report material, API reference and three architecture figures (`docs/report-material/`);
+  - usability pack (`docs/usability/`);
+  - 64 screenshots (`docs/screenshots/`).
+
+**Not on GitHub yet:** pushes are refused because the token lacks the `workflow` scope (needed for the CI file).
+The user must run `~/.local/bin/gh auth refresh -h github.com -s workflow` then `~/.local/bin/gh auth setup-git`;
+after that, `git push`, and check the first CI run with `gh run list`.
+
+**Running when paused** (started for the user to look at):
+- back end `uvicorn` on :8000 with `EXPLORER_LIVE_LOOKUP=on`, and the front end `npm run dev` on :5173, both
+  detached;
+- PIDs in the session scratchpad (`app-backend.pid`, `app-frontend.pid`);
+- otherwise find them with `lsof -i :8000 -i :5173` and stop them with `kill`.
+
+**No agent is running; no worktree or branch other than `main` exists.**
 
 ## 3. Where everything is
 
@@ -192,37 +214,29 @@ planning, gates and review, and the cheapest on mechanical work.
 | D-W-12 | E6/E10 `sort=amount` orders by absolute amount |
 | D-W-13 | BTC amounts in server text are written to 8 decimal places (web-layer rewrite; A2 untouched) |
 
-## 8. What to do next, in order
+## 8. What to do next, in order (on resuming)
 
-1. **(Done 12 Nov)** frontend polish and the MS2 gate. To re-run the gate: start both servers, then
-   `python tools/ms_gate_check.py` and `cd frontend && npm run screenshots` (see `docs/TEST_LOG.md`).
-2. **Read `docs/PLAN_SHOULD.md`** (the post-MS2 plan, if present) before starting Should items.
-3. **Should items after MS2, in the plan's build order** (cut from the bottom if time runs short):
-   - T30 S-01 method selector: the back end already accepts `?method=` on E3/E5/E6/E7/E10; the front-end
-     menu is missing.
-   - T31 S-02 G4 and S-03 G6.
-   - T32 S-04 watchlist: SQLite, E13–E15, V6.
-   - T33 S-05 Assistant: E12. Then restore `EXPLORER_ASSISTANT=auto` (D-W-09).
-   - T34 S-06 replay.
-   - T35 S-07 linked selection and S-08 scenario table.
-   - T37 S-10 types from OpenAPI and CI.
-   - T38 S-11 browser tests and S-12 `tools/measure.py`.
-   - T36 S-09 live lookup **only if the team approves CR-08 by 22 Nov**.
-4. **Test and fix:** T39 usability walkthrough (people needed; prepare the script and sheets), T40
-   accessibility (automated checks plus a keyboard pass), T41 fixes.
-5. **Freeze and package:**
-   - T42 MS3;
-   - T43 README complete, docstring pass, `MODIFICATIONS.md`, a licence line in `LICENSES.md`;
-   - T44 clean install from a trial zip on macOS (and the user on Windows);
+1. **Push** once the `workflow` scope is granted (above), and check that the first CI run is green.
+2. **S-11 browser tests** (wave D, Sonnet medium): turn `frontend/scripts/screenshots.mjs`'s journeys into asserted
+   browser tests at 390/820/1280 and re-take the screenshots (several older shots predate the Assistant panel). The
+   `LIVE=1` shots need a back end with live lookup on and network access.
+3. **S-10 generated types** (Sonnet medium): `openapi-typescript` → `frontend/src/api/generated.ts`, with a test that
+   `types.ts` agrees with it (the API has now settled).
+4. **MS3 gate (Fri 27 Nov), on Opus or Fable, with a detailed record in `docs/TEST_LOG.md`:**
+   - each Should item finished and tested, or cut and recorded;
+   - re-run `tools/ms_gate_check.py` and the screenshots from a fresh clone;
+   - re-run `tools/measure.py`.
+5. **T39–T41 usability and accessibility** (people needed; the pack is in `docs/usability/`).
+6. **Freeze and package:**
+   - T43: README complete, docstring pass, `LICENSES.md` licence line;
+   - T44: clean install from a trial zip (macOS here; Windows by the user);
    - T45 MS4 `v1.0-rc`;
-   - T47 report material (API tables from `openapi.json`, measured tables from `measure.py`, screenshots);
-   - T50 tag `v1.0`, build the zip from the tag (`tools/package.py`, not written yet), checksums, unzip
-     and run.
+   - T50: `tools/package.py`, the zip from the tag, checksums.
+7. **Report and video support:** the material is in `docs/report-material/`. Whether the architecture figure goes in
+   the body or the appendix is the team's call.
 
-**Open review findings:**
-- Plotly's range buttons and legend are under 44 px touch targets (partly addressed by polish; see its report).
-- Scrolling past a chart on a real phone is not verified.
-- The About wording and the G5 ticks may be done by polish; check.
+**Open review findings:** see the bottom of `TODO.md` (e.g. the E14 wrong-type wording; scrolling past a chart on a
+real phone not verified).
 
 ## 9. Things only the user or the team can do
 

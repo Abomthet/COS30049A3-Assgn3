@@ -867,3 +867,48 @@ The figures record **16 plan-versus-code differences** (V1–V7 not V8; G1–G6;
 regenerated, and README row 14 updated. A stale comment in `api/endpoints.ts` about exposed headers was corrected.
 **For the report:** at full width, the architecture figure is about two-thirds of a page of the 1.25-page section.
 Either trim the footer and legend, or move it to the appendix and keep `whatif-flow` in the body (the team's call).
+
+## 2026-11-13 — S-09 live lookup merged; **work paused at the user's request**
+**Live lookup** (Sonnet 5.5, high; continued after an accidental stop, two usage limits and a network error) on
+branch `worktree-agent-a93f6e580f3925d66`, commits `6ef05fd`, `2237c10`, `71a3f2f`, `15cae09`, **merged** as `8ff1519`.
+**Four conflicts** (two cooks appending to the same places), resolved by the lead:
+- `vite.config.ts`: both proxy overrides kept (`EXPLORER_API ?? VITE_PROXY_TARGET ?? :8000`);
+- `endpoints.ts`: imports combined;
+- `screenshots.mjs`: both shot sets kept, and the live branch's private DevTools client dropped (main had moved it to
+  `cdp.mjs`);
+- `base.css`: both blocks kept.
+
+**Verified:** a clean worktree of the merge gave back end **724 passed, 2 skipped**, front end **650**, build clean, no
+mock, **first-screen JS 147.8 kB gzip** (budget 150). Then `tools/ms_gate_check.py` on the running app (live lookup
+on) **passed**: 28 addresses, 7,966 rows, 681 flagged with the limitation line, 945 bodies with no banned word,
+**20 operations** (GET, POST, PUT, DELETE).
+**The cook's evidence:**
+- 5 real Esplora fetches of `bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh` (500 of 1,157 transactions in 27.6 s, 490
+  scored, 24 flagged on 20 days);
+- cancel stores nothing;
+- live off → 403;
+- three snapshot addresses pushed through the live route match their saved scores within 1e-9 (Mod-11);
+- tests never use the network: a fake Esplora, and an autouse guard on `urlopen`.
+
+**A real bug the cook fixed:** the ETag middleware buffered the event stream (it treats `no-cache` 200s as snapshot
+data), so the dialog would have shown nothing until the end. The stream now sends `no-cache, no-transform`, with a
+regression test.
+**Design notes:**
+- **A fetched address takes A2's held-out route:** `build_transactions` → `build_features` → the 70 % split → every
+  frozen method. The regression's per-address residual scale is recomputed by the training's rule. Parity within
+  1e-9 is the evidence.
+- **Progress is an append-only event list:** E17 returns the current state; E18 replays the list from the start, then
+  follows it. A late or reconnecting client misses nothing, and polling E17 needs no new code.
+- **Politeness and privacy are structural:** only the address is sent; requests are paced; one lookup at a time and
+  6 an hour; the cache is local and "Forget" deletes it together with the watchlist entry.
+
+**Demo risks:** the first fetch of an address needs Blockstream reachable (fetch the demo address beforehand: the
+cache then answers for 7 days); a 500-transaction fetch takes ~25–30 s.
+
+### Paused (13 Nov), at the user's request
+- **State:** `main` = `8ff1519` (+ this log). All merged worktrees and branches removed; no agent running.
+- **Every Should item but S-11 is built:** S-01 to S-10 (types half deferred), S-12.
+- **Running for the user:** back end on :8000 (live lookup on) and front end on :5173, detached.
+- **GitHub is behind:** pushes are refused until the token has the `workflow` scope (CI file). 12+ reviewed commits are
+  local only.
+- **Usage:** limits were hit five times in two days. Five parallel cooks use a 5-hour window in about 1.5 hours.

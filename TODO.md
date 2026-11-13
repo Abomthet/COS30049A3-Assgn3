@@ -1,6 +1,8 @@
 # A3 to-do (Claude's working list)
 
 > **Picking this up in a new session or with another model? Read `docs/HANDOFF.md` first, then `docs/PLAN_SHOULD.md` (waves after MS2).**
+>
+> **PAUSED 13 Nov at the user's request.** `main` = merged and verified (back end 724 + 2 skipped, front end 650). Push blocked on the GitHub `workflow` scope. Next: S-11 browser tests, the S-10 types half, then the MS3 gate (27 Nov).
 
 Source: `docs/plan/main.pdf` (the full plan, which wins) and `../explainers/a3/a3.pdf` (the briefing).
 Task numbers (T01–T52) and scope IDs (M/S/C) are the plan's. Owners are ignored: Claude does every task
@@ -71,7 +73,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T33 (`6e1a6b8`, `ea70d25`) S-05 Assistant: service, E12, panel, guardrail, cache, prepared answers (works without the 610 MB weights)
 - [x] T34 (`0f4febf`) S-06 replay
 - [x] T35 (`ea70d25`) S-07 linked selection; S-08 scenario table
-- [~] T36 `@B2-live` S-09 live lookup, E16–E20, dialog V8 (CR-08 approved)
+- [x] T36 (`8ff1519`) S-09 live lookup, E16–E20, dialog V8 (CR-08 approved)
 - [~] T37 S-10: CI done (`75eaf5a`); generated types deferred until the API settles
 - [~] T38 S-11 browser tests (wave D); S-12 `measure.py` done (`75eaf5a`, every budget passes) (response times, bundle sizes, render times)
 
