@@ -465,6 +465,24 @@ def test_a_client_that_connects_after_the_end_is_replayed_everything(client: Tes
     assert len(events(client, done["id"])) >= 6
 
 
+def test_e18_delivers_each_event_as_it_happens_not_when_the_stream_ends(client: TestClient, fake: FakeEsplora) -> None:
+    """The ETag middleware holds back a response marked `no-cache` until its body is complete: the stream must not be one."""
+    fake.gate = threading.Event()
+    started = lookup(client, A).json()
+    assert fake.waiting.wait(10)  # the job is stuck at its second page
+    names: list[str] = []
+    with client.stream("GET", f"/api/live/lookups/{started['id']}/events") as response:
+        assert "etag" not in response.headers and response.headers["cache-control"] != "no-cache"
+        for line in response.iter_lines():
+            if line.startswith("event: "):
+                names.append(line.removeprefix("event: "))
+            if "progress" in names:
+                break
+    assert names[:2] == ["status", "progress"] and not fake.gate.is_set()
+    fake.gate.set()
+    finish(client, started["id"])
+
+
 def test_e18_sends_a_comment_line_when_nothing_happens(client: TestClient, fake: FakeEsplora) -> None:
     client.app.state.runtime.live.keepalive_seconds = 0.2  # type: ignore[attr-defined]
     fake.gate = threading.Event()

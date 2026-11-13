@@ -113,8 +113,8 @@ export interface LiveInfo {
 export interface TimelineResponse {
   address: string;
   snapshot: SnapshotInfo;
-  /** Set for a fetched address (`source: 'live'`); null or absent for a snapshot address. */
-  live?: LiveInfo | null;
+  /** Set for a fetched address (`source: 'live'`); null for a snapshot address. */
+  live: LiveInfo | null;
   /** The first and last transaction time (ISO 8601), not day keys. */
   range: { start: string; end: string };
   /** Only days with at least one transaction, oldest first. */

@@ -14,7 +14,8 @@
 // (The offline banner, shot 39, needs no mock: the browser itself is told to go offline.)
 //
 // Options: BASE_URL (default http://localhost:5173), BROWSER_PATH, ONLY=<regex of names>,
-// MOCK=1 (also take the mock-only shots), and an output folder as the first argument.
+// MOCK=1 (also take the mock-only shots), LIVE=1 (also take the live-lookup shots, S-09: they need the back end started with
+// EXPLORER_LIVE_LOOKUP=on, and fetch LIVE_ADDRESS for real, two lookups of the hour's six) and an output folder as the first argument.
 
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -28,6 +29,8 @@ const t = JSON.parse(readFileSync(join(here, '..', 'src', 'api', 'mock', 'fixtur
 const mock = process.env.MOCK === '1';
 const base = (process.env.BASE_URL ?? 'http://localhost:5173').replace(/\/$/, '');
 const outDir = resolve(process.argv[2] ?? join(here, '..', '..', 'docs', 'screenshots'));
+const live = process.env.LIVE === '1';
+const LIVE_ADDRESS = process.env.LIVE_ADDRESS ?? 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
 const only = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 
 const browserPath = [
@@ -66,7 +69,7 @@ const typeAmount = (amount) => `(() => {
 // event) and press a button, so the same steps work on the real service and on the mock.
 const drive = (steps) => `(async () => {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const until = async (find) => { for (let i = 0; i < 80; i++) { const el = find(); if (el) return el; await wait(100); } throw new Error('not found: ' + find); };
+  const until = async (find, tries = 80) => { for (let i = 0; i < tries; i++) { const el = find(); if (el) return el; await wait(100); } throw new Error('not found: ' + find); };
   const button = (name) => until(() => [...document.querySelectorAll('button')].find((b) => (b.getAttribute('aria-label') ?? b.textContent).trim().startsWith(name)));
   const fill = async (label, value) => {
     const field = await until(() => document.querySelector('[role="dialog"]')?.querySelector('label[for]') && [...document.querySelectorAll('[role="dialog"] label')].find((l) => l.textContent === label)?.control);
@@ -116,6 +119,20 @@ const replay20 = drive(`
   (await button('20 a second')).click();
   (await button('Play')).click();
 `);
+// S-09: the live lookup. A shot starts from an address that has not been fetched (the service forgets it first), or waits until
+// the lookup that an earlier shot started has finished.
+async function forgetFetched() {
+  await fetch(`${base}/api/addresses/${LIVE_ADDRESS}`, { method: 'DELETE' }).catch(() => {});
+}
+async function waitFetched() {
+  for (let i = 0; i < 300; i++) {
+    const answer = await fetch(`${base}/api/lookup`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: LIVE_ADDRESS }) }).catch(() => null);
+    if (answer?.status === 200) return;
+    await sleep(500);
+  }
+  throw new Error('the live lookup did not finish');
+}
+const fetchPublicHistory = drive(`(await button("Fetch this address's public history")).click();`);
 const DESKTOP = 1280;
 const TABLET = 820;
 const MOBILE = 390;
@@ -229,6 +246,15 @@ function connect(wsUrl) {
   });
 }
 
+const liveShots = [
+  ['live-01-offer-1280', '', q(LIVE_ADDRESS), DESKTOP, false, false, null, 0, forgetFetched],
+  ['live-02-dialog-1280', '', q(LIVE_ADDRESS), DESKTOP, false, false, fetchPublicHistory, 2.5, forgetFetched],
+  ['live-03-overview-1280', '', tl(LIVE_ADDRESS), DESKTOP, true, false, null, 0, waitFetched],
+  ['live-01-offer-390', '', q(LIVE_ADDRESS), MOBILE, false, false, null, 0, forgetFetched],
+  ['live-02-dialog-390', '', q(LIVE_ADDRESS), MOBILE, false, false, fetchPublicHistory, 2.5, forgetFetched],
+  ['live-03-overview-390', '', tl(LIVE_ADDRESS), MOBILE, true, false, null, 0, waitFetched],
+];
+
 async function main() {
   mkdirSync(outDir, { recursive: true });
   const profile = mkdtempSync(join(tmpdir(), 'explorer-shots-'));
@@ -253,8 +279,9 @@ async function main() {
     await send('Page.enable');
     await send('Network.enable');
 
-    for (const [name, extra, hash, width, fullPage, mockOnly, after, settle = 0] of shots) {
+    for (const [name, extra, hash, width, fullPage, mockOnly, after, settle = 0, prepare] of live ? [...shots, ...liveShots] : shots) {
       if ((only && !only.test(name)) || (mockOnly && !mock)) continue;
+      await prepare?.();
       const params = new URLSearchParams(extra);
       if (after === watchTwo || after === watchDialog || after === watchRemoved) await emptyWatchlist();
       if (mock && !params.has('latency')) params.set('latency', '0');

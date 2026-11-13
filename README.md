@@ -125,6 +125,53 @@ and `"off"` when `EXPLORER_ASSISTANT=off`. PyTorch is imported only when an answ
 
 - With the Assistant off or not installed, E12 answers 200 with the template and `skippedWriters` says why.
 
+## Live lookup of any address (optional)
+
+The application works on the snapshot's 28 addresses with no internet connection, and that is how it starts. With the
+live lookup on, an address that is not in the snapshot can be fetched from the public blockchain service and opened like
+any other.
+
+**Switch it on.** Start the back end with the variable set, then reload the page:
+
+```bash
+cd backend
+EXPLORER_LIVE_LOOKUP=on python -m uvicorn app.main:app --port 8000        # macOS; on Windows Command Prompt: set EXPLORER_LIVE_LOOKUP=on first (not run on Windows)
+```
+
+`GET /api/health` and `GET /api/config` then say `liveLookup: true`. Type a valid address that is not in the snapshot: the
+page offers "Fetch this address's public history". A dialog follows the fetch (pages and transactions fetched, with Cancel);
+when it ends the overview opens, marked "Live data, fetched 12 Nov 2026 14:02 UTC", with "Forget this address" beside it.
+With the variable off (the default) every live endpoint (E16 to E20) answers `403 disabled`.
+
+**What it does.**
+
+- It reads the address's most recent confirmed transactions, newest first, 25 to a page, up to 500 by default (50 to 1,000
+  through `maxTx` in the API). Only the address is sent to Blockstream's public API (`blockstream.info/api`); if Blockstream
+  limits the rate, the address goes to mempool.space (`mempool.space/api`) for the next hour instead. No transaction
+  data, no label, no note and nothing about you is sent.
+- The history is cleaned, featured and scored by Assignment 2's frozen models against the address's own earlier
+  transactions, exactly as a snapshot address is (backend/MODIFICATIONS.md, Mod-11). TxGPT has no score for a fetched
+  address. When only the most recent 500 of a longer history are fetched, the oldest of them have little history behind
+  them and are shown unscored; the banner says so. An address with fewer than 10 transactions or 14 days of history
+  shows the not-enough-history state.
+- A fetched address is public blockchain data and is treated exactly like a snapshot address: no owner, no label, the same
+  wording and the same limitation line. It can be put on the watchlist and exported.
+
+**The limits** (`web.live` in `backend/config/settings.json`): at most 6 lookups an hour (the 7th gets `429` with
+`Retry-After`), one at a time, 500 transactions by default and 1,000 at most, and a fetched address stays in the cache for
+7 days. Blockstream itself allows about 700 unauthenticated requests an hour from one IP address; a fetch of 500
+transactions uses about 22. A fetch of 500 transactions takes about 10 to 20 seconds, because requests are paced.
+
+**Where the data is kept.** In `backend/var/live/` (one file per address, git-ignored), beside the watchlist's
+`explorer.db`; with `EXPLORER_DB` set, in a `live` folder next to that file. "Forget this address" (or
+`DELETE /api/addresses/{address}`) removes the file and the address's watchlist entry. A file older than 7 days is
+deleted when the server starts or when the address is asked for.
+
+**If it does not work.** A message that "the public blockchain service did not answer" means this computer could not
+reach Blockstream or mempool.space (no connection, a firewall, or both services limiting the rate). Try again in a
+minute, or use a snapshot address; nothing else in the application needs the connection. The tests never use the network;
+`LIVE_NETWORK=1 python -m pytest -q tests/test_live_api.py -m slow` makes one real request.
+
 ## Run it: two terminals
 
 Terminal 1, the back end (port 8000):
@@ -191,7 +238,7 @@ Environment variables only choose what a machine may do:
 | Variable | Default | Meaning |
 |---|---|---|
 | `EXPLORER_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Origins allowed to call the API directly (comma-separated) |
-| `EXPLORER_LIVE_LOOKUP` | `off` | `on` turns the live address lookup on (not built yet) |
+| `EXPLORER_LIVE_LOOKUP` | `off` | `on` lets the application fetch an address outside the snapshot from the public blockchain service (see "Live lookup of any address") |
 | `EXPLORER_ASSISTANT` | `auto` | `auto` uses the Assistant when its weights and PyTorch are installed (and serves the prepared answers); `off` shows the template text only |
 | `EXPLORER_LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` or `CRITICAL` |
 | `VITE_API_BASE` (front end) | empty | Empty: same origin, through Vite's proxy. Otherwise the back end's address, such as `http://127.0.0.1:8001` |

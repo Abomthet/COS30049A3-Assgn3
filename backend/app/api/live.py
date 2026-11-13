@@ -84,7 +84,8 @@ def lookup_events(lookup_id: str, live: Live) -> StreamingResponse:
     then `done` or `failed`. A cancelled lookup ends with a `status` event whose `status` is `cancelled`. A client that
     connects late is replayed every event so far, so it never misses the end."""
     job = live.job(lookup_id)
-    headers: dict[str, Any] = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    # Not plain `no-cache`: that is the mark of snapshot data, which the ETag middleware holds back until the body is complete.
+    headers: dict[str, Any] = {"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
     return StreamingResponse(stream(live, job), media_type="text/event-stream", headers=headers)
 
 
