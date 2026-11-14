@@ -117,14 +117,14 @@ P=~/miniconda3/envs/cos30049-a3/bin/python
 
 # back end
 cd backend && $P -m uvicorn app.main:app --port 8000      # ready ~1 s; /docs lists every endpoint
-$P -m pytest -q                      # full suite, 601 tests, ~2 min, warnings are errors
-$P -m pytest -q -m "not slow"        # quick run, ~430 tests, ~28 s (inner loop only)
+$P -m pytest -q                      # full suite, 724 passed + 2 skipped, warnings are errors
+$P -m pytest -q -m "not slow"        # quick run (inner loop only)
 PARITY_FULL=1 $P -m pytest -q tests/test_whatif_parity.py   # 1,517 amounts, ~8 min (optional)
 cd .. && $P tools/vendor_a2.py --check                       # A2 files unchanged (hashes)
 
 # front end (second terminal; Vite proxies /api to 127.0.0.1:8000)
 cd frontend && npm ci && npm run dev  # http://localhost:5173
-npm test                              # Vitest, 445 tests, 0 skipped
+npm test                              # Vitest, 650 tests, 0 skipped
 npm run typecheck && npm run build    # must be clean, no warnings
 VITE_API_MODE=mock npm run dev        # runs on the recorded fixtures, no back end
 npm run fixtures                      # re-record fixtures from a running back end
@@ -213,6 +213,9 @@ planning, gates and review, and the cheapest on mechanical work.
 | D-W-11 | The limitation line is on every CSV row, not only flagged ones |
 | D-W-12 | E6/E10 `sort=amount` orders by absolute amount |
 | D-W-13 | BTC amounts in server text are written to 8 decimal places (web-layer rewrite; A2 untouched) |
+| D-W-14 | Model by kind of work: Opus/Fable for planning, gates and review; Sonnet medium for features; Haiku for mechanical work |
+| D-W-15 | CR-08 approved: live lookup (S-09) is wave B2, off by default (`EXPLORER_LIVE_LOOKUP=off`) |
+| D-W-16 | Code cooks work in their own git worktree and branch; the lead merges and verifies |
 
 ## 8. What to do next, in order (on resuming)
 
