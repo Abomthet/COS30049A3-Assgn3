@@ -1,0 +1,99 @@
+\section{Real-time behaviour, responsiveness and performance}
+\label{sec:realtime}
+
+The rubric's full points here read ``smooth, real-time updates with immediate responsiveness;
+elements and visualisations update dynamically without delay; maintains performance across
+devices''. The High Distinction list adds ``live data feeds or auto-refreshing charts''.
+
+\subsection{What updates by itself}
+
+{\small
+\begin{longtable}{@{}L{0.6cm}L{2.5cm}L{3.3cm}L{3.9cm}L{1.9cm}L{1.2cm}@{}}
+\toprule
+\textbf{No.} & \textbf{Behaviour} & \textbf{Trigger and what changes} & \textbf{How} & \textbf{Target} & \textbf{Tier} \\
+\midrule
+\endhead
+R1 & Live what-if & A form value changes: the verdict card, chart G3, the model table and the marker on G5 & Wait 250 ms after the last change; cancel the request in flight; POST E8 & Under 1 s after the last keystroke & \must \\
+R2 & Response curve & The direction or time changes: chart G5's line & POST E9, one batched feature build & Under 2 s & \must \\
+R3 & Filters & A chip, date or sort changes: chart G2, the table and the count line & GET E6; the old rows stay until the new ones arrive & Under 0.5 s & \must \\
+R4 & Service status & Every 15 s, and at once when a request fails: the status dot. When the service returns, failed views reload by themselves & Poll E1 & Recovery with no click & \must \\
+R5 & Method switch & The method menu changes: tiles, chart colours, lists & GET with \code{method=} & Under 0.5 s & \should{} S-01 \\
+R6 & Replay & Play: charts G1 and G2 grow one transaction at a time, the tiles count up, flags appear as they happened & A timer over rows already loaded; 1, 5 or 20 transactions a second; pause, step, scrub & 20 a second without a dropped frame & \should{} S-06 \\
+R7 & Assistant status & An explanation is requested: a progress line, then the answer or the template & One POST E12 with a long time limit; cancel & Feedback at once; answer in about 10 s & \should{} S-05 \\
+R8 & Lookup progress & A live lookup runs: progress bar and counts & Server-sent events from E18; polling E17 every 2 s if the stream fails & An event per page fetched & \should{} S-09 \\
+R9 & Watch mode & A new confirmed transaction of a fetched address: it appears, scored & Periodic fetch of the newest page & Within a minute of confirmation & \could{} C-06 \\
+\bottomrule
+\end{longtable}
+}
+
+\textbf{The replay is honest about what it is.} Each transaction is shown with the score it has in
+the snapshot. That score never used later transactions (the time-safety rule), so replaying history
+forward shows exactly what the Explorer would have said on the day. The view is labelled ``Replay of
+recorded history'' and never ``live''.
+
+\textbf{Responsiveness rules that apply everywhere.}
+\begin{itemize}
+  \item Something on screen changes within 100 ms of any input.
+  \item A view never goes blank while it refreshes: the previous data stays, marked as updating.
+  \item A slow request says so after 5 seconds and ends in the timeout state after 10 (90 for the
+    Assistant).
+  \item A request the user has moved away from is cancelled, so an old answer can never overwrite
+    a newer one.
+\end{itemize}
+
+\subsection{Budgets}
+\label{sec:budgets}
+
+A budget is the most a step may take on the PC or the Mac. The third column is what Assignment 2's
+code already does, measured on the Mac; the web layer adds parsing and serialising on top.
+
+{\small
+\begin{longtable}{@{}L{5.6cm}L{2.9cm}L{3.5cm}L{2.1cm}@{}}
+\toprule
+\textbf{Measure} & \textbf{Budget} & \textbf{Measured so far} & \textbf{Checked by} \\
+\midrule
+\endhead
+Back end ready after the start command & 10 s & 5.6 s (import 4.7, load 0.9) & start-up test \\
+E5 timeline, server time & 150 ms; 20 ms from the cache & 40 to 100 ms to score an address & \code{measure.py} \\
+E6 one page of 200 rows & 150 ms & -- & \code{measure.py} \\
+E7 one transaction & 150 ms & -- & \code{measure.py} \\
+E8 what-if & 700 ms & 400 ms & \code{measure.py} \\
+E9 curve of 41 amounts & 1.5 s & 180 ms, eight methods & \code{measure.py} \\
+Timeline body & 60 kB\est{} & -- & API test \\
+One transaction's body & 6 kB\est{} & about 2.8 kB a transaction (1.96 MB for 700) & API test \\
+First view usable after opening the page & 2 s & -- & browser script \\
+Script for the first view, compressed & 250 kB\est{} & -- & build report \\
+First chart after opening V2, Plotly included & 1.5 s & -- & browser script \\
+A chart redraw after new data & 300 ms & -- & browser script \\
+Zoom and pan on 1,000 points & no visible stutter & -- & by hand, three devices \\
+50,000 synthetic points with WebGL & usable & -- & browser script \\
+\bottomrule
+\end{longtable}
+}
+
+A budget that is missed at MS2 is either fixed or changed with a reason in \fp{CHANGELOG.md}; the
+report quotes the measured table, not this one.
+
+\subsection{Devices and browsers}
+\label{sec:devices}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.2cm}Y L{3.6cm}@{}}
+\toprule
+\textbf{Size} & \textbf{Checked on} & \textbf{How} \\
+\midrule
+Phone, 390 × 844 & Chrome's device mode; one real phone & Screenshot script; by hand \\
+Tablet, 820 × 1180 & Chrome's device mode; a real tablet if one is at hand & Screenshot script; by hand \\
+Desktop, 1280 × 800 and 1920 × 1080 & Chrome, Edge and Firefox on Windows; Chrome and Safari on macOS & Journeys by hand; S-11 in Chromium, Firefox and WebKit \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The video shows the three sizes with the same journey, as the brief requires
+(Section~\ref{sec:video}).
+
+\begin{done}
+R1 to R4 work on all three sizes at MS2. The measured table exists and every Must budget is met or
+has a recorded reason. The video shows the what-if updating while a value is typed.
+\end{done}

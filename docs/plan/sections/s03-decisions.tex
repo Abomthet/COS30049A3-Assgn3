@@ -1,0 +1,167 @@
+\section{Decisions to confirm}
+\label{sec:decisions}
+
+Each box gives the recommendation, the reason and the alternative that was weighed. The team
+delegated Assignment 2's open decisions to Cao Tri Tran on 23 October; no such delegation is
+recorded for Assignment 3, so these are proposals until the Week 9 meeting records them. D-A3-2 to
+D-A3-4 are rechecked when the Week 9--12 slides are released.
+
+\begin{decision}{D-A3-1: a new, private repository with Assignment 2's runtime copied in}
+\textbf{Recommendation.} \code{COS30049A3} holds \fp{backend/} and \fp{frontend/}. A script copies
+the modules, models and snapshot tables that prediction needs out of the Assignment 2 repository at
+the submitted commit, and records that commit and a SHA-256 for every file
+(Section~\ref{sec:vendoring}). The repository stays private until marks are released.
+
+\textbf{Why.} The brief wants the model code inside the back end's zip. The Assignment 2 repository
+is over 200 MB with training code, and it is under marking, so it should not change. The saved
+models are pickles that name their classes by module path, so the package must still be called
+\code{explorer}; copying whole modules unchanged keeps them loadable.
+
+\textbf{Alternative.} Adding \fp{backend/} and \fp{frontend/} to the Assignment 2 repository:
+simpler imports, but it edits a submitted repository and ships data no web feature uses.
+\end{decision}
+
+\begin{decision}{D-A3-2: the front end grows from the Assignment 1 prototype}
+\textbf{Recommendation.} Keep React, TypeScript, Vite, the prototype's own design system, its hash
+router and its tests, and add to them.
+
+\textbf{Why.} Assignment 1 promised that the screens would move to real data without being
+rewritten, and the prototype already has the states, the validation, the responsive layouts and the
+accessibility work that two usability rows of the rubric ask for.
+
+\textbf{Alternative.} Starting again with create-react-app and JavaScript as in Workshop 8.
+TypeScript is a superset of JavaScript and the README's commands are the same (\code{npm install},
+\code{npm run dev}); create-react-app has been deprecated by the React team since February 2025.
+The tutor is asked to confirm (Appendix~\ref{app:cr}).
+\end{decision}
+
+\begin{decision}{D-A3-3: Plotly.js for every chart}
+\textbf{Recommendation.} One wrapper component draws every chart with Plotly.js. The library is
+loaded only when a chart first appears and is built from the trace types the application uses.
+
+\textbf{Why.} Assignment 1's WBS dictionary named Plotly.js. The brief's High Distinction line
+names D3.js or Plotly.js. Zoom, pan, a range slider, hover tooltips, legend toggles and PNG export
+are built in, so the effort goes into what the charts say.
+
+\textbf{Alternative.} D3.js gives full control but needs each interaction written by hand;
+Chart.js is not on the High Distinction line.
+\end{decision}
+
+\begin{decision}{D-A3-4: Axios for every request}
+\textbf{Recommendation.} \fp{src/api/http.ts} becomes one Axios instance with a base address, a
+time limit, cancellation, and an interceptor that turns every failure into the \code{ApiError} the
+screens already handle.
+
+\textbf{Why.} Assignment 1's dictionary says ``call the API with Axios'' and the brief's report
+outline gives Axios as its example. Cancellation and time limits are what the live what-if needs.
+\end{decision}
+
+\begin{decision}{D-A3-5: Assignment 1's API is kept and extended; validation errors answer 400}
+\textbf{Recommendation.} The five planned endpoints keep their paths, methods and bodies. New
+endpoints sit under the same \code{/api} prefix. A request that fails validation answers 400 with
+the \code{invalid} body.
+
+\textbf{Why.} FastAPI answers 422 for a failed validation by default, but Assignment 1 gave 422
+one meaning: the address or transaction has too little history to score. Keeping the two apart lets
+the front end map each status to one state.
+\end{decision}
+
+\begin{decision}{D-A3-6: the baseline decides the flags; other methods are a view}
+\textbf{Recommendation.} The robust-z baseline stays the Explorer's method, as Assignment 2
+selected it. A selector (S-01) lets the user see the flags of any of the nine methods; it always
+starts on the baseline and says which method is showing.
+
+\textbf{Why.} The models stay frozen (W-06), yet all nine reach the interface, which is what
+``AI model integration'' is marked on.
+\end{decision}
+
+\begin{decision}{D-A3-7: the Must tier works with no internet}
+\textbf{Recommendation.} Everything in the Must tier reads local files. Its real-time behaviour
+is the what-if, computed by the server on every change. The replay (S-06) also needs no network.
+Only the live lookup (S-09) calls Esplora, behind a setting that is off unless CR-08 is approved.
+
+\textbf{Why.} Assignment 1 risk 15 fires if ``the application needs a live call to run''. A marker
+with no connection, or a rate-limited one, still sees every Must feature.
+\end{decision}
+
+\begin{decision}{D-A3-8: no accounts; preferences in the browser, the watchlist in SQLite}
+\textbf{Recommendation.} Theme, units, recent addresses and the last filters live in the
+browser's local storage. The watchlist lives on the server in one SQLite file, written through
+Python's standard library. The snapshot stays read-only files.
+
+\textbf{Why.} The brief asks for no login, and the Week 8 lecture says a data layer is not
+compulsory. A small store still gives the API its PUT and DELETE and gives the interface something
+personal to remember.
+\end{decision}
+
+\begin{decision}{D-A3-9: the Assistant is optional, guarded and never streamed}
+\textbf{Recommendation.} The template explanation is always shown. The Assistant writes only when
+the user asks, its answer is shown only after every guardrail check has passed, and a failed answer
+is replaced by the template with the reason. Its weights are an optional download, checked by
+SHA-256. Answers are cached, and the answers for the snapshot's flagged transactions are prepared in
+advance.
+
+\textbf{Why.} Assignment 2's plan made the Assistant optional and off by default; its report says
+the template is authoritative. Showing text token by token would display words the guardrail has not
+yet checked.
+\end{decision}
+
+\begin{decision}{D-A3-10: one pinned environment per tier}
+\textbf{Recommendation.} \code{environment.yml} creates \code{cos30049-a3} with Python 3.11 and
+Assignment 2's exact versions of the libraries the saved models were written with: numpy 2.2.6,
+pandas 2.2.3, scikit-learn 1.6.1, scipy 1.17.1 and joblib 1.4.2. FastAPI, Uvicorn, Pydantic, httpx
+and pytest are pinned to the versions installed on the first day. \code{requirements.txt} is the
+pip route. PyTorch 2.7.1 and \code{tokenizers} are only in \code{requirements-assistant.txt}. The
+front end needs Node.js 22 or later and installs from \code{package-lock.json}.
+
+\textbf{Why.} A different scikit-learn prints a version warning for every model it loads, and the
+rubric's execution line says ``without errors or warnings''. PyTorch is a large download that only
+the optional Assistant needs.
+\end{decision}
+
+\begin{decision}{D-A3-11: two terminals, one origin}
+\textbf{Recommendation.} The README starts Uvicorn on port 8000 and Vite on port 5173. Vite passes
+every \code{/api} request to the back end, so the browser sees one origin. The back end also allows
+the front end's address by CORS, for anyone who points the client straight at port 8000.
+
+\textbf{Why.} It is the layout the unit teaches (a React server and a FastAPI server), and the
+proxy removes the most common first-run failure. Serving the built front end from FastAPI with one
+command is Could item C-05.
+\end{decision}
+
+\subsection{Change requests}
+
+Assignment 1's change control (its §8.5) needs a change request to add an optional item from the
+scope exhibit or to change a must-have item, approved by all four members. Two are raised; their
+full text is in Appendix~\ref{app:cr}.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{1.4cm}Y L{3.6cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Proposal} & \textbf{If it is rejected} \\
+\midrule
+CR-07 & Adopt the scope of Section~\ref{sec:scope} as the next scope baseline for WBS 1.4: activate Assignment 1's optional items (a third chart type, zoom and filtering, CSV export), and add the what-if lab, the models page, the method selector, the watchlist, the Assistant and the replay & The Must tier shrinks to Assignment 1's minimum viable demonstration and two charts: the brief's pass level, not its High Distinction list \\
+CR-08 & Allow a live lookup of any valid Bitcoin address as a Should item behind a setting. This reverses two Assignment 1 statements: ``no live blockchain calls from the application'' and the exclusion of addresses outside the sample & S-09 and C-06 are dropped. Nothing else depends on them \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Questions for the tutor}
+\label{sec:tutorq}
+
+\begin{enumerate}
+  \item Does Assignment 2's arrangement for generative AI (allowed, with a separate declaration)
+    apply to Assignment 3, whose brief allows AI for learning, idea generation and debugging and
+    asks for all use to be acknowledged in the report?
+  \item Is React with TypeScript and Vite acceptable, as in the marked Assignment 1 prototype, in
+    place of create-react-app?
+  \item Is the due time Sunday 6 December 2026, 23:59 GMT+7, and what are Canvas's size limits
+    for the zip and the video?
+  \item The models are about 30 MB and go in the zip. The optional 152M Assistant is 610 MB. May
+    the README link to it with a SHA-256 instead?
+  \item Is running locally from the README the expected demonstration, or should the application
+    also be hosted?
+  \item May the full API reference sit in the appendix, with at least four endpoints documented
+    in the 8 pages?
+\end{enumerate}

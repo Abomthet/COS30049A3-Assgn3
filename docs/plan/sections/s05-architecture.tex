@@ -1,0 +1,273 @@
+\section{Architecture}
+\label{sec:architecture}
+
+\subsection{The three layers}
+
+The Week 8 lecture's layers map directly: the React application is the presentation layer, the
+FastAPI service is the application layer, and the data layer is read-only files plus one small
+SQLite file. Figure~\ref{fig:arch} is also the first diagram of the report.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\small,
+  box/.style={draw=ink, rounded corners=2pt, align=center, minimum width=3.7cm, minimum height=9mm, inner sep=3pt},
+  fe/.style={box, fill=accentsoft},
+  be/.style={box, fill=tealsoft},
+  ml/.style={box, fill=violetsoft},
+  st/.style={box, fill=greysoft},
+  arr/.style={-{Stealth[length=2.2mm]}, thick, draw=ink},
+  darr/.style={{Stealth[length=2.2mm]}-{Stealth[length=2.2mm]}, thick, draw=ink}]
+  % front end
+  \node[fe] (views)  at (0, 0)    {Views V1--V8\\ \footnotesize screens, forms, feedback states};
+  \node[fe] (charts) at (0,-1.5)  {Charts G1--G9\\ \footnotesize one Plotly.js wrapper};
+  \node[fe] (valid)  at (0,-3.0)  {Validation\\ \footnotesize address checksum, what-if rules};
+  \node[fe] (client) at (0,-4.5)  {API client\\ \footnotesize Axios, \texttt{ApiError}, request cache};
+  % back end
+  \node[be] (routers)  at (6.2, 0)   {Routers\\ \footnotesize \texttt{/api}: E1--E22};
+  \node[be] (schemas)  at (6.2,-1.5) {Schemas\\ \footnotesize Pydantic: requests, responses, errors};
+  \node[be] (services) at (6.2,-3.0) {Services\\ \footnotesize explorer, what-if, export, assistant, live};
+  \node[be] (core)     at (6.2,-4.5) {Core\\ \footnotesize settings, error handlers, logging};
+  % model layer and stores
+  \node[ml] (explorer) at (12.4, 0)   {\texttt{explorer} package (A2)\\ \footnotesize \texttt{Predictor}, features, methods, explain};
+  \node[st] (files)    at (12.4,-1.5) {Models and snapshot tables\\ \footnotesize \texttt{.joblib}, \texttt{.csv}, \texttt{settings.json}};
+  \node[st] (db)       at (12.4,-3.0) {SQLite file\\ \footnotesize watchlist, live cache index};
+  \node[st, dashed] (opt) at (12.4,-4.5) {Optional\\ \footnotesize Assistant weights; Esplora API};
+  % groups
+  \begin{scope}[on background layer]
+    \node[draw=accent, rounded corners=4pt, inner sep=9pt, fit=(views)(client), label={[font=\small\bfseries, text=accent]above:React front end (browser)}] (fegrp) {};
+    \node[draw=teal, rounded corners=4pt, inner sep=9pt, fit=(routers)(core), label={[font=\small\bfseries, text=teal]above:FastAPI back end (Uvicorn)}] (begrp) {};
+    \node[draw=violet, rounded corners=4pt, inner sep=9pt, fit=(explorer)(opt), label={[font=\small\bfseries, text=violet]above:Model and data}] (mlgrp) {};
+  \end{scope}
+  % arrows
+  \draw[arr] (views) -- (charts);
+  \draw[arr] (valid) -- (client);
+  \draw[darr] (client.east) -- node[above, font=\footnotesize, align=center] {HTTP and JSON} node[below, font=\footnotesize, align=center] {GET POST PUT DELETE} (core.west |- client.east);
+  \draw[arr] (routers) -- (schemas);
+  \draw[arr] (schemas) -- (services);
+  \draw[arr] (services.east) -- (explorer.west);
+  \draw[arr] (explorer) -- (files);
+  \draw[arr] (services.east) -- (db.west);
+  \draw[arr, dashed] (services.east) -- (opt.west);
+\end{tikzpicture}}
+\caption{The layers. Solid arrows are calls made in the Must tier. Dashed parts are optional: the
+application runs without them and says what is missing.}
+\label{fig:arch}
+\end{figure}
+
+\textbf{Rules of the layering.}
+\begin{itemize}
+  \item A router only parses the request, calls one service function and returns its result. It
+    never touches pandas or a model.
+  \item A service never knows about HTTP. It raises the package's own exceptions
+    (\code{Unsupported}, \code{InsufficientHistory}, \code{ValueError}); the core layer turns them
+    into responses in one place.
+  \item The \code{explorer} package is Assignment 2's code, copied unchanged. Every difference is
+    in a service around it and is listed in Section~\ref{sec:mods}.
+  \item A view never calls Axios. It calls a typed function of the API client and renders one of
+    the request's four states: idle, loading, success, error.
+  \item A view never draws with Plotly directly. It passes data to a chart component, which uses
+    the one wrapper.
+\end{itemize}
+
+\subsection{One request, end to end}
+\label{sec:walkthrough}
+
+The what-if is the path the report and the video explain, because it crosses every layer.
+
+\begin{enumerate}
+  \item The user changes the amount in view V4. The form's rules run on the keystroke; an invalid
+    value shows its message under the field and nothing is sent.
+  \item 250 ms after the last change, the client cancels any request still in flight and sends
+    \code{POST /api/addresses/{address}/what-if} with \code{amountBtc}, \code{direction} and
+    \code{time}.
+  \item FastAPI parses the body into a Pydantic model. A wrong type, an unknown field or a value
+    out of range answers 400 with the \code{invalid} body and the failing field.
+  \item The what-if service checks the address (404), converts the amount to whole satoshis and
+    calls \code{Predictor.score_what_if}.
+  \item \emph{Preprocessing.} The package builds the hypothetical row, giving it the median shape of
+    the earlier transactions, appends it to the history strictly before its time, and computes the
+    features F1 to F4 and their robust z-scores against the address's own comparison windows.
+  \item \emph{Prediction.} The clipped z-scores and the direction go to each saved model; each
+    returns a score, compared with that model's own threshold.
+  \item \emph{Postprocessing.} The result becomes a transaction detail: values in BTC, the role of
+    each feature, the comparison basis, every model's score and flag, the template explanation and
+    the limitation line.
+  \item The response model serialises it. The client resolves; the verdict card, the feature chart
+    and the model table re-render, and the curve request (E9) follows.
+\end{enumerate}
+
+\subsection{Technology choices}
+\label{sec:stack}
+
+Versions are pinned on the first day and recorded in \code{environment.yml} and
+\code{package-lock.json}; the report quotes them from those files.
+
+{\small
+\begin{longtable}{@{}L{2.5cm}L{3.3cm}L{8.2cm}@{}}
+\toprule
+\textbf{Part} & \textbf{Choice} & \textbf{Why, and what was not chosen} \\
+\midrule
+\endhead
+Interface & React with TypeScript & Required by the brief; TypeScript carries the API contract into every screen (D-A3-2) \\
+Build tool & Vite & Starts in seconds, proxies \code{/api}; create-react-app is deprecated \\
+Charts & Plotly.js & D-A3-3. Not D3.js (every interaction by hand) or Chart.js (not on the High Distinction line) \\
+Requests & Axios & D-A3-4. Cancellation and time limits for the live what-if \\
+Routing & The prototype's hash router & Every view and state has a link; no server rewrite rules. Not React Router: 60 lines already do the job and are tested \\
+Server state & The prototype's \code{useRequest} hook, extended with cancellation and polling & One small hook the team can explain. Not a query library: one more dependency for what three additions provide \\
+Styling & The prototype's CSS with design tokens & Already responsive, themed and contrast-checked. Not a component kit: restyling every screen would gain nothing the rubric marks \\
+Server & FastAPI on Uvicorn & Required by the brief; typed routes; generated OpenAPI documentation \\
+Validation & Pydantic models & One definition gives parsing, validation, the response shape and the documentation \\
+Model layer & Assignment 2's \code{explorer} package, pandas, scikit-learn, joblib & The brief: integrate the Assignment 2 model. Versions equal to Assignment 2's (D-A3-10) \\
+Storage & CSV and joblib files; SQLite through the standard library & D-A3-8. Not an ORM: three small tables \\
+Back-end tests & pytest with FastAPI's test client & Assignment 2's tool; requests run in-process, no server needed \\
+Front-end tests & Vitest and Testing Library & The prototype's 66 tests keep running \\
+Browser tests & Playwright (S-11) & Three widths, real browsers, screenshots for the report \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{Repository layout}
+\label{sec:layout}
+
+\begin{lstlisting}
+COS30049A3/
+  README.md                    set-up, run, configuration, tests, troubleshooting
+  LICENSES.md  CHANGELOG.md
+  backend/
+    environment.yml  requirements.txt  requirements-assistant.txt
+    app/
+      main.py                  create_app(): lifespan, middleware, handlers, routers
+      api/                     one router per resource
+        system.py              E1 health, E2 config
+        addresses.py           E3 list, E4 lookup, E5 timeline, E6 transactions, E20 delete
+        transactions.py        E7 detail
+        whatif.py              E8 single, E9 curve
+        exports.py             E10
+        methods.py             E11
+        explanations.py        E12
+        watchlist.py           E13-E15
+        live.py                E16-E19
+      schemas/                 Pydantic models: common, addresses, transactions, whatif, errors ...
+      services/
+        store.py               AddressStore: snapshot (and live) data behind one interface
+        explorer_service.py    timeline, rows, detail; the per-address cache; method override
+        whatif_service.py      single and batched what-if
+        export_service.py      CSV and JSON
+        assistant_service.py   lazy load, one answer at a time, cache
+        watchlist_repo.py      SQLite
+        live_service.py        jobs, Esplora fetch, progress events
+      core/
+        config.py              environment variables and settings.json -> web
+        errors.py              exception classes and the handlers that build the error body
+        validation.py          Bitcoin address and transaction-ID checks
+        logging.py
+    explorer/  lm/             Assignment 2's runtime modules, copied unchanged (A2_VENDOR.json)
+    config/settings.json       Assignment 2's settings plus the "web" block
+    models/                    the saved methods (about 30 MB)
+    data/processed/esplora/    features.csv, transactions.csv, scores.csv, txgpt_scores.csv, manifest.json
+    var/                       explorer.db, live cache, logs (git-ignored, created at start)
+    tests/                     unit, API, parity, wording, performance smoke
+    MODIFICATIONS.md           every change made for the web, with its test
+  frontend/
+    package.json  package-lock.json  vite.config.ts  tsconfig.json  index.html
+    src/
+      api/                     http.ts (Axios), endpoints.ts, types.ts, mock/ (tests only)
+      views/                   V1-V8, one folder each
+      charts/                  PlotlyChart.tsx (the wrapper) and G1-G9
+      components/              buttons, badges, table, modal, toast, tabs, filter bar, fields ...
+      hooks/                   useRequest, useDebounced, usePolling, useEventSource, usePreferences
+      lib/                     address.ts, dates.ts, format.ts, router.ts, validation/
+      styles/
+    tests/                     unit, component, journeys
+    e2e/                       Playwright (S-11)
+  tools/
+    vendor_a2.py               copies the runtime from the Assignment 2 repository, with hashes
+    package.py                 builds the zip from a git tag, with SHA256SUMS.txt
+    measure.py                 the performance table (S-12)
+  docs/
+    plan/  A3_delivery_plan.pdf   this plan
+    brief/                     the brief (not in the zip)
+    AI_USE_LOG.md  TEST_LOG.md  change-log.md  usability/
+  report/                      the report's LaTeX (not in the zip)
+\end{lstlisting}
+
+\subsection{The address store}
+\label{sec:store}
+
+Services read addresses through one interface, so the snapshot and a fetched address look the same
+to every endpoint.
+
+\begin{itemize}
+  \item \code{AddressStore.get(address)} returns the address's features, transactions and scores
+    and its \code{source}: \code{snapshot} or \code{live}. It raises \code{Unsupported} when the
+    address is in neither.
+  \item The snapshot store wraps the \code{Predictor}'s three tables. It is filled once at start
+    and never changes.
+  \item The live store (S-09) adds an address after a lookup has fetched, cleaned, featured and
+    scored its history. It is a folder of cached tables under \fp{var/live/}, named by the SHA-256
+    of the address so that no user text reaches a file path.
+  \item Every response that shows data carries \code{source} and its date, so the interface can
+    label live data as live.
+\end{itemize}
+
+\subsection{Configuration}
+\label{sec:config}
+
+No value is typed into code. Numbers the web tier needs go into a new \code{web} block of
+\fp{config/settings.json}; the front end reads them from E2, so the two tiers cannot disagree.
+
+\begin{lstlisting}[style=json]
+"web": {
+  "whatIf":   { "minAmountBtc": 0.00000001, "maxAmountBtc": 21000000, "maxGapYears": 5,
+                "curvePoints": 41, "curveMaxPoints": 61, "debounceMs": 250 },
+  "lists":    { "pageSize": 50, "maxPageSize": 200 },
+  "requests": { "timeoutMs": 10000, "assistantTimeoutMs": 90000, "healthPollSeconds": 15 },
+  "charts":   { "webglMinPoints": 1000 },
+  "watchlist":{ "maxEntries": 200, "maxLabelChars": 40, "maxNoteChars": 500 },
+  "live":     { "defaultMaxTx": 500, "maxTxLimit": 1000, "lookupsPerHour": 6, "cacheDays": 7 },
+  "replay":   { "speeds": [1, 5, 20] },
+  "limits":   { "maxBodyBytes": 10240, "maxAddressChars": 100 }
+}
+\end{lstlisting}
+
+Values here are starting points\est{}; a change is logged in \fp{CHANGELOG.md} as in Assignment 2.
+Environment variables only choose what a machine may do:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{4.6cm}L{4.2cm}Y@{}}
+\toprule
+\textbf{Variable} & \textbf{Default} & \textbf{Meaning} \\
+\midrule
+\code{EXPLORER_CORS_ORIGINS} & \code{http://localhost:5173}, \code{http://127.0.0.1:5173} & Origins allowed to call the API directly \\
+\code{EXPLORER_LIVE_LOOKUP} & \code{off} & Turns S-09 on; needs CR-08 \\
+\code{EXPLORER_ASSISTANT} & \code{auto} & \code{auto}: on when the weights are present; \code{off}: template only \\
+\code{EXPLORER_LOG_LEVEL} & \code{INFO} & Log detail \\
+\code{VITE_API_BASE} (front end) & empty & Empty: same origin through Vite's proxy; else the back end's address \\
+\code{VITE_API_MODE} (front end) & \code{http} & \code{mock} runs the screens on the in-browser mock, for tests \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Ways to run it}
+\label{sec:runmodes}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.8cm}Y L{1.6cm}@{}}
+\toprule
+\textbf{Mode} & \textbf{How} & \textbf{Tier} \\
+\midrule
+Development and marking & Terminal 1: \code{uvicorn app.main:app --port 8000} in \fp{backend/}. Terminal 2: \code{npm run dev} in \fp{frontend/}, then open \code{http://localhost:5173}. The API's documentation is at \code{http://localhost:8000/docs} & \must \\
+Tests & \code{python -m pytest -q} in \fp{backend/}; \code{npm test} in \fp{frontend/}. Neither needs the other tier running & \must \\
+One command & \code{npm run build}, then Uvicorn serves \fp{frontend/dist} at \code{/}; or \code{docker compose up} & \could{} (C-05) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{done}
+A fresh clone starts both tiers with the README's commands in under 15 minutes including installs,
+the back end reports ready within 10 seconds of starting\est{} (5.6 s measured for import and load
+on the Mac), and the browser console and both terminals show no error or warning.
+\end{done}

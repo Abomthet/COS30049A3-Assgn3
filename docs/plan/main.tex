@@ -1,0 +1,205 @@
+% COS30049 Assignment 3 -- delivery plan (not the report).
+% Group HCMC_COS30049.1_4. Compile with pdfLaTeX three times in this folder:
+%   pdflatex main && pdflatex main && pdflatex main
+\documentclass[a4paper,11pt]{article}
+
+% ---------------------------------------------------------------- page and fonts
+\usepackage[margin=2.3cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{parskip}
+\setlength{\emergencystretch}{3em} % lets lines with long monospace commands break cleanly
+\DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}}
+\DeclareUnicodeCharacter{2265}{\ensuremath{\geq}}
+\DeclareUnicodeCharacter{2264}{\ensuremath{\leq}}
+\DeclareUnicodeCharacter{00D7}{\ensuremath{\times}}
+\DeclareUnicodeCharacter{2212}{\ensuremath{-}}
+\DeclareUnicodeCharacter{2248}{\ensuremath{\approx}}
+\DeclareUnicodeCharacter{00F7}{\ensuremath{\div}}
+\DeclareUnicodeCharacter{00B1}{\ensuremath{\pm}}
+
+% ---------------------------------------------------------------- tables
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{colortbl}
+\renewcommand{\arraystretch}{1.22}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash\hspace{0pt}}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash\hspace{0pt}}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% ---------------------------------------------------------------- figures and drawing
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf}
+\captionsetup[table]{position=top}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds, shapes.geometric}
+
+% ---------------------------------------------------------------- text
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\setlist{itemsep=2pt, topsep=3pt, parsep=0pt}
+\usepackage{xcolor}
+\usepackage{pifont}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{url}
+\usepackage{listings}
+\usepackage[skins,breakable]{tcolorbox}
+
+\definecolor{ink}{HTML}{1F2933}
+\definecolor{accent}{HTML}{1D4ED8}
+\definecolor{accentsoft}{HTML}{E8EEFC}
+\definecolor{okgreen}{HTML}{15803D}
+\definecolor{oksoft}{HTML}{E7F5EC}
+\definecolor{warn}{HTML}{B45309}
+\definecolor{warnsoft}{HTML}{FDF1E3}
+\definecolor{grey}{HTML}{6B7280}
+\definecolor{greysoft}{HTML}{F3F4F6}
+\definecolor{violet}{HTML}{6D28D9}
+\definecolor{violetsoft}{HTML}{F1EBFD}
+\definecolor{teal}{HTML}{0F766E}
+\definecolor{tealsoft}{HTML}{E6F4F2}
+
+\titleformat{\section}{\Large\bfseries\color{ink}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\large\bfseries\color{ink}}{\thesubsection}{0.7em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{ink}}{\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.4em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.1em}{0.4em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{grey}COS30049 A3 delivery plan}
+\fancyhead[R]{\small\color{grey}HCMC\_COS30049.1\_4}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\setlength{\headheight}{14pt}
+
+% Boxes. Each one has a single job, so a reader can skim by colour.
+\newtcolorbox{decision}[1]{enhanced, breakable, colback=accentsoft, colframe=accent,
+  boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  title={\textbf{Decision:} #1}, fonttitle=\small, coltitle=white}
+\newtcolorbox{done}{enhanced, breakable, colback=oksoft, colframe=okgreen,
+  boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=3pt, bottom=3pt,
+  title={\textbf{Done when}}, fonttitle=\small, coltitle=white}
+\newtcolorbox{feeds}{enhanced, breakable, colback=violetsoft, colframe=violet,
+  boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=3pt, bottom=3pt,
+  title={\textbf{Feeds the report and rubric}}, fonttitle=\small, coltitle=white}
+\newtcolorbox{caution}{enhanced, breakable, colback=warnsoft, colframe=warn,
+  boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=3pt, bottom=3pt,
+  title={\textbf{Watch out}}, fonttitle=\small, coltitle=white}
+\newtcolorbox{team}{enhanced, breakable, colback=tealsoft, colframe=teal,
+  boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=3pt, bottom=3pt,
+  title={\textbf{Needs a teammate}}, fonttitle=\small, coltitle=white}
+\newtcolorbox{summarybox}{enhanced, breakable, colback=greysoft, colframe=ink,
+  boxrule=0.6pt, arc=2pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  before upper={\setlength{\parskip}{0.5em}}}
+
+% Command and JSON blocks. Plain monospace; no shell-escape needed.
+\lstdefinestyle{cmd}{basicstyle=\ttfamily\small, backgroundcolor=\color{greysoft},
+  frame=single, framerule=0pt, xleftmargin=4pt, xrightmargin=4pt, aboveskip=6pt,
+  belowskip=6pt, columns=fullflexible, keepspaces=true, breaklines=true,
+  showstringspaces=false, upquote=true}
+\lstdefinestyle{json}{style=cmd, basicstyle=\ttfamily\footnotesize}
+\lstdefinestyle{py}{style=cmd, language=Python, keywordstyle=\color{accent}\bfseries,
+  commentstyle=\color{grey}\itshape, stringstyle=\color{okgreen}}
+\lstset{style=cmd}
+
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\fp}[1]{\path{#1}} % file paths, breakable at / and .
+\newcommand{\yes}{\textcolor{okgreen}{\ding{51}}}
+\newcommand{\no}{\textcolor{warn}{\ding{55}}}
+\newcommand{\est}{\textsuperscript{\textcolor{grey}{est.}}}
+% Scope tiers, as coloured tags.
+\newcommand{\must}{\textcolor{accent}{\textbf{Must}}}
+\newcommand{\should}{\textcolor{teal}{\textbf{Should}}}
+\newcommand{\could}{\textcolor{violet}{\textbf{Could}}}
+\newcommand{\wont}{\textcolor{grey}{\textbf{Won't}}}
+
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true, linkcolor=accent, urlcolor=accent, citecolor=accent}
+
+\begin{document}
+
+% ---------------------------------------------------------------- title page
+\begin{titlepage}
+\thispagestyle{empty}
+\vspace*{1.2cm}
+{\color{grey}\large COS30049 Computing Technology Innovation Project}\par
+\vspace{0.4cm}
+{\color{ink}\Huge\bfseries Assignment 3 delivery plan}\par
+\vspace{0.3cm}
+{\color{ink}\Large The web application: its scope, its interfaces and the work to build,\\ test, document and submit it between 10 November and 6 December 2026}\par
+\vspace{1.0cm}
+\begin{tabularx}{\textwidth}{@{}L{4.2cm}Y@{}}
+\toprule
+Project & Bitcoin Address Activity Explorer: a React and FastAPI application on Assignment 2's models (an unusual-activity indicator, never a fraud verdict) \\
+Group & HCMC\_COS30049.1\_4 \\
+Members & Cam Dan Bui (105967074); Cao Tri Tran (106214726); Le Quang Anh Hoang (106218605); Minh Khang Nguyen (106216803) \\
+Tutor & Arthur Hoang \\
+Plan prepared & Tuesday 10 November 2026 (teaching Week 9, day 57 of the 84-day unit) \\
+Assignment 3 due & Sunday 6 December 2026, 23:59 GMT+7 (day 83; the brief says ``Sunday, Week 12''); 26 days from this plan \\
+Planned submission & Saturday 5 December 2026, one day early \\
+Weight & 45\% of the unit (45 points); hurdle of 40\% in every assignment \\
+Machines & PC: Windows 11, Intel Core i5-12600K, 16 GB. Mac: Apple M5, 16 GB. No GPU is needed \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.8cm}
+\begin{summarybox}
+\textbf{What this document is.} A working plan and a scope specification for Assignment 3. It
+fixes what the application does and does not do, screen by screen, endpoint by endpoint and chart by
+chart, so that building it later is a matter of following numbered items. It also says how each item
+is checked, who owns it, when it is due and which rubric line it earns.
+
+\textbf{What it is not.} It is not the report and is not submitted. Numbers marked \est{} are
+planning estimates that a measured run replaces. Timings without that mark were measured on the Mac
+on 10 November 2026 with Assignment 2's code at commit \code{aa56a26}.
+
+\textbf{What needs the team first.} Three items block the work and are listed in
+Section~\ref{sec:needsteam}: the tutor's answer on generative AI for this assignment, the approval
+of change requests CR-07 and CR-08, and the split of work packages between the four members.
+\end{summarybox}
+\vfill
+{\small\color{grey}Source documents read for this plan: the Assignment 3 brief and rubric as
+transcribed into \fp{docs/brief/}; the submitted Assignment 1 report (requirements, planned API,
+WBS 1.4, risk register, prototype design); the prototype repository (commit \code{8375cf0}); the
+Assignment 2 repository at commit \code{aa56a26} (\code{explorer/predict.py}, \code{explore.py},
+\code{settings.json}, README, delivery plan, change log); and the Week 8 lecture and workshop. The
+Week 9--12 material was not yet available, so the stack choices in Section~\ref{sec:decisions}
+are checked against it when it is released.}
+\end{titlepage}
+
+\tableofcontents
+\clearpage
+
+\input{sections/s00-summary}
+\input{sections/s01-deliverables}
+\input{sections/s02-start}
+\input{sections/s03-decisions}
+\input{sections/s04-scope}
+\input{sections/s05-architecture}
+\input{sections/s06-api}
+\input{sections/s07-model}
+\input{sections/s08-frontend}
+\input{sections/s09-charts}
+\input{sections/s10-realtime}
+\input{sections/s11-errors}
+\input{sections/s12-quality}
+\input{sections/s13-report}
+\input{sections/s14-schedule}
+\input{sections/s15-risks}
+
+\appendix
+\input{sections/a-change-requests}
+\input{sections/b-json}
+\input{sections/c-commands}
+
+\end{document}

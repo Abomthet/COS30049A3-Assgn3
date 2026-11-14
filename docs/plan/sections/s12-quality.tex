@@ -1,0 +1,151 @@
+\section{Code quality, tests, README and packaging}
+\label{sec:quality}
+
+Five points are for the source code: it runs with no errors or warnings (2), it is commented (1)
+and it is well structured (2).
+
+\subsection{Code rules}
+\label{sec:coderules}
+
+\textbf{Both tiers.}
+\begin{enumerate}
+  \item Every file opens with a comment or docstring that says what it does and which requirement,
+    scope item or endpoint it serves (for example ``E8, M-03'').
+  \item Comments explain why, not what: why validation errors answer 400, why hypothetical rows
+    share one time, why the Assistant's text is never streamed. Comments that restate the code are
+    left out.
+  \item No number or message key is typed into code. Numbers come from \fp{settings.json}; the
+    front end gets them from E2.
+  \item No dead code, no commented-out experiments, no leftover console or print output.
+  \item Names say what a thing is in the product's words: address, transaction, flag, method,
+    what-if.
+\end{enumerate}
+
+\textbf{Back end}, as in Assignment 2: type hints throughout; a docstring with arguments, units,
+return value and errors on every public function; \code{pathlib} for every path; routers thin,
+services free of HTTP, the copied package untouched (Section~\ref{sec:architecture}).
+
+\textbf{Front end.} TypeScript in strict mode and no \code{any}; one component per file with
+typed props; views compose components and never call Axios or Plotly directly; styles use the
+design tokens; ESLint and Prettier run before every commit.
+
+\subsection{Tests}
+\label{sec:tests}
+
+{\small
+\begin{longtable}{@{}L{2.5cm}L{2.2cm}L{9.4cm}@{}}
+\toprule
+\textbf{Level} & \textbf{Tool} & \textbf{What it covers} \\
+\midrule
+\endhead
+Back end, unit & pytest & The address and transaction-ID checkers against the shared vectors; the what-if rules; the batched what-if against single calls; the CSV formula guard; the watchlist store; settings loading \\
+Back end, API & pytest with FastAPI's test client & Every endpoint: its success, and each status in its row of Section~\ref{sec:endpoints}. A wrong type posted to every POST and PUT answers 400, never 422 or 500 \\
+Parity with Assignment 2 & pytest & For all 28 addresses, E5, E6 and E7 together rebuild exactly what \code{Predictor.score_address} returns; each method's flags equal \fp{scores.csv}; E8 equals \code{score_what_if} \\
+Wording & pytest; Vitest & Every string in every response for all 28 addresses and a grid of what-ifs passes \code{check_outputs}; every rendered view and state has no banned word; every flagged item has the limitation line \\
+Integrity & pytest & Every copied file matches its hash in \fp{A2_VENDOR.json}; the installed library versions equal the pins \\
+API documentation & pytest & The OpenAPI schema builds; every route has a response model, a summary and an example; the committed copy of \fp{openapi.json} is current \\
+Front end, unit & Vitest & The address checker and the what-if rules against the shared vectors; formatters; the router; the hooks (debounce, cancellation, polling) \\
+Front end, component & Vitest and Testing Library & Every row of the state catalogue; every chart's states and table view; the what-if form's feedback; dialogs hold and return focus \\
+Front end, journeys & Vitest & J1 to J6 on the in-browser mock, whose answers are fixtures recorded from the real API \\
+Accessibility & axe in Vitest; by hand & No automatic violation on any view; the keyboard run and the checks of Section~\ref{sec:a11y} \\
+Browser (S-11) & Playwright & J1 to J6 against both real servers at 390, 820 and 1280 pixels, in Chromium, Firefox and WebKit; no sideways scrolling; an empty browser console; the report's screenshots \\
+Performance (S-12) & \code{measure.py}; a browser script & The budgets of Section~\ref{sec:budgets} \\
+By hand & \fp{docs/TEST_LOG.md} & The journeys on real devices and browsers: date, build, tester, device, result, issue \\
+Clean install & A teammate & The README, from the zip, on Windows 11 and on macOS (AT-11) \\
+\bottomrule
+\end{longtable}
+}
+
+\textbf{Rules.} \code{python -m pytest -q} and \code{npm test} both pass before every commit, and
+the exit code is what counts. A bug gets a test that fails before the fix. The mock is used only by
+tests; \code{npm run fixtures} refreshes its answers from the running back end, so it cannot drift
+from the real contract. With S-10, the TypeScript types are generated from \fp{openapi.json} and a
+check fails when they are stale, and GitHub Actions runs both suites, the type check and the build
+on every push.
+
+\subsection{README}
+\label{sec:readme}
+
+The brief asks for set-up instructions, the libraries needed, how to run both tiers, and how the
+model is configured. The README follows this outline.
+
+\begin{enumerate}
+  \item \textbf{What this is}, in three sentences, with one screenshot and the folder map.
+  \item \textbf{What you need}: Windows 10 or 11, macOS on Apple silicon, or Linux; conda
+    (Miniforge or Miniconda); Node.js 22 or later; about 2 GB of disk; no GPU.
+  \item \textbf{Start the back end}:
+\begin{lstlisting}
+cd backend
+conda env create -f environment.yml
+conda activate cos30049-a3
+python -m pytest -q                      # expect: all passed
+uvicorn app.main:app --port 8000         # expect: "Explorer ready: 28 addresses, 9 methods"
+\end{lstlisting}
+  \item \textbf{Start the front end}, in a second terminal:
+\begin{lstlisting}
+cd frontend
+npm install
+npm run dev                              # then open http://localhost:5173
+\end{lstlisting}
+  \item \textbf{Check it works}: open \code{http://localhost:8000/api/health}; open the
+    application and pick the first address; the expected screen is shown.
+  \item \textbf{A two-minute tour}: the journey of the video, in six steps, with the example
+    address and a what-if to type.
+  \item \textbf{The API}: the endpoint table and the link to \code{/docs}.
+  \item \textbf{How the model is integrated and configured}: where the models and tables are, how
+    they were copied from Assignment 2 (\fp{A2_VENDOR.json}), what \fp{settings.json} controls, the
+    environment variables, and how to add the optional Assistant weights and check their SHA-256.
+  \item \textbf{Tests}: the commands and what they cover.
+  \item \textbf{Troubleshooting}: a port already in use; \code{conda} not found, or its terms of
+    service not accepted; an older Node.js; the pip route (\code{pip install -r requirements.txt}
+    on Python 3.11); a library version message at start; \code{set PYTHONUTF8=1} on Windows; the
+    firewall prompt on first start; a blank page when the back end is not running.
+  \item \textbf{Libraries and licences}, and the acknowledgement of AI use.
+\end{enumerate}
+
+\begin{team}
+\textbf{The clean install (T44, milestone MS4).} A member who did not write the README follows it
+from a trial zip on a machine that has never had the project: Windows 11 first, then macOS. They
+note every place they had to guess and the time each step took. Every guess becomes a README fix.
+Assignment 1's risk 9 is closed only when they finish without help and both terminals and the
+browser console are free of errors and warnings.
+\end{team}
+
+\subsection{The zip}
+\label{sec:packaging}
+
+\code{python tools/package.py --tag v1.0} builds the zip from the git tag, never from the working
+folder, and writes \fp{SHA256SUMS.txt} into it and beside it, as in Assignment 2.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{5.0cm}Y L{2.0cm}@{}}
+\toprule
+\textbf{In the zip} & \textbf{Contents} & \textbf{Size}\est{} \\
+\midrule
+\fp{README.md}, \fp{LICENSES.md}, \fp{CHANGELOG.md} & Run guide; licences; changes & under 1 MB \\
+\fp{backend/app/}, \fp{backend/tests/} & The FastAPI service and its tests & under 1 MB \\
+\fp{backend/explorer/}, \fp{backend/lm/} & The model code used by the web application, copied from Assignment 2 & under 1 MB \\
+\fp{backend/MODIFICATIONS.md}, \fp{A2_VENDOR.json} & What was changed for the web; where each file came from & -- \\
+\fp{backend/models/} & The nine saved methods and the profile model & 31 MB \\
+\fp{backend/data/processed/esplora/} & The snapshot's features, transactions, scores, TxGPT scores and manifest & 12 MB \\
+\fp{backend/config/settings.json} & Every threshold and limit & -- \\
+\fp{frontend/} & The React source, \fp{package.json} and \fp{package-lock.json} & 1 MB \\
+\fp{shared/} & The validation test vectors & -- \\
+\fp{docs/AI_USE_LOG.md} & The record behind the AI acknowledgement & -- \\
+\midrule
+\multicolumn{2}{@{}l}{Whole zip, compressed} & about 40 MB \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Left out:} \fp{node_modules/} (the brief says so), \fp{frontend/dist/}, \fp{.git/},
+\fp{.env} files, \fp{backend/var/}, caches, the brief, this plan, the report's sources and the
+working notes. The Assistant's weights (610 MB) are a download named in the README with their
+SHA-256, if the tutor agrees (Section~\ref{sec:tutorq}).
+
+\begin{done}
+The zip unpacks into the tree of Section~\ref{sec:layout}; \fp{SHA256SUMS.txt} verifies every file;
+on a clean machine the README's commands start both tiers and both test suites pass from the
+unzipped folder with no git history.
+\end{done}

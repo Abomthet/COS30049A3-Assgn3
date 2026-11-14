@@ -1,0 +1,141 @@
+\section{The report, the video, the minutes and the form}
+\label{sec:report}
+
+\subsection{Report outline and page budget}
+\label{sec:reportoutline}
+
+Eight pages at most, not counting the cover, the contents, the bibliography and the appendix. The
+section names are the brief's. The budget leaves a quarter of a page spare.
+
+{\small
+\begin{longtable}{@{}L{3.3cm}C{1.1cm}L{7.0cm}L{2.6cm}@{}}
+\toprule
+\textbf{Section} & \textbf{Pages} & \textbf{Content} & \textbf{Writer} \\
+\midrule
+\endhead
+Cover & -- & Project title; group name and ID; names and student IDs; the tutor, Arthur Hoang; the video link & Cam Dan Bui \\
+Contents & -- & & \\
+1. Introduction & 0.5 & The problem and the user; what the application does; what it does not claim; the three assignments in one line & Cam Dan Bui \\
+2. System architecture & 1.25 & Figure~\ref{fig:arch}; the path of one what-if request (Section~\ref{sec:walkthrough}) as a second figure; each technology with its reason & Le Quang Anh Hoang \\
+3. Front-end implementation & 1.75 & The views; the what-if form and its validation; the charts and what each answers; how data is sent (Axios, cancellation, the error class); responsive layout and accessibility; two screenshots & Minh Khang Nguyen \\
+4. Back-end implementation & 2.25 & Server set-up; the endpoint table; the error body and status codes; four endpoints in full (E4, E5, E7, E8) with request and response; validation and error handling & Le Quang Anh Hoang \\
+5. AI model integration & 1.25 & A recap of Assignment 2's models; preprocessing and postprocessing (Section~\ref{sec:prepost}); the modifications for the web (Section~\ref{sec:mods}); measured response times; the Assistant's guardrail & Cao Tri Tran \\
+6. Conclusion & 0.75 & How the application addresses the real-world problem; limits; improvements; future work & Cam Dan Bui \\
+\midrule
+Total & 7.75 & & \\
+\midrule
+Bibliography & -- & Harvard style, numbered as in Assignments 1 and 2 & Cam Dan Bui \\
+Appendix & -- & The full API reference from \fp{openapi.json}; screenshots at three widths; the test log summary; the usability results; the measured performance table; requirement traceability; the acknowledgement of AI use & all \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{Writing rules}
+
+\begin{itemize}
+  \item \textbf{Nothing typed that code can produce.} The endpoint tables come from the OpenAPI
+    schema, the example bodies from the running API, the timings from \code{measure.py}, the
+    versions from the lock files. A script fills them in, as \code{report_numbers.py} did for
+    Assignment 2.
+  \item \textbf{The wording rule} applies to the report: ``unusual'', ``flag'', ``worth a look''.
+    The banned words appear only where a cited dataset uses them as its own class names.
+  \item \textbf{Every technology choice has its reason} beside it; the rubric asks for
+    justification.
+  \item \textbf{Diagrams are ours.} Anything adapted from a source is cited.
+  \item \textbf{References} in Harvard style: React, FastAPI, Plotly.js, Axios, Pydantic and Vite
+    documentation; Nielsen's heuristics; the Esplora API; the Assignment 2 report's method sources
+    where the recap needs them.
+  \item \textbf{The page count} is checked on the built PDF by a script that fails over eight.
+  \item \textbf{AI use is acknowledged} in the appendix, written from \fp{docs/AI_USE_LOG.md},
+    in the form the tutor asks for (Section~\ref{sec:needsteam}).
+\end{itemize}
+
+\subsection{The video}
+\label{sec:video}
+
+Seven minutes at most; MP4. The brief's five content requirements are the columns the shot list
+must cover: the full functionality, every interaction, three device sizes, the whole path from
+input to chart, and the key technical decisions and difficulties.
+
+{\small
+\begin{longtable}{@{}L{1.6cm}L{8.6cm}L{3.9cm}@{}}
+\toprule
+\textbf{Time} & \textbf{On screen} & \textbf{Speaker} \\
+\midrule
+\endhead
+0:00--0:20 & Title: project, group, members. What the Explorer is, in one sentence, and the limitation line & Cam Dan Bui \\
+0:20--0:45 & Two terminals start the tiers; the health check; the generated API page & Le Quang Anh Hoang \\
+0:45--1:35 & J1: pick an address; the tiles; chart G1 with the range slider, a tooltip and a click on a flagged day & Minh Khang Nguyen \\
+1:35--2:25 & J2: the transaction; the reason, the comparison basis, the limitation line; chart G3; what each of the nine models says & Cao Tri Tran \\
+2:25--3:25 & J4: the what-if lab. An amount typed, the verdict changing as it is typed; three refused inputs; the slider; chart G5; the direction switched & Cao Tri Tran \\
+3:25--4:05 & J5 and J6: filter chips, zoom on chart G2, a point opened; CSV export opened in a spreadsheet; a chart saved as PNG & Minh Khang Nguyen \\
+4:05--4:40 & J3: a typo caught; an address outside the snapshot; a short-history address. The back end stopped and started again: the network state, then recovery by itself & Le Quang Anh Hoang \\
+4:40--5:15 & The Should items that made MS3: method selector, watchlist note, replay, live lookup & Minh Khang Nguyen \\
+5:15--5:45 & The same journey at tablet and phone widths, and a clip of a real phone & Minh Khang Nguyen \\
+5:45--6:35 & The architecture figure. Three decisions (the batched what-if; 400 against 422; the copied package and its unchanged names) and two difficulties, then the limits & Cam Dan Bui, then all \\
+\bottomrule
+\end{longtable}
+}
+
+That is 6 minutes 35 seconds, with 25 seconds spare.
+
+\begin{itemize}
+  \item \textbf{Before recording.} A written script, timed in a rehearsal; 1080p; browser zoom set
+    so text is readable; notifications off; the example address and what-if values chosen; if S-09
+    is shown, one lookup already cached and one short fresh one.
+  \item \textbf{After.} Check the length is under 7:00 and the sound is clear; export H.264 MP4;
+    compare the file size with Canvas's limit.
+  \item \textbf{Two copies.} The file on Canvas if it fits, and an unlisted YouTube upload. The
+    link goes on the report's cover and in \code{HCMC_COS30049.1_4-video-link.txt}. A member who
+    did not upload it opens the link in a private window the day before submission (risk 8).
+\end{itemize}
+
+\subsection{Minutes and the contribution form}
+\label{sec:minutes}
+
+The brief wants minutes for every week since the team formed, so the submission carries Weeks 1 to
+12. Each meeting records date, attendees, what was discussed, each decision, and each action with
+its owner, as Assignment 1 set out.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.6cm}Y@{}}
+\toprule
+\textbf{Meeting} & \textbf{Agenda items this plan needs recorded} \\
+\midrule
+Week 9 (by 13 Nov) & Lessons from Assignment 2: what took longer and why. The tutor's answer on AI. CR-07 and CR-08: approve, reject or defer, by name. Decisions D-A3-1 to D-A3-11. Owners of the work packages. Risk register re-scored for Assignment 3 \\
+Week 10 (by 20 Nov) & MS1 result. Progress against the schedule, critical path first. The API contract's freeze. Open risks. Which Should items look safe \\
+Week 11 (by 27 Nov) & MS2 result and the minimum viable demonstration. The usability findings and their fixes. MS3: the cut list. Report sections assigned \\
+Week 12 (by 4 Dec) & MS4 result and the clean install. Report and video review against the rubric. The contribution form. The submission checklist. The post-project review: what changed and what the team learned \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{caution}
+\textbf{The contribution form.} The team's notes record that a member whose share is under 33\%
+has their mark scaled down in proportion, and that Assignment 1's form gave two members 20\%. Check the form's rule and the planned
+shares at the Week 9 meeting, while the work packages can still be balanced, and again before
+anyone signs.
+\end{caution}
+
+\subsection{Completeness check against the brief}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}Y L{5.6cm}@{}}
+\toprule
+\textbf{The brief asks for} & \textbf{Where it is} \\
+\midrule
+Project title and group information on the cover; the tutor's name & Report cover \\
+System architecture: front end, back end, model & Report §2 \\
+Front end: input form, visualisation, validation, how data is sent & Report §3 \\
+Back end: server set-up; endpoint documentation with request type and JSON & Report §4 and appendix \\
+Model: recap, integration, modifications & Report §5 \\
+Conclusion: the real-world issue, improvements, future work & Report §6 \\
+Harvard bibliography; appendix & Report \\
+React code without \fp{node_modules}; FastAPI code with the model code; README & The zip \\
+Video: full functionality, all interactions, three device sizes, the whole workflow, decisions and difficulties & The shot list above \\
+Minutes for every week; the contribution form & Section~\ref{sec:minutes} \\
+\bottomrule
+\end{tabularx}
+\end{center}

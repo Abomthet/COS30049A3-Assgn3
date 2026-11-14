@@ -1,0 +1,217 @@
+{
+  "about": "Shared test vectors for the what-if body rules (plan section 11.2): backend/app/core/validation.py and app/schemas/whatif.py (pytest, backend/tests/test_whatif_api.py) and, later, the front end's form checks (Vitest). Each entry is one field of a what-if body; a failing entry names the message the server sends in `fields`. `sats` is the amount in whole satoshis that an accepted amount becomes. Rules that need an address's history (a time too far after its last transaction: 400; a time with too little history before it: 422) are not here; they are covered by the API tests.",
+  "limits": {
+    "minAmountBtc": "0.00000001",
+    "maxAmountBtc": "21000000",
+    "maxDecimals": 8,
+    "settingsKey": "config/settings.json -> web.whatIf"
+  },
+  "amountBtc": [
+    {
+      "id": "plain-number",
+      "input": 0.05,
+      "ok": true,
+      "sats": 5000000
+    },
+    {
+      "id": "decimal-string",
+      "input": "0.05",
+      "ok": true,
+      "sats": 5000000
+    },
+    {
+      "id": "comma-as-decimal-point",
+      "input": "0,05",
+      "ok": true,
+      "sats": 5000000
+    },
+    {
+      "id": "whole-number",
+      "input": 1,
+      "ok": true,
+      "sats": 100000000
+    },
+    {
+      "id": "one-satoshi",
+      "input": "0.00000001",
+      "ok": true,
+      "sats": 1
+    },
+    {
+      "id": "the-largest",
+      "input": "21000000",
+      "ok": true,
+      "sats": 2100000000000000
+    },
+    {
+      "id": "padded-with-spaces",
+      "input": "  0.5 ",
+      "ok": true,
+      "sats": 50000000
+    },
+    {
+      "id": "zero",
+      "input": 0,
+      "ok": false,
+      "message": "Must be greater than 0."
+    },
+    {
+      "id": "negative",
+      "input": -1,
+      "ok": false,
+      "message": "Must be greater than 0."
+    },
+    {
+      "id": "zero-string",
+      "input": "0",
+      "ok": false,
+      "message": "Must be greater than 0."
+    },
+    {
+      "id": "below-one-satoshi",
+      "input": "0.000000001",
+      "ok": false,
+      "message": "Must be at least 0.00000001 BTC (one satoshi)."
+    },
+    {
+      "id": "above-the-supply",
+      "input": "21000000.00000001",
+      "ok": false,
+      "message": "Must be at most 21,000,000 BTC."
+    },
+    {
+      "id": "nine-decimals",
+      "input": "0.123456789",
+      "ok": false,
+      "message": "Use at most 8 decimal places."
+    },
+    {
+      "id": "grouping-comma",
+      "input": "1,000.5",
+      "ok": false,
+      "message": "Write the amount without thousands separators, such as 1250.5."
+    },
+    {
+      "id": "grouping-point",
+      "input": "1.000,5",
+      "ok": false,
+      "message": "Write the amount without thousands separators, such as 1250.5."
+    },
+    {
+      "id": "not-a-number",
+      "input": "abc",
+      "ok": false,
+      "message": "Enter an amount in BTC, such as 0.05."
+    },
+    {
+      "id": "empty-string",
+      "input": "",
+      "ok": false,
+      "message": "Enter an amount in BTC, such as 0.05."
+    },
+    {
+      "id": "null",
+      "input": null,
+      "ok": false,
+      "message": "Must be a number."
+    },
+    {
+      "id": "boolean",
+      "input": true,
+      "ok": false,
+      "message": "Must be a number."
+    }
+  ],
+  "direction": [
+    {
+      "id": "in",
+      "input": "in",
+      "ok": true
+    },
+    {
+      "id": "out",
+      "input": "out",
+      "ok": true
+    },
+    {
+      "id": "upper-case",
+      "input": "IN",
+      "ok": false,
+      "message": "Must be \"in\" or \"out\"."
+    },
+    {
+      "id": "unknown-word",
+      "input": "sideways",
+      "ok": false,
+      "message": "Must be \"in\" or \"out\"."
+    },
+    {
+      "id": "empty-string",
+      "input": "",
+      "ok": false,
+      "message": "Must be \"in\" or \"out\"."
+    },
+    {
+      "id": "null",
+      "input": null,
+      "ok": false,
+      "message": "Must be \"in\" or \"out\"."
+    },
+    {
+      "id": "number",
+      "input": 1,
+      "ok": false,
+      "message": "Must be \"in\" or \"out\"."
+    }
+  ],
+  "time": [
+    {
+      "id": "utc",
+      "input": "2026-10-20T12:00:00Z",
+      "ok": true,
+      "utc": "2026-10-20T12:00:00Z"
+    },
+    {
+      "id": "offset",
+      "input": "2026-10-20T14:00:00+02:00",
+      "ok": true,
+      "utc": "2026-10-20T12:00:00Z"
+    },
+    {
+      "id": "no-zone",
+      "input": "2026-10-20T12:00:00",
+      "ok": false,
+      "message": "Use a date and time such as 2026-10-20T12:00:00Z."
+    },
+    {
+      "id": "date-only",
+      "input": "2026-10-20",
+      "ok": false,
+      "message": "Use a date and time such as 2026-10-20T12:00:00Z."
+    },
+    {
+      "id": "words",
+      "input": "tomorrow",
+      "ok": false,
+      "message": "Use a date and time such as 2026-10-20T12:00:00Z."
+    },
+    {
+      "id": "no-such-day",
+      "input": "2026-13-40T00:00:00Z",
+      "ok": false,
+      "message": "Use a date and time such as 2026-10-20T12:00:00Z."
+    },
+    {
+      "id": "empty-string",
+      "input": "",
+      "ok": false,
+      "message": "Use a date and time such as 2026-10-20T12:00:00Z."
+    },
+    {
+      "id": "null",
+      "input": null,
+      "ok": false,
+      "message": "Use a date and time such as 2026-10-20T12:00:00Z."
+    }
+  ]
+}

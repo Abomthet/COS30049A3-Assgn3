@@ -1,0 +1,6 @@
+# The optional Explorer Assistant (S-05). Install on top of requirements.txt:  pip install -r requirements-assistant.txt
+# The versions are Assignment 2's (its environment.yml); the saved weights were written with them.
+# PyPI's torch is the CPU build on Windows and macOS. On Linux, add  --index-url https://download.pytorch.org/whl/cpu
+# for the smaller CPU-only build. Without these two packages the application still runs: explanations use the template.
+torch==2.7.1
+tokenizers==0.21.1

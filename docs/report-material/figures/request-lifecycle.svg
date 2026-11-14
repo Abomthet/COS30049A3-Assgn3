@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 418" width="720" height="418" role="img" aria-labelledby="t d" font-family="'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', sans-serif">
+<title id="t">One GET through the middleware, the cache and back</title>
+<desc id="d">A GET for an address's timeline passes five middleware layers to the router and the cached explorer service; the answer returns with an ETag, or as a 304 when the client's copy is current; any error is built by core/errors.py and leaves the same way.</desc>
+<defs>
+<marker id="head-ink" viewBox="0 0 10 8" markerWidth="8.5" markerHeight="6.8" refX="9.2" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 L2.6,4 Z" fill="#1F2933"/></marker>
+<marker id="head-warn" viewBox="0 0 10 8" markerWidth="8.5" markerHeight="6.8" refX="9.2" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 L2.6,4 Z" fill="#B45309"/></marker>
+</defs>
+<!-- A white card, so the figure reads the same on a light and on a dark page. -->
+<rect x="0" y="0" width="720" height="418" rx="8" fill="#FFFFFF"/>
+<g>
+</g>
+<g>
+<rect x="12.0" y="12.0" width="536.0" height="44.0" rx="3" fill="#E8EEFC" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="280.0" y="31.3"><tspan font-weight="700" font-size="11.4">Browser</tspan><tspan font-size="11.4">, through the Vite proxy</tspan></tspan>
+<tspan x="280.0" y="45.4"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">GET /api/addresses/{address}/timeline</tspan>; a repeat from the browser's cache carries <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">If-None-Match</tspan></tspan>
+</text>
+<rect x="48.0" y="78.0" width="464.0" height="34.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="280.0" y="98.6"><tspan font-weight="700">1 · RequestContext</tspan></tspan>
+</text>
+<text text-anchor="start" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="53.2" y="98.6">gives the request an identifier</tspan>
+</text>
+<text text-anchor="end" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="506.8" y="91.9">adds <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">X-Request-ID</tspan>;</tspan>
+<tspan x="506.8" y="105.3">writes one log line</tspan>
+</text>
+<rect x="48.0" y="116.0" width="464.0" height="34.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="280.0" y="136.6"><tspan font-weight="700">2 · CORS</tspan></tspan>
+</text>
+<text text-anchor="start" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="53.2" y="129.9">no <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">Origin</tspan> through the proxy:</tspan>
+<tspan x="53.2" y="143.3">nothing to do</tspan>
+</text>
+<text text-anchor="end" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="506.8" y="129.9">headers for a page on</tspan>
+<tspan x="506.8" y="143.3">another origin only</tspan>
+</text>
+<rect x="48.0" y="154.0" width="464.0" height="34.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="280.0" y="174.6"><tspan font-weight="700">3 · BodyLimit</tspan></tspan>
+</text>
+<text text-anchor="start" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="53.2" y="167.9">a GET has no body: passes</tspan>
+<tspan x="53.2" y="181.3">(a body over 10 kB: 413)</tspan>
+</text>
+<rect x="48.0" y="192.0" width="464.0" height="34.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="280.0" y="212.6"><tspan font-weight="700">4 · GZip</tspan></tspan>
+</text>
+<text text-anchor="end" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="506.8" y="205.9">compresses a body of</tspan>
+<tspan x="506.8" y="219.3">1000 B or more</tspan>
+</text>
+<rect x="48.0" y="230.0" width="464.0" height="34.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="280.0" y="250.6"><tspan font-weight="700">5 · ETag</tspan></tspan>
+</text>
+<text text-anchor="start" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="53.2" y="250.6">notes <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">If-None-Match</tspan></tspan>
+</text>
+<text text-anchor="end" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="506.8" y="243.9">tags a 200 marked <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">no-cache</tspan>;</tspan>
+<tspan x="506.8" y="257.3">tag matches: <tspan font-weight="700">304</tspan>, no body</tspan>
+</text>
+<rect x="12.0" y="282.0" width="536.0" height="52.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="280.0" y="298.6"><tspan font-weight="700" font-size="11.4">Router</tspan><tspan font-size="11.4"> </tspan><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">api/addresses.py</tspan><tspan font-size="11.4">, with </tspan><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">api/deps.py</tspan></tspan>
+<tspan x="280.0" y="312.7"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">path_address</tspan> checks the address; <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">get_explorer</tspan> answers 503 until the models are loaded;</tspan>
+<tspan x="280.0" y="326.1"><tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">snapshot_data</tspan> marks the answer <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">Cache-Control: no-cache</tspan>, which is what earns it an <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">ETag</tspan></tspan>
+</text>
+<rect x="12.0" y="354.0" width="332.0" height="52.0" rx="3" fill="#E6F4F2" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="178.0" y="370.6"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">ExplorerService.timeline</tspan></tspan>
+<tspan x="178.0" y="384.7">cache: one entry per (method, address), LRU;</tspan>
+<tspan x="178.0" y="398.1">a hit is answered from memory</tspan>
+</text>
+<rect x="376.0" y="354.0" width="172.0" height="52.0" rx="3" fill="#F1EBFD" stroke="#1F2933" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="462.0" y="370.6"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">Predictor.score_address</tspan></tspan>
+<tspan x="462.0" y="384.7">A2's code, on a miss only;</tspan>
+<tspan x="462.0" y="398.1">the result is cut up and kept</tspan>
+</text>
+<rect x="576.0" y="282.0" width="132.0" height="124.0" rx="3" fill="#FDF1E3" stroke="#B45309" stroke-width="0.9"/>
+<text text-anchor="middle" font-size="10.2" fill="#1F2933" xml:space="preserve">
+<tspan x="642.0" y="301.1"><tspan font-weight="700" font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="10.3">core/errors.py</tspan></tspan>
+<tspan x="642.0" y="315.2">any <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">raise</tspan> on the way:</tspan>
+<tspan x="642.0" y="328.6">400 <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">invalid</tspan>,</tspan>
+<tspan x="642.0" y="342.0">404 <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">unsupported</tspan>,</tspan>
+<tspan x="642.0" y="355.4">503 <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">unavailable</tspan>, …</tspan>
+<tspan x="642.0" y="368.8">one body, carrying</tspan>
+<tspan x="642.0" y="382.2">the <tspan font-family="Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" font-size="9.2">requestId</tspan>;</tspan>
+<tspan x="642.0" y="395.6">anything else: 500</tspan>
+</text>
+</g>
+<g fill="none" stroke-linejoin="round">
+<path d="M30.0,56.0 L30.0,282.0" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M530.0,282.0 L530.0,56.0" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)"/>
+<path d="M178.0,334.0 L178.0,354.0" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)" marker-start="url(#head-ink)"/>
+<path d="M344.0,380.0 L376.0,380.0" stroke="#1F2933" stroke-width="1.4" marker-end="url(#head-ink)" marker-start="url(#head-ink)"/>
+<path d="M548.0,308.0 L576.0,308.0" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+<path d="M548.0,380.0 L576.0,380.0" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+<path d="M642.0,282.0 L642.0,246.8 L530.0,246.8" stroke="#B45309" stroke-width="1.4" marker-end="url(#head-warn)"/>
+</g>
+<g>
+<text x="50.0" y="71.2" text-anchor="start" font-size="9.0" fill="#1F2933" font-style="italic" xml:space="preserve">on the way in</text>
+<text x="510.0" y="71.2" text-anchor="end" font-size="9.0" fill="#1F2933" font-style="italic" xml:space="preserve">on the way out</text>
+<text x="360.0" y="374.4" text-anchor="middle" font-size="9.0" fill="#1F2933" xml:space="preserve">miss</text>
+<text x="562.0" y="302.3" text-anchor="middle" font-size="9.0" fill="#B45309" xml:space="preserve">raise</text>
+<text x="562.0" y="374.4" text-anchor="middle" font-size="9.0" fill="#B45309" xml:space="preserve">raise</text>
+<text x="648.0" y="220.0" text-anchor="middle" font-size="9.0" fill="#B45309" xml:space="preserve">the error body leaves</text>
+<text x="648.0" y="233.2" text-anchor="middle" font-size="9.0" fill="#B45309" xml:space="preserve">through the same layers</text>
+</g>
+</svg>

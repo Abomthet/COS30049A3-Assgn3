@@ -1,0 +1,123 @@
+\section{What must be submitted, and what earns each mark}
+\label{sec:deliverables}
+
+\subsection{The five files}
+
+One member uploads all of them through the ``Assignment 3 Submission'' link. The brief deducts marks
+for wrong file names, so the names below follow the group-name pattern used for Assignments 1 and 2.
+
+{\small
+\begin{longtable}{@{}L{2.5cm}L{5.3cm}L{4.9cm}L{2.3cm}@{}}
+\toprule
+\textbf{Deliverable} & \textbf{File} & \textbf{Limits and contents} & \textbf{Owner} \\
+\midrule
+\endhead
+Project report & \fp{HCMC_COS30049.1_4_Assignment3_Report.pdf} & 8 pages at most, not counting the cover, contents, bibliography and appendix. The sections of Section~\ref{sec:reportoutline}; the video link on the cover & Cam Dan Bui integrates; every member writes a part \\
+Source code & \fp{HCMC_COS30049.1_4_Assignment3_Code.zip} & \fp{frontend/} without \fp{node_modules}; \fp{backend/} with the model code and the models; \fp{README.md} & Le Quang Anh Hoang; Cao Tri Tran for the models \\
+Demonstration video & \fp{HCMC_COS30049.1_4_Assignment3_Video.mp4} & 7 minutes at most; MP4 or AVI; everything in Section~\ref{sec:video} & Minh Khang Nguyen records; all speak \\
+Video link, if the file is too large for Canvas & \fp{HCMC_COS30049.1_4-video-link.txt} & An unlisted YouTube link that opens in a private window; the same link on the report's cover & Le Quang Anh Hoang \\
+Meeting minutes & \fp{HCMC_COS30049.1_4_Assignment3_Meeting_Minutes.pdf} & One meeting for every week since the team formed: Weeks 1 to 12 & Cam Dan Bui \\
+Contribution form & \fp{HCMC_COS30049.1_4_Assignment3_Contribution_Form.pdf} & Each member's details and contribution, signed & All \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{Rubric line by line}
+\label{sec:rubricmap}
+
+The middle column is the rubric's own description of full points. The last column names the scope
+items (Section~\ref{sec:scopetable}) that earn it.
+
+{\small
+\begin{longtable}{@{}L{3.3cm}C{0.7cm}L{5.6cm}L{4.4cm}@{}}
+\toprule
+\textbf{Criterion} & \textbf{Pts} & \textbf{Full points mean} & \textbf{Earned by} \\
+\midrule
+\endhead
+Report 1: formatting and referencing & 1 & Professional cover with title, group and student details; tidy layout; Harvard references & M-16; Section~\ref{sec:reportoutline} \\
+Report 2: architecture and implementation & 2 & Detailed architecture; implementation described with the reasons for each technology; clear diagrams & M-16; the diagrams of Section~\ref{sec:architecture} \\
+Report 3: API documentation & 2 & Every endpoint documented with request type, parameters, JSON structure and examples & M-16; generated from the OpenAPI schema (Section~\ref{sec:api}) \\
+Code 1: execution & 2 & No errors or warnings; every feature runs; quick start; dependencies managed & M-01, M-14; Section~\ref{sec:readme} \\
+Code 2: comments & 1 & Significant sections explained & M-14; Section~\ref{sec:coderules} \\
+Code 3: structure & 2 & Clear hierarchy; modular; best practices & M-01, M-05; Section~\ref{sec:layout} \\
+Functionality 1: AI model integration & 3 & Seamless; real-time predictions; handles various input types & M-02, M-03, M-04, M-13; S-01, S-05, S-09 \\
+Functionality 2: front-end and back-end communication & 4 & Smooth, error-free GET and POST; prompt; full retrieval and submission & M-02, M-05, M-06, M-11 \\
+Functionality 3: error handling and validation & 3 & Every input validated on both tiers; graceful errors with clear messages; invalid data never processed & M-09, M-10 \\
+Functionality 4: API design & 4 & RESTful; efficient; two or more HTTP methods used properly; documented; reliable & M-01, M-02, M-03, M-12; S-04 adds PUT and DELETE \\
+Functionality 5: real-time updates and responsiveness & 4 & Elements and charts update without delay; performance holds across devices & M-11; S-06, S-09 \\
+Visualisation 1: diversity and relevance & 3 & Three or more diverse chart types that suit the data and explain the model's output & M-07 (bar, scatter, line); S-02, S-03 \\
+Visualisation 2: interactivity & 4 & Zoom, filtering, tooltips, real-time updates; smooth & M-07, M-08; S-06, S-07 \\
+Visualisation 3: clarity & 2 & Predictions easy to read; labels, legends, titles and units & M-07; the chart contract (Section~\ref{sec:chartcontract}) \\
+Visualisation 4: performance and loading & 2 & Quick to load and smooth with large data & M-07; S-12; Section~\ref{sec:budgets} \\
+Usability 1: user interface & 3 & Polished and responsive; intuitive navigation; advanced components such as modals and dynamic forms & M-05, M-06; Section~\ref{sec:components} \\
+Usability 2: user experience & 3 & Feedback mechanisms, personalised interactions and smooth transitions & M-10, M-11, M-15; S-04 \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{The High Distinction list}
+\label{sec:hdmap}
+
+The brief asks for three or more chart types, interactive charts and ``at least three advanced
+functionalities'', and gives five examples. The plan covers all five, and three of them are met by
+Must items alone.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{4.6cm}Y L{2.4cm}@{}}
+\toprule
+\textbf{The brief's example} & \textbf{What the Explorer does} & \textbf{Items} \\
+\midrule
+Enhanced visualisations: three or more chart types with zoom and filtering, in D3.js or Plotly.js & Bar, scatter and line charts in Plotly.js with zoom, pan, a range slider, tooltips, a filter bar and click-through; a dot chart and a grouped bar chart added & M-07, M-08; S-02, S-03, S-07 \\
+Real-time updates: live data feeds or auto-refreshing charts & The what-if verdict and curve refresh as the user types; a replay feeds an address's history to the charts; a live lookup streams its progress & M-11; S-06; S-09 \\
+Custom user input: advanced forms, full validation, dynamic feedback & The what-if form: amount with a unit switch and a slider, direction, time; rules checked on each keystroke and again on the server & M-06, M-09 \\
+Error handling: robust, with clear messages on both ends & One error body, one catalogue of states, a next action on every state & M-10 \\
+User-experience extras: export of predictions and charts & CSV and JSON of scored transactions; PNG of every chart; a scenario table & M-12; S-08 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Promises from Assignments 1 and 2 that this build must keep}
+\label{sec:promises}
+
+{\small
+\begin{longtable}{@{}L{5.4cm}L{2.6cm}L{6.0cm}@{}}
+\toprule
+\textbf{Promise} & \textbf{Where made} & \textbf{How Assignment 3 keeps it} \\
+\midrule
+\endhead
+FR-01 to FR-05: select a supported address; timeline; drilldown; a reason, a comparison basis and the limitation line on every flag; five distinguishable feedback states & A1 Table 2.1 & Views V1 to V3 on the real API; journeys J1 to J3; acceptance tests AT-01 to AT-05 \\
+AC-01 to AC-03 and FR-05 pass on every snapshot address and are shown in the video & A1 §1.1 & MS2 runs them on all 28 addresses automatically; the video shows them on one \\
+The five planned endpoints, with 400, 404 and 422 & A1 Table 2.7 & E3 to E7 keep their paths, methods and bodies (Section~\ref{sec:api}) \\
+The screens move to real data ``without changing screen code'' & A1 §10 & The API client is swapped; screen components change only where a view gains a feature \\
+NFR-01: units, source and snapshot date on every chart; the limitation line; none of the five banned words; two walkthrough participants read a flag as ``needs investigation'' & A1 Table 2.5 & The chart contract; the wording test on both tiers; the walkthrough (M-15) \\
+NFR-03: keyboard navigation, visible focus, contrast, recovery from mistakes & A1 Table 2.5 & Section~\ref{sec:a11y}; the timeline chart keeps its arrow-key control \\
+Charts in Plotly.js; the API called with Axios & A1 WBS dictionary, 1.4.3 and 1.4.4 & D-A3-3 and D-A3-4 \\
+The three issues of the heuristic inspection: z-scores may confuse; the unusual-days list hides its overflow; the prototype tools cover content & A1 Table 10.2 & Plain words first, z in the table and tooltip; a ``Show all'' control; the tools removed from the build \\
+Optional items go through change control; no live blockchain calls from the application & A1 §2.6, §8.5, WBS 1.4.5 & CR-07 and CR-08 (Appendix~\ref{app:cr}); the Must tier never needs the network \\
+The integrated product shows the model evaluation and its known limitations & A1 §9 & View V5, models and limits (M-13) \\
+The usability walkthrough, moved to ``the Assignment 3 usability study'' & A2 report, objectives table & M-15, in Week 11, with Assignment 1's four tasks and observer sheet \\
+\code{predict.py} is the interface the back end wraps; the Assistant is optional and off by default; Assignment 2's numbers do not change & A2 plan §15 & Section~\ref{sec:model}; S-05; W-06 \\
+A post-project review of what changed and what the team learned & A1 §9 & Week 12 minutes (Section~\ref{sec:minutes}) \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{Rules in the brief that are easy to miss}
+
+\begin{itemize}
+  \item \textbf{The video carries the marks.} If it cannot be opened when marking happens, most
+    components score zero. It must show desktop, tablet and mobile sizes, every interaction, the
+    whole path from input to chart, and the key technical decisions and difficulties.
+  \item \textbf{The report documents at least four endpoints} and must describe preprocessing,
+    postprocessing, error handling, validation and any change made to the model for the web.
+  \item \textbf{The zip holds the model code} that the web application uses, with its
+    modifications, and a README that covers set-up, libraries, how to run both tiers and how the
+    model is configured.
+  \item \textbf{Generative AI}: see Section~\ref{sec:needsteam}, item 1. All use is acknowledged
+    in the report.
+  \item \textbf{Late work} loses 10\% of the available mark per day and scores zero after seven days.
+  \item \textbf{Nothing about the work is posted publicly} on Canvas discussions. The GitHub
+    repository for Assignment 2 is public; decision D-A3-1 keeps the Assignment 3 repository
+    private until marks are released.
+\end{itemize}

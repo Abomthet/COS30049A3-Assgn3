@@ -1,0 +1,116 @@
+\section{Validation and error handling}
+\label{sec:errors}
+
+Three points are for ``comprehensive handling and validation across front and back end; all inputs
+validated; errors handled gracefully with clear messages; prevents invalid data''.
+
+\subsection{Principles}
+
+\begin{enumerate}
+  \item \textbf{Both tiers check, from one table.} The browser checks so that the user is told at
+    once; the server checks again because a request need not come from our browser.
+  \item \textbf{Never invent a result.} An input that cannot be scored gets an explanation, not a
+    score (AC-02).
+  \item \textbf{Every state has a next action}, and no error clears what the user typed.
+  \item \textbf{Messages are specific and in plain words}: what is wrong, and what to do.
+  \item \textbf{One body, one place.} The server builds every error in its handlers; the client
+    turns every failure into one \code{ApiError}; views switch on its \code{status}.
+\end{enumerate}
+
+\subsection{The validation table}
+\label{sec:validation}
+
+{\small
+\begin{longtable}{@{}L{2.2cm}L{5.5cm}L{3.2cm}L{3.2cm}@{}}
+\toprule
+\textbf{Input} & \textbf{Rule} & \textbf{Front end} & \textbf{Back end} \\
+\midrule
+\endhead
+Bitcoin address & Not empty; at most 100 characters; no spaces. Not an Ethereum or test-network address (each has its own message). Legacy: 26 to 35 characters of the Base58 alphabet, a correct checksum, version 0 or 5. \code{bc1}: one letter case, the Bech32 alphabet, a correct Bech32 or Bech32m checksum, a valid program length & \fp{lib/address.ts} (exists), as the user types and on submit & \fp{core/validation.py}, on E4 and on every path with an address; 400 \\
+Day & \code{YYYY-MM-DD} and a real date & Date fields limited to the address's active period & Parsed; 400 \\
+Day range & \code{from} not after \code{to}; not together with \code{date} & Both fields marked & 400 with both fields named \\
+Transaction ID & 64 hexadecimal characters & Checked when a link is opened & Pattern; 400. Unknown for that address: 404 \\
+Amount & A number; greater than 0; at least 1 satoshi; at most 21,000,000 BTC; at most 8 decimal places in BTC, whole in satoshis. One comma is read as the decimal point; grouping separators are refused with a message & As the user types & Parsed as a decimal, never a float; 400 with \code{fields} \\
+Direction & \code{in} or \code{out} & A two-way switch; cannot be empty & Choice; 400 \\
+Time & A real date and time in UTC; not before the address's first transaction; at most \code{maxGapYears} after its last & Fields limited to the allowed range & 422 if too early to score; 400 if too far ahead \\
+List parameters & \code{page} from 1; \code{pageSize} 1 to 200; \code{sort}, \code{status}, \code{direction} and \code{method} from their lists & Built by the client, never typed & 400 naming the parameter \\
+Watchlist label and note & 40 and 500 characters at most; no control characters; kept and shown as plain text & Character counters; Save disabled when over & 400; SQL through parameters only \\
+Export format & \code{csv} or \code{json} & A menu & Choice; 400 \\
+Live lookup & A valid address not in the snapshot; \code{maxTx} 50 to 1,000 & The dialog & 400; 409; 429 \\
+Any body & JSON; at most 10 kB; no unknown fields & -- & 415; 413; 400 \\
+\bottomrule
+\end{longtable}
+}
+
+\textbf{Shared test vectors.} \fp{shared/address_vectors.json} holds valid addresses of each type
+(P2PKH, P2SH, P2WPKH, P2WSH, P2TR) and one invalid address for each failure the checker names.
+Vitest and pytest both read it, so the two tiers must agree on every verdict and message key. The
+same is done for the what-if rules with \fp{shared/whatif_vectors.json}.
+
+\subsection{The catalogue of states}
+\label{sec:catalogue}
+
+The first six are Assignment 1's (FR-05 and the network state). Each row has a component test and,
+where a server status is involved, an API test.
+
+{\small
+\begin{longtable}{@{}L{2.9cm}L{2.7cm}L{4.9cm}L{3.6cm}@{}}
+\toprule
+\textbf{Situation} & \textbf{Signal} & \textbf{What the user sees} & \textbf{Next action} \\
+\midrule
+\endhead
+Invalid input & Client rule, or 400 & The specific message under the field; the field keeps its text and focus & Correct it \\
+Unsupported address & 404 \code{unsupported} & What the snapshot covers; three supported examples & Open an example; clear the box; with S-09, fetch it \\
+Loading & Request pending & A skeleton in the final layout; ``Still working'' after 5 s & Wait; leave \\
+Empty & 200, no rows & ``Choose a transaction to see its details''; ``No transaction matches these filters'' & Choose one; reset the filters \\
+Insufficient history & 422, or \code{history.status} & The transactions unscored, and why: ``8 transactions in under a day; scoring needs 10 over 14 days'' & Browse them anyway; choose another address; in V4, set the first date that works \\
+Network failure & No answer & ``The explorer service did not respond.'' The status dot turns red & Try again; reloads by itself when the service is back \\
+Not found & 404 \code{not_found}, or an unknown route & ``There's nothing at this link'' & Go to the address, or to the list \\
+Timeout & 10 s (90 s for the Assistant) & ``This is taking longer than it should'' & Try again \\
+Server error & 500 & ``Something went wrong on our side'', with the request identifier & Try again; copy the identifier \\
+Service starting & 503 & ``The service is starting; this page will load by itself'' & None needed \\
+Busy & 429 & The wait, counting down & Retries by itself \\
+Upstream failure (S-09) & 502, 504 & ``The public blockchain service did not answer'' & Try again; pick a snapshot address \\
+Conflict & 409 & ``The watchlist is full (200)''; ``This address is already being fetched'' & Remove an entry; open the running lookup \\
+Chart failed to draw & Caught by the chart's boundary & The table view, and a note & Show the chart again \\
+Part of a view crashed & Error boundary & ``This part of the page failed to load''; the rest keeps working & Reload the part \\
+Offline & The browser reports it & A banner; views already loaded stay usable & Reconnect \\
+Assistant not installed, or its answer rejected & \code{skippedWriters}, \code{attempts} & A note; the template explanation is shown & Read the README; nothing else \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{On the server}
+
+\begin{itemize}
+  \item \textbf{Handlers.} One each for request validation (400), the package's
+    \code{Unsupported} (404) and \code{InsufficientHistory} (422), \code{ValueError} (400),
+    missing files (503), HTTP errors raised by routes, and everything else (500).
+  \item \textbf{Logging.} One line per request: identifier, method, path, status, milliseconds.
+    A 500 logs its trace under the same identifier. Bodies are not logged.
+  \item \textbf{What a response never contains.} A stack trace, a file path, a library's raw
+    error text, or a banned word.
+  \item \textbf{Start-up.} A missing model file, a failed hash or a wrong library version stops the
+    start with one sentence that says what to do; it does not start half-working.
+\end{itemize}
+
+\subsection{Hardening}
+
+\begin{itemize}
+  \item User text never reaches a file path, a shell or an SQL string: addresses are looked up
+    in memory, cache files are named by a hash, and SQL uses parameters.
+  \item The server calls out only to the two Esplora hosts named in the settings, and only with an
+    address that has passed validation.
+  \item CORS allows only the listed origins. Bodies over 10 kB are refused. Live lookups and the
+    Assistant are rate-limited.
+  \item React renders every string as text; labels and notes are never treated as markup. External
+    links open with \code{rel="noopener noreferrer"}.
+  \item CSV cells that could run as formulas are neutralised (E10).
+  \item Dependencies are pinned; \code{npm audit} and \code{pip-audit} run before the code freeze.
+\end{itemize}
+
+\begin{done}
+Every row of the validation table has a test on each tier and every row of the catalogue has a
+component test. Posting each invalid vector to the API returns its expected status and never a 500.
+The video shows four error states and one recovery.
+\end{done}

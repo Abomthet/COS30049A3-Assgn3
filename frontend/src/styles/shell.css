@@ -1,0 +1,318 @@
+/* The application shell: navigation, service status, theme switch and toasts.
+   Colours come from the tokens in base.css; the two status colours below are the only additions. */
+
+:root {
+  --status-ok: #1a7f4b;
+  --status-wait: #b7791f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --status-ok: #4cc38a;
+    --status-wait: #e0b341;
+  }
+}
+:root[data-theme='dark'] {
+  --status-ok: #4cc38a;
+  --status-wait: #e0b341;
+}
+
+/* ------------------------------------------------------------------ header and navigation */
+
+.header-inner {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.nav-toggle {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.main-nav {
+  display: none;
+  flex-basis: 100%;
+}
+.main-nav.is-open {
+  display: block;
+}
+.main-nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.main-nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-weight: 560;
+  text-decoration: none;
+}
+.main-nav a:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+/* The current section is marked by weight and an underline as well as colour. */
+.main-nav a[aria-current='page'] {
+  color: var(--text);
+  font-weight: 680;
+  box-shadow: inset 0 -3px 0 var(--accent);
+  border-radius: 0;
+}
+
+@media (min-width: 720px) {
+  .nav-toggle {
+    display: none;
+  }
+  .main-nav {
+    display: block;
+    flex: 1 1 auto;
+    flex-basis: auto;
+    margin-left: 16px;
+  }
+  .main-nav ul {
+    flex-direction: row;
+    gap: 4px;
+  }
+}
+
+.header-bar {
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.header-bar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 20px;
+  min-height: 44px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.header-bar .header-meta {
+  flex: 1 1 auto;
+}
+
+/* ------------------------------------------------------------------ service status */
+
+.service-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+.service-status .status-text {
+  margin: 0;
+}
+.status-words {
+  font-weight: 600;
+  color: var(--text);
+}
+.status-hint {
+  color: var(--text-muted);
+}
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--status-wait);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+.service-status[data-state='ready'] .status-dot {
+  background: var(--status-ok);
+}
+.service-status[data-state='unreachable'] .status-dot {
+  background: var(--error-ink);
+}
+.status-button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.status-button:hover {
+  background: var(--surface-2);
+}
+
+/* ------------------------------------------------------------------ theme switch */
+
+.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.switch-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--border-strong);
+  transition: background 150ms ease;
+}
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--border-strong);
+  transition: transform 150ms ease;
+}
+.theme-switch[aria-checked='true'] .switch-track {
+  background: var(--accent);
+}
+.theme-switch[aria-checked='true'] .switch-thumb {
+  transform: translateX(16px);
+}
+
+/* The 44 px touch rule for the header's own controls; the condition is the same as in base.css. */
+@media (any-pointer: coarse), (max-width: 899px) {
+  .status-button,
+  .theme-switch {
+    min-height: 44px;
+  }
+}
+
+/* ------------------------------------------------------------------ toasts */
+
+.toast-region {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 520px);
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(11, 11, 11, 0.18);
+  animation: toast-in 180ms ease-out;
+}
+.toast-info {
+  border-left-color: var(--info-ink);
+}
+.toast-success {
+  border-left-color: var(--status-ok);
+}
+.toast-error {
+  border-left-color: var(--error-ink);
+}
+.toast-leaving {
+  animation: toast-out 180ms ease-in forwards;
+}
+.toast-message {
+  flex: 1 1 auto;
+  margin: 0;
+}
+.toast-button {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--link);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.toast-button:hover {
+  text-decoration: underline;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast-leaving {
+    animation: none;
+  }
+  .switch-track,
+  .switch-thumb {
+    transition: none;
+  }
+}
+
+@media print {
+  .toast-region,
+  .nav-toggle,
+  .theme-switch,
+  .service-status {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ offline banner */
+
+/* Stays at the top of the window while the page scrolls, since the connection can drop at any point of a long page. */
+.offline-banner {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  background: var(--warn-bg);
+  border-bottom: 1px solid var(--warn-border);
+  color: var(--warn-ink);
+}
+.offline-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.offline-banner p {
+  margin: 0;
+}

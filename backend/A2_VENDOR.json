@@ -1,0 +1,76 @@
+{
+  "about": "Assignment 2's runtime, copied unchanged by tools/vendor_a2.py. Do not edit these files; web changes go in backend/app/ and are listed in MODIFICATIONS.md.",
+  "source": {
+    "repository": "COS30049A2",
+    "commit": "aa56a26dc05ba6d4941f0fdcec8aa94e1590cf7a",
+    "tags": [
+      "v1.0"
+    ],
+    "subject": "Team review checklist for main.pdf (report/REVIEW_CHECKLIST.md: file, data name, printed page, owner and what to check; each row's numbers compared with the built PDF); cover note says bibliography; results unchanged"
+  },
+  "copiedUtc": "2026-11-12T07:10:51Z",
+  "files": {
+    "data/processed/esplora/features.csv": "391d06c37f83c20a80852bbd7f2c8ba3e982c1bb389b7131ab340ac274be6da0",
+    "data/processed/esplora/manifest.json": "2f564d94d3e787e44d889a19a118bd12c1cde9a7115e76449ebc455542be06f3",
+    "data/processed/esplora/scores.csv": "4e8c978c44f98a21914c55422d96f8ab8f2bd41dae34f41dafd648d8df26e7e4",
+    "data/processed/esplora/transactions.csv": "bf06fd90ddbf53d7b4ee32af44713c3c8e79bcd468daf45ac8bb340c89b705f4",
+    "data/processed/esplora/txgpt_scores.csv": "055bd9a53df73a8219450af3e0c7ef52fb772f23d700ce41917679ff90daec2a",
+    "explorer/__init__.py": "fb370e6c0f9fcb74eea8b426f08d139c45d7b3a384ef5df6440992678d4223ed",
+    "explorer/amounts.py": "ef06b3fa4852c69d274bd7d4587373a6ff930cd799c775b78f5506a51001e19c",
+    "explorer/assistant.py": "ca5752928f4710a912f8446199f90daec1b9966da905c6f9c7870f1bad1220fd",
+    "explorer/baseline.py": "6b309bcd35951c560f1c2017a27a7479917b3e7989ac18c4af6c23645a87b1f7",
+    "explorer/classify.py": "f7b89320ed734b2acc243aeddb8ae496ca5e30a92b2dea4645dd82448f844e22",
+    "explorer/clustering.py": "764b6b84f6a5789b23515ad94eef2e02008849441c16a9ede17c21afb041e9ff",
+    "explorer/esplora.py": "de76e7a3f49ccb88791f2a6538fde6d407d967066693936fa30279f3dde1774e",
+    "explorer/explain.py": "06bc08fc98c8c4caa442a11d6d86661cc156f07e28c53344c736ad5f70f4471b",
+    "explorer/external.py": "af4a4454b723ebac888c12187ef36052d6c474fdbce01147415d6294c9b2aec3",
+    "explorer/features.py": "f116a08d1753a5569218ed84e971b193b7b717861292c2a4dd4c366bbb829f28",
+    "explorer/fusion.py": "aa420e558ee681e6b82e1938c6ef352ffa267528575d1397e3772b403052f9a5",
+    "explorer/inject.py": "46b599d46d818165009951efe6039b9d475ec5f094a760dfe646086443291b4b",
+    "explorer/labelled.py": "f3c55fa7c649e5f73a21557967c85281c4cf3ca3afb9179bfad0a78aeb5c6f27",
+    "explorer/methods.py": "540c583dc372e31a65a9bba244f3aa03286fb6cf0e76e150f2455294aebbbec1",
+    "explorer/outliers.py": "bef6f4b5bb9e20d4a4d4236fa3b11d9ee09fa08cb73393ee2ffb3e068a840817",
+    "explorer/predict.py": "086913db826754ec72a7e168ad7c5555ba61dd1313643c685216802e18a4e8d0",
+    "explorer/regression.py": "2852dde19813be89ab0b9fe0d8445577de2c881611a8afdecbe6f0397f1e81b6",
+    "explorer/scores.py": "30cd503687e5afeac2a3c62874d2a311963499234f80cecbf3f38e8d30c8b438",
+    "explorer/settings.py": "32af04b533fcd3e23e43bd15eb05671499d04a910a8c97fe7ef22ff9a66f53a3",
+    "explorer/snapshot.py": "4db5c77c13401f8b5342a4759d2502811f5c2b5e2304ebda3d179acf48cb119f",
+    "explorer/split.py": "fe322c1122835862b9263fe67b9f7790e3250da1bf209157af90932694c39d34",
+    "explorer/stage_search.py": "01111af50f38f2938dd9de048a27b0651a29cd472bef1976c93f50a874e12222",
+    "explorer/stages.py": "9197d003570c3f24e09120c5a8b8e58fa5c3717287ce998ebeb994be7a981ffe",
+    "explorer/transactions.py": "59005548cf0a0438e71590ef4a52c2237cfa714def1557839e7c49ae6f6ffec7",
+    "explorer/txgpt.py": "e37ad8a440ea8270a3806b7a34fb4c9415fa0e45cec920943a373532012ad7f9",
+    "lm/__init__.py": "290ed32d244eb358aa5b0d4e47b30b7d2ea39db7c9027b365693674048e0bbf4",
+    "lm/chat.py": "af2d9fd3a4fe728a72c6267618b928f59bf6cd7a250b792ee5e28901bacc9912",
+    "lm/generate.py": "a60623a6e353140849308d635f97f26ad82bba182fb85d3dca06c7a7b1889971",
+    "lm/model.py": "3e5e5c541f3d17c3367772cf229f18da0c90e02f9aa4f964771e130d5856a20b",
+    "lm/tokenizer.py": "07e21ca124e514bd8bbd9ec61afa004c599838b800ecc7295996e58bd253d5c4",
+    "lm/tx_tokens.py": "7a897401066405afb1a734157018b213b2f1acc33ec422fccd7111a8f21216d9",
+    "lm/writers.py": "7043ea7ac17e1b7c72e28d6c5b1155649bad34e0022039271fd025054ea20536",
+    "models/baseline.json": "227f53a76086184d265f50819591d4e9ed0b8888673a0dff148f0979ada5af6c",
+    "models/fusion.joblib": "8a6dbaa69cfd416276600dbfc0e01f555a57bbe3da050655179d5fde46171641",
+    "models/isolation_forest.joblib": "aa2e850af1c2f7344be556fc0d20b395c7d62ee4eaddf3690bd1decfa21fac79",
+    "models/profiles.joblib": "22edb030b862b78b2dc23e1c0c87ad03cdebb24a6ba653a0bbec49b0e50334f4",
+    "models/regression.joblib": "56f0cee537ef63b0ab0c81e956c99ce38614528931d8feee5aa77189b82737c3",
+    "models/regression_interval.joblib": "c231b5d66f29dabd9a28e9a259acd843e6ed57e61bd0eae5fc5aec56f4a907a7",
+    "models/selection.json": "4a266e78e4b280035f761b45f97f4f9af5a7e35b278577ebd9c584b7e3c89b8d",
+    "models/stage/C3_lof.joblib": "be9b3583b0bc63121fd7afc167cf1371b1a7746a06a2643beb3e1bbffbbb600d",
+    "models/stage/C4_kmeans.joblib": "c90f25047e74e23e39c9fdcd41b97572b806c5a09b55a9b9dd9ffff4ff12ae7c",
+    "models/stage/C5_dbscan.joblib": "264064882b45bf59080c96615b2999e00446de37fdd068a96af81346f4a611f0",
+    "models/txgpt_method.joblib": "0294c16e0aaa5a892c03e1ef201ae3db3cbe9bbb321823593cee572efdd49b6a",
+    "reports/tables/eval_selection.csv": "88ae6baf7e37fb4dbec8f59777787a559262a1128feed471ce2d0a462db26e8d",
+    "reports/tables/eval_significance.csv": "27d3bd6e0e27bed72c169f42658e74b7af7f4d16d4ccd38c3d75b494f3c9385f"
+  },
+  "derived": {
+    "config/settings.json": {
+      "addedKeys": [
+        "web"
+      ],
+      "otherKeysSha256": "cf5d5e5f89c1c60958eb7a92d7e51e868a2f28ffe97eb3166cfb6a86089b5bf8"
+    }
+  },
+  "assistant": {
+    "models/assistant/model.pt": "f9306a5e2d734943469830c6012c49b9b380b4212becb64434d12d958f841434",
+    "models/assistant/tokenizer.json": "c8f4509cc0951d00426ae6bae99a34b8639c2f20c8c32e05b9d0bce1cc3e5d45"
+  }
+}

@@ -1,0 +1,172 @@
+\section{Visualisations}
+\label{sec:charts}
+
+Eleven of the 45 points are for the charts. Each chart below answers one question a user has about
+the model's output; none is decoration.
+
+\subsection{The charts}
+\label{sec:chartlist}
+
+{\small
+\begin{longtable}{@{}L{0.7cm}L{2.7cm}L{2.0cm}L{4.6cm}L{1.5cm}L{1.6cm}@{}}
+\toprule
+\textbf{No.} & \textbf{Chart} & \textbf{Type} & \textbf{Question it answers} & \textbf{Data} & \textbf{Tier} \\
+\midrule
+\endhead
+G1 & Daily activity & Bar, on a date axis & When was this address active, and on which days did something unusual happen? & E5 & \must \\
+G2 & Transactions over time & Scatter, log amount & How large was each transaction, and where do the unusual ones sit? & E6 & \must \\
+G3 & Feature deviation & Horizontal bar & How far is this transaction from the address's usual size, pace, gap and ratio? & E7, E8 & \must \\
+G5 & What-if response & Line, log amount & How does the score change with the amount, and where does it cross the flag line? & E9 & \must \\
+G4 & Model verdicts & Dot plot & Where does this transaction rank among the address's own transactions for each model, and which models flag it? & E7, E8 & \should{} S-02 \\
+G6 & Planted-test recall & Grouped bar with intervals & How often does each method catch each planted pattern? & E11 & \should{} S-03 \\
+G7 & TxGPT surprisal by field & Stacked bar or heat map & Which part of the transaction surprised the language model? & E21 & \could{} C-01 \\
+G8 & Activity calendar & Heat map & Which weeks and weekdays is the address active? & E5 & \could{} C-03 \\
+G9 & Snapshot map & Scatter, WebGL & Where are the unusual transactions across all 7,966 in the snapshot? & E6 & \could{} C-03 \\
+\bottomrule
+\end{longtable}
+}
+
+The Must tier alone has three chart types (bar, scatter, line) in four charts. If one Should chart
+slips, the count of types does not fall.
+
+\subsection{The chart contract}
+\label{sec:chartcontract}
+
+Every chart is drawn by one wrapper component, \fp{src/charts/PlotlyChart.tsx}, so these hold for
+all of them and are tested once.
+
+\begin{itemize}
+  \item \textbf{Words on the chart (NFR-01, condition 1).} A title; both axes labelled with units
+    (BTC, transactions, date in UTC, robust z); a legend when there is more than one series; and a
+    caption with the source and the snapshot date, or the fetch time for live data.
+  \item \textbf{Tooltips.} The facts in plain words and real units: ``28 Sep 2026, 06:51 UTC;
+    received 0.00056497 BTC; unusual: longer gap than usual''. Amounts to eight places; counts with
+    thousands separators.
+  \item \textbf{Zoom and pan.} Drag to zoom, double-click to reset, and a tool bar reduced to
+    zoom, pan, reset and download. A redraw with new data keeps the zoom.
+  \item \textbf{Colour and shape.} The prototype's blue and orange pair, read from the theme's
+    variables so light and dark both work. Unusual is orange and a triangle; not scored is hollow
+    grey. Nothing depends on colour alone.
+  \item \textbf{Table view.} A switch shows the chart's data as a table, which is also what a
+    screen reader gets, with a one-sentence summary above it.
+  \item \textbf{Export.} ``Download PNG'' on every chart, named from the chart, the address and the
+    snapshot date; the table view offers CSV.
+  \item \textbf{States.} A skeleton of the chart's size while loading (no layout jump); an empty
+    state with a next action; an error state with ``Try again'' and the table view as the fallback
+    if the chart itself fails to draw.
+  \item \textbf{Size.} The chart fills its container and redraws when the container resizes; on a
+    phone it uses fewer ticks and moves the tools into a menu.
+\end{itemize}
+
+\subsection{Each chart}
+
+\subsubsection*{G1 \quad Daily activity}
+\begin{itemize}
+  \item \textbf{Marks.} One bar per day: transactions that day. A day with an unusual transaction
+    is orange with a triangle above it. Days are continuous on the axis, so quiet stretches show as
+    gaps; a history shorter than 21 days is padded, as in the prototype.
+  \item \textbf{Interaction.} A range slider under the chart and range buttons (1 month, 3 months,
+    6 months, 1 year, all); hover for the day's counts; click or Enter opens the day in V3; arrow
+    keys move between active days.
+  \item \textbf{Edge cases.} One active day; three transactions in all; 348 active days on a phone,
+    where the chart opens on the last six months with the slider showing the rest.
+\end{itemize}
+
+\subsubsection*{G2 \quad Transactions over time}
+\begin{itemize}
+  \item \textbf{Marks.} One point per transaction: time on x, the absolute amount in BTC on a log
+    y axis. Colour and shape show the status; the size grows with the score. Received and sent can
+    be told apart by a filled or an outlined mark and by the filter.
+  \item \textbf{Interaction.} Box zoom on both axes; the filter bar (Section~\ref{sec:filters});
+    hover for the facts and the main reason; click opens the transaction. With S-07, box or lasso
+    selection filters the table to the selected points and shows ``14 selected: 9 received, 5 sent,
+    3 unusual''.
+  \item \textbf{Edge cases.} A net amount of zero cannot sit on a log axis: it is drawn on the
+    axis floor and labelled 0. Amounts spanning eight orders of magnitude are why the axis is log.
+  \item \textbf{Scale.} Above \code{webglMinPoints} the chart switches to Plotly's WebGL scatter;
+    it falls back to SVG where WebGL is missing.
+\end{itemize}
+
+\subsubsection*{G3 \quad Feature deviation}
+\begin{itemize}
+  \item \textbf{Marks.} Four horizontal bars, one per feature, from 0 to the feature's robust z.
+    A shaded band marks $\pm 2$ (stands out) and dashed lines mark $\pm 5.0$ (the flag line, read
+    from E2). A bar is labelled with its role in words.
+  \item \textbf{Interaction.} Hover: ``Size: 0.05 BTC, against a usual 0.000525 BTC (z 5.9)''.
+    In V4 the bars move as the form changes.
+  \item \textbf{Edge cases.} A feature with no comparison shows ``no comparison'' in place of a
+    bar. A z beyond $\pm 20$ is drawn at the edge with an arrow, since the models clip there.
+\end{itemize}
+
+\subsubsection*{G5 \quad What-if response}
+\begin{itemize}
+  \item \textbf{Marks.} A line: amount on a log x axis, the deciding method's score on y. A
+    horizontal line at its threshold; the stretches where it flags are shaded; a vertical line at
+    the address's usual amount; a marker at the amount in the form.
+  \item \textbf{Interaction.} Dragging the form's slider moves the marker at once; the line
+    redraws when the direction or time changes. Hover reads the score at any amount. Clicking the
+    curve sets the form's amount. A menu switches the curve to another method, with its own
+    threshold line.
+  \item \textbf{Why it matters.} The curve shows that the baseline flags unusually small amounts
+    as well as unusually large ones, which a single verdict cannot show.
+\end{itemize}
+
+\subsubsection*{G4 \quad Model verdicts (S-02)}
+\begin{itemize}
+  \item \textbf{Marks.} One row per method, grouped by family. The x axis is the share of this
+    address's scored transactions with a lower score under that method, from 0 to 100\%. A tick
+    shows where the method's threshold falls on the same scale; the dot is an orange triangle when
+    the method flags.
+  \item \textbf{Why ranks.} The nine scores have different units and one threshold is 0, so
+    neither raw scores nor ratios can share an axis. A rank within the address's own history can,
+    and it matches what the Explorer means by unusual. E7 and E8 add the ranks when S-02 is built.
+\end{itemize}
+
+\subsubsection*{G6 \quad Planted-test recall (S-03)}
+\begin{itemize}
+  \item \textbf{Marks.} Methods on the x axis; three bars each for the planted patterns (spike,
+    burst, dormant) and a marker for the mean with its 95\% interval.
+  \item \textbf{Caption.} ``Share of planted test transactions each method flagged in Assignment
+    2's evaluation. This is not accuracy on real activity, which has no labels.''
+  \item \textbf{Interaction.} Legend entries switch patterns on and off; hover shows the interval.
+\end{itemize}
+
+\subsection{Which chart has which interaction}
+
+\begin{center}
+\small\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+ & \textbf{G1} & \textbf{G2} & \textbf{G3} & \textbf{G5} & \textbf{G4} & \textbf{G6} \\
+\midrule
+Zoom and pan & \yes & \yes & -- & \yes & -- & \yes \\
+Range slider or range buttons & \yes & -- & -- & -- & -- & -- \\
+Tooltips with units & \yes & \yes & \yes & \yes & \yes & \yes \\
+Click-through to a view & \yes & \yes & -- & sets the form & -- & -- \\
+Filtering & method & filter bar & -- & method & -- & legend \\
+Selection (S-07) & -- & \yes & -- & -- & -- & -- \\
+Updates without a reload & method, replay & filters, replay & what-if & what-if & what-if & -- \\
+Table view, PNG export & \yes & \yes & \yes & \yes & \yes & \yes \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Performance}
+
+\begin{itemize}
+  \item \textbf{Loading.} Plotly is the largest dependency. It is imported only when the first
+    chart mounts, from a bundle that registers only the trace types in use (bar, scatter, WebGL
+    scatter, and heat map if G7 or G8 is built). The first screen never waits for it.
+  \item \textbf{Drawing.} Charts update in place and keep the zoom; resizes are debounced; a
+    chart off screen is not redrawn.
+  \item \textbf{Data.} G2 loads pages of 200 rows and draws when the first page arrives.
+  \item \textbf{Evidence (S-12).} \code{tools/measure.py} and a browser script record the time to
+    first chart and the redraw time for 700, 7,966 and 50,000 points (the last is synthetic and
+    appears in no view). The table goes into the report.
+\end{itemize}
+
+\begin{done}
+Each finished chart passes the contract's checklist, has a component test for its states and its
+table view, and is shown in the video with one zoom, one tooltip and one click. Three chart types
+are present at MS2.
+\end{done}

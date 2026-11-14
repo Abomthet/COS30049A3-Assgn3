@@ -1,0 +1,298 @@
+\section{The API}
+\label{sec:api}
+
+This is the contract both tiers build against. FastAPI generates the same information as an OpenAPI
+schema, served at \code{/docs}, \code{/redoc} and \code{/openapi.json}; the report's API section is
+written from that schema so the two cannot differ.
+
+\subsection{Conventions}
+\label{sec:apiconventions}
+
+\begin{itemize}
+  \item \textbf{Base and format.} Every path starts with \code{/api}. Bodies are JSON in UTF-8,
+    except the CSV export (E10) and the progress stream (E18). Names are camelCase, as in
+    Assignment 1's contract and \code{predict.py}.
+  \item \textbf{Resources.} Paths name things (addresses, transactions, methods, watchlist entries,
+    lookups), and the HTTP method says what happens: GET reads and changes nothing; POST computes
+    from a body or starts a job; PUT creates or replaces the named entry and can be repeated safely;
+    DELETE removes it. Assignment 1's \code{POST /api/lookup} keeps its name because it was promised.
+  \item \textbf{Times and amounts.} Times are ISO 8601 in UTC, such as \code{2026-10-20T12:00:00Z}.
+    Days are \code{YYYY-MM-DD} in UTC. Amounts in responses are whole satoshis (\code{netSats});
+    feature values are in the units people read (BTC, count, hours, ratio). The what-if request
+    takes \code{amountBtc}, with up to eight decimal places.
+  \item \textbf{Lists.} \code{page} starts at 1; \code{pageSize} defaults to 50 and stops at 200.
+    A list answers with its rows, \code{page}, \code{pageSize} and \code{total}. No rows is a 200
+    with an empty list, never an error.
+  \item \textbf{Errors.} One body for every failure (Section~\ref{sec:errorbody}).
+  \item \textbf{Headers.} Every response carries \code{X-Request-ID}. Snapshot data carries an
+    \code{ETag} and \code{Cache-Control: no-cache}, so a repeat request costs a 304. Responses over
+    1 kB are compressed with gzip.
+  \item \textbf{The deciding method.} E3, E5, E6, E7 and E10 accept \code{method=} (S-01). Without
+    it they use \code{explorerMethod}, the baseline.
+\end{itemize}
+
+\subsection{Every endpoint}
+\label{sec:endpoints}
+
+{\small
+\begin{longtable}{@{}L{0.7cm}L{1.3cm}L{6.6cm}L{4.0cm}L{1.7cm}@{}}
+\toprule
+\textbf{No.} & \textbf{Method} & \textbf{Path} & \textbf{Returns} & \textbf{Tier} \\
+\midrule
+\endhead
+E1 & GET & \code{/api/health} & Ready or starting; what is loaded & \must \\
+E2 & GET & \code{/api/config} & Snapshot, limits, thresholds, feature names, capabilities & \must \\
+E3 & GET & \code{/api/addresses} & The addresses that can be opened, with counts & \must{} (A1) \\
+E4 & POST & \code{/api/lookup} & Whether a typed address is supported & \must{} (A1) \\
+E5 & GET & \code{/api/addresses/{address}/timeline} & Per-day counts, totals, range, history status & \must{} (A1) \\
+E6 & GET & \code{/api/addresses/{address}/transactions} & A filtered, sorted page of transaction rows & \must{} (A1, extended) \\
+E7 & GET & \code{/api/transactions/{txid}?address=} & One transaction: facts, features, reason, every model's verdict & \must{} (A1) \\
+E8 & POST & \code{/api/addresses/{address}/what-if} & A hypothetical transaction's verdict from every model & \must \\
+E9 & POST & \code{/api/addresses/{address}/what-if/curve} & Scores over a range of amounts & \must \\
+E10 & GET & \code{/api/addresses/{address}/export} & The scored transactions as a CSV or JSON file & \must \\
+E11 & GET & \code{/api/methods} & The nine methods, their thresholds and test results & \must \\
+E12 & POST & \code{/api/explanations} & The Assistant's guarded explanation, or the template & \should{} S-05 \\
+E13 & GET & \code{/api/watchlist} & The watched addresses with labels and notes & \should{} S-04 \\
+E14 & PUT & \code{/api/watchlist/{address}} & Adds or replaces an entry & \should{} S-04 \\
+E15 & DELETE & \code{/api/watchlist/{address}} & Removes an entry & \should{} S-04 \\
+E16 & POST & \code{/api/live/lookups} & Starts a live lookup; answers 202 with its identifier & \should{} S-09 \\
+E17 & GET & \code{/api/live/lookups/{id}} & The lookup's status and progress & \should{} S-09 \\
+E18 & GET & \code{/api/live/lookups/{id}/events} & The same as a stream of events & \should{} S-09 \\
+E19 & DELETE & \code{/api/live/lookups/{id}} & Cancels the lookup & \should{} S-09 \\
+E20 & DELETE & \code{/api/addresses/{address}} & Forgets a fetched address & \should{} S-09 \\
+E21 & GET & \code{/api/addresses/{address}/surprisal} & TxGPT's surprisal per field & \could{} C-01 \\
+E22 & GET & \code{/api/addresses/{address}/profile} & The address's activity profile & \could{} C-02 \\
+\bottomrule
+\end{longtable}
+}
+
+The Must tier uses GET and POST across eleven endpoints, which meets the brief's ``at least two
+HTTP methods''. S-04 adds PUT and DELETE on a resource where they mean what REST says they mean.
+
+\subsection{The error body and the status codes}
+\label{sec:errorbody}
+
+\begin{lstlisting}[style=json]
+{
+  "status": "invalid",
+  "message": "The amount must be greater than zero.",
+  "hint": "Enter an amount in BTC, such as 0.05.",
+  "fields": [ { "name": "amountBtc", "message": "Must be greater than 0." } ],
+  "requestId": "0f3c9a1e7b2d"
+}
+\end{lstlisting}
+
+\code{status} is for the code, \code{message} and \code{hint} are plain words that are safe to
+show, \code{fields} names the form fields at fault, and \code{requestId} matches the server's log
+line. The first three are Assignment 1's bodies unchanged; \code{fields} and \code{requestId} are
+additions. Some statuses add their own keys, as Assignment 1 planned: \code{examples} with
+\code{unsupported}, and \code{transaction}, \code{history} and \code{firstScoredDate} with
+\code{insufficient_history}.
+
+{\small
+\begin{longtable}{@{}L{0.9cm}L{3.6cm}L{5.2cm}L{4.2cm}@{}}
+\toprule
+\textbf{Code} & \textbf{\code{status}} & \textbf{When} & \textbf{Raised by} \\
+\midrule
+\endhead
+200 & -- & Success with a body & \\
+201 & -- & A watchlist entry was created & E14 \\
+202 & -- & A live lookup was accepted and is running & E16 \\
+204 & -- & Removed; no body & E15, E19, E20 \\
+304 & -- & The cached copy is still right & snapshot GETs \\
+400 & \code{invalid} & A malformed address, date, transaction ID, number, choice or body; an unknown field; \code{from} after \code{to} & Pydantic validation, the address checker, \code{ValueError} \\
+403 & \code{disabled} & Live lookup is switched off on this server & E16 to E20 \\
+404 & \code{unsupported} & A valid address that is not in the snapshot or the live cache; carries three examples & \code{Unsupported} \\
+404 & \code{not_found} & An unknown transaction for that address, watchlist entry, lookup or path & \code{Unsupported}, the repositories \\
+409 & \code{conflict} & The watchlist is full; a lookup for that address is already running; a snapshot address cannot be forgotten & E14, E16, E20 \\
+413 & \code{too_large} & A body over the size limit & middleware \\
+415 & \code{invalid} & A body that is not JSON & FastAPI \\
+422 & \code{insufficient_history} & Too little earlier history to score: the address, the transaction, or the what-if's time & \code{InsufficientHistory} \\
+429 & \code{rate_limited} & Too many live lookups, or the Assistant is busy; carries \code{Retry-After} & E12, E16 \\
+500 & \code{server_error} & Anything unexpected. A fixed message and the request identifier; the trace goes to the log only & the catch-all handler \\
+502 & \code{upstream_error} & Esplora answered with an error & E16 to E18 \\
+503 & \code{unavailable} & The models are still loading, or a file is missing & E1; \code{FileNotFoundError} \\
+504 & \code{upstream_timeout} & Esplora did not answer in time & E16 to E18 \\
+\bottomrule
+\end{longtable}
+}
+
+\begin{caution}
+FastAPI's own validation error is a 422 with a \code{detail} list. The handler for
+\code{RequestValidationError} is replaced so that it answers 400 with the body above (D-A3-5). A
+test posts a wrong type to every POST and PUT endpoint and checks for 400 and \code{fields}.
+\end{caution}
+
+\subsection{Endpoints in detail}
+
+Shapes marked A1 are those of \fp{frontend/src/api/types.ts} in the prototype. Full example bodies
+are in Appendix~\ref{app:json}.
+
+\subsubsection*{E1 \quad GET /api/health}
+Answers 200 with \code{status: "ok"}, the application version, \code{snapshotDate},
+\code{addressCount}, \code{methodCount}, \code{assistant} (\code{ready}, \code{not_installed},
+\code{loading} or \code{off}), \code{liveLookup} (true or false) and \code{uptimeSeconds}. While the
+models load it answers 503 with \code{status: "unavailable"}. Never cached. The front end polls it
+for the service-status indicator, and the README uses it as the first check.
+
+\subsubsection*{E2 \quad GET /api/config}
+Everything the front end would otherwise hard-code: \code{snapshot} (date, source, link, address
+count, method), \code{limitationLine}, \code{features} (identifier, name, description and unit of F1
+to F4), \code{history} (the minimum of 10 transactions over 14 days), \code{thresholds} (the flag
+line 5.0 and the contributing line 2.0), \code{defaultMethod}, the \code{web} block of
+Section~\ref{sec:config}, \code{whatIf.defaultTime} (noon UTC on the snapshot date) and
+\code{capabilities} (\code{assistant}, \code{liveLookup}).
+
+\subsubsection*{E3 \quad GET /api/addresses}
+A1's \code{AddressesResponse}: \code{snapshot} and \code{addresses}. Each address has
+\code{address}, \code{firstSeen}, \code{lastSeen}, \code{txCount}, \code{scoredCount},
+\code{flaggedCount} and \code{history} (\code{sufficient} or \code{insufficient}). Added:
+\code{kind} (the address type, such as P2PKH), \code{source} (\code{snapshot} or \code{live}) and,
+with S-04, \code{watch} (label and note, or null). Main addresses come first, busiest first; the
+short-history ones last, as in the terminal Explorer.
+
+\subsubsection*{E4 \quad POST /api/lookup}
+Body: \code{address}. 200 with \code{status: "supported"}, the normalised \code{address} and its
+\code{summary}. 400 \code{invalid} with the checker's specific message, such as ``This address fails
+its checksum, so it probably contains a typo.'' 404 \code{unsupported} with the coverage sentence
+and three \code{examples}; with S-09 it adds \code{canLookupLive}.
+
+\subsubsection*{E5 \quad GET /api/addresses/\{address\}/timeline}
+A1's \code{TimelineResponse}: \code{address}, \code{snapshot}, \code{range} (first and last
+transaction time), \code{days} (only days with transactions, oldest first, each with
+\code{txCount} and \code{flaggedCount}), \code{totals} (\code{txCount}, \code{scoredCount},
+\code{flaggedCount}, \code{flaggedDays}) and \code{history} (\code{status}, \code{txCount},
+\code{spanDays}, \code{required}, \code{firstScoredDate}). A short-history address answers 200 with
+\code{history.status: "insufficient"} and \code{scoredCount: 0}, so the screen can list its
+transactions unscored. Errors: 400, 404 \code{unsupported}.
+
+\subsubsection*{E6 \quad GET /api/addresses/\{address\}/transactions}
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.4cm}L{4.3cm}Y@{}}
+\toprule
+\textbf{Query} & \textbf{Values} & \textbf{Meaning} \\
+\midrule
+\code{date} & \code{YYYY-MM-DD} & One UTC day (A1's parameter) \\
+\code{from}, \code{to} & \code{YYYY-MM-DD} & An inclusive range of days; not with \code{date} \\
+\code{status} & \code{flagged}, \code{not-flagged}, \code{not-scored}; may repeat & Keep these statuses \\
+\code{direction} & \code{in}, \code{out}, \code{none}; may repeat & Keep these directions \\
+\code{sort} & \code{time}, \code{amount}, \code{score}; a leading minus reverses & Default \code{time} \\
+\code{page}, \code{pageSize} & whole numbers & Default 1 and 50; at most 200 a page \\
+\code{method} & a method identifier & Whose flags and scores to show (S-01) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+Answers \code{address}, \code{date} (or null), \code{transactions}, \code{page}, \code{pageSize}
+and \code{total}. A row is A1's \code{TransactionRow} (\code{txid}, \code{time}, \code{direction},
+\code{netSats}, \code{status}) plus \code{score} (the deciding method's, or null),
+\code{mainReason} (the template's strongest reason, such as ``Longer gap than usual''),
+\code{mainZ} and \code{flaggedBy} (how many methods flag it). A day or a filter that matches
+nothing is a 200 with an empty list. Errors: 400 for a malformed or contradictory query, 404
+\code{unsupported}.
+
+The scatter chart asks for up to 200 rows a page and joins the pages; the largest snapshot address
+needs four requests.
+
+\subsubsection*{E7 \quad GET /api/transactions/\{txid\}?address=}
+A1's \code{TransactionDetail}: the facts (\code{txid}, \code{address}, \code{time},
+\code{blockHeight}, \code{direction}, \code{receivedSats}, \code{sentSats}, \code{netSats},
+\code{sourceUrl}), \code{scored}, \code{flagged}, \code{score}, \code{method}, \code{features}
+(for each of F1 to F4: \code{value}, \code{usual}, \code{z} and \code{role}), \code{comparison}
+(what each feature was compared with: how many earlier transactions, from when to when) and
+\code{limitation}. Added, all already returned by \code{predict.py}: \code{explanation} (the
+template text), \code{scores} and \code{flags} for every method, and \code{source}. Errors: 400
+(a transaction ID that is not 64 hexadecimal characters, or no \code{address}); 404
+\code{unsupported} (the address); 404 \code{not_found} (the transaction is not that address's);
+422 \code{insufficient_history} with the transaction's facts when it could not be scored.
+
+\subsubsection*{E8 \quad POST /api/addresses/\{address\}/what-if}
+\label{sec:e8}
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.2cm}L{3.1cm}Y@{}}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Rule} \\
+\midrule
+\code{amountBtc} & number or decimal string & Greater than 0; at least 0.00000001; at most 21,000,000; at most 8 decimal places \\
+\code{direction} & \code{"in"} or \code{"out"} & Required \\
+\code{time} & ISO 8601 with a zone & Not before the address's first transaction (else 422); not more than \code{maxGapYears} after its last (else 400) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+200: a transaction detail as E7 with \code{txid: "what-if"}, \code{sourceUrl: null}, the template
+\code{explanation}, \code{scores} and \code{flags} from the eight methods that can score new input,
+\code{notAvailable: ["txgpt_method"]} and a \code{note} that the transaction is hypothetical.
+Nothing is stored. Errors: 400 \code{invalid} with \code{fields}; 404 \code{unsupported}; 422
+\code{insufficient_history} when fewer than 10 transactions or 14 days of history precede the
+chosen time, with the counts and the first date that can be scored.
+
+\subsubsection*{E9 \quad POST /api/addresses/\{address\}/what-if/curve}
+Body: \code{direction} and \code{time} as E8, then either \code{amountsBtc} (a list of up to 61
+amounts) or \code{minBtc}, \code{maxBtc} and \code{points}. With neither, the server spaces 41
+amounts evenly on a log scale from one hundredth of the address's usual amount in that direction to
+a thousand times it. 200: \code{amountsBtc}, \code{usualBtc}, \code{decidingMethod}, and for each
+method its \code{threshold}, \code{scores} and \code{flags}, one per amount. One feature build
+scores every amount (Section~\ref{sec:whatif}). Errors as E8.
+
+\subsubsection*{E10 \quad GET /api/addresses/\{address\}/export}
+Query: \code{format} (\code{csv}, the default, or \code{json}) and E6's filters. Answers a file
+with \code{Content-Disposition: attachment}, named from the first eight characters of the address
+and the snapshot date. CSV columns: address, transaction ID, time (UTC), direction, received, sent
+and net amount in BTC, scored, flagged, deciding method, score, each feature's value, usual value
+and z, the main reason, the methods that flag it, the source link, the snapshot date and, on
+flagged rows, the limitation line. A cell that starts with \code{=}, \code{+}, \code{-} or
+\code{@} is written with a leading apostrophe, so a spreadsheet does not run it as a formula.
+
+\subsubsection*{E11 \quad GET /api/methods}
+\code{defaultMethod} and \code{methods}. Each has \code{id}, \code{name}, \code{family} (statistics,
+outlier detection, clustering, regression, combination, language model), a one-sentence
+\code{description}, its \code{threshold}, \code{scoresNewInput} and \code{evaluation}: mean recall
+on planted transactions with its 95\% interval, recall per pattern (spike, burst, dormant) and the
+flag rate on real transactions. The evaluation numbers are read from copies of Assignment 2's
+\fp{eval_significance.csv} and \fp{eval_selection.csv}; none is typed.
+
+\subsubsection*{E12 \quad POST /api/explanations \quad (S-05)}
+Body: \code{address} and either \code{txid} or a \code{whatIf} object as E8. 200: \code{txid},
+\code{flagged}, \code{explanation}, \code{source} (\code{text150m} or \code{template}),
+\code{cached}, \code{attempts} (each writer tried and the guardrail checks it failed),
+\code{skippedWriters} (a writer this machine cannot run, and why), \code{limitation} and
+\code{seconds}. A rejected answer is never returned. Errors: 400, 404, 422; 429 while another
+answer is being written.
+
+\subsubsection*{E13 to E15 \quad the watchlist \quad (S-04)}
+\code{GET /api/watchlist} lists entries (\code{address}, \code{label}, \code{note}, \code{addedAt},
+\code{updatedAt} and the address's summary). \code{PUT /api/watchlist/{address}} with
+\code{label} (40 characters at most) and \code{note} (500 at most) answers 201 for a new entry and
+200 for a replaced one; 404 \code{unsupported} for an address that cannot be opened; 409 when the
+list holds 200 entries. \code{DELETE} answers 204, or 404 \code{not_found}.
+
+\subsubsection*{E16 to E20 \quad live lookup \quad (S-09, CR-08)}
+\code{POST /api/live/lookups} with \code{address} and optional \code{maxTx} (50 to 1,000; default
+500) answers 202 with the lookup's \code{id}, its \code{status} and links to E17 and E18, and a
+\code{Location} header. A fresh cached result answers 200 at once. \code{GET} E17 returns
+\code{status} (\code{queued}, \code{fetching}, \code{scoring}, \code{done}, \code{failed},
+\code{cancelled}), \code{progress} (pages and transactions fetched, the cap) and, on failure, an
+error body. E18 sends the same as server-sent events named \code{progress}, \code{status},
+\code{done} and \code{failed}, with a comment line every 15 seconds to keep the connection open.
+E19 cancels. Once done, the address answers E5 to E10 like a snapshot address, with
+\code{source: "live"} and the time it was fetched; E20 forgets it.
+
+\subsubsection*{E21, E22 \quad (Could)}
+E21 returns, for a snapshot address, each transaction's surprisal in total and for the six token
+fields (gap, direction, amount, inputs, outputs, fee). E22 returns the address's profile from
+Assignment 2's profile model: its label, its eight address-level features and the profile's medians.
+
+\subsection{What the report documents}
+
+The brief asks for at least four endpoints. The report gives the table of
+Section~\ref{sec:endpoints}, the error body, and four endpoints in full with a request and a real
+response each: E4 (a POST with all three outcomes), E5, E7 and E8. The complete reference, exported
+from \code{/openapi.json}, goes in the appendix, which does not count towards the eight pages.
+
+\begin{done}
+Every endpoint in a finished tier has a response model, appears in \code{/docs} with a summary and
+an example, and has one test for its success and one for each error in its row. \code{GET} E3 to E7
+return exactly what \code{Predictor} returns for all 28 addresses (the parity test of
+Section~\ref{sec:tests}).
+\end{done}

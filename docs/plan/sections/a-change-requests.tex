@@ -1,0 +1,105 @@
+\section{Change requests CR-07 and CR-08, and the messages to send}
+\label{app:cr}
+
+Assignment 1's §8.5 requires a change request to add an optional item from the scope exhibit, to
+change a must-have item, or to use more than half of an assignment's buffer, and it needs every
+member's agreement, at a meeting or by a recorded message within 48 hours. The fields follow the
+Change Log (\fp{docs/change-log.md} since CR-06).
+
+\subsection{CR-07: the Assignment 3 scope}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.0cm}Y@{}}
+\toprule
+\textbf{Field} & \textbf{Entry} \\
+\midrule
+ID & CR-07 \\
+Date raised & Tuesday 10 November 2026 \\
+Requestor & Cao Tri Tran (Data/ML Lead) \\
+Proposal & Adopt Section~\ref{sec:scope} of this plan as the scope of WBS 1.4. (1) Activate Assignment 1's optional items: a third chart type, zoom, filtering and tooltips, and CSV export. (2) Add to the must-have items: the what-if prediction and its form, the response curve, the models and limits page, export, and a health and a settings endpoint. (3) Add as optional items: the method selector, two more charts, the watchlist, the Assistant, the replay, linked selection, the scenario table, generated types and browser tests. (4) Record decisions D-A3-1 to D-A3-11 \\
+Reason & The Assignment 3 rubric gives full points for three or more chart types, interactive charts, real-time updates and predictions from user input, and the brief's High Distinction list asks for at least three advanced functions. Assignment 1's minimum viable demonstration alone meets the brief's pass level \\
+Impact on scope & Must items are added; nothing Assignment 1 promised is removed (Section~\ref{sec:promises}). Its five endpoints keep their shapes \\
+Impact on schedule & WBS 1.4 starts on 10 November, 13 days after the baseline, and the new schedule (Section~\ref{sec:schedule}) uses the whole Assignment 3 buffer. Package 1.4.5 holds everything that can be cut \\
+Impact on risk & Risks 6, 7, 8, 9, 12 and 31 are re-scored and risks 32 to 40 added (Section~\ref{sec:riskregister}) \\
+Impact on quality & More evidence: tests on both tiers, a parity test against Assignment 2, a usability walkthrough, a clean install on two systems \\
+Decision & Pending: approve, reject or defer, by name, at the Week 9 meeting \\
+Changed artefacts & Scope exhibit; WBS dictionary 1.4.1 to 1.4.7; Gantt chart; risk register \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{CR-08: a live lookup}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.0cm}Y@{}}
+\toprule
+\textbf{Field} & \textbf{Entry} \\
+\midrule
+ID & CR-08 \\
+Date raised & Tuesday 10 November 2026 \\
+Requestor & Cao Tri Tran (Data/ML Lead) \\
+Proposal & Allow the application, when a setting is on, to fetch the public confirmed history of any valid Bitcoin address from the Esplora API, score it with the frozen models and show it as live data (S-09, Section~\ref{sec:live}). The setting is off by default \\
+Reason & The brief's High Distinction list names live data feeds, and the rubric's model line asks for real-time predictions on varied input. Assignment 2 already applies the frozen models to addresses outside the snapshot for its held-out test, with the same client \\
+What it reverses & Assignment 1 §2.6: ``No live blockchain calls are made from the application''. Assignment 1's scope exhibit: addresses outside the curated sample are excluded \\
+What it keeps & Every Must item reads local files (D-A3-7), so risk 15's trigger, ``the application needs a live call to run'', cannot fire. No identity, ownership or intent claim is made for any address; the wording rule and the limitation line apply to fetched addresses exactly as to snapshot ones \\
+Impact on schedule & Four days of two members in package 1.4.5 (T36). First in the cut order after the tooling items \\
+Impact on risk & Risk 15 is re-opened for S-09 only, with limits on rate, size and concurrency \\
+Decision & Pending. Needed by Sunday 22 November; with no decision by then, S-09 is cut \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Message to the team}
+
+\begin{summarybox}
+\textbf{Assignment 3 plan and two change requests: please reply by Thursday's meeting.}
+
+The delivery plan for Assignment 3 is in the repository (\fp{docs/A3_delivery_plan.pdf}). Sections
+\ref{sec:summary} and \ref{sec:scope} are the ones to read first.
+
+\textbf{CR-07.} Assignment 1's optional items (a third chart, zoom and filtering, CSV export) become
+part of the build, and a what-if form, a response curve and a models page are added, because the
+rubric's full points and the High Distinction list need them. Nothing from Assignment 1 is dropped.
+
+\textbf{CR-08.} An optional live lookup of any Bitcoin address, off by default. It reverses
+Assignment 1's ``no live calls'' statement, so it needs all four of us. If it is not approved by
+22 November it is dropped and nothing else changes.
+
+\textbf{Owners.} Section~\ref{sec:wp} proposes who builds what, following Assignment 1's WBS: Hoang
+the back end, Khang the front end, Dan two charts, two views, the accessibility inspection and the
+report, Cao the model layer. Say if you want a different split; each of us has to be able to explain
+our part in the video.
+
+Please reply ``approve'', ``reject'' or ``defer'' for each change request, by name.
+\end{summarybox}
+
+\subsection{Message to the tutor}
+
+\begin{summarybox}
+Dear Arthur,
+
+We are starting Assignment 3 for group HCMC\_COS30049.1\_4 (the Bitcoin Address Activity Explorer)
+and have six short questions.
+
+\begin{enumerate}
+  \item \textbf{Generative AI.} For Assignment 2 you allowed AI use with a separate declaration.
+    The Assignment 3 brief says AI must not generate content, allows it for learning, idea
+    generation and debugging, and asks for all use to be acknowledged in the report. Does the
+    Assignment 2 arrangement still apply, and in what form would you like the acknowledgement?
+  \item \textbf{Stack.} Our marked Assignment 1 prototype uses React with TypeScript and Vite. May
+    we keep it in place of create-react-app?
+  \item \textbf{Deadline and sizes.} Is the due time Sunday 6 December, 23:59 (GMT+7)? What are
+    Canvas's size limits for the zip and for the video?
+  \item \textbf{Model files.} The models the application needs are about 30 MB and are in the zip.
+    An optional 152M language model is 610 MB. May the README link to it with a checksum?
+  \item \textbf{Running it.} Is a local run from the README what you expect, or should it also be
+    hosted somewhere?
+  \item \textbf{API documentation.} May the complete API reference go in the appendix, with four
+    endpoints documented in full inside the eight pages?
+\end{enumerate}
+
+Thank you. \\
+Cao Tri Tran, for the group
+\end{summarybox}

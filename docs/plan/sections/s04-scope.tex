@@ -1,0 +1,157 @@
+\section{Scope}
+\label{sec:scope}
+
+This section is the baseline the later sections detail. Every item has an identifier that the API,
+front-end, chart, test and schedule sections use: M for Must, S for Should, C for Could, W for
+Won't. Views are V1 to V8, charts G1 to G9, endpoints E1 to E22, journeys J1 to J8 and tasks T01
+to T52.
+
+\subsection{Scope statement}
+
+\textbf{The product.} A web application for one Bitcoin address at a time. It shows the address's
+confirmed activity per day, lists each day's transactions, marks the transactions that are unusual
+compared with the same address's own earlier activity, says why in plain words, shows what each of
+nine models makes of a transaction, and lets the user test a hypothetical transaction against the
+address's real history.
+
+\textbf{The user.} A student researcher or analyst deciding which transactions deserve a closer
+look, as in Assignment 1. The application is used by one person on their own machine.
+
+\textbf{The success boundary}, unchanged from Assignment 1: the system can explain why observed
+transactions stand out; it cannot establish wrongdoing, identity, intent or ownership.
+
+\textbf{The topic in the brief's list.} Area 5, cybersecurity threat detection in banking and
+finance, by way of anomaly detection on transaction histories (area 4's method). The tutor approved
+the topic for all three assignments.
+
+\subsection{User journeys}
+\label{sec:journeys}
+
+Each journey is a path the video shows and an acceptance test runs (Section~\ref{sec:acceptance}).
+
+\begin{longtable}{@{}L{0.8cm}L{4.2cm}L{6.9cm}L{2.1cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Journey} & \textbf{Steps} & \textbf{Serves} \\
+\midrule
+\endhead
+J1 & Open an address and read its activity & Pick an address from the list → the overview shows the date range, the source and snapshot date, four summary tiles, the daily chart and the days with unusual transactions & FR-01, FR-02, AC-01 \\
+J2 & Find out why a transaction stands out & Click a flagged day → the day's transactions → one transaction: its facts, the reason in plain words, the comparison basis, the limitation line, the feature chart and every model's verdict & FR-03, FR-04, AC-03 \\
+J3 & Type an address that cannot be shown & A typo is caught before any request; a valid address outside the snapshot gets an explanation and three supported examples; a short-history address lists its transactions unscored & FR-05, AC-02 \\
+J4 & Test a hypothetical transaction & Open the what-if lab → enter an amount, a direction and a time → the verdict and the response curve update as the values change → keep the scenario & Brief: user input → prediction; M-03, M-04, M-06 \\
+J5 & Explore with the charts & Zoom the daily chart with the range slider; filter the scatter to outgoing, flagged transactions; hover for the facts; click a point to open it & M-07, M-08 \\
+J6 & Take the results away & Export the address's scored transactions as CSV; save a chart as PNG & M-12 \\
+J7 & Compare the models and keep a watchlist & Switch the deciding method and watch the flags change; read the models page; add the address to the watchlist with a note; find it again from the first screen & S-01 to S-04 \\
+J8 & Look up an address outside the snapshot & Start a live lookup → watch the progress → the same overview opens for the fetched address, marked as live data & S-09 (CR-08) \\
+\bottomrule
+\end{longtable}
+
+\subsection{Scope table}
+\label{sec:scopetable}
+
+\must{} items together reach the full-points description of every rubric line.
+\should{} items are the High Distinction extras and the polish; each stands alone and can be cut
+without breaking another. \could{} items are built only after MS3 and only with a logged change.
+\wont{} items are excluded, with the reason.
+
+{\small
+\begin{longtable}{@{}L{0.9cm}L{6.9cm}L{3.6cm}L{2.5cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Item} & \textbf{Rubric lines it serves} & \textbf{Specified in} \\
+\midrule
+\endhead
+\multicolumn{4}{@{}l}{\must} \\
+M-01 & Back-end service: application factory, models loaded once at start, settings, CORS, logging, request identifiers, one error body, health check, generated API documentation & Code 1, 3; Functionality 4 & \ref{sec:architecture}, \ref{sec:api} \\
+M-02 & Assignment 1's five endpoints on the real snapshot (E3 to E7), with its 400, 404 and 422 bodies & Functionality 1, 2, 4 & \ref{sec:api} \\
+M-03 & What-if prediction (E8): a hypothetical transaction scored by every model that can score new input & Functionality 1, 2 & \ref{sec:whatif} \\
+M-04 & What-if response curve (E9): one request scores a range of amounts & Functionality 1, 5; Visualisation 1 & \ref{sec:whatif} \\
+M-05 & The three prototype screens on the real API (V1 to V3) through an Axios client; prototype banner and tools removed & Functionality 2; Usability 1 & \ref{sec:frontend} \\
+M-06 & The what-if lab (V4): a validated form with live feedback & Functionality 2, 3; Usability 1, 2 & \ref{sec:viewwhatif} \\
+M-07 & Charts G1, G2, G3 and G5 in Plotly.js under one chart contract: zoom, pan, range slider, tooltips, legend, units, snapshot date, table view, click-through & Visualisation 1 to 4 & \ref{sec:charts} \\
+M-08 & A filter bar (status, direction, date range) that drives the scatter and the transaction table through E6 & Visualisation 2; Functionality 2 & \ref{sec:filters} \\
+M-09 & Validation on both tiers from one rule table (address, date, transaction ID, what-if, list parameters), with shared test vectors & Functionality 3 & \ref{sec:validation} \\
+M-10 & Error handling on both tiers: one catalogue of states, each with a next action; error boundary; toasts; retry; time limits; service-status indicator & Functionality 3; Usability 2 & \ref{sec:errors} \\
+M-11 & Real-time behaviour: the what-if refreshes as values change; feedback within 100 ms on every request; layouts at 390, 820 and 1280 pixels & Functionality 5; Usability 1 & \ref{sec:realtime} \\
+M-12 & Export: an address's scored transactions as CSV or JSON (E10); any chart as PNG & Usability 2; HD list & \ref{sec:api}, \ref{sec:chartcontract} \\
+M-13 & Every model's verdict on a transaction (a table in V3), the method list (E11) and the models and limits page (V5) & Functionality 1 & \ref{sec:model}, \ref{sec:frontend} \\
+M-14 & Tests on both tiers, the wording test, the README, and a clean install by a teammate on Windows and macOS & Code 1 to 3 & \ref{sec:quality} \\
+M-15 & The usability walkthrough (four tasks, two or more participants) and the accessibility inspection, with every severity 3 or 4 issue fixed & Usability 1, 2 & \ref{sec:usability} \\
+M-16 & The submission: report, video, minutes, contribution form, zip & Report 1 to 3; all & \ref{sec:report} \\
+\midrule
+\multicolumn{4}{@{}l}{\should{} (in build order)} \\
+S-01 & Method selector: view the flags of any of the nine methods (\code{?method=}); the baseline is the default & Functionality 1; Visualisation 2 & \ref{sec:methods} \\
+S-02 & Chart G4: each model's score against its own threshold for one transaction & Visualisation 1, 2 & \ref{sec:charts} \\
+S-03 & Chart G6: each method's recall on planted test transactions, from Assignment 2's tables, on V5 & Visualisation 1, 3 & \ref{sec:charts} \\
+S-04 & Watchlist with a label and a note (E13 to E15), recent addresses, remembered preferences & Functionality 4; Usability 2 & \ref{sec:viewwatch} \\
+S-05 & Explorer Assistant explanations on request (E12): guarded, cached, optional weights, prepared answers for the snapshot's flags & Functionality 1 & \ref{sec:assistant} \\
+S-06 & Replay: an address's history played forward, the charts updating as each transaction arrives & Functionality 5; Visualisation 2 & \ref{sec:realtime} \\
+S-07 & Linked selection: points selected in the scatter filter the table and show a summary & Visualisation 2 & \ref{sec:charts} \\
+S-08 & Scenario table in the what-if lab: keep, compare and export what-ifs & Usability 2 & \ref{sec:viewwhatif} \\
+S-09 & Live lookup of any valid Bitcoin address (E16 to E20): progress stream, cache, limits. Needs CR-08 & Functionality 1, 5 & \ref{sec:live} \\
+S-10 & TypeScript types generated from the OpenAPI schema; tests and builds run on every push & Code 3 & \ref{sec:tests} \\
+S-11 & Browser tests of the journeys at three widths, producing the report's screenshots & Code 1; Usability 1 & \ref{sec:tests} \\
+S-12 & A script that measures response times, bundle sizes and chart render times, for the report & Visualisation 4 & \ref{sec:budgets} \\
+\midrule
+\multicolumn{4}{@{}l}{\could} \\
+C-01 & Chart G7: TxGPT's surprisal per field for a snapshot transaction (E21) & Visualisation 1 & \ref{sec:charts} \\
+C-02 & Activity profile card from Assignment 2's address profiles (E22) & Functionality 1 & \ref{sec:api} \\
+C-03 & Charts G8 (calendar heat map) and G9 (snapshot overview) & Visualisation 1 & \ref{sec:charts} \\
+C-04 & Review marks on transactions (``worth a look'', ``as expected'', ``unsure'') with a note and an export & Usability 2 & -- \\
+C-05 & One-command mode: FastAPI serves the built front end; a Docker Compose file & Code 1 & \ref{sec:runmodes} \\
+C-06 & Watch mode for a live address: new confirmed transactions appear by themselves & Functionality 5 & \ref{sec:live} \\
+C-07 & A printable one-page summary of an address & Usability 2 & -- \\
+\midrule
+\multicolumn{4}{@{}l}{\wont} \\
+W-01 & Any claim about who owns an address, links between addresses, or wallet tracking & \multicolumn{2}{L{6.1cm}}{Assignment 1 exclusion; the data cannot support it} \\
+W-02 & Other blockchains and Bitcoin test networks & \multicolumn{2}{L{6.1cm}}{Assignment 1 exclusion; validation rejects them with a reason} \\
+W-03 & Accounts, sign-in, roles & \multicolumn{2}{L{6.1cm}}{Not in the brief; one local user (D-A3-8)} \\
+W-04 & The Elliptic and BitcoinHeist classifiers in the interface & \multicolumn{2}{L{6.1cm}}{Elliptic's licence forbids shipping a derived model; the BitcoinHeist model is 276 MB and near chance across time; a form for them would read as a verdict on an address} \\
+W-05 & Free chat with the 152M model & \multicolumn{2}{L{6.1cm}}{Its open answers are not guarded; the glossary it learned has one outdated sentence (Section~\ref{sec:looseends})} \\
+W-06 & Retraining or re-tuning any model, or changing an Assignment 2 number & \multicolumn{2}{L{6.1cm}}{The models are frozen at \code{results-v1.1}} \\
+W-07 & Scoring an uploaded file of transactions & \multicolumn{2}{L{6.1cm}}{The live lookup covers new addresses; the address store (Section~\ref{sec:store}) leaves room for it later} \\
+W-08 & A hosted public deployment as a marked item & \multicolumn{2}{L{6.1cm}}{The brief marks a local run from the README; asked of the tutor (Section~\ref{sec:tutorq})} \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{The minimum viable demonstration}
+\label{sec:mvd}
+
+Assignment 1 defined one complete journey as the gate before anything optional. Assignment 3's gate
+is that journey on real data plus the brief's own minimum, and it is milestone MS2.
+
+\begin{done}
+On all 28 snapshot addresses, with both servers started from the README:
+\begin{enumerate}
+  \item J1, J2 and J3 pass: AC-01, AC-02, AC-03 and all five FR-05 states, checked by the
+    acceptance tests and by hand on three addresses.
+  \item J4 passes: a what-if entered in the form returns every model's verdict, and an invalid
+    value is refused in the browser and again by the server.
+  \item Three chart types are on screen (G1 bar, G2 scatter, G5 line) with zoom and tooltips,
+    each with a title, axis units, a legend and the snapshot date.
+  \item The API uses GET and POST, and its documentation page lists every endpoint.
+  \item The wording test finds none of the five banned words in any response or on any screen,
+    and every flagged transaction shows the limitation line.
+  \item The layouts pass at 390, 820 and 1280 pixels with no sideways scrolling.
+\end{enumerate}
+\end{done}
+
+\subsection{Cut order if time runs short}
+\label{sec:cutorder}
+
+Items are cut from the bottom of this list upwards, and each cut is recorded in the minutes and the
+change log. A Should item that is not finished and tested by MS3 (Fri 27 Nov) is cut, not carried.
+
+\begin{enumerate}
+  \item Every Could item (never started before MS3).
+  \item S-12, S-11, S-10: evidence and tooling. The Must tests still run by hand.
+  \item S-09 live lookup, the largest Should item and the only one that needs the network.
+  \item S-08 scenario table, S-07 linked selection.
+  \item S-06 replay.
+  \item S-05 Assistant: the template explanation already satisfies FR-04.
+  \item S-04 watchlist: the API then has GET and POST only, which still meets the brief.
+  \item S-03 and S-02: the charts fall back to the four Must charts, which still cover three types.
+  \item S-01 method selector: the verdict table of M-13 still shows all nine models.
+\end{enumerate}
+
+Nothing in the Must tier is cut. If a Must item is at risk, the team re-plans at once under
+Assignment 1's variance rules (Section~\ref{sec:variance}).

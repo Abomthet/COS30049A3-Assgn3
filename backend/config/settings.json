@@ -1,0 +1,538 @@
+{
+  "_about": "Every threshold in one place. Read by the Python pipeline (explorer/settings.py) and the front-end prototype (frontend/src/lib/settings.ts). Change a value here only, and log the change in the Change Log.",
+
+  "limitationLine": "Unusual activity requires investigation; it does not indicate wrongdoing.",
+
+  "source": {
+    "name": "Blockstream Esplora",
+    "apiBase": "https://blockstream.info/api",
+    "fallbackName": "mempool.space (Esplora-compatible)",
+    "fallbackApiBase": "https://mempool.space/api",
+    "apiDocs": "https://github.com/Blockstream/esplora/blob/master/API.md",
+    "explorerTxUrl": "https://blockstream.info/tx/{txid}",
+    "explorerAddressUrl": "https://blockstream.info/address/{address}",
+    "dayTimeZone": "UTC"
+  },
+
+  "collection": {
+    "pageSize": 25,
+    "requestPauseSeconds": 0.5,
+    "maxRetries": 5,
+    "timeoutSeconds": 30,
+    "maxTxPerAddress": 1000,
+    "mainMinTx": 50,
+    "mainMaxTx": 1000,
+    "mainMinSpanDays": 90,
+    "shortMinTx": 3,
+    "shortMaxTx": 9,
+    "targetMainAddresses": 25,
+    "targetShortAddresses": 3,
+    "selectionSeed": 30049,
+    "snapshotBlockCount": 20,
+    "snapshotOldestBlockBack": 4000,
+    "snapshotNewestBlockBack": 100,
+    "snapshotTxPagesPerBlock": 4,
+    "historyFetchAttempts": 2,
+    "failoverHoldSeconds": 3600,
+    "_failoverHoldSeconds": "after repeated HTTP 429s from one host, use the other for this long (plan §6.2: switch to mempool.space for an hour)",
+    "crossCheckAddresses": 2
+  },
+
+  "corpus": {
+    "seed": 30049,
+    "sources": ["fallbackApiBase"],
+    "_sources": "keys of settings.source to crawl from; Blockstream allows only 700 unauthenticated requests per hour per IP, far too few for DS2",
+    "blockCount": 200,
+    "oldestBlockBack": 52560,
+    "newestBlockBack": 100,
+    "txPagesPerBlock": 4,
+    "minTx": 20,
+    "maxTx": 1000,
+    "targetAddresses": 4000,
+    "_targetAddresses": "4,000 (user, 23 Oct): above the plan's 3,000 minimum; at ~1.6 kept/min it is reached before pretraining ends, so the GPU never waits for DS2",
+    "minimumAddresses": 3000,
+    "workersPerSource": 8,
+    "_workersPerSource": "replies take a median 4.3 s (mempool.space throttles large pages), so 4 workers reached ~1 request/s; 8 stay under the 2 request starts/s that requestPauseSeconds allows",
+    "idHexChars": 16,
+    "progressEvery": 200
+  },
+
+  "external": {
+    "downloadTimeoutSeconds": 60,
+    "bitcoinheist": {
+      "id": "DS4",
+      "name": "BitcoinHeist Ransomware Address Dataset (UCI Machine Learning Repository, dataset 526)",
+      "page": "https://archive.ics.uci.edu/dataset/526/bitcoinheistransomwareaddressdataset",
+      "url": "https://archive.ics.uci.edu/static/public/526/bitcoinheistransomwareaddressdataset.zip",
+      "doi": "10.24432/C5BG8V",
+      "citation": "Akcora, C.G., Li, Y., Gel, Y.R. and Kantarcioglu, M. (2020) BitcoinHeist: topological data analysis for ransomware prediction on the Bitcoin blockchain. IJCAI-PRICAI 2020.",
+      "licence": "CC BY 4.0",
+      "licenceCheckedOn": "2026-10-20",
+      "expectedFiles": ["BitcoinHeistData.csv"]
+    },
+    "elliptic": {
+      "id": "DS3",
+      "name": "Elliptic Data Set (Kaggle)",
+      "page": "https://www.kaggle.com/datasets/ellipticco/elliptic-data-set",
+      "url": "https://www.kaggle.com/api/v1/datasets/download/ellipticco/elliptic-data-set",
+      "doi": null,
+      "citation": "Weber, M. et al. (2019) Anti-money laundering in Bitcoin: experimenting with graph convolutional networks for financial forensics. KDD '19 Workshop on Anomaly Detection in Finance.",
+      "licence": "CC BY-NC-ND 4.0 (https://creativecommons.org/licenses/by-nc-nd/4.0/); creator Claudio Bellei",
+      "licenceCheckedOn": "2026-10-22",
+      "_licence": "No derivatives: processed Elliptic rows are never committed or zipped; the repository ships only the download record, code, metrics and figures (plan §6.3).",
+      "expectedFiles": ["elliptic_txs_features.csv", "elliptic_txs_classes.csv", "elliptic_txs_edgelist.csv"]
+    }
+  },
+
+  "features": {
+    "burstWindowDays": 7,
+    "comparisonWindowDays": 30,
+    "comparisonMinTx": 20,
+    "minComparisonValues": 5,
+    "minHistoryTx": 10,
+    "minHistorySpanDays": 14,
+    "sizeComparison": "same-direction",
+    "_sizeComparisonOptions": "same-direction (proposed CR-04: size features compared only with earlier transactions in the same direction) or all (report §2.3 as written)",
+    "csvSignificantDigits": 12,
+    "_csvSignificantDigits": "features.csv and features_as_written.csv are written with this many significant digits (decided 29 Oct; MAC REPLICATION in context.txt): numpy's last-bit rounding differs between Apple Silicon, Intel Windows and Linux (~1e-13), and the regression gap model amplified that into different fits; rounded, every machine writes identical files and fits identical models",
+    "zClip": 20,
+    "_zClip": "own-history z-scores are clipped to +/- this before pooled models (plan §6.2), so one extreme value cannot dominate",
+    "pace": {
+      "_about": "Stage A0 (docs/TRAINING_PLAN.md): F9 = strictly earlier transactions inside the last windowGaps x the address's own median gap (over its timing window; at least minGapHours), and its robust z against the same timing window (spread floor minScale). An input to the pooled scikit-learn methods only; the baseline, explanations and the A1 prototype keep F1-F4.",
+      "enabled": false,
+      "windowGaps": 3,
+      "minGapHours": 1,
+      "minScale": 1
+    }
+  },
+
+  "featuresAsWritten": {
+    "_about": "The method exactly as A1 §2.3 wrote it, for the refinement ablation (plan §6.2): a plain 30-day window with no extension (CR-02), all directions (CR-04), no log transform of F3/F4 and no floor on the spread (CR-05). Every other value comes from features and baseline.",
+    "comparisonMinTx": 0,
+    "sizeComparison": "all",
+    "transform": false,
+    "minScale": { "F1": 0, "F2": 0, "F3": 0, "F4": 0 }
+  },
+
+  "baseline": {
+    "madScale": 1.4826,
+    "flagAbsZ": 3.5,
+    "contributingAbsZ": 2.0,
+    "zTransform": {
+      "F1": "none (already log10 satoshis)",
+      "F2": "none (count)",
+      "F3": "log10(1 + hours)",
+      "F4": "log10(max(ratio, 0.001))"
+    },
+    "minScale": { "F1": 0.1, "F2": 1.0, "F3": 0.1, "F4": 0.1 }
+  },
+
+  "model": {
+    "fitFraction": 0.7,
+    "flagTopFraction": 0.02,
+    "seed": 30049,
+    "stabilityTarget": 0.7,
+    "stabilityTopK": 50,
+    "stabilitySeeds": 5,
+    "stabilityBootstraps": 5
+  },
+
+  "baselineSweep": [2.5, 3.0, 3.5, 4.0, 4.5, 5.0],
+
+  "clustering": {
+    "kmeansK": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "kmeansNInit": 20,
+    "silhouetteSample": 10000,
+    "dbscanMinPtsPerDimension": 2,
+    "dbscanEpsFactors": [0.7, 0.85, 1.0, 1.15, 1.3],
+    "dbscanMinPts": [8, 12, 16],
+    "dbscanNoiseShare": [0.01, 0.05],
+    "describeAbsZ": 1.0,
+    "describeDirectionShare": 0.6
+  },
+
+  "regression": {
+    "validationFraction": 0.2,
+    "_validationFraction": "the last share of each address's fit period used for tuning, time order kept",
+    "ridgeAlpha": [0.001, 0.00316, 0.01, 0.0316, 0.1, 0.316, 1, 3.16, 10, 31.6, 100, 316, 1000],
+    "randomForest": { "n_estimators": [300], "max_depth": [null, 10, 20], "min_samples_leaf": [1, 5, 20], "max_features": [1.0, "sqrt"] },
+    "histGradientBoosting": { "learning_rate": [0.03, 0.1], "max_leaf_nodes": [15, 31, 63], "l2_regularization": [0, 1] },
+    "intervalQuantiles": [0.05, 0.95],
+    "flagQuantiles": [0.01, 0.99],
+    "conformal": true,
+    "_conformal": "calibrate both quantile ranges by split conformal prediction (CQR) on the last validationFraction of each address's fit period (CHANGELOG 24 Oct): the raw 90% gap range covered only 79% of DS1's evaluation rows",
+    "residualFloor": 0.05,
+    "_residualFloor": "minimum residual spread (log10 units) so an address with near-identical residuals cannot divide by ~0",
+    "flagAbsR": 3.5
+  },
+
+  "evaluation": {
+    "explainabilityOrder": ["baseline", "regression_interval", "regression", "fusion", "kmeans", "isolation_forest", "dbscan", "lof", "txgpt_method"],
+    "_explainabilityOrder": "plan §11.4: the tie-break when two methods' mean injection recall is within tieMarginPoints",
+    "tieMarginPoints": 5
+  },
+
+  "fusion": {
+    "_about": "Score fusion (explorer/fusion.py): a transaction is flagged when any component's score reaches multiplier x its own threshold; multipliers tuned on the tuning plants within the explorerMethod's flag rate (equal flag budget). Components need a positive threshold.",
+    "candidates": [["baseline", "regression"], ["baseline", "isolation_forest"], ["baseline", "kmeans"], ["baseline", "lof"], ["regression", "isolation_forest"]],
+    "references": [["baseline"], ["regression"], ["isolation_forest"]],
+    "_references": "single methods searched over the same multipliers: their recall-flag rate curves are the yardstick for the pairs (never saved as the fusion)",
+    "multipliers": [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0],
+    "stabilityCandidates": 3,
+    "_stabilityCandidates": "per pair, the best configurations within the budget whose stability (25 refits each) is measured; the saved fusion must reach model.stabilityTarget, as outliers.py requires of its grids"
+  },
+
+  "sensitivity": {
+    "_about": "explorer/sensitivity.py: each pattern planted again at these strengths (reporting seeds, everything else as injection); the defaults are 10x, 10 and 60-120 days.",
+    "spikeMultiplier": [2, 3, 5, 10, 20, 50],
+    "burstSize": [3, 5, 10, 20],
+    "dormantDays": [[7, 14], [14, 30], [30, 60], [60, 120], [120, 240], [240, 480]]
+  },
+
+  "walkForward": {
+    "_about": "explorer/walkforward.py: the split moved to each of these fit fractions; every method refitted with its saved configuration (model.fitFraction is the reported one).",
+    "fitFractions": [0.5, 0.6, 0.7, 0.8]
+  },
+
+  "ds2Check": {
+    "_about": "explorer/ds2_check.py: the frozen DS1 methods on every DS2 history meeting DS1's main-address rule; plants per pattern per reporting seed (DS1 has 50 for 25 addresses; DS2 has ~117x the addresses).",
+    "plantsPerPattern": 1000
+  },
+
+  "ds10": {
+    "_about": "explorer/ds10.py: a teammate's independent DS1-style snapshot (27 addresses, 23 Oct 2026), refetched and cross-checked, then every DS1 model tested on it frozen. Plants use settings -> injection exactly as DS1 (a population of DS1's size).",
+    "maxTxPerAddress": 2000,
+    "_maxTxPerAddress": "the refetch's cap, above the teammate's 600, so a history that grew since 23 Oct is still read back to its first transaction before the cut",
+    "explanations": {"maxPairsPerAddress": 12, "unscoredPerAddress": 1},
+    "_explanations": "the explanation set for the Assistant's writers, picked as DS7 picks (ds7.pick): up to half flagged by the explorer method, the rest unflagged, one unscored"
+  },
+
+  "significance": {
+    "_about": "explorer/significance.py: address-level bootstrap of the reporting plants (plants on one address are not independent).",
+    "bootstrapResamples": 2000,
+    "ciLevel": 0.95,
+    "seed": 30049
+  },
+  "stages": {
+    "_about": "explorer/stages.py: the strict gate after every training stage (docs/TRAINING_PLAN.md section 3); group-level paired bootstrap of the difference between the last accepted stage and the new one, and the SHA-256 check of the frozen test and final files.",
+    "table": "stages.csv",
+    "bootstrapResamples": 2000,
+    "ciLevel": 0.95,
+    "seed": 73000,
+    "frozenManifest": "data/processed/frozen_tests.json",
+    "frozenFiles": ["data/processed/ds10/histories.json.gz", "data/processed/ds10/transactions.csv",
+                    "data/processed/ds10/explain.jsonl", "data/processed/ds7/test.jsonl",
+                    "data/processed/random_test/*.jsonl"]
+  },
+
+  "stageSearch": {
+    "_about": "explorer/stage_search.py: training stages C1-C6 (docs/TRAINING_PLAN.md section 4). Every candidate's threshold flags at most the method's M0 dev flag rate (capped at sanity.maxFlaggedShare) of the real evaluation rows; candidates are ranked on searchSeeds and the winner is gated against M0 on gateSeeds (both tuning seeds; the reporting seeds are never read).",
+    "searchSeeds": [40000, 40001, 40002],
+    "gateSeeds": [40003, 40004],
+    "stabilityChecks": 10,
+    "_stabilityChecks": "Isolation Forest and LOF: the ranked candidates whose stability is measured (25 refits each) until one reaches model.stabilityTarget, as at M0",
+    "inputSets": {
+      "F1-F4+dir": {"features": ["F1", "F2", "F3", "F4"], "direction": true},
+      "F1-F4": {"features": ["F1", "F2", "F3", "F4"], "direction": false},
+      "F1-F4+F9+dir": {"features": ["F1", "F2", "F3", "F4", "F9"], "direction": true},
+      "F1-F4+F9": {"features": ["F1", "F2", "F3", "F4", "F9"], "direction": false}
+    },
+    "_inputSets": "the pooled methods' inputs: clipped own-history z-scores, with or without the direction one-hot; M0 is F1-F4+dir",
+    "baseline": {"combine": ["max", "top2", "l2", "sum"]},
+    "_baseline": "how |z| over F1-F4 becomes one score: the largest (A1, M0), the two largest added, the Euclidean norm, or the sum; the baseline keeps F1-F4 (stage A0 decision)",
+    "isolationForest": {"n_estimators": [200, 500], "max_samples": [256, 1024, "auto"], "max_features": [1.0, 0.75, 0.5]},
+    "lof": {"n_neighbors": [5, 10, 20, 35, 50, 75, 100], "metric": ["euclidean", "manhattan"], "scaler": ["none", "standard", "robust"]},
+    "kmeans": {"k": [2, 3, 4, 5, 6, 7, 8, 9, 10, 12], "init": ["k-means++", "random"], "score": ["distance", "scaled"]},
+    "_kmeans": "score: distance to the nearest centroid, or that distance over the cluster's median fit-period distance",
+    "dbscan": {"eps_factor": [0.5, 0.7, 0.85, 1.0, 1.15, 1.3, 1.6, 2.0], "min_samples": [4, 8, 12, 16, 24]},
+    "hdbscan": {"min_cluster_size": [5, 10, 20, 40, 80]},
+    "_hdbscan": "scikit-learn's HDBSCAN as a candidate in DBSCAN's stage (C5); a new point's score is its distance to the nearest clustered fit-period point",
+    "regression": {"inputSets": {"base": [], "+F9": ["F9"]}, "families": ["ridge", "randomForest", "histGradientBoosting"],
+                   "residualFloor": [0.02, 0.05, 0.1, 0.2]},
+    "_regression": "per input set and target, each family's parameters are chosen by validation MAE (as at M0); candidates are the size model's family x the gap model's family x the residual floor",
+    "regressionInterval": {"quantiles": [[0.005, 0.995], [0.01, 0.99], [0.025, 0.975]], "calibrationShare": [0.1, 0.2, 0.3]},
+    "_regressionInterval": "the range variant: quantile pair x the share of each address's fit period used for conformal calibration (CQR)",
+    "fusion": {"ratios": [0.5, 0.7, 1.0, 1.4, 2.0]},
+    "_fusion": "stage C9 (set 29 Oct before any result): every pair of the current methods (each at its last accepted stage, settings stageModels; TxGPT scores only the reporting plants, so it cannot join), fused as fusion.py fuses (max of score / (weight x the component's threshold)); the budget's cut sets the level, so only the second component's weight relative to the first (these ratios) matters. Rank averaging is not a candidate: a rank needs the whole frame, so a single what-if transaction could not be scored."
+  },
+
+  "rebuildCheck": {
+    "_about": "tools/compare_tables.py (README sections 4 and 11; milestone M4): a rebuilt table matches the committed one when its columns, rows and text cells are equal and every number is within tolerance x max(1, |committed value|) (README 11: a difference above 0.01 in a recall or a rate is worth reporting). ignoreColumns record when or where a run happened, not a result.",
+    "tolerance": 0.01,
+    "ignoreColumns": ["time_utc", "commit", "seconds", "built_utc", "source"]
+  },
+
+  "stageModels": {
+    "_about": "explorer/scores.py saved_methods: each DS1 method's last ACCEPTED training stage (reports/tables/stages.csv; docs/TRAINING_PLAN.md); its winner models/stage/<stage>_<method>.joblib replaces the M0 model everywhere (scores, evaluate, significance, DS2/DS10 checks, predict). Methods not listed stay at M0. Recorded 29 Oct from the C1-C6 gate of 28 Oct; the test tier (29 Oct, stage C-test) kept C3-C5 and sent regression_interval (C6) back to M0 (its gain's interval reached below 0 and dormant fell past its spread).",
+    "lof": "C3",
+    "kmeans": "C4",
+    "dbscan": "C5"
+  },
+
+  "explorerMethod": "baseline",
+  "_explorerMethod": "the DS1 method the Explorer and predict.py use (plan §11.4): the robust-z baseline, as models/selection.json recommends; recorded 23 Oct by Cao Tri Tran with the team's delegation",
+
+  "explore": {
+    "_about": "the interactive terminal Explorer (python -m explorer.cli explore, 3 Nov): rows per page, so a page fits a standard 30-line terminal",
+    "addressesPerPage": 10,
+    "transactionsPerPage": 20
+  },
+
+  "txgpt": {
+    "variants": ["raw", "relative"],
+    "relativeMinScale": 0.5,
+    "eventWindowsHours": [1, 6, 24],
+    "_eventWindowsHours": "stage C7 (set 29 Oct before any result): event-level scores for bursts. event_<base>_<W>h = this transaction's score plus the strictly earlier ones within W hours in the same history (positive parts; base raw = surprisal, relative = the robust z), so several mildly surprising transactions close together add up. Strictly earlier only, as for every feature (DR-02).",
+    "_relativeMinScale": "floor on the spread (nats) of an address's earlier surprisals, as minScale does for the baseline (CR-05)",
+    "reasons": {
+      "GAP": "the timing was unusual for this address",
+      "DIR": "the direction was unusual for this address",
+      "AMT": "the amount was unusual for this address",
+      "NIN": "the transaction's shape (its inputs) was unusual for this address",
+      "NOUT": "the transaction's shape (its outputs) was unusual for this address",
+      "FEE": "the fee rate was unusual for this address"
+    }
+  },
+
+  "outliers": {
+    "isolationForest": { "n_estimators": [200, 500], "max_samples": [256, 1024, "auto"], "max_features": [1.0, 0.75] },
+    "lof": { "n_neighbors": [10, 20, 35, 50] }
+  },
+
+  "injection": {
+    "_about": "Synthetic plants (plan §6.4, A1 §2.3.2). Tuning seeds never score the reported results.",
+    "plantsPerPattern": 50,
+    "tuningSeeds": [40000, 40001, 40002, 40003, 40004],
+    "reportingSeeds": [30049, 30050, 30051, 30052, 30053],
+    "spikeMultiplier": 10,
+    "burstSize": 10,
+    "burstWindowHours": 24,
+    "dormantDaysMin": 60,
+    "dormantDaysMax": 120,
+    "recallTarget": 0.7,
+    "patternsMeetingTarget": 2
+  },
+
+  "elliptic": {
+    "_about": "DS3 processing (plan §6.3): Weber et al. (2019) temporal split; tuning stays inside the training steps.",
+    "fitLastStep": 26,
+    "trainLastStep": 34
+  },
+
+  "bitcoinheist": {
+    "_about": "DS4 processing (plan §6.4). Features exclude address, year and day; year only defines splits.",
+    "seed": 30049,
+    "features": ["length", "weight", "count", "looped", "neighbors", "income"],
+    "log1pIfSkewAbove": 1.0,
+    "_log1pIfSkewAbove": "log(1+x) for weight, count, looped and neighbors when their skewness exceeds this (plan: 'if the analysis confirms heavy tails'); income is always log10",
+    "log1pCandidates": ["weight", "count", "looped", "neighbors"],
+    "minTestPositives": 1000,
+    "negativesPerPositive": 10,
+    "randomTestFraction": 0.2,
+    "randomValidationFraction": 0.1,
+    "leaveOutFamilies": 5,
+    "knnSubsample": 200000
+  },
+
+  "classification": {
+    "_about": "Model grids for DS3 and DS4 (plan §9.4). Random searches draw nIter configurations with the seed.",
+    "seed": 30049,
+    "nJobs": 10,
+    "nIter": 30,
+    "rfMaxSamples": 100000,
+    "knnKdTreeMinRows": 100000,
+    "_rfMaxSamples": "rows drawn for each tree's bootstrap; bounds memory and time on DS4 (the plan's grid grows full-depth trees on ~400k rows, several GB for 600 trees)",
+    "logistic": { "C": [0.001, 0.01, 0.1, 1, 10, 100], "class_weight": [null, "balanced"], "max_iter": 2000 },
+    "knn": { "n_neighbors": [3, 5, 9, 15, 25, 41], "weights": ["uniform", "distance"], "p": [1, 2] },
+    "randomForest": { "n_estimators": [300, 600], "max_depth": [null, 20, 40], "max_features": ["sqrt", 0.3], "min_samples_leaf": [1, 3], "class_weight": [null, "balanced_subsample"] },
+    "histGradientBoosting": { "learning_rate": [0.05, 0.1], "max_leaf_nodes": [31, 63, 127], "l2_regularization": [0, 1], "class_weight": [null, "balanced"] }
+  },
+
+  "labelCheck": {
+    "_about": "Unsupervised methods scored against DS3/DS4 labels (plan §9.4, §10.2). Every method fits on the same seeded sample of training rows; LOF and DBSCAN keep them in memory.",
+    "fitSample": 10000,
+    "seed": 30049
+  },
+
+  "reviewer": {
+    "_about": "The blind reviewer check (plan §11.1): top flagged plus random unflagged evaluation rows of the selected method, shuffled.",
+    "flaggedRows": 20,
+    "unflaggedRows": 20,
+    "seed": 30049
+  },
+
+  "ds7": {
+    "_about": "Explanation pairs for both Explorer Assistants (plan §6.7). DS1 transactions are what the Explorer shows, so DS1 addresses give more pairs each; DS2 fills the rest.",
+    "targetPairs": 10000,
+    "maxPairsPerAddress": 10,
+    "ds1PairsPerAddress": 40,
+    "unscoredPerAddress": 1,
+    "phrasings": 5,
+    "trainShare": 0.9,
+    "valShare": 0.05,
+    "seed": 30049
+  },
+
+  "ds7v2": {
+    "_about": "Round 2's larger DS7 (docs/KAGGLE_LM_PLAN.md §4, C7): every DS2 address, up to 15 pairs each, about 4x round 1. Seed and shares equal ds7's, so the frozen v1 test addresses are test addresses again; the build stops if a frozenTest prompt would be trained on.",
+    "targetPairs": 40000,
+    "maxPairsPerAddress": 15,
+    "ds1PairsPerAddress": 40,
+    "unscoredPerAddress": 1,
+    "phrasings": 5,
+    "trainShare": 0.9,
+    "valShare": 0.05,
+    "seed": 30049,
+    "frozenTest": "data/processed/ds7/test.jsonl"
+  },
+
+  "randomTest": {
+    "_about": "A randomized test set for both Explorer Assistants and both rounds (user, 26 Oct; explorer/random_test.py): real prompts drawn from DS7 v2's test addresses (none in the frozen v1 test) and synthetic transactions drawn from the ranges below. Built once with this seed, then frozen.",
+    "seed": 50000,
+    "realPrompts": 500,
+    "syntheticPrompts": 500,
+    "unscoredShare": 0.09,
+    "noComparisonShare": 0.05,
+    "_z": "each feature's z is drawn from a mixture: within usual, contributing or flag-level, either sign; values follow from z and the usual value on the feature's own scale",
+    "zMixture": {"withinSd": 1.2, "contributingShare": 0.25, "flagShare": 0.15, "nearZeroShare": 0.03},
+    "_ranges": "log10 bounds: usual amount in satoshis, usual gap in hours, usual ratio (F4); linear bounds: usual 7-day count; spreads on each feature's z scale (baseline -> zTransform)",
+    "usualSatsLog10": [3, 9],
+    "usualGapHoursLog10": [-0.5, 3],
+    "usualRatioLog10": [-1, 0.3],
+    "usualCount": [0, 40],
+    "spread": {"F1": [0.1, 0.8], "F2": [1, 6], "F3": [0.1, 0.8], "F4": [0.1, 0.8]},
+    "_caps": "values a real address could show: amounts up to 10^11 satoshis (1,000 BTC), gaps up to 5 years, 500 transactions in the burst window; z is recomputed from the capped value",
+    "maxSatsLog10": 11,
+    "maxGapHours": 43800,
+    "maxCount": 500,
+    "_hard": "hard.jsonl: synthetic transactions explained for any of the nine methods (a method other than the baseline flags independently of the features, as Isolation Forest can), with the instruction reworded and the features shuffled in some prompts: what neither model trained on",
+    "hardSeed": 50001,
+    "hardPrompts": 500,
+    "hardBaselineShare": 0.4,
+    "hardOtherFlagShare": 0.35,
+    "rewordShare": 0.5,
+    "shuffleShare": 0.5,
+    "_balanced": "balanced.jsonl: every transaction of DS10's 27 unseen addresses and of DS2's test-split addresses explained (no per-address cap), duplicates and prompts already in the v1 test or real.jsonl removed, then up to balancedPerCase drawn from each case (explorer.assistant.case_of), so the easy cases cannot dominate the rate",
+    "balancedSeed": 50002,
+    "balancedPerCase": 100,
+    "_more": "build-more-tests (user, 27 Oct: 'even more randomized datasets'): one balanced set per crawled source (DS1's, DS2's test-split addresses, DS10) with up to perSourcePerCase per case; close calls (real prompts whose listed |z| values differ by less than closeMargin, so the order is hardest); extreme synthetic values (one regime per transaction); maximal shift (every prompt reworded, shuffled and for a method other than the baseline). None repeats a prompt of an earlier test set.",
+    "moreSeed": 50003,
+    "perSourcePerCase": 60,
+    "closeMargin": 0.3,
+    "closePrompts": 300,
+    "extremePrompts": 300,
+    "maxShiftPrompts": 300,
+    "extremeRegimes": [
+      {"usualSatsLog10": [0, 2]},
+      {"usualSatsLog10": [9.5, 11]},
+      {"usualGapHoursLog10": [-2, -1]},
+      {"usualGapHoursLog10": [3.5, 4.6]},
+      {"usualCount": [80, 200]}
+    ]
+  },
+
+  "weakCases": {
+    "_about": "explorer/weak_cases.py (TRAINING_PLAN stage B3, set 29 Oct before any result): training and dev explanation examples of the round-1 writer's weak cases (a method other than the baseline, reworded instructions of its own, shuffled facts, three or four reasons), drawn as random_test.hard_record draws with its own seeds; no frozen test prompt, and dev never repeats a train prompt. manyReasonShare of rows draw z from manyReasonMixture (more contributing and flag-level values).",
+    "seed": 60000,
+    "devSeed": 60001,
+    "trainPrompts": 8000,
+    "devPrompts": 600,
+    "hardBaselineShare": 0.3,
+    "hardOtherFlagShare": 0.35,
+    "rewordShare": 0.5,
+    "shuffleShare": 0.5,
+    "manyReasonShare": 0.35,
+    "manyReasonMixture": {
+      "withinSd": 1.2,
+      "contributingShare": 0.45,
+      "flagShare": 0.25,
+      "nearZeroShare": 0.03
+    },
+    "_dev": "The writer's dev tier for stages B3-B6: dev.jsonl plus devVal prompts drawn with devValSeed from DS7 v2's val.jsonl (both are dev data; the test tier stays untouched). The gate pairs the two writers prompt by prompt (bootstrap over prompts, McNemar); a case's allowed fall is the binomial standard error of the earlier writer's rate on that case, as the writer has no seed spread at M0.",
+    "devVal": 600,
+    "devValSeed": 60002
+  },
+
+  "writerStats": {
+    "_about": "lm/eval_stats.py: bootstrap intervals (draws over each test set's prompts, shared by every writer, so comparisons are paired) and McNemar's exact test for the Assistants.",
+    "seed": 72000,
+    "bootstrapDraws": 2000
+  },
+
+  "classDistribution": {
+    "_about": "explorer/classify_distribution.py: each reported classifier refitted with `seeds` seeds (random forest and gradient boosting only; logistic regression and KNN are deterministic) and its test scores bootstrapped `bootstrapDraws` times.",
+    "firstSeed": 71000,
+    "seeds": 10,
+    "bootstrapDraws": 1000
+  },
+
+  "ensemble": {
+    "_about": "explorer/ensemble.py, stage D6 (docs/TRAINING_PLAN.md): soft voting or stacking of the four Elliptic classifiers. The members are fitted on the fit steps; steps up to weightLastStep choose the weights and threshold, the remaining validation steps gate the ensemble against the random forest; the test steps are used once, only if it is accepted.",
+    "featureSet": "AF",
+    "weightLastStep": 30,
+    "weights": [0, 1, 2, 4],
+    "_weights": "every weight vector over (logistic, knn, randomForest, histGradientBoosting) with at least two non-zero weights",
+    "stackC": [0.01, 0.1, 1, 10],
+    "_stackC": "the stacking logistic regression's inverse regularisation strength, on the members' log-odds",
+    "probabilityClip": 1e-6
+  },
+
+  "distribution": {
+    "_about": "explorer/distribution.py (user, 27 Oct: distributions and mean accuracy over many tests): the three planted patterns replanted with many seeds on DS1, DS2 and DS10, every frozen method scored on each. The seed block starts above every tuning, reporting and test-set seed, so no reported number moves. DS2 is ~30x DS1's size, so it gets fewer seeds.",
+    "firstSeed": 70000,
+    "seedCount": {"DS1": 100, "DS10": 100, "DS2": 20}
+  },
+
+  "profiles": {
+    "_about": "Address profiles of DS1 (main addresses) and DS2 (plan §9.4, S-7): 8 address-level features, standardised, K-Means by silhouette; the DS2-covers-DS1 check (plan §7). Uses clustering.kmeansNInit and silhouetteSample, and model.seed.",
+    "k": [3, 4, 5, 6, 7, 8],
+    "logFeatures": ["tx_per_day", "mean_outputs", "history_tx", "median_fee_rate"],
+    "_logFeatures": "compared on log10(1 + x): each spans orders of magnitude across addresses",
+    "minSpanDays": 1,
+    "_minSpanDays": "floor on a history's span when dividing by it, so an address active within one day has a finite rate",
+    "describeAbsZ": 0.75,
+    "describeMax": 3,
+    "_describeAbsZ": "a profile is named by its (at most describeMax) most distinctive features whose centroid is at least this many SDs from the mean; address-level centroids sit closer to the mean than DS1's transaction clusters, so clustering.describeAbsZ (1.0) left most profiles unnamed",
+    "coverageQuantiles": [0.01, 0.99],
+    "_coverageQuantiles": "DS2's range for the coverage check: the share of DS1 addresses inside it, per feature"
+  },
+
+  "assistant": {
+    "_about": "The guarded Explorer Assistant in explorer.predict (plan §10.3, §12.1): writers tried in writerOrder, each answer checked by explorer.assistant; writers this machine cannot run are skipped, and the template is always last. Paths are relative to the project root.",
+    "writerOrder": ["text150m"],
+    "_writerOrder": "Only models trained from scratch by the team (the tutor, 27 Oct; CHANGELOG): the 152M model, which runs on a CPU. The Qwen 3B fine-tune was dropped; it is kept on the qwen-archive branch.",
+    "text150mCheckpoint": "models/assistant/model.pt",
+    "_text150mCheckpoint": "the explanation stage's model_best.pt, with its tokenizer.json in the same folder. Since 30 Oct: round 2 (adopted by lm.adopt, reports/tables/adoption.csv), SHA-256 f9306a5e2d734943469830c6012c49b9b380b4212becb64434d12d958f841434; round 1 was 086b9d157343e73578c5acff12f9f871104c01eed56692402e5a2499130684ab",
+    "maxNewTokens": 256,
+  "adoption": {
+    "_about": "lm/adopt.py: docs/KAGGLE_LM_PLAN.md section 3, fixed 26 Oct before any round-2 result. On each frozen test (tag of lm.eval_explain's summary table) the round-2 writer's guardrail pass rate and number faithfulness must be no lower and its direction errors no more than round 1's; on the glossary test its key-fact accuracy must be at least keyFactGain higher.",
+    "frozenTests": {"DS7 v1 test": "", "DS10": "ds10"},
+    "glossaryTag": "glossary",
+    "keyFactGain": 0.10
+  }
+  },
+
+  "sanity": {
+    "maxFlaggedShare": 0.2
+  },
+
+  "bannedWords": ["fraud", "criminal", "illicit", "guilty", "suspicious"],
+
+  "web": {
+    "whatIf": {
+      "minAmountBtc": 0.00000001,
+      "maxAmountBtc": 21000000,
+      "maxGapYears": 5,
+      "curvePoints": 41,
+      "curveMaxPoints": 61,
+      "debounceMs": 250
+    },
+    "lists": { "pageSize": 50, "maxPageSize": 200 },
+    "requests": { "timeoutMs": 10000, "assistantTimeoutMs": 90000, "healthPollSeconds": 15 },
+    "charts": { "webglMinPoints": 1000 },
+    "watchlist": { "maxEntries": 200, "maxLabelChars": 40, "maxNoteChars": 500 },
+    "live": { "defaultMaxTx": 500, "minMaxTx": 50, "maxTxLimit": 1000, "lookupsPerHour": 6, "cacheDays": 7 },
+    "replay": { "speeds": [1, 5, 20] },
+    "limits": { "maxBodyBytes": 10240, "maxAddressChars": 100 }
+  }
+}

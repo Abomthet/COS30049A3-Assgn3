@@ -1,0 +1,26 @@
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+# Node
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.venv/
+# runtime state (created at start)
+backend/var/
+# LaTeX build output
+docs/plan/*.aux
+docs/plan/*.log
+docs/plan/*.out
+docs/plan/*.toc
+# local scratch
+*.local.*
+
+# agent worktrees (each cook works on its own branch; the lead merges)
+.claude/
