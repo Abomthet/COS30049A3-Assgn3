@@ -912,3 +912,43 @@ cache then answers for 7 days); a 500-transaction fetch takes ~25–30 s.
 - **GitHub is behind:** pushes are refused until the token has the `workflow` scope (CI file). 12+ reviewed commits are
   local only.
 - **Usage:** limits were hit five times in two days. Five parallel cooks use a 5-hour window in about 1.5 hours.
+
+## 2026-11-14 — Session journal, 10–13 Nov (written before the chat was compacted)
+**From an empty folder to MS2 plus 11 of 12 Should items in four days.**
+- **10–11 Nov:** read both plans and wrote `TODO.md`. Installed Node; created the private repo. Identified the
+  submitted A2 commit from the downloaded zip (`aa56a26` = `v1.0`; the zip adds wording-only edits and the Assistant's
+  weights). Wave 1: the back-end core and the front end on A3's layout. Wave 2: charts, E3–E7. **MS1 passed** from a
+  fresh clone (a cross-tier contract test was fixed on the way).
+- **12 Nov:**
+  - What-if E8/E9 (batched build; parity shown, planted bugs caught), export E10, methods E11.
+  - Hardening (reason rewording, one 400 for every field, sort by size).
+  - The what-if lab, V5, the state catalogue and layouts.
+  - **MS2 passed** from a fresh clone (`docs/TEST_LOG.md`).
+  - Replanned the Should tier on Opus (`docs/PLAN_SHOULD.md`).
+  - Waves A and B: method selector, G4, G6, watchlist, replay, and the Assistant (E12; 677 prepared answers, all
+    guardrail-passed).
+  - Usability pack; report material.
+- **13 Nov:**
+  - Parallel cooks in git worktrees: `measure.py` (every budget passes) and CI; the Assistant panel, linked
+    selection, scenarios; architecture figures (Fable); live lookup S-09 (merged with 4 conflicts resolved).
+  - Paused by the user, with the app left running on :8000/:5173 for them.
+
+**Decisions made with the user:**
+- the private repo;
+- no AI co-author lines;
+- the tutor accepts AI use (in person; email expected);
+- CR-08 approved by the team;
+- the model allocation policy (D-W-14);
+- more parallel cooks in worktrees (D-W-16).
+
+**Recurring problems and their fixes:**
+- **Usage limits** (five times): resume agents rather than restart them.
+- **Agents' false claims** (about 1 report in 3): verify everything.
+- **Flaky tests:** BLAS noise compared with `==`; a wall-clock ratio; a test reading the first chart draw.
+- **The Mac's Command Line Tools** vanished for two minutes (an update): conda git as the fallback.
+- **GitHub refuses the CI file** without the `workflow` scope: the user must refresh the token.
+
+**Context files:**
+- `CLAUDE.md` (auto-loaded), `docs/HANDOFF.md` (full cold start), `TODO.md`, this log, `docs/TEST_LOG.md`,
+  `docs/PLAN_SHOULD.md`, `docs/AI_USE_LOG.md`;
+- memory: `~/.claude/projects/-Users-tritran2411/memory/cos30049-a3-plan.md`.
