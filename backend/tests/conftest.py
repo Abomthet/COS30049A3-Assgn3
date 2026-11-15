@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import os
+# Windows without the old `wmic` tool makes joblib warn about counting physical cores, and pytest.ini turns
+# warnings into failures. Setting the count up front skips that lookup.
+os.environ.setdefault("LOKY_MAX_CPU_COUNT", str(os.cpu_count() or 1))
 import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
