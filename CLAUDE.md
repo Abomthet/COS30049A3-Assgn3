@@ -11,8 +11,9 @@ disagrees with it, the plan wins, except for the decisions recorded in the work 
 - **Left:** S-11 browser tests, the S-10 generated-types half, then the **MS3 gate (Fri 27 Nov)**, run on Opus or
   Fable with a detailed record.
 - Local `main` is verified: back end 724 passed + 2 skipped, front end 650, first-screen JS 147.8 kB (budget 150).
-- **GitHub is behind:** pushes need the token's `workflow` scope (for the CI file). The user runs
-  `~/.local/bin/gh auth refresh -h github.com -s workflow` and then `~/.local/bin/gh auth setup-git`.
+- **GitHub (18 Nov):** two remotes. `origin` = `Defaul119/COS30049A3` (private). `assgn3` = the team repo
+  `Abomthet/COS30049A3-Assgn3` (**public**; Abomthet is admin). Its history began as a copy, so it was joined to ours
+  with an unrelated-histories merge on 18 Nov; from then on, fetch and merge it before pushing (never force-push).
 
 ## Rules that must not be broken
 - **Commits as `Defaul119 <231157022+Defaul119@users.noreply.github.com>`, with no `Co-Authored-By` line or any AI

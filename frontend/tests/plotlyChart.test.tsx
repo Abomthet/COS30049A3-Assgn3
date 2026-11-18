@@ -323,7 +323,7 @@ describe('loading and failing', () => {
         const path = join(dir, name.name);
         if (name.isDirectory()) walk(path);
         else if (/\.tsx?$/.test(name.name) && /from 'plotly\.js-cartesian-dist-min'|import\('plotly\.js-cartesian-dist-min'\)/.test(readFileSync(path, 'utf8'))) {
-          importers.push(path.replace(root, ''));
+          importers.push(path.replace(root, '').replace(/\\/g, '/'));
         }
       }
     };

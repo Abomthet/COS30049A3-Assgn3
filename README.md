@@ -312,3 +312,4 @@ It ran here against both servers on their default ports.
 - `backend/MODIFICATIONS.md` lists every change made to Assignment 2's behaviour for the web, with the test that
   covers it.
 - `docs/WORKLOG.md` records the decisions and measurements behind the build.
+- Windows without the old `wmic` tool makes joblib warn about counting physical cores, and pytest.ini turns warnings into failures. Setting the count up front skips that lookup.
