@@ -884,8 +884,11 @@ main.container {
   position: relative;
   width: 100%;
 }
+/* Clipped sideways: a drawing still at an older, wider size (before its resize lands) must never widen the page.
+   Without this, shrinking the window left an off-screen chart at its desktop width, and a phone zoomed the page out. */
 .pchart-plot {
   width: 100%;
+  overflow-x: clip;
 }
 /* The skeleton fills the chart's final box until Plotly has drawn, so nothing jumps. */
 .pchart-skeleton {
@@ -953,7 +956,10 @@ main.container {
   border-radius: var(--radius-sm);
 }
 
+/* position: relative makes the box hold its .sr-only labels: without it they are placed against the page, escape the
+   scrolling, and a wide table (the kept scenarios) made the whole page wider than a phone after a resize. */
 .table-scroll {
+  position: relative;
   max-height: 360px;
   overflow: auto;
   margin-top: 8px;

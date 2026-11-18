@@ -195,9 +195,13 @@ export function PlotlyChart({
     };
   }, [plotly]);
 
-  // The container changed size (already debounced by useElementWidth).
+  // The container changed size (already debounced by useElementWidth). Resized even when scrolled off screen: a
+  // drawing left at its old width would stick out of a narrowed page.
   useEffect(() => {
-    if (plotly && plotRef.current && inView && phase === 'ready') plotly.Plots.resize(plotRef.current);
+    const el = plotRef.current;
+    if (!plotly || !el || phase !== 'ready') return;
+    // Typed as void, but Plotly returns a promise, which it rejects for a hidden chart (table view, closed tab).
+    (plotly.Plots.resize(el) as unknown as Promise<void> | undefined)?.catch(() => {});
   }, [width]);
 
   // Click-through. On a touch screen the first tap on a point shows its tooltip and the second opens it (plan section 8).

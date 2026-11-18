@@ -308,6 +308,57 @@ async function main() {
       writeFileSync(join(outDir, `${name}.png`), Buffer.from(shot.data, 'base64'));
       console.log(`${name}.png  ${width}x${height}`);
     }
+
+    // Narrowing a window that is already open (a member found this by hand on 18 Nov): every shot above loads at its
+    // final width, so a chart that kept its desktop size after a resize was never seen. Each page opens at desktop
+    // width, then shrinks to tablet and phone width without reloading.
+    if (!only || only.test('resize-')) {
+      for (const [name, hash, after] of [
+        ['resize-overview', tl(t.mainAddress), null],
+        ['resize-what-if', lab(t.mainAddress, t.whatIf.direction), typeAmount(t.whatIf.amountBtc)],
+      ]) {
+        const params = new URLSearchParams(mock ? 'latency=0&theme=light' : 'theme=light');
+        await send('Emulation.setDeviceMetricsOverride', { width: DESKTOP, height: 900, deviceScaleFactor: 1, mobile: false });
+        await send('Page.navigate', { url: 'about:blank' });
+        const loaded = cdp.waitFor('Page.loadEventFired', sessionId);
+        await send('Page.navigate', { url: `${base}/?${params}${hash}` });
+        await loaded;
+        await sleep(900);
+        if (after) {
+          await send('Runtime.evaluate', { expression: after, awaitPromise: true });
+          await sleep(1200);
+        }
+        for (const width of [TABLET, MOBILE]) {
+          const mobile = width < 700;
+          await send('Emulation.setDeviceMetricsOverride', { width, height: mobile ? 844 : 1180, deviceScaleFactor: 1, mobile });
+          await sleep(1200); // the width hook waits for the resizing to stop, then the charts redraw
+          // The page's width, and the innermost elements that stick out past the width asked for (to say what to fix).
+          const { result } = await send('Runtime.evaluate', {
+            expression: `JSON.stringify((() => {
+              // Inside a scrolling box an element is contained, unless it is positioned against something outside it.
+              const contained = (e) => {
+                const placed = getComputedStyle(e).position === 'absolute' ? e.offsetParent : null;
+                for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) {
+                  if (getComputedStyle(a).overflowX !== 'visible' && (!placed || a.contains(placed))) return true;
+                }
+                return false;
+              };
+              const out = (e) => e.getBoundingClientRect().right > ${width} + 1 && getComputedStyle(e).position !== 'fixed' && !contained(e);
+              const culprits = [...document.querySelectorAll('body *')]
+                .filter((e) => out(e) && ![...e.children].some(out))
+                .slice(0, 4)
+                .map((e) => e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\\s+/).join('.') : '') + ' ' + Math.round(e.getBoundingClientRect().width) + 'px');
+              return { w: document.documentElement.scrollWidth, culprits };
+            })())`,
+            returnByValue: true,
+          });
+          const { w, culprits } = JSON.parse(result.value);
+          // A phone zooms out to fit a page that is too wide, so compare with the width asked for, not innerWidth.
+          if (w > width) problems.push(`${name}: after narrowing to ${width}px the page is ${w}px wide (${culprits.join('; ')})`);
+          console.log(`${name} at ${width}px: page ${w}px wide`);
+        }
+      }
+    }
   } finally {
     await close();
   }

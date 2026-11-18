@@ -155,6 +155,45 @@ describe('what the wrapper hands to Plotly', () => {
     await act(async () => vi.advanceTimersByTime(200));
     expect(resize).toHaveBeenCalledTimes(1);
   });
+
+  test('a chart scrolled off screen still resizes, so a narrowed window does not keep its old width', async () => {
+    // Found by hand on 18 Nov: shrinking the window left the what-if chart (below the form on a phone) at its
+    // desktop width, the page became wider than the screen and the phone zoomed out.
+    let notify: () => void = () => {};
+    let seen: (entries: { isIntersecting: boolean }[]) => void = () => {};
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: () => void) {
+          notify = callback;
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
+          seen = callback;
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    const size = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ width: 700 } as DOMRect);
+    render(chart());
+    act(() => seen([{ isIntersecting: true }]));
+    await drawn();
+    act(() => seen([{ isIntersecting: false }]));
+    const resize = fakePlotly.api.Plots.resize as ReturnType<typeof vi.fn>;
+    resize.mockClear();
+    vi.useFakeTimers();
+    size.mockReturnValue({ width: 324 } as DOMRect);
+    notify();
+    await act(async () => vi.advanceTimersByTime(200));
+    expect(resize).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('WebGL above the point threshold', () => {
