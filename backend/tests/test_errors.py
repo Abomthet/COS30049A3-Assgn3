@@ -149,7 +149,6 @@ def test_every_error_text_passes_the_wording_rule(rigged: TestClient) -> None:
             check_wording(text)
 
 
-
 def test_a_non_text_note_on_the_watchlist_says_the_type_is_wrong(client: TestClient) -> None:
     response = client.put(f"/api/watchlist/{RUNNING_EXAMPLE}", json={"note": 5})
     body = response.json()
