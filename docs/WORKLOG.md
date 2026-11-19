@@ -1021,3 +1021,11 @@ viewport without touch emulation; Chromium and WebKit use `isMobile` and `hasTou
 
 **Decisions.** Python for the servers comes from `E2E_PYTHON` (default `python`; here the miniconda env). Zoom is tested
 through the chart's own period buttons (the range slider is drawn by Plotly and has no accessible control).
+
+**Lead review (Opus 5.5).** Clean worktree of `af7e36c`: `npm ci`, Vitest 653, typecheck, build (first-screen JS
+105.2 kB gzip, unchanged), `npm run e2e` 99/99 in 1.5 min while the full back-end suite (739 + 2 skipped) ran alongside.
+Breakage checks: `min-width: 600px` on the page → J1 fails at 390 ("scrolls sideways … Received: 210"); the limitation
+line cut to 20 characters → J2 fails (WebKit 820); a `console.error` at start → J1 fails ("the browser console must be
+empty", Firefox 390). Accepted: zoom through the period buttons, not a drag of Plotly's range slider (it has no
+accessible control); the CI job uploads the HTML report on failure.
+

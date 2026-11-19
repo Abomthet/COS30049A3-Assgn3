@@ -33,7 +33,7 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 |---|---|---|
 | MS1 walking skeleton | Sun 15 Nov | **Passed 11 Nov** (`docs/TEST_LOG.md`) |
 | MS2 minimum viable demonstration | Sun 22 Nov | **Passed 12 Nov** (`docs/TEST_LOG.md`; re-run with `tools/ms_gate_check.py`) |
-| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | **11 of 12 Should items built**; left: S-11 browser tests (S-10 finished 19 Nov) |
+| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | **All 12 Should items built** (S-10 and S-11 finished 19 Nov) |
 | MS4 code freeze, `v1.0-rc`, clean install Win + Mac | Sun 29 Nov | |
 | MS5 submit on Canvas | Sat 5 Dec | |
 
@@ -217,9 +217,9 @@ The order is the wrap-up plan in `TODO.md` (sections A to C). Models follow D-W-
 Sonnet for features and tests; Haiku for mechanical work.
 
 1. ~~1.5 chart owners in the briefing~~ done 19 Nov.
-2. **1.2 S-11 browser tests** (Sonnet, 20–23 Nov, T38): turn `frontend/scripts/screenshots.mjs`'s journeys into asserted
-   browser tests at 390/820/1280. The `LIVE=1` shots need a back end with live lookup on and network access.
-3. **1.3** Re-take all screenshots (Haiku), after 1.2. Several older shots predate the Assistant panel.
+2. ~~**1.2 S-11 browser tests**~~ done 19 Nov (`npm run e2e`; CI runs `e2e:quick`).
+3. **1.3** Re-take all screenshots (Haiku). Several older shots predate the Assistant panel. The `LIVE=1` shots need a
+   back end with live lookup on and network access.
 4. **2.1 and 2.5:** automated accessibility checks, light and dark, at 3 widths (Sonnet, 24 Nov, T40); then fix
    severity 3–4 issues and retest (Sonnet, 25–26 Nov, T41).
 5. **MS3 gate, Fri 27 Nov (3.1, Opus), with a detailed record in `docs/TEST_LOG.md`:** each Should item finished and
