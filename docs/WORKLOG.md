@@ -977,3 +977,17 @@ staleness test fails with "run: npm run types". A full parallel front-end run fa
 changes no screen code, so it is the known timing flake. Its test-only fix from the scrapped `ui-remake` branch
 (`23379c6`: mock latency 400 ms, longer final waits, assertions unchanged) is cherry-picked onto `main`.
 Follow-up for T43: the README should mention `npm run types` (run it after any API change).
+
+---
+
+## 2026-11-19 — Status docs refreshed (Haiku 5.5)
+
+**Done.** Status text brought up to 19 Nov (work resumed; nothing paused). Text only; no code changed.
+- `CLAUDE.md`: the "State" section (resumed, `main` = `4e29a72` pushed to the team repo, CI green again, counts).
+- `docs/HANDOFF.md`: §2 (status table, S-10 line added to "Tools and docs", new counts; the push-block and
+  running-process paragraphs removed; "no worktree" line replaced by the cook-worktree rule) and §8 (next steps now
+  point to the wrap-up plan in `TODO.md`; "on resuming" dropped).
+- `TODO.md`: the top status block, and a new "Wrap-up plan (from 19 Nov): who does what" section (three tables).
+
+**Open.** Lead review of these docs. The counts (back end 739 + 2 skipped, front end 653) are the lead's figures from
+`4e29a72`; not re-run by the cook. `tools/package.py`, named in the old §8, does not exist yet; §8 no longer names it.

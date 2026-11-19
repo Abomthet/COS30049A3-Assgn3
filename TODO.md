@@ -2,7 +2,63 @@
 
 > **Picking this up in a new session or with another model? Read `docs/HANDOFF.md` first, then `docs/PLAN_SHOULD.md` (waves after MS2).**
 >
-> **PAUSED 13 Nov at the user's request.** `main` = merged and verified (back end 724 + 2 skipped, front end 650). Push blocked on the GitHub `workflow` scope. Next: S-11 browser tests, the S-10 types half, then the MS3 gate (27 Nov).
+> **Resumed Thu 19 Nov; nothing is paused.** `main` = `4e29a72`, pushed to the team repo, CI green. Back end 739 passed + 2 skipped, front end 653. S-10 (generated types) and E14 are done. Left: S-11 browser tests, then the MS3 gate (Fri 27 Nov). The order of work is the wrap-up plan below.
+
+## Wrap-up plan (from 19 Nov): who does what
+
+Report text and video narration stay people-only until the tutor's AI-use email arrives (the A3 brief bans generated content; the tutor allowed AI in person on 12 Nov).
+
+**A. AI alone** (lead reviews each, then merges and pushes)
+
+| # | Task | Who/model | When |
+|---|---|---|---|
+| 1.1 | S-10 generated types (T37) | Sonnet | ✅ 19 Nov |
+| 1.4 | E14 wording | Haiku | ✅ 19 Nov |
+| 1.7 | Refresh status docs | Haiku | ✅ 19 Nov |
+| 1.5 | Chart owners in `explainers/a3/t05-people-rules.tex` | Haiku | 19 Nov |
+| 1.2 | S-11 browser tests at 390/820/1280 (T38) | Sonnet | 20–23 Nov |
+| 1.3 | Re-take all screenshots | Haiku | after 1.2 |
+| 2.1 | Automated accessibility checks, light and dark, 3 widths (T40) | Sonnet | 24 Nov |
+| 2.5 | Fix severity 3–4 issues and retest (T41) | Sonnet | 25–26 Nov |
+| 3.1 | MS3 gate from a fresh clone (T42) | Opus | Fri 27 Nov |
+| 3.2 | Should items and cut list in `docs/TEST_LOG.md` | Opus | 27 Nov |
+| 4.1 | README complete, incl. `npm run types` (T43) | Sonnet | 28 Nov |
+| 4.2 | Docstrings, `MODIFICATIONS.md`, `LICENSES.md` line (T43) | Haiku | 28 Nov |
+| 4.3 | Clean install from a trial zip, macOS (T44) | Opus | 29 Nov |
+| 4.5a | Chrome, Safari, Firefox via automated runs (T45) | Sonnet | 29 Nov |
+| 4.6 | Tag `v1.0-rc`, push (MS4) | Opus | Sun 29 Nov |
+| 5.2 | Final report figures and tables (T47) | Sonnet | 30 Nov |
+| 5.5 | Video shot list and timing (T48) | Opus | 1 Dec |
+| 5.4 | Report check vs rubric, pages, Harvard refs (T49) | Opus | 3 Dec |
+| 6.1 | Tag `v1.0`, zip from the tag, checksums, clean unzip-and-run (T50) | Opus | 4 Dec |
+
+**B. AI drafts, a person checks**
+
+| # | Task | Who/model | When |
+|---|---|---|---|
+| 2.2 | Keyboard pass | AI: tab-order and focus tests; person: 10 min by keyboard | — |
+| 3.3 | Could items | AI recommends cutting all; team decides | — |
+| 5.3 | AI acknowledgement | AI drafts from `docs/AI_USE_LOG.md`; person checks, adds tutor email | — |
+| 5.1 | Report (8 pages, T46) | AI: figures, tables, outlines only; team writes the text | — |
+| 5.7 | Explain-it-back practice | AI runs the A3 walkthrough; user learns it | — |
+| P4 | Tutor questions, CR votes (T01) | AI drafts; user sends | — |
+
+**C. People only**
+
+| # | Task | Who/model | When |
+|---|---|---|---|
+| P1 | Book 2 usability participants (T39) | Person | this week |
+| P2 | Tutor's AI-use email into `docs/brief/` | Person | this week |
+| P3 | Ask team about the A2 AI declaration | Person | this week |
+| P5 | Split report and video between members | Person | this week |
+| P6 / 6.2 | Minutes Weeks 1–12, contribution form (T51) | Person | ongoing, 4 Dec |
+| 1.6 | Scroll past a chart on a real phone | Person | by 26 Nov |
+| 2.3 | VoiceOver pass | Person | 24–26 Nov |
+| 2.4 | Run usability sessions | Person | 25–26 Nov |
+| 4.4 | Clean install on the Windows PC | Person | 29 Nov |
+| 4.5b | Real-phone check | Person | 29 Nov |
+| 5.6 | Record, narrate, upload video | Person | 3 Dec |
+| 6.3 | Submit on Canvas, download and open every file (T52) | Person | Sat 5 Dec |
 
 Source: `docs/plan/main.pdf` (the full plan, which wins) and `../explainers/a3/a3.pdf` (the briefing).
 Task numbers (T01–T52) and scope IDs (M/S/C) are the plan's. Owners are ignored: Claude does every task

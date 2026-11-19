@@ -27,18 +27,18 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 - **Brief and rubric:** `docs/brief/` (Markdown). 40 of the 45 marks are judged from the running app and
   the 7-minute video; the report (8 pages) is 5 marks.
 
-## 2. Status — **PAUSED on 13 Nov 2026** at the user's request
+## 2. Status — resumed on 19 Nov 2026 (paused 13 Nov; nothing is paused now)
 
 | Milestone | Date | State |
 |---|---|---|
 | MS1 walking skeleton | Sun 15 Nov | **Passed 11 Nov** (`docs/TEST_LOG.md`) |
 | MS2 minimum viable demonstration | Sun 22 Nov | **Passed 12 Nov** (`docs/TEST_LOG.md`; re-run with `tools/ms_gate_check.py`) |
-| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | **11 of 12 Should items built**; left: S-11 browser tests, the S-10 generated-types half |
+| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | **All 12 Should items built except S-11 browser tests** (S-10 done 19 Nov) |
 | MS4 code freeze, `v1.0-rc`, clean install Win + Mac | Sun 29 Nov | |
 | MS5 submit on Canvas | Sat 5 Dec | |
 
-**`main` (local) = `8ff1519` plus log commits, all merged and verified.**
-- Clean worktree: back end **724 passed, 2 skipped** (the real-model and opt-in network tests), front end **650**,
+**`main` = `4e29a72`, pushed to the team repo `Abomthet/COS30049A3-Assgn3` (remote `assgn3`).**
+- Clean worktree: back end **739 passed, 2 skipped** (the real-model and opt-in network tests), front end **653**,
   build clean, no mock in `dist/`, first-screen JS **147.8 kB gzip** (budget 150; keep new screens lazy).
 - `tools/ms_gate_check.py` passes on the running app.
 
@@ -59,21 +59,15 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 - **Tools and docs:**
   - `tools/measure.py` (every plan budget passes; `docs/report-material/measured/`);
   - CI workflow `.github/workflows/ci.yml`;
+  - `npm run types` writes `frontend/src/api/generated.ts` from `backend/openapi.json`; a test fails when it is stale (S-10, 19 Nov);
   - report material, API reference and three architecture figures (`docs/report-material/`);
   - usability pack (`docs/usability/`);
   - 64 screenshots (`docs/screenshots/`).
 
-**Not on GitHub yet:** pushes are refused because the token lacks the `workflow` scope (needed for the CI file).
-The user must run `~/.local/bin/gh auth refresh -h github.com -s workflow` then `~/.local/bin/gh auth setup-git`;
-after that, `git push`, and check the first CI run with `gh run list`.
+**GitHub:** `main` is pushed to the team repo, and its CI is green again (it failed on 18 Nov from a timing flake,
+fixed by `7820c5e`).
 
-**Running when paused** (started for the user to look at):
-- back end `uvicorn` on :8000 with `EXPLORER_LIVE_LOOKUP=on`, and the front end `npm run dev` on :5173, both
-  detached;
-- PIDs in the session scratchpad (`app-backend.pid`, `app-frontend.pid`);
-- otherwise find them with `lsof -i :8000 -i :5173` and stop them with `kill`.
-
-**No agent is running; no worktree or branch other than `main` exists.**
+**Cooks work in temporary worktrees (`../COS30049A3-<task>`) that the lead removes after merging.**
 
 ## 3. Where everything is
 
@@ -217,29 +211,33 @@ planning, gates and review, and the cheapest on mechanical work.
 | D-W-15 | CR-08 approved: live lookup (S-09) is wave B2, off by default (`EXPLORER_LIVE_LOOKUP=off`) |
 | D-W-16 | Code cooks work in their own git worktree and branch; the lead merges and verifies |
 
-## 8. What to do next, in order (on resuming)
+## 8. What to do next
 
-1. **Push** once the `workflow` scope is granted (above), and check that the first CI run is green.
-2. **S-11 browser tests** (wave D, Sonnet medium): turn `frontend/scripts/screenshots.mjs`'s journeys into asserted
-   browser tests at 390/820/1280 and re-take the screenshots (several older shots predate the Assistant panel). The
-   `LIVE=1` shots need a back end with live lookup on and network access.
-3. **S-10 generated types** (Sonnet medium): `openapi-typescript` → `frontend/src/api/generated.ts`, with a test that
-   `types.ts` agrees with it (the API has now settled).
-4. **MS3 gate (Fri 27 Nov), on Opus or Fable, with a detailed record in `docs/TEST_LOG.md`:**
-   - each Should item finished and tested, or cut and recorded;
-   - re-run `tools/ms_gate_check.py` and the screenshots from a fresh clone;
-   - re-run `tools/measure.py`.
-5. **T39–T41 usability and accessibility** (people needed; the pack is in `docs/usability/`).
+The order is the wrap-up plan in `TODO.md` (sections A to C). Models follow D-W-14: Opus for gates, reviews and tags;
+Sonnet for features and tests; Haiku for mechanical work.
+
+1. **1.5** Fix the chart owners in `explainers/a3/t05-people-rules.tex` (Haiku). This is next.
+2. **1.2 S-11 browser tests** (Sonnet, 20–23 Nov, T38): turn `frontend/scripts/screenshots.mjs`'s journeys into asserted
+   browser tests at 390/820/1280. The `LIVE=1` shots need a back end with live lookup on and network access.
+3. **1.3** Re-take all screenshots (Haiku), after 1.2. Several older shots predate the Assistant panel.
+4. **2.1 and 2.5:** automated accessibility checks, light and dark, at 3 widths (Sonnet, 24 Nov, T40); then fix
+   severity 3–4 issues and retest (Sonnet, 25–26 Nov, T41).
+5. **MS3 gate, Fri 27 Nov (3.1, Opus), with a detailed record in `docs/TEST_LOG.md`:** each Should item finished and
+   tested, or cut (3.2, with the cut list); re-run `tools/ms_gate_check.py`, `tools/measure.py --build --charts` and the
+   screenshots from a fresh clone.
 6. **Freeze and package:**
-   - T43: README complete, docstring pass, `LICENSES.md` licence line;
-   - T44: clean install from a trial zip (macOS here; Windows by the user);
-   - T45 MS4 `v1.0-rc`;
-   - T50: `tools/package.py`, the zip from the tag, checksums.
-7. **Report and video support:** the material is in `docs/report-material/`. Whether the architecture figure goes in
-   the body or the appendix is the team's call.
+   - 4.1 README complete, including `npm run types` (Sonnet, 28 Nov); 4.2 docstrings, `MODIFICATIONS.md`, `LICENSES.md`
+     line (Haiku, 28 Nov);
+   - 4.3 clean install from a trial zip on macOS (Opus, 29 Nov); 4.4 clean install on the Windows PC (person, 29 Nov);
+   - 4.5a Chrome, Safari and Firefox via automated runs (Sonnet, 29 Nov); 4.5b real-phone check (person, 29 Nov);
+     4.6 tag `v1.0-rc` and push, MS4 (Opus, Sun 29 Nov);
+   - 6.1 tag `v1.0`, zip from the tag (no `node_modules`), checksums, clean unzip-and-run (Opus, 4 Dec).
+7. **Report and video support** (the team writes the report text and narration; AI supplies material only): 5.2 figures
+   and tables from `docs/report-material/` (Sonnet, 30 Nov); 5.5 video shot list and timing (Opus, 1 Dec); 5.4 check
+   against the rubric, page count and Harvard references (Opus, 3 Dec). Whether the architecture figure goes in the body
+   or the appendix is the team's call.
 
-**Open review findings:** see the bottom of `TODO.md` (e.g. the E14 wrong-type wording; scrolling past a chart on a
-real phone not verified).
+**Open review findings:** see the bottom of `TODO.md` (scrolling past a chart on a real phone is not verified: 1.6).
 
 ## 9. Things only the user or the team can do
 

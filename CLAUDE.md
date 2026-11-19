@@ -6,15 +6,19 @@ Assignment 2's frozen `Predictor`. Group HCMC_COS30049.1_4. **Due Sun 6 Dec 2026
 the newest entries of `docs/WORKLOG.md`. The plan (the specification) is `docs/plan/sections/*.tex`; where anything
 disagrees with it, the plan wins, except for the decisions recorded in the work log.
 
-## State (14 Nov 2026): PAUSED by the user
-- MS1 passed 11 Nov; MS2 passed 12 Nov (`docs/TEST_LOG.md`). Every Must item is built, and 11 of 12 Should items.
-- **Left:** S-11 browser tests, the S-10 generated-types half, then the **MS3 gate (Fri 27 Nov)**, run on Opus or
-  Fable with a detailed record.
-- Local `main` is verified: back end 724 passed + 2 skipped, front end 651, first-screen JS 147.8 kB (budget 150).
-- **GitHub (18 Nov): work only in the team repo** `Abomthet/COS30049A3-Assgn3` (remote `assgn3`; `main` tracks
+## State (19 Nov 2026): resumed on 19 Nov; nothing is paused
+- Work resumed on Thu 19 Nov 2026 (paused 13 Nov). MS1 passed 11 Nov; MS2 passed 12 Nov (`docs/TEST_LOG.md`). Every
+  Must item is built, and all 12 Should items except S-11 browser tests. S-10 (generated types) is done (19 Nov).
+- **Left before MS3:** S-11 browser tests. Then the **MS3 gate (Fri 27 Nov)**, run on Opus or Fable with a detailed
+  record. The order of work is the wrap-up plan in `TODO.md`.
+- `main` = `4e29a72`, pushed to the team repo. Verified in a clean worktree: back end 739 passed + 2 skipped, front
+  end 653, typecheck and build clean, first-screen JS 147.8 kB (budget 150).
+- **GitHub: work only in the team repo** `Abomthet/COS30049A3-Assgn3` (remote `assgn3`; `main` tracks
   `assgn3/main`). It is **public** (Abomthet is admin). Fetch and merge it before every push; never force-push.
   `origin` (`Defaul119/COS30049A3`, private) is the old copy: no more pushes there. The UI remake was scrapped on
   18 Nov (user's call); its only copy is `origin/ui-remake`.
+- CI on the team repo is green again. It failed on 18 Nov from a timing flake in
+  `frontend/tests/transactionsTab.test.tsx`; the fix (`7820c5e`) was carried over from the scrapped `ui-remake` branch.
 
 ## Rules that must not be broken
 - **Commits as `Defaul119 <231157022+Defaul119@users.noreply.github.com>`, with no `Co-Authored-By` line or any AI
