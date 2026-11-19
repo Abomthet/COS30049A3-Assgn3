@@ -16,7 +16,7 @@ Report text and video narration stay people-only until the tutor's AI-use email 
 | 1.4 | E14 wording | Haiku | ✅ 19 Nov |
 | 1.7 | Refresh status docs | Haiku | ✅ 19 Nov |
 | 1.5 | Chart owners in `explainers/a3/t05-people-rules.tex` | Haiku | ✅ 19 Nov |
-| 1.2 | S-11 browser tests at 390/820/1280 (T38) | Sonnet | 20–23 Nov |
+| 1.2 | S-11 browser tests at 390/820/1280 (T38) | Sonnet | ✅ 19 Nov |
 | 1.3 | Re-take all screenshots | Haiku | after 1.2 |
 | 2.1 | Automated accessibility checks, light and dark, 3 widths (T40) | Sonnet | 24 Nov |
 | 2.5 | Fix severity 3–4 issues and retest (T41) | Sonnet | 25–26 Nov |
@@ -131,7 +131,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T35 (`ea70d25`) S-07 linked selection; S-08 scenario table
 - [x] T36 (`8ff1519`) S-09 live lookup, E16–E20, dialog V8 (CR-08 approved)
 - [x] T37 S-10: CI done (`75eaf5a`); generated types (`npm run types`, staleness test, `types.ts` agreement check) 19 Nov
-- [~] T38 S-11 browser tests (wave D); S-12 `measure.py` done (`75eaf5a`, every budget passes) (response times, bundle sizes, render times)
+- [x] T38 S-11 browser tests: Playwright 1.64.1, J1–J6 × Chromium/Firefox/WebKit × 390/820/1280, 99 of 99 pass twice (`npm run e2e`, `e2e:quick`; branch `s11-browser`, 19 Nov); S-12 `measure.py` done (`75eaf5a`, every budget passes) (response times, bundle sizes, render times)
 
 ## 1.4.6 Test and fix (25–29 Nov)
 - [~] T39 **[you]** Usability walkthrough, two sessions: pack ready in `docs/usability/` (`7c3dd25`); book participants

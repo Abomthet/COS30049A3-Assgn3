@@ -991,3 +991,33 @@ Follow-up for T43: the README should mention `npm run types` (run it after any A
 
 **Open.** Lead review of these docs. The counts (back end 739 + 2 skipped, front end 653) are the lead's figures from
 `4e29a72`; not re-run by the cook. `tools/package.py`, named in the old §8, does not exist yet; §8 no longer names it.
+
+
+---
+
+## 2026-11-19 — S-11 browser tests (Sonnet 5.5)
+
+**Built.** Playwright (`@playwright/test` 1.64.1, exact-pinned; 1.65.0 and 1.65.1 are under two weeks old) in `frontend/`.
+- `playwright.config.ts`: 9 projects (Chromium, Firefox, WebKit at 390, 820, 1280). Its `webServer` starts its own back end
+  (Uvicorn, :8010) and front end (Vite, :5183, `VITE_PROXY_TARGET`), never reusing a server unless `E2E_REUSE=1`.
+  `E2E_PYTHON`, `E2E_API_PORT`, `E2E_WEB_PORT` override the defaults. Playwright treats only 2xx to 4xx as ready, so
+  waiting on `/api/health` waits for the models (503 until then); no wait script is needed.
+- `e2e/fixtures.ts`: every test gets a guard that fails it on sideways scroll (checked at key steps and at the end) or any
+  `console.error` / uncaught error. One allow-list entry, opt-in per test (J3 unsupported address): the browser's own
+  "Failed to load resource ... 404" for `/api/lookup`; needed in Chromium and WebKit (shown by removing it), Firefox logs nothing.
+- `e2e/j1` to `j6` spec files, 11 tests per project. `npm run e2e`, `npm run e2e:quick`. CI job `browser` (Chromium only).
+- Vitest excludes `e2e/**`; `tsconfig.json` now includes `e2e` and `playwright.config.ts`, so `npm run typecheck`
+  covers them (TypeScript 7 needs nothing special: Playwright compiles the tests itself with Babel).
+
+**Run results.** Two full runs of `npm run e2e`: 99 passed, 0 failed, 0 skipped, 0 flaky each time (~80 s); 11 of 11 in
+each of the 9 projects. Vitest 653; typecheck and build clean.
+
+**Findings.** No app bug found. Behaviour worth knowing: charts draw only when scrolled into view (the tests scroll to
+them); on a touch pointer a chart point opens on the second tap (by design, plan section 8), so the test taps twice
+there; a radio's input sits over its label, so the tests use the radio role; on a phone the tables become cards and the
+header row leaves the accessibility tree, so row counts use `tbody tr`. Hover works at every width in all three browsers
+(mouse movement is emulated), so no hover step is skipped. Firefox has no `isMobile`, so at 390 it is a 390 x 844
+viewport without touch emulation; Chromium and WebKit use `isMobile` and `hasTouch`.
+
+**Decisions.** Python for the servers comes from `E2E_PYTHON` (default `python`; here the miniconda env). Zoom is tested
+through the chart's own period buttons (the range slider is drawn by Plotly and has no accessible control).
