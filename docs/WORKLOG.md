@@ -968,3 +968,12 @@ memory and fails with "run: npm run types" when the file is stale (CRLF-safe); i
 install fails with ERESOLVE. A one-package npm workspace, `frontend/tools/typegen`, holds `openapi-typescript` and
 `typescript@5.9.3` (used by the generator only); the project keeps TypeScript 7. One lock file, plain `npm ci`, no
 `--force` or `--legacy-peer-deps`.
+
+**Lead review (Opus 5.5).** Clean worktree of `02a7e32`: `npm ci`, front end 653, back end 724 + 2 skipped, typecheck,
+build; `npm run types` twice gives no diff. Breakage checks: `flaggedCount: string` in `types.ts` → 10 typecheck
+errors; dropping `'regression_interval'` from `MethodId` → typecheck errors; a field added to `openapi.json` → the
+staleness test fails with "run: npm run types". A full parallel front-end run failed once in
+`transactionsTab.test.tsx` ("previous rows stay, marked as updating"); 5 of 5 runs of that file alone passed, and S-10
+changes no screen code, so it is the known timing flake. Its test-only fix from the scrapped `ui-remake` branch
+(`23379c6`: mock latency 400 ms, longer final waits, assertions unchanged) is cherry-picked onto `main`.
+Follow-up for T43: the README should mention `npm run types` (run it after any API change).
