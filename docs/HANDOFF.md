@@ -33,7 +33,7 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 |---|---|---|
 | MS1 walking skeleton | Sun 15 Nov | **Passed 11 Nov** (`docs/TEST_LOG.md`) |
 | MS2 minimum viable demonstration | Sun 22 Nov | **Passed 12 Nov** (`docs/TEST_LOG.md`; re-run with `tools/ms_gate_check.py`) |
-| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | **All 12 Should items built except S-11 browser tests** (S-10 done 19 Nov) |
+| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | **11 of 12 Should items built**; left: S-11 browser tests (S-10 finished 19 Nov) |
 | MS4 code freeze, `v1.0-rc`, clean install Win + Mac | Sun 29 Nov | |
 | MS5 submit on Canvas | Sat 5 Dec | |
 
@@ -111,14 +111,14 @@ P=~/miniconda3/envs/cos30049-a3/bin/python
 
 # back end
 cd backend && $P -m uvicorn app.main:app --port 8000      # ready ~1 s; /docs lists every endpoint
-$P -m pytest -q                      # full suite, 724 passed + 2 skipped, warnings are errors
+$P -m pytest -q                      # full suite, 739 passed + 2 skipped, warnings are errors
 $P -m pytest -q -m "not slow"        # quick run (inner loop only)
 PARITY_FULL=1 $P -m pytest -q tests/test_whatif_parity.py   # 1,517 amounts, ~8 min (optional)
 cd .. && $P tools/vendor_a2.py --check                       # A2 files unchanged (hashes)
 
 # front end (second terminal; Vite proxies /api to 127.0.0.1:8000)
 cd frontend && npm ci && npm run dev  # http://localhost:5173
-npm test                              # Vitest, 650 tests, 0 skipped
+npm test                              # Vitest, 653 tests, 0 skipped
 npm run typecheck && npm run build    # must be clean, no warnings
 VITE_API_MODE=mock npm run dev        # runs on the recorded fixtures, no back end
 npm run fixtures                      # re-record fixtures from a running back end
