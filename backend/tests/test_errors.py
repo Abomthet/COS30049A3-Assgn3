@@ -7,11 +7,13 @@ import pytest
 from fastapi import APIRouter
 from fastapi.testclient import TestClient
 
-from app.core.errors import InvalidRequest, NotFound, Unavailable
+from app.core.errors import InvalidRequest, NotFound, Unavailable, _describe
 from app.schemas.errors import FieldError
 from app.schemas.whatif import WhatIfRequest
 from explorer.explain import check_wording
 from explorer.predict import InsufficientHistory, Unsupported
+
+from .conftest import RUNNING_EXAMPLE
 
 SECRET = "/Users/someone/secret/path.csv"
 HISTORY_BODY = {"status": "insufficient_history", "message": "There is no earlier history at that time.",
@@ -146,3 +148,37 @@ def test_every_error_text_passes_the_wording_rule(rigged: TestClient) -> None:
         for text in (body["message"], body.get("hint", ""), *(f["message"] for f in body.get("fields", []))):
             check_wording(text)
 
+
+
+def test_a_non_text_note_on_the_watchlist_says_the_type_is_wrong(client: TestClient) -> None:
+    response = client.put(f"/api/watchlist/{RUNNING_EXAMPLE}", json={"note": 5})
+    body = response.json()
+    assert response.status_code == 400 and body["status"] == "invalid"
+    assert {"name": "note", "message": "Must be text."} in body["fields"]
+
+
+@pytest.mark.parametrize("error, expected", [
+    ({"type": "string_type", "ctx": {}}, "Must be text."),
+    ({"type": "string_too_short", "ctx": {"min_length": 3}}, "Must be at least 3 characters."),
+    ({"type": "string_too_short", "ctx": {"min_length": 1}}, "Must be at least 1 character."),
+    ({"type": "string_too_long", "ctx": {"max_length": 40}}, "Must be at most 40 characters."),
+    ({"type": "string_too_long", "ctx": {"max_length": 1}}, "Must be at most 1 character."),
+    ({"type": "list_type", "ctx": {}}, "Must be a list."),
+    ({"type": "too_short", "ctx": {"min_length": 2}}, "Must have at least 2 items."),
+    ({"type": "too_short", "ctx": {"min_length": 1}}, "Must have at least 1 item."),
+    ({"type": "too_long", "ctx": {"max_length": 5}}, "Must have at most 5 items."),
+    ({"type": "too_long", "ctx": {"max_length": 1}}, "Must have at most 1 item."),
+])
+def test_describe_names_the_type_or_the_limit(error: dict, expected: str) -> None:
+    assert _describe(error) == expected
+    check_wording(expected)
+
+
+@pytest.mark.parametrize("error, expected", [
+    ({"type": "string_too_short"}, "Must be text of an acceptable length."),
+    ({"type": "string_too_long", "ctx": {}}, "Must be text of an acceptable length."),
+    ({"type": "too_short"}, "Must be a list of an acceptable length."),
+    ({"type": "too_long", "ctx": {}}, "Must be a list of an acceptable length."),
+])
+def test_describe_falls_back_to_the_old_wording_when_the_limit_is_missing(error: dict, expected: str) -> None:
+    assert _describe(error) == expected

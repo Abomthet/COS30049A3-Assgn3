@@ -182,12 +182,23 @@ def _describe(error: dict[str, Any]) -> str:
         return "Use a date and time such as 2026-10-20T12:00:00Z."
     if kind.startswith("date"):
         return "Use a day such as 2026-10-20."
-    if kind in ("string_type", "string_too_short", "string_too_long"):
-        return "Must be text of an acceptable length."
+    if kind == "string_type":
+        return "Must be text."
+    if kind == "list_type":
+        return "Must be a list."
+    # kind: (wording, the limit's key in ctx, the noun); the old wording stays for a ctx without the limit
+    lengths = {"string_too_short": ("Must be at least {n} {noun}.", "min_length", "character"),
+               "string_too_long": ("Must be at most {n} {noun}.", "max_length", "character"),
+               "too_short": ("Must have at least {n} {noun}.", "min_length", "item"),
+               "too_long": ("Must have at most {n} {noun}.", "max_length", "item")}
+    if kind in lengths:
+        wording, key, noun = lengths[kind]
+        if context.get(key) is None:
+            return "Must be text of an acceptable length." if kind.startswith("string") else "Must be a list of an acceptable length."
+        n = context[key]
+        return wording.format(n=n, noun=noun if n == 1 else noun + "s")
     if kind in ("bool_type", "bool_parsing"):
         return "Must be true or false."
-    if kind in ("list_type", "too_short", "too_long"):
-        return "Must be a list of an acceptable length."
     return "This value is not acceptable."
 
 

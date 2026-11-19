@@ -102,7 +102,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] Fix the chart owners in `explainers/a3/t05-people-rules.tex` to match the plan (or drop owners from the briefing)
 
 ## Review findings to fix later
-- [ ] E14: a non-text `note` gets "Must be text of an acceptable length" (wrong-type wording)
+- [x] E14: a non-text `note` gets "Must be text." (was "Must be text of an acceptable length"); a length error now names its limit (`errors.py::_describe`)
 - [x] (`55c0b98`) G5: log-axis tick labels overlap at desktop width (T28)
 - [x] (`55c0b98`) Method names: E11 vs the front end's `lib/methods.ts`; use E11 everywhere
 - [x] Command Line Tools: back since 12 Nov 08:26 (an update had been mid-reinstall); Apple git in use again, the conda-git link removed
