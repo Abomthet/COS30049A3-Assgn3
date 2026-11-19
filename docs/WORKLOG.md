@@ -1029,3 +1029,19 @@ line cut to 20 characters → J2 fails (WebKit 820); a `console.error` at start 
 empty", Firefox 390). Accepted: zoom through the period buttons, not a drag of Plotly's range slider (it has no
 accessible control); the CI job uploads the HTML report on failure.
 
+
+## 2026-11-19 — Screenshots re-taken (Haiku 5.5)
+
+**Context.** Wrap-up plan item 1.3. The screenshots had to show the Assistant panel, the resize fix and the new layouts. The script `frontend/scripts/screenshots.mjs` (Chrome over DevTools) was run unchanged; no source code was touched.
+
+**Done.**
+- Normal run against the real back end (`EXPLORER_LIVE_LOOKUP=on`, port 8020, Vite on 5193): ends with "Responsive check passed: no page scrolls sideways at any width."
+- Mock-only states (`VITE_API_MODE=mock`, `MOCK=1`, `ONLY='^(04|11|4[0-4])'`): 7 shots (04, 11, 40–44), with the responsive check passed.
+- Live-lookup shots (`LIVE=1`, `ONLY='^live'`): **kept old.** The first run wrote `live-01-offer-1280` and `live-02-dialog-1280`, then stalled on `live-03` after the lookup started (202) with no status polls. One retry stalled the same way. Both re-rendered `live-01`/`live-02` were restored from HEAD, so all six `live-*` images are the previous ones (`live-03-overview-1280` shows data fetched 13 Nov 2026).
+- Two things to know about the runs: the first normal run hung at shot 39 (offline banner) and was killed; a second full run passed. The mock run printed its pass line but its node process did not exit; it was stopped by hand.
+- Checked by eye: 05, 08, 16, 17, 30, 58, 62 render with data and no broken panels. 04 and 42 show the intended loading and timeout states (mock). The live-03 image is the old one.
+- Note for review: shot 58 and shot 08 carry "Written by the Explorer Assistant" text, while the real back end reports `assistant: not_installed` (shot 30 says the model file is not installed and the template is used). The two are not consistent; the prepared text needs a look before the report uses the shots.
+
+**Evidence.** 64 numbered PNGs plus 6 `live-*` = 70 in `docs/screenshots/`. 45 PNGs changed; 25 are byte-identical to the previous set. `git status` shows only `docs/screenshots/` PNGs and these doc files. `backend/var/` (the back end's SQLite and live cache) is git-ignored and not committed.
+
+**Open.** Live-lookup shots not refreshed (the lookup stalls on the real block explorer). The Assistant text question above.
