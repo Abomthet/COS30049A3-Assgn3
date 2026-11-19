@@ -216,7 +216,7 @@ planning, gates and review, and the cheapest on mechanical work.
 The order is the wrap-up plan in `TODO.md` (sections A to C). Models follow D-W-14: Opus for gates, reviews and tags;
 Sonnet for features and tests; Haiku for mechanical work.
 
-1. **1.5** Fix the chart owners in `explainers/a3/t05-people-rules.tex` (Haiku). This is next.
+1. ~~1.5 chart owners in the briefing~~ done 19 Nov.
 2. **1.2 S-11 browser tests** (Sonnet, 20–23 Nov, T38): turn `frontend/scripts/screenshots.mjs`'s journeys into asserted
    browser tests at 390/820/1280. The `LIVE=1` shots need a back end with live lookup on and network access.
 3. **1.3** Re-take all screenshots (Haiku), after 1.2. Several older shots predate the Assistant panel.

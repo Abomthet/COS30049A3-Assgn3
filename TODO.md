@@ -15,7 +15,7 @@ Report text and video narration stay people-only until the tutor's AI-use email 
 | 1.1 | S-10 generated types (T37) | Sonnet | ✅ 19 Nov |
 | 1.4 | E14 wording | Haiku | ✅ 19 Nov |
 | 1.7 | Refresh status docs | Haiku | ✅ 19 Nov |
-| 1.5 | Chart owners in `explainers/a3/t05-people-rules.tex` | Haiku | 19 Nov |
+| 1.5 | Chart owners in `explainers/a3/t05-people-rules.tex` | Haiku | ✅ 19 Nov |
 | 1.2 | S-11 browser tests at 390/820/1280 (T38) | Sonnet | 20–23 Nov |
 | 1.3 | Re-take all screenshots | Haiku | after 1.2 |
 | 2.1 | Automated accessibility checks, light and dark, 3 widths (T40) | Sonnet | 24 Nov |
@@ -155,7 +155,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] C-01 G7 surprisal (E21) · C-02 profile card (E22) · C-03 G8 calendar, G9 snapshot map · C-04 review marks · C-05 one-command mode and Docker · C-06 watch mode · C-07 printable summary
 
 ## Housekeeping found while reading
-- [ ] Fix the chart owners in `explainers/a3/t05-people-rules.tex` to match the plan (or drop owners from the briefing)
+- [x] Fix the chart owners in `explainers/a3/t05-people-rules.tex` to match the plan (19 Nov: G2 Dan+Tri, G3 Dan+Khang, G5 Tri+Khang, G4/G6 Tri+Dan, wrapper Tri+Khang, G1 Khang; `a3.pdf` rebuilt, 17 pages; backup `explainers/a3.bak-20261119`)
 
 ## Review findings to fix later
 - [x] E14: a non-text `note` gets "Must be text." (was "Must be text of an acceptable length"); a length error now names its limit (`errors.py::_describe`)
