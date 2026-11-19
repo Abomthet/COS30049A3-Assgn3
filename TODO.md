@@ -74,7 +74,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] T34 (`0f4febf`) S-06 replay
 - [x] T35 (`ea70d25`) S-07 linked selection; S-08 scenario table
 - [x] T36 (`8ff1519`) S-09 live lookup, E16–E20, dialog V8 (CR-08 approved)
-- [~] T37 S-10: CI done (`75eaf5a`); generated types deferred until the API settles
+- [x] T37 S-10: CI done (`75eaf5a`); generated types (`npm run types`, staleness test, `types.ts` agreement check) 19 Nov
 - [~] T38 S-11 browser tests (wave D); S-12 `measure.py` done (`75eaf5a`, every budget passes) (response times, bundle sizes, render times)
 
 ## 1.4.6 Test and fix (25–29 Nov)

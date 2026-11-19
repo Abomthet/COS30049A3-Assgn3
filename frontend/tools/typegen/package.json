@@ -1,0 +1,11 @@
+{
+  "name": "typegen",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Isolated home for openapi-typescript: it needs the JS compiler API of TypeScript 5.x, which TypeScript 7 (the project compiler) no longer ships. Used only by `npm run types` and tests/generatedTypes.test.ts.",
+  "type": "module",
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}

@@ -952,3 +952,19 @@ cache then answers for 7 days); a 500-transaction fetch takes ~25–30 s.
 - `CLAUDE.md` (auto-loaded), `docs/HANDOFF.md` (full cold start), `TODO.md`, this log, `docs/TEST_LOG.md`,
   `docs/PLAN_SHOULD.md`, `docs/AI_USE_LOG.md`;
 - memory: `~/.claude/projects/-Users-tritran2411/memory/cos30049-a3-plan.md`.
+
+---
+
+## 2026-11-19 — S-10 generated types (branch `s10-types`, Sonnet 5.5)
+
+**Done.** `npm run types` (`frontend/tools/typegen/generate.mjs`) writes `frontend/src/api/generated.ts` from
+`backend/openapi.json` with `openapi-typescript` 7.13.0 (pinned). `tests/generatedTypes.test.ts` regenerates in
+memory and fails with "run: npm run types" when the file is stale (CRLF-safe); it is the only staleness check, so
+`ci.yml` is unchanged. `tests/typeAgreement.check.ts` asserts at compile time (`npm run typecheck`) that
+`types.ts` and `generated.ts` agree, with each deliberate difference documented beside its check. `types.ts` untouched.
+
+**Decision: where the generator lives.** `openapi-typescript` needs the JavaScript compiler API of TypeScript 5.x
+(`ts.factory`); TypeScript 7 (the project's compiler) no longer ships it, and its peer range is `^5.x`, so a plain
+install fails with ERESOLVE. A one-package npm workspace, `frontend/tools/typegen`, holds `openapi-typescript` and
+`typescript@5.9.3` (used by the generator only); the project keeps TypeScript 7. One lock file, plain `npm ci`, no
+`--force` or `--legacy-peer-deps`.

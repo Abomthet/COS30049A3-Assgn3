@@ -9,6 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "types": "node tools/typegen/generate.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "screenshots": "node scripts/screenshots.mjs",
@@ -36,5 +37,8 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.3",
     "vitest": "^5.0.3"
-  }
+  },
+  "workspaces": [
+    "tools/typegen"
+  ]
 }
