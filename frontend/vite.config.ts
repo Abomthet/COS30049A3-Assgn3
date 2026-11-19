@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 
@@ -23,6 +23,8 @@ export default defineConfig({
   preview: { port: 4173, proxy },
   test: {
     environment: 'jsdom',
+    // The browser tests (Playwright, e2e/) are run by `npm run e2e`, not by Vitest.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
     setupFiles: ['./tests/setup.ts'],
     // The tests run the screens on the in-browser mock; no back end is needed.
     env: { VITE_API_MODE: 'mock' },

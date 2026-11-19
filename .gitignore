@@ -24,3 +24,9 @@ docs/plan/*.toc
 
 # agent worktrees (each cook works on its own branch; the lead merges)
 .claude/
+
+# Playwright (S-11)
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/playwright/.cache/

@@ -49,5 +49,7 @@ disagrees with it, the plan wins, except for the decisions recorded in the work 
 ## Commands (macOS; `export PATH="$HOME/.local/bin:$PATH"`; Python `~/miniconda3/envs/cos30049-a3/bin/python`)
 - **Back end:** `cd backend && uvicorn app.main:app --port 8000`; `python -m pytest -q` (full) or `-m "not slow"`.
 - **Front end:** `cd frontend && npm run dev` (:5173, proxies `/api`); `npm test`; `npm run typecheck && npm run build`.
+- **Browser tests (Playwright, S-11):** `cd frontend && npm run e2e` (Chromium, Firefox, WebKit at 390/820/1280; starts its own servers on 8010/5183; set `E2E_PYTHON`).
+- **Quick browser tests:** `npm run e2e:quick` (Chromium at the three widths).
 - **Gates and measurement:** `python tools/ms_gate_check.py` (API half of a gate); `npm run screenshots` (layouts,
   sideways-scroll check); `python tools/measure.py --build --charts`.
