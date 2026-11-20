@@ -1,5 +1,5 @@
 // J3: type an address that cannot be shown (plan section 4).
-import { examples, expect, test } from './fixtures';
+import { examples, expect, test, WIDER_TEXT_CSS } from './fixtures';
 
 test.describe('J3: addresses that cannot be shown', () => {
   test('a typo is caught in the browser, before any request', async ({ page, guard }) => {
@@ -33,6 +33,10 @@ test.describe('J3: addresses that cannot be shown', () => {
     const examplesList = panel.getByRole('list').getByRole('link');
     await expect(examplesList).toHaveCount(3);
     await guard.noSidewaysScroll('after the unsupported address');
+    // Its buttons are whole sentences: with a wider font they must wrap, not widen the page.
+    const wider = await page.addStyleTag({ content: WIDER_TEXT_CSS });
+    await guard.noSidewaysScroll('after the unsupported address, with wider text');
+    await wider.evaluate((el) => (el as Element).remove());
 
     // An example opens its overview.
     await examplesList.first().click();
@@ -44,6 +48,9 @@ test.describe('J3: addresses that cannot be shown', () => {
     const notice = page.getByTestId('state-insufficient');
     await expect(notice.getByRole('heading', { name: 'Not enough history to score this address' })).toBeVisible();
     await expect(page.locator('dl.stat-row').getByRole('definition').nth(2)).toHaveText('Not scored');
+    const wider = await page.addStyleTag({ content: WIDER_TEXT_CSS });
+    await guard.noSidewaysScroll('on the short-history notice, with wider text');
+    await wider.evaluate((el) => (el as Element).remove());
 
     await notice.getByRole('link', { name: 'Browse its transactions anyway' }).click();
     const table = page.getByRole('table', { name: /Transactions of this address/ });

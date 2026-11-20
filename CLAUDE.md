@@ -11,7 +11,7 @@ disagrees with it, the plan wins, except for the decisions recorded in the work 
   Must item and all 12 Should items are built (S-10 generated types and S-11 browser tests finished 19 Nov).
 - **Next:** screenshots, accessibility checks and fixes, then the **MS3 gate (Fri 27 Nov)**, run on Opus or Fable with a detailed
   record. The order of work is the wrap-up plan in `TODO.md`.
-- `main` = `4e29a72`, pushed to the team repo. Verified in a clean worktree: back end 739 passed + 2 skipped, front
+- `main` is pushed to the team repo after each verified task (`git log assgn3/main`). Last full check (19 Nov): back end 739 passed + 2 skipped, front
   end 653, typecheck and build clean, first-screen JS 147.8 kB (budget 150).
 - **GitHub: work only in the team repo** `Abomthet/COS30049A3-Assgn3` (remote `assgn3`; `main` tracks
   `assgn3/main`). It is **public** (Abomthet is admin). Fetch and merge it before every push; never force-push.

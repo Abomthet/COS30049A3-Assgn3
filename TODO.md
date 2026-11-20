@@ -172,5 +172,6 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] (`ee858f7`) A2's reason text repeats itself ("…ratio to the usual amount than usual"): fix in the web layer, record in `MODIFICATIONS.md`
 - [x] (`ee858f7`) A 400 reports only the first validation layer's faults (`pageSize=999&status=bogus` → only `status`)
 - [x] Touch targets: own 44 px range buttons; legend display-only on touch (`55c0b98`); desktop legend stays compact
+- [x] (20 Nov) Wider fonts (Linux, Windows) pushed the unsupported and short-history panels past a 390 px phone: state panel `minmax(0, 1fr)`, state buttons wrap; J3 re-checks with wider text
 - [ ] Phone scroll past a chart not verified on a real device (T38)
 - [x] `EXPLORER_ASSISTANT` default back to `auto` (`6e1a6b8`, D-W-09 closed)

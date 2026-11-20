@@ -450,7 +450,9 @@ main.container {
 
 .state-panel {
   display: grid;
-  grid-template-columns: auto 1fr;
+  /* minmax(0, 1fr), not 1fr: a 1fr track never shrinks below its longest unbreakable line, so with a wider font
+     (Linux's DejaVu Sans, Windows' Segoe UI) a one-line button widened the page past a 390 px phone. */
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 12px;
   padding: 16px 18px;
   border-radius: var(--radius);
@@ -474,6 +476,12 @@ main.container {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
+}
+/* A state's buttons carry whole sentences ("Clear and try another address"); on a narrow phone they wrap onto two
+   lines instead of widening the page (buttons elsewhere stay on one line). */
+.state-actions .btn {
+  white-space: normal;
+  text-align: center;
 }
 .tone-info {
   background: var(--info-bg);

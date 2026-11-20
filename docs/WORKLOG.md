@@ -1029,3 +1029,26 @@ line cut to 20 characters → J2 fails (WebKit 820); a `console.error` at start 
 empty", Firefox 390). Accepted: zoom through the period buttons, not a drag of Plotly's range slider (it has no
 accessible control); the CI job uploads the HTML report on failure.
 
+---
+
+## 2026-11-20 — Wider fonts pushed two phone pages sideways (CI's first browser run; fixed by the lead, Opus 5.5)
+
+**Found.** The first CI run of the browser job (`7aa9dc1`, Linux Chromium) failed one test: at 390 px the "This address
+isn't in the snapshot" panel made the page 9 px too wide. It passed on the Mac. Cause: `.btn` is `white-space: nowrap`
+and the state panel's text column was a `1fr` grid track, which never shrinks below its longest unbreakable line, so
+the one-line button "Clear and try another address" set the panel's width. Linux's default sans (DejaVu Sans) is wider
+than the Mac's system font. A sweep of every main page at 390 and 820 px with Verdana (about DejaVu's width) found one
+more: the short-history notice ("Browse its transactions anyway"), 39 px too wide. Every other page fits. Windows'
+Segoe UI is also wider than the Mac's font, so a team member's PC would likely have shown the same.
+
+**Fix.** `.state-panel` uses `grid-template-columns: auto minmax(0, 1fr)`, and `.state-actions .btn` may wrap
+(`white-space: normal`). The Mac rendering is unchanged (the buttons still fit on one line there).
+
+**Regression check.** `e2e/fixtures.ts` `WIDER_TEXT_CSS` (letter spacing 0.1em, platform-independent) is applied in the
+two J3 tests, which then re-check for sideways scroll. On the old CSS both fail (Chromium 390); with the fix they pass
+in Chromium, Firefox and WebKit at 390.
+
+**Live-lookup screenshots.** The screenshot cook's two live runs were stopped before the fetch finished (exit 143). The
+lookup itself works: run by hand it fetched 500 of 1,164 transactions and the address opened. The Mac's idle sleep
+froze every process for minutes at a time, which made the runs look stuck. The lead took the six `live-*` shots.
+

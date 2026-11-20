@@ -12,6 +12,10 @@ export interface AllowedConsoleError {
   reason: string;
 }
 
+/** Letter spacing that stands in for a wider font than this Mac's (Linux's DejaVu Sans, Windows' Segoe UI). Without it a
+ * one-line button that fits here pushed a 390 px phone page sideways on the Linux CI machine (19 Nov). */
+export const WIDER_TEXT_CSS = 'body * { letter-spacing: 0.1em !important; }';
+
 export interface Guard {
   /** Allows one expected console error for this test only. */
   allow: (entry: AllowedConsoleError) => void;
