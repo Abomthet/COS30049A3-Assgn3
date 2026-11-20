@@ -1044,4 +1044,6 @@ accessible control); the CI job uploads the HTML report on failure.
 
 **Evidence.** 64 numbered PNGs plus 6 `live-*` = 70 in `docs/screenshots/`. 45 PNGs changed; 25 are byte-identical to the previous set. `git status` shows only `docs/screenshots/` PNGs and these doc files. `backend/var/` (the back end's SQLite and live cache) is git-ignored and not committed.
 
+**Lead review (Opus 5.5), 20 Nov.** The live lookup works (a hand run fetched 500 of 1,164 transactions); the cook's runs were stopped before the ~30 s fetch finished, and the Mac's idle sleep froze processes for minutes. The lead took the six `live-*` shots (`LIVE=1 ONLY='^live'`, responsive check passed); three changed, three came out identical. The Assistant label on 08 and 58 is correct: those are the prepared answers the Assistant wrote in advance (Mod-15), served without the weights; a what-if (30) has no prepared answer, so it uses the template. All 70 shots are current.
+
 **Open.** Live-lookup shots not refreshed (the lookup stalls on the real block explorer). The Assistant text question above.
