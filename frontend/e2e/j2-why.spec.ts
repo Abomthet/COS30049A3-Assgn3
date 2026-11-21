@@ -1,5 +1,5 @@
 // J2: find out why a transaction stands out (plan section 4).
-import { drawnChart, examples, expect, limitationLine, test } from './fixtures';
+import { drawnChart, examples, expect, limitationLine, test, WIDER_TEXT_CSS } from './fixtures';
 
 test('J2: from a flagged day to one transaction and its reasons', async ({ page, guard }) => {
   const { flagged } = examples;
@@ -41,4 +41,8 @@ test('J2: from a flagged day to one transaction and its reasons', async ({ page,
   await expect(verdicts.getByRole('row', { name: /Deciding method/ })).toContainText('Flag');
   await drawnChart(page, 'Where each model ranks it');
   await guard.noSidewaysScroll('on the transaction');
+  // With a wider font (Linux, Windows, larger text) the page must still fit: buttons and tabs wrap.
+  const wider = await page.addStyleTag({ content: WIDER_TEXT_CSS });
+  await guard.noSidewaysScroll('on the transaction, with wider text');
+  await wider.evaluate((el) => (el as Element).remove());
 });

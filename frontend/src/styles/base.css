@@ -1439,6 +1439,8 @@ main.container {
 /* Tabs are links (each is a route); the current one has a heavier underline as well as its ARIA state. */
 .tabs ul {
   display: flex;
+  /* A wider font (Linux, Windows, larger text) must not push a phone page sideways: the tabs wrap as a last resort. */
+  flex-wrap: wrap;
   gap: 4px;
   list-style: none;
   margin: 0;
@@ -1463,6 +1465,17 @@ main.container {
 .tabs a[aria-current='page'] {
   color: var(--text);
   border-bottom-color: var(--series-1);
+}
+@media (max-width: 480px) {
+  .tabs a {
+    padding: 0 10px;
+  }
+  /* On a phone a button with a long label ("Ask the Assistant to write this explanation") wraps instead of widening
+     the page; with the Mac's narrow system font it still fits on one line. */
+  .btn {
+    white-space: normal;
+    text-align: center;
+  }
 }
 
 .transactions-tab {

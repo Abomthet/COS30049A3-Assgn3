@@ -1,5 +1,5 @@
 // J1: open an address and read its activity (plan section 4).
-import { drawnChart, examples, expect, test } from './fixtures';
+import { drawnChart, examples, expect, test, WIDER_TEXT_CSS } from './fixtures';
 
 test('J1: pick an address from the list and read its overview', async ({ page, guard }) => {
   await page.goto('/#/');
@@ -40,4 +40,8 @@ test('J1: pick an address from the list and read its overview', async ({ page, g
   const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1];
   await expect(days.getByRole('link', { name: new RegExp(`${d} ${month} ${y}`) })).toBeVisible();
   await guard.noSidewaysScroll('on the overview');
+  // With a wider font (Linux, Windows, larger text) the page must still fit: buttons and tabs wrap.
+  const wider = await page.addStyleTag({ content: WIDER_TEXT_CSS });
+  await guard.noSidewaysScroll('on the overview, with wider text');
+  await wider.evaluate((el) => (el as Element).remove());
 });
