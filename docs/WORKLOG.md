@@ -1143,3 +1143,16 @@ the 13 Nov servers on 8000 and 5173 are still running (an earlier check that sai
 an install check must confirm its own server started ("Explorer ready", small uptime) before trusting any answer.
 README: the port item now gives the tested `VITE_PROXY_TARGET` route; ten more "(not run …)" remarks removed.
 
+
+---
+
+## 2026-11-21 — Report material refreshed (Haiku 5.5)
+
+Mechanical pass in the `report-material` worktree; no app code changed.
+
+- **Screenshot index.** Twelve descriptions added to `make_screenshot_index.py` (shots 58 to 63 and the six `live-` shots). The `live-` shots were in no view group, so the index would have left them out of its tables; a group was added for them, and 58 to 63 were given to the existing V2 to V4 groups. Index: 70 shots, two byte-identical pairs. Heights of several older PNGs changed from the previous index, so the index was stale and is rewritten.
+- **Design notes.** Twelve bullets added to `TOPIC`: 8 Back end, 1 Front end (the watchlist store), G4 under Charts, 2 Tooling (the measurement table and CI). 67 bullets in all.
+- **API reference.** Regenerated from `openapi.json`: 18 paths, 20 operations.
+- **`measurements.md`.** The "Read this first" paragraph now points to `measured/measure.md`. Count to confirm: that file's Budgets table has 31 rows, all PASS, while the MS3 entry above and `TEST_LOG.md` say 27 of 27. The paragraph states that every budget passes and gives no count.
+- **`figures/README.md`.** The live lookup (S-09, T36 `8ff1519`) is built, so the "in progress, not on `main`" statements and the endpoint count are corrected. The architecture drawing still labels the Esplora box "S-09, in progress": `make_figures.py` needs that label changed and the figures rebuilt (not done here).
+- `measured/measure.md` records its commit as `2041d49 (uncommitted changes)`; the MS3 gate was a fresh clone, so the lead should check which tree the measured run used.

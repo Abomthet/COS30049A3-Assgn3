@@ -37,6 +37,14 @@ TOPIC = {
     "An exact cap under concurrency": "Back end",
     "Ranks without rescoring": "Back end",
     "No file at import": "Back end",
+    "The replay is honest:": "Back end",
+    "One answer at a time, without queueing:": "Back end",
+    "Greedy decoding makes caching sound:": "Back end",
+    "Torch is optional:": "Back end",
+    "A rejected answer cannot leak:": "Back end",
+    "A fetched address takes A2's held-out route:": "Back end",
+    "Progress is an append-only event list:": "Back end",
+    "Politeness and privacy are structural:": "Back end",
     # front end
     "One client, one error type": "Front end",
     "Cancellation by signal": "Front end",
@@ -53,6 +61,7 @@ TOPIC = {
     "One panel, one catalogue": "Front end",
     "A slow request says so; a busy service counts down": "Front end",
     "The link decides the method": "Front end",
+    "The watchlist is a store, not a request cache:": "Front end",
     # charts
     "One wrapper; a chart is a figure function": "Charts",
     "Plotly is loaded on demand, and failure is a state": "Charts",
@@ -67,6 +76,7 @@ TOPIC = {
     "Why Plotly's widgets are replaced on touch": "Charts",
     "Axis labels fit the room": "Charts",
     "G6 is honest about what it measures": "Charts",
+    "G4": "Charts",
     # testing
     "Fixtures are recorded, not invented": "Testing",
     "Two checkers, one set of vectors": "Testing",
@@ -75,6 +85,8 @@ TOPIC = {
     "Waiting for the state, not the first event": "Testing",
     # tooling (build and mock)
     "The mock cannot ship": "Tooling",
+    "One script, one table": "Tooling",
+    "CI as the README's commands": "Tooling",
 }
 ORDER = ["Back end", "Front end", "Charts", "Testing", "Tooling"]
 BLOCK_START = re.compile(r"design notes", re.IGNORECASE)
