@@ -42,10 +42,12 @@ async function scan(page: Page, name: string, theme: Theme): Promise<void> {
     return result.violations.map((v) => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.map((n) => n.target.join(' ')) }));
   };
   let hits = await run();
-  // A loading line fades and spins in; a scan taken in the middle of that reports the contrast of a half-faded line
-  // (seen once on V4's empty lab). A result that names only such a line is taken again, up to three times.
-  for (let again = 0; again < 3 && hits.some((h) => h.nodes.some((n) => n.includes('.loading'))) && hits.every((h) => h.nodes.every((n) => n.includes('.loading'))); again++) {
-    await page.waitForTimeout(1500);
+  // A toast fades in over 180 ms (`toast-in`, from opacity 0), and a scan taken in the middle reports the contrast of a
+  // half-faded toast (seen once in WebKit, on V4 right after "Keep"). A result that names only toast nodes is taken again
+  // after the fade, up to three times. (A "Loading" line used to need the same: that was A-03, fixed in the CSS, so it is no longer retried.)
+  const transient = (n: string): boolean => n.includes('.toast');
+  for (let again = 0; again < 3 && hits.length > 0 && hits.every((h) => h.nodes.every(transient)); again++) {
+    await page.waitForTimeout(500);
     hits = await run();
   }
   mkdirSync('test-results', { recursive: true });
