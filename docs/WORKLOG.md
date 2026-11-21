@@ -1071,3 +1071,13 @@ in Chromium, Firefox and WebKit at 390.
 lookup itself works: run by hand it fetched 500 of 1,164 transactions and the address opened. The Mac's idle sleep
 froze every process for minutes at a time, which made the runs look stuck. The lead took the six `live-*` shots.
 
+**Second CI failure (21 Nov, `e41c930`).** With Linux's font plus J3's wider-text check, the short-history page was
+still 23 px too wide: the address tabs (Overview, Transactions, What-if) could not wrap. A sweep of every page at 390
+and 820 px with a Linux-width font (Verdana) plus 0.1em spacing also found the transaction page 49 px too wide (the
+one-line "Ask the Assistant to write this explanation" button). Fix (`303f5fb`): `.tabs ul` may wrap; on phones
+(<= 480 px) the tabs use 10 px side padding and every `.btn` may wrap. After it, the same sweep passes on all 22
+page-and-width cases. On the Mac the only visible change is tighter tab spacing on phones (no button wraps there);
+the phone screenshots show the old spacing until the MS3 re-take. J1 and J2 now re-check with wider text too, and
+`WIDER_TEXT_CSS` is 0.2em: at 0.1em the checks passed on the old CSS on the Mac (its font is narrower than Linux's);
+at 0.2em they fail on the old CSS (overview, short-history) and pass with the fix in Chromium, Firefox and WebKit.
+

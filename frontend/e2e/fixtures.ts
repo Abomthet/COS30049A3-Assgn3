@@ -12,9 +12,10 @@ export interface AllowedConsoleError {
   reason: string;
 }
 
-/** Letter spacing that stands in for a wider font than this Mac's (Linux's DejaVu Sans, Windows' Segoe UI). Without it a
- * one-line button that fits here pushed a 390 px phone page sideways on the Linux CI machine (19 Nov). */
-export const WIDER_TEXT_CSS = 'body * { letter-spacing: 0.1em !important; }';
+/** Letter spacing that stands in for a wider font than this Mac's (Linux's DejaVu Sans, Windows' Segoe UI, larger text).
+ * One-line buttons and the address tabs that fit here pushed a 390 px phone page sideways on the Linux CI machine
+ * (19 and 20 Nov). 0.2em makes the Mac's font as wide as Linux's plus a margin: the checks fail on the old CSS here. */
+export const WIDER_TEXT_CSS = 'body * { letter-spacing: 0.2em !important; }';
 
 export interface Guard {
   /** Allows one expected console error for this test only. */
