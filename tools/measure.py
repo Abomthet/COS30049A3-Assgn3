@@ -241,9 +241,19 @@ def command_output(*command: str) -> str:
     return out.splitlines()[0] if out else "unknown"
 
 
+def working_tree_dirty() -> bool:
+    """Whether `git status --porcelain` lists anything. (Not via command_output: that answers "unknown" for an empty
+    output, and a clean tree prints nothing, so every run used to be labelled "uncommitted changes".)"""
+    try:
+        status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, check=True, cwd=ROOT)
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    return bool(status.stdout.strip())
+
+
 def environment(repeats: int, backend: str, health: dict) -> dict:
     """Where and when the run happened, for the report's table."""
-    dirty = bool(command_output("git", "status", "--porcelain"))
+    dirty = working_tree_dirty()
     cpu = command_output("sysctl", "-n", "machdep.cpu.brand_string")
     return {
         "date": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),
