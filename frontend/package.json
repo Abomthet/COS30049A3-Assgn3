@@ -15,6 +15,7 @@
     "screenshots": "node scripts/screenshots.mjs",
     "e2e": "playwright test",
     "e2e:quick": "playwright test --project=chromium-390 --project=chromium-820 --project=chromium-1280",
+    "e2e:a11y": "playwright test e2e/a11y.spec.ts --project=chromium-390 --project=chromium-820 --project=chromium-1280",
     "fixtures": "node scripts/record-fixtures.mjs"
   },
   "engines": {
@@ -27,6 +28,7 @@
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@playwright/test": "1.64.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
