@@ -1,12 +1,12 @@
 # Licences
 
-**This project.** Coursework for COS30049 at Swinburne University of Technology; all rights reserved by the group members unless stated otherwise. (No licence file existed in the repository when this was written.)
+**This project.** Coursework for COS30049 at Swinburne University of Technology; all rights reserved by the group members unless stated otherwise.
 
 **Assignment 2.** The back end's `explorer/`, `lm/`, `models/`, `data/` and `reports/` folders (the Predictor, the nine saved models, the snapshot's tables and the Assistant's weights) are Assignment 2's work by the same group, copied unchanged by `tools/vendor_a2.py` (source and hashes in `backend/A2_VENDOR.json`). The same line above applies to them.
 
 **Data.** The snapshot is public blockchain data for 28 addresses, fetched on 22 October 2026 from the Blockstream Esplora public API (`https://blockstream.info/api`). The optional live lookup reads the same service (and, if it limits the rate, `mempool.space/api`). The application stores no personal data.
 
-**Libraries.** Each version and licence below was read from the installed package's own metadata (Python: `importlib.metadata`, npm: `package.json` after `npm ci`) on 21 November 2026. Versions are the pins in `backend/requirements.txt`, `backend/requirements-assistant.txt`, `frontend/package.json` (ranges such as `^19.3.0` show the version installed from `package-lock.json`) and `frontend/tools/typegen/package.json`. Nothing was reported as unknown.
+**Libraries.** Each version and licence below was read from the installed package's own metadata (Python: `importlib.metadata`, npm: `package.json` after `npm ci`) on 21 November 2026. Versions are the pins in `backend/requirements.txt`, `backend/requirements-assistant.txt`, `frontend/package.json` (ranges such as `^19.3.0` show the version installed from `package-lock.json`) and `frontend/tools/typegen/package.json`.
 
 ## Python, back end (`backend/requirements.txt`)
 

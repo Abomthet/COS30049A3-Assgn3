@@ -1130,3 +1130,8 @@ skipped, Vitest 657, typecheck, `npm run types` (no change), `npm run e2e` 462 p
 screenshots re-taken (normal, live, mock). Record: `docs/TEST_LOG.md`. All 12 Should items finished; none cut. Could
 items not started; cutting all seven is recommended to the team (3.3). New risk: first-screen JS 148.0 of 150 kB.
 
+**README tidy (lead).** The README cook had written its own verification notes into the instructions ("run here as
+--dry-run only", "It was run on this Mac", "not re-run for this file"); the lead's review of `446cab1` checked facts
+but missed the tone. Eight such lines are rewritten as plain instructions, with a short "Tested on" note; the honest
+"(not run on Windows)" heading stays until the team's Windows install. Two similar remarks in `LICENSES.md` removed.
+

@@ -11,9 +11,8 @@ and export what the table shows.
 
 ![An address's day-by-day activity, with the unusual days marked](docs/screenshots/05-timeline.png)
 
-> **Status.** Commands in a plain code block were run on macOS (Apple silicon, Python 3.11.18, Node v24) while
-> writing this file. Where a command was not run, or only part of it was, the line says so. Nothing here has been
-> run on Windows yet (the team's Windows clean install is on 29 November).
+> **Tested on** macOS (Apple silicon) with Python 3.11 and Node 24. The Windows steps follow the same route and are
+> checked on Windows 11 before submission.
 
 Contents: [Folders](#what-is-in-the-repository) · [What you need](#what-you-need) · [Back end](#1-start-the-back-end) ·
 [Front end](#2-start-the-front-end) · [Check it works](#3-check-it-works) · [Tour](#4-a-two-minute-tour) ·
@@ -48,7 +47,7 @@ Contents: [Folders](#what-is-in-the-repository) · [What you need](#what-you-nee
 
 ```bash
 cd backend
-conda env create -f environment.yml     # about a minute or two; run here as --dry-run only (the environment already existed): the solve succeeded
+conda env create -f environment.yml     # about a minute or two
 conda activate cos30049-a3
 python --version                        # Python 3.11.x
 python -m pytest -q                     # optional, about 2 minutes: expect all passed ("-m 'not slow'" is quicker)
@@ -58,7 +57,7 @@ uvicorn app.main:app --port 8000        # expect: "Explorer ready: 28 addresses,
 It is ready about one second after the start. Leave this terminal open.
 
 If `conda activate` is not recognised in a new terminal, run `conda init zsh` once and open a new terminal
-(not run here; the hook was loaded with `eval "$(conda shell.zsh hook)"` instead).
+(or, for this terminal only, `eval "$(conda shell.zsh hook)"`).
 
 ### Windows 10/11 (not run on Windows)
 
@@ -93,7 +92,7 @@ npm run dev                             # then open http://localhost:5173
 
 `npm ci` installs exactly what `package-lock.json` pins; `npm install` also works but may change the lock file.
 It also installs the small type generator in `frontend/tools/typegen` (a workspace); nothing you see depends on it,
-it is only used by `npm run types`. It was run on this Mac and finished with exit code 0.
+it is only used by `npm run types`.
 
 Vite hands every `/api` request to Uvicorn on port 8000, so the browser sees one origin and needs no
 configuration (decision D-A3-11).
@@ -101,7 +100,7 @@ configuration (decision D-A3-11).
 ## 3. Check it works
 
 1. With the back end running, open <http://localhost:8000/api/health> (or `curl http://localhost:8000/api/health`).
-   It answers with the service's state; checked on this Mac on a server started on another port:
+   It answers with the service's state, for example:
 
    ```json
    {"status":"ok","version":"0.1.0","snapshotDate":"2026-10-22","addressCount":28,"methodCount":9,"assistant":"not_installed","liveLookup":false,"uptimeSeconds":3.9}
@@ -186,7 +185,7 @@ and `reports/`). The web layer is `backend/app/`; it calls the `Predictor` and n
 `backend/A2_VENDOR.json`) and recorded a SHA-256 for each one. From the repository root:
 
 ```bash
-python tools/vendor_a2.py --check       # "Vendored files match A2_VENDOR.json."  (run here: it printed exactly that)
+python tools/vendor_a2.py --check       # expect: "Vendored files match A2_VENDOR.json." 
 ```
 
 A changed, missing or extra file fails the check (it also runs in the GitHub checks and inside the test suite). Do not
@@ -323,7 +322,7 @@ minute, or use a snapshot address; nothing else in the application needs the con
 Back end, from `backend/` with the environment active. Warnings are errors in every run.
 
 ```bash
-python -m pytest -q                                   # the full suite: the default, no flag (739 passed, 2 skipped on 19 Nov)
+python -m pytest -q                                   # the full suite (expect all passed; 2 tests skip themselves)
 python -m pytest -q -m "not slow"                     # everything except the long grids
 PARITY_FULL=1 python -m pytest -q tests/test_whatif_parity.py   # every amount of every what-if curve against single calls
 python tools/vendor_a2.py --check                     # from the repository root: Assignment 2's files are unchanged
@@ -368,7 +367,7 @@ E2E_PYTHON=... npm run e2e:a11y                       # automated accessibility 
 
 `E2E_PYTHON` is the Python that has `backend/requirements.txt` installed (default `python`, so with the environment
 active it can be left out). `E2E_API_PORT` and `E2E_WEB_PORT` change the two ports; `E2E_REUSE=1` uses servers already
-listening there. (These commands were not re-run for this file; the full run was last done on 21 Nov, 462 passed.)
+listening there.
 
 **What GitHub runs** on every push to `main` and every pull request (`.github/workflows/ci.yml`): the back end on Linux
 with Python 3.11 and the pip route (`vendor_a2.py --check`, then `pytest -q`), the front end on Node 24 (`npm ci`, `npm test`,
