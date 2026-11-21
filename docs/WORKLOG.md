@@ -1119,3 +1119,14 @@ One flake met in the full `npm run e2e`: WebKit, V4 "flagged, one kept scenario"
 **Checks.** Back end `pytest -m "not slow"`: 569 passed. Front end `npm test`: 657 passed; `npm run typecheck` clean. Both diff checks (non-comment added lines, removed lines) print nothing.
 
 **Not covered.** The TODO row for 4.2 also names `MODIFICATIONS.md`; this pass did not check it.
+
+---
+
+## 2026-11-21 — MS3 gate passed (lead, Opus 5.5)
+
+A fresh clone of the team repo at `2041d49`, run by one script under `caffeinate`: vendor check, back end 739 + 2
+skipped, Vitest 657, typecheck, `npm run types` (no change), `npm run e2e` 462 passed / 42 skipped / 0 failed,
+`ms_gate_check.py` PASS (28 addresses, 945 bodies scanned), `measure.py --build --charts` 27 of 27 budgets, all 70
+screenshots re-taken (normal, live, mock). Record: `docs/TEST_LOG.md`. All 12 Should items finished; none cut. Could
+items not started; cutting all seven is recommended to the team (3.3). New risk: first-screen JS 148.0 of 150 kB.
+

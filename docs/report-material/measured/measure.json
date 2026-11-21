@@ -1,15 +1,15 @@
 {
   "environment": {
-    "date": "2026-11-13T02:21:39+07:00",
-    "commit": "0f69f02 (uncommitted changes)",
+    "date": "2026-11-21T09:28:29+07:00",
+    "commit": "2041d49 (uncommitted changes)",
     "machine": "macOS-26.6.2-arm64-arm-64bit, Apple M5, 10 cores",
     "python": "3.11.18",
     "node": "v24.22.2",
     "backend": {
-      "url": "http://localhost:8100",
+      "url": "http://127.0.0.1:8100",
       "version": "0.1.0",
       "snapshotDate": "2026-10-22",
-      "uptimeSecondsAtStart": 4.6
+      "uptimeSecondsAtStart": 12.3
     },
     "repeats": 15
   },
@@ -19,154 +19,154 @@
   },
   "responses": {
     "E1 health": {
-      "cold_ms": 0.9687909914646298,
-      "warm_ms": 0.7815830031177029,
-      "warm_min_ms": 0.6390829948941246,
-      "warm_max_ms": 0.9759160020621493,
+      "cold_ms": 0.768083002185449,
+      "warm_ms": 0.6622499786317348,
+      "warm_min_ms": 0.6267500284593552,
+      "warm_max_ms": 0.750000006519258,
       "plain_bytes": 162,
       "gzip_bytes": 162
     },
     "E3 address list": {
-      "cold_ms": 3.2487499993294477,
-      "warm_ms": 2.9416670004138723,
-      "warm_min_ms": 2.6906659913947806,
-      "warm_max_ms": 3.3687499962979928,
+      "cold_ms": 2.8973329754080623,
+      "warm_ms": 2.632958989124745,
+      "warm_min_ms": 2.5927500100806355,
+      "warm_max_ms": 2.744249999523163,
       "plain_bytes": 6846,
       "gzip_bytes": 2003
     },
     "E11 methods": {
-      "cold_ms": 9.235791003447957,
-      "warm_ms": 0.9569589892635122,
-      "warm_min_ms": 0.8624589972896501,
-      "warm_max_ms": 1.1344579979777336,
+      "cold_ms": 1.0970000002998859,
+      "warm_ms": 0.9571670088917017,
+      "warm_min_ms": 0.9170410048682243,
+      "warm_max_ms": 1.0907920077443123,
       "plain_bytes": 5494,
       "gzip_bytes": 1918
     },
     "E5 timeline, running example": {
-      "cold_ms": 1.8571670079836622,
-      "warm_ms": 1.4792089932598174,
-      "warm_min_ms": 1.165042005595751,
-      "warm_max_ms": 1.858832998550497,
-      "plain_bytes": 11609,
-      "gzip_bytes": 1191
+      "cold_ms": 1.3984169927425683,
+      "warm_ms": 1.2323330156505108,
+      "warm_min_ms": 1.1582080041989684,
+      "warm_max_ms": 1.3610830064862967,
+      "plain_bytes": 11621,
+      "gzip_bytes": 1199
     },
     "E6 50 rows, running example": {
-      "cold_ms": 1.75441600731574,
-      "warm_ms": 1.3446660013869405,
-      "warm_min_ms": 1.1793750018114224,
-      "warm_max_ms": 1.8422080029267818,
+      "cold_ms": 1.4927500160411,
+      "warm_ms": 1.3404169876594096,
+      "warm_min_ms": 1.2797079980373383,
+      "warm_max_ms": 1.4288749953266233,
       "plain_bytes": 13112,
       "gzip_bytes": 3573
     },
     "E6 200 rows, running example": {
-      "cold_ms": 2.7829169994220138,
-      "warm_ms": 2.893957993364893,
-      "warm_min_ms": 2.552916994318366,
-      "warm_max_ms": 4.2808339931070805,
+      "cold_ms": 2.7415420045144856,
+      "warm_ms": 2.5213329936377704,
+      "warm_min_ms": 2.4050420033745468,
+      "warm_max_ms": 2.8212910110596567,
       "plain_bytes": 53353,
       "gzip_bytes": 13431
     },
     "E7 one transaction, running example": {
-      "cold_ms": 2.6952500047627836,
-      "warm_ms": 1.4922499976819381,
-      "warm_min_ms": 1.251791007234715,
-      "warm_max_ms": 2.014166006119922,
+      "cold_ms": 1.2765419960487634,
+      "warm_ms": 1.1520839761942625,
+      "warm_min_ms": 1.092833001166582,
+      "warm_max_ms": 1.3017499877605587,
       "plain_bytes": 3041,
       "gzip_bytes": 1301
     },
     "E8 what-if, running example": {
-      "cold_ms": 326.9590830022935,
-      "warm_ms": 274.2972499981988,
-      "warm_min_ms": 257.55999999819323,
-      "warm_max_ms": 318.28783299715724,
+      "cold_ms": 354.48229100438766,
+      "warm_ms": 277.481083991006,
+      "warm_min_ms": 267.7348750003148,
+      "warm_max_ms": 361.19633400812745,
       "plain_bytes": 2896,
       "gzip_bytes": 1254
     },
     "E9 curve of 41, running example": {
-      "cold_ms": 214.31491601106245,
-      "warm_ms": 210.0486249983078,
-      "warm_min_ms": 185.0479999993695,
-      "warm_max_ms": 384.02637500257697,
+      "cold_ms": 203.1753339979332,
+      "warm_ms": 202.209250011947,
+      "warm_min_ms": 198.48862499929965,
+      "warm_max_ms": 249.77204197784886,
       "plain_bytes": 9426,
       "gzip_bytes": 3691
     },
     "E9 curve of 61, running example": {
-      "cold_ms": 302.2520000085933,
-      "warm_ms": 290.23133299779147,
-      "warm_min_ms": 170.18283400102518,
-      "warm_max_ms": 316.8466249917401,
-      "plain_bytes": 13533,
+      "cold_ms": 164.79825001442805,
+      "warm_ms": 165.30633298680186,
+      "warm_min_ms": 162.68679199856706,
+      "warm_max_ms": 170.48349999822676,
+      "plain_bytes": 13537,
       "gzip_bytes": 5008
     },
     "E10 CSV export, running example": {
-      "cold_ms": 20.363042000099085,
-      "warm_ms": 17.65308300673496,
-      "warm_min_ms": 17.234124999959022,
-      "warm_max_ms": 59.274291998008266,
+      "cold_ms": 18.509292014641687,
+      "warm_ms": 17.653958988375962,
+      "warm_min_ms": 17.042624996975064,
+      "warm_max_ms": 63.87054099468514,
       "plain_bytes": 186970,
       "gzip_bytes": 39395
     },
     "E5 timeline, largest": {
-      "cold_ms": 1.5743749972898513,
-      "warm_ms": 1.312958003836684,
-      "warm_min_ms": 1.2094999983673915,
-      "warm_max_ms": 1.4976660022512078,
-      "plain_bytes": 18445,
-      "gzip_bytes": 1499
+      "cold_ms": 1.5255830076057464,
+      "warm_ms": 1.2725419946946204,
+      "warm_min_ms": 1.207834022352472,
+      "warm_max_ms": 1.5156670124270022,
+      "plain_bytes": 18457,
+      "gzip_bytes": 1508
     },
     "E6 50 rows, largest": {
-      "cold_ms": 1.5591669944114983,
-      "warm_ms": 1.3686249876627699,
-      "warm_min_ms": 1.281207994907163,
-      "warm_max_ms": 1.4861660019960254,
+      "cold_ms": 1.4439999940805137,
+      "warm_ms": 1.3039589975960553,
+      "warm_min_ms": 1.2372500204946846,
+      "warm_max_ms": 1.4321250200737268,
       "plain_bytes": 12568,
       "gzip_bytes": 3300
     },
     "E6 200 rows, largest": {
-      "cold_ms": 2.8304579900577664,
-      "warm_ms": 2.624667002237402,
-      "warm_min_ms": 2.4739590007811785,
-      "warm_max_ms": 2.858167004887946,
+      "cold_ms": 2.7913750091101974,
+      "warm_ms": 2.585415990324691,
+      "warm_min_ms": 2.318708982784301,
+      "warm_max_ms": 2.797167020617053,
       "plain_bytes": 52255,
       "gzip_bytes": 12966
     },
     "E7 one transaction, largest": {
-      "cold_ms": 1.3972500019008294,
-      "warm_ms": 1.2268749997019768,
-      "warm_min_ms": 1.1215419945074245,
-      "warm_max_ms": 1.3005829969188198,
+      "cold_ms": 1.2624160153791308,
+      "warm_ms": 1.1827090056613088,
+      "warm_min_ms": 1.1056250077672303,
+      "warm_max_ms": 1.2625839735846967,
       "plain_bytes": 2907,
       "gzip_bytes": 1274
     },
     "E8 what-if, largest": {
-      "cold_ms": 331.5273329935735,
-      "warm_ms": 372.331958002178,
-      "warm_min_ms": 355.8525419939542,
-      "warm_max_ms": 435.35775000054855,
+      "cold_ms": 351.59316699719056,
+      "warm_ms": 344.4881249743048,
+      "warm_min_ms": 336.9637499854434,
+      "warm_max_ms": 387.63958401978016,
       "plain_bytes": 2858,
       "gzip_bytes": 1257
     },
     "E9 curve of 41, largest": {
-      "cold_ms": 340.5479579960229,
-      "warm_ms": 435.73591599124484,
-      "warm_min_ms": 347.11641700414475,
-      "warm_max_ms": 709.5693750015926,
+      "cold_ms": 348.01387501647696,
+      "warm_ms": 371.6336659854278,
+      "warm_min_ms": 342.57762497873046,
+      "warm_max_ms": 442.4818329862319,
       "plain_bytes": 9290,
       "gzip_bytes": 3630
     },
     "E9 curve of 61, largest": {
-      "cold_ms": 496.13912499626167,
-      "warm_ms": 376.1148750054417,
-      "warm_min_ms": 313.07479199313093,
-      "warm_max_ms": 418.84333299822174,
+      "cold_ms": 262.6221670070663,
+      "warm_ms": 239.18587499065325,
+      "warm_min_ms": 233.51529199862853,
+      "warm_max_ms": 276.27637502155267,
       "plain_bytes": 13385,
       "gzip_bytes": 5181
     },
     "E10 CSV export, largest": {
-      "cold_ms": 33.621500013396144,
-      "warm_ms": 33.00554200541228,
-      "warm_min_ms": 32.35866600880399,
-      "warm_max_ms": 79.68254100705963,
+      "cold_ms": 32.66287498991005,
+      "warm_ms": 31.763458013301715,
+      "warm_min_ms": 31.24024998396635,
+      "warm_max_ms": 78.05558401742019,
       "plain_bytes": 344782,
       "gzip_bytes": 68979
     }
@@ -174,14 +174,18 @@
   "bundle": {
     "first_screen_js": {
       "files": [
-        "assets/PlotlyChart-B3p8s7pm.js",
-        "assets/dates-CuEqMO6Y.js",
-        "assets/index-BOH4WCWc.js",
+        "assets/StatePanel-B9S0cJRv.js",
+        "assets/TableScroll-DsS4Zv2o.js",
+        "assets/format-4URyChqK.js",
+        "assets/index-DAYFWfer.js",
+        "assets/preload-helper-DjzSQ1t3.js",
         "assets/rolldown-runtime-hePW80VL.js",
-        "assets/useRequest-DqPmkR9T.js"
+        "assets/useRequest-B_-sj3cU.js",
+        "assets/useSettings-BY0pn1kp.js",
+        "assets/useToasts-B52E_TML.js"
       ],
-      "gzip_bytes": 145297,
-      "bytes": 443663
+      "gzip_bytes": 147957,
+      "bytes": 451067
     },
     "plotly": {
       "assets/plotly-cartesian.min-8g1kOclB.js": {
@@ -190,237 +194,261 @@
       }
     },
     "css": {
-      "assets/index-aA2w8Pn8.css": {
-        "bytes": 34875,
-        "gzip_bytes": 7448
+      "assets/index-BH7HbTl5.css": {
+        "bytes": 36792,
+        "gzip_bytes": 7794
       }
     },
     "lazy": {
-      "assets/G4ModelVerdicts-I4In5eSV.js": {
-        "bytes": 3804,
-        "gzip_bytes": 1809
+      "assets/AssistantPanel-VvfW97-c.js": {
+        "bytes": 2930,
+        "gzip_bytes": 1333
       },
-      "assets/ReplayStage-B8UIbgB1.js": {
-        "bytes": 5588,
-        "gzip_bytes": 2106
+      "assets/Dialog-CiWonLnd.js": {
+        "bytes": 1467,
+        "gzip_bytes": 717
       },
-      "assets/WatchDialog-CIaIo3VI.js": {
-        "bytes": 4361,
-        "gzip_bytes": 1919
+      "assets/G4ModelVerdicts-DnAHT21t.js": {
+        "bytes": 3912,
+        "gzip_bytes": 1854
       },
-      "assets/WatchlistScreen-Bf80Bc9X.js": {
-        "bytes": 3331,
-        "gzip_bytes": 1349
+      "assets/LiveBanner-DgI0NJHb.js": {
+        "bytes": 1472,
+        "gzip_bytes": 814
+      },
+      "assets/LiveLookupDialog-CnfNADNW.js": {
+        "bytes": 3328,
+        "gzip_bytes": 1572
+      },
+      "assets/ReplayStage-D4uVdYFI.js": {
+        "bytes": 5661,
+        "gzip_bytes": 2134
+      },
+      "assets/ScenarioPanel-1jeFAU71.js": {
+        "bytes": 5534,
+        "gzip_bytes": 2147
+      },
+      "assets/SelectionBar-DzkbRik4.js": {
+        "bytes": 2285,
+        "gzip_bytes": 1000
+      },
+      "assets/WatchDialog-Dy7e-_BI.js": {
+        "bytes": 3153,
+        "gzip_bytes": 1488
+      },
+      "assets/WatchlistScreen-DeFzNq9U.js": {
+        "bytes": 3364,
+        "gzip_bytes": 1362
       }
     }
   },
   "charts": {
     "G1": {
       "firstDraw": [
-        236.40000000596046,
-        237,
+        232.10000002384186,
+        230.09999999403954,
+        231,
+        228.7999999821186,
+        231.7999999821186,
+        231.40000000596046,
+        233,
+        241.09999999403954,
+        240.90000000596046,
+        234.40000000596046,
         229.40000000596046,
-        230.3999999910593,
-        234,
-        230.90000000596046,
-        230.29999999701977,
-        231.5,
-        228.79999999701977,
-        236.29999999701977,
-        228,
-        237.5,
-        230.20000000298023,
-        230.20000000298023,
-        231.5
+        232.90000000596046,
+        233.09999999403954,
+        229.09999999403954,
+        231.09999999403954
       ],
       "redraw": [
-        72.5,
-        71.09999999403954,
-        71.70000000298023,
-        70.20000000298023,
-        74.69999998807907,
-        71.6000000089407,
-        74.79999999701977,
-        75.1000000089407,
-        73.79999999701977,
-        74.69999998807907,
-        72.8999999910593,
-        71.8999999910593,
+        74.10000002384186,
+        72.69999998807907,
         72.90000000596046,
-        70.80000001192093,
-        72.40000000596046
+        73.40000000596046,
+        72.7000000178814,
+        74.69999998807907,
+        72.59999999403954,
+        73.30000001192093,
+        70.19999998807907,
+        71.5,
+        72.30000001192093,
+        72.10000002384186,
+        74,
+        72.7999999821186,
+        71.59999999403954
       ],
       "sinceNavigation": [
-        332.70000000298023,
+        333.90000000596046,
+        332.40000000596046,
+        337.30000001192093,
+        331.39999997615814,
+        338.7999999821186,
+        334.80000001192093,
+        336.40000000596046,
+        355.19999998807907,
+        352,
+        338.19999998807907,
+        334.7000000178814,
+        342.5,
         341.90000000596046,
-        331.40000000596046,
-        332.79999999701977,
-        336.3999999910593,
-        333.20000000298023,
-        331,
-        335,
-        330.70000000298023,
-        340.29999999701977,
-        330.79999999701977,
-        339.20000000298023,
-        332.5,
-        332.70000000298023,
-        334.90000000596046
+        331.59999999403954,
+        332.69999998807907
       ]
     },
     "G2": {
       "firstDraw": [
-        210.20000000298023,
-        208.8999999910593,
-        210.1000000089407,
-        212.40000000596046,
-        214.40000000596046,
-        206.5,
-        210.09999999403954,
-        209.90000000596046,
-        215.29999999701977,
-        213,
-        213.70000000298023,
-        207.5,
-        209.80000001192093,
-        208.59999999403954,
-        210.30000001192093
+        208.89999997615814,
+        208.7000000178814,
+        213.19999998807907,
+        211.5,
+        242.19999998807907,
+        237.5,
+        226.69999998807907,
+        270.30000001192093,
+        235.5,
+        222.09999999403954,
+        213.09999999403954,
+        213.7999999821186,
+        216.80000001192093,
+        210.69999998807907,
+        210
       ],
       "redraw": [
-        60.1000000089407,
-        43.599999994039536,
-        42.30000001192093,
-        42.5,
-        41.8999999910593,
-        42.5,
-        59.400000005960464,
+        43.20000001788139,
+        60.70000001788139,
+        91.80000001192093,
         41.5,
-        42.400000005960464,
-        55,
-        60.20000000298023,
-        55.20000000298023,
-        58.70000000298023,
-        59,
-        43.70000000298023
+        52.30000001192093,
+        33.400000005960464,
+        98.7999999821186,
+        44.19999998807907,
+        42.30000001192093,
+        93.19999998807907,
+        42.10000002384186,
+        54.30000001192093,
+        42,
+        42.19999998807907,
+        43
       ],
       "sinceNavigation": [
-        370.1000000089407,
-        364.8999999910593,
-        365.5,
-        365.40000000596046,
-        371.40000000596046,
-        381.90000000596046,
-        382.09999999403954,
-        371.90000000596046,
-        382.59999999403954,
-        368.8999999910593,
-        374.70000000298023,
-        365.6000000089407,
-        370.1000000089407,
-        369.29999999701977,
-        365.20000000298023
+        365.2999999821186,
+        378.2000000178814,
+        368.80000001192093,
+        362.5,
+        405.19999998807907,
+        380.59999999403954,
+        399.40000000596046,
+        462.90000000596046,
+        392.7999999821186,
+        383.5,
+        372.59999999403954,
+        367.90000000596046,
+        369.2000000178814,
+        367.19999998807907,
+        370.5
       ]
     },
     "G5": {
       "firstDraw": [
-        188.79999999701977,
-        192.90000000596046,
-        197.1000000089407,
-        189.20000000298023,
-        188.5,
-        188.5,
-        191.8999999910593,
-        190.29999999701977,
-        190.59999999403954,
-        188.90000000596046,
+        194,
+        188.19999998807907,
+        192.40000000596046,
+        189.59999999403954,
+        191.30000001192093,
+        193.5,
+        192.40000000596046,
+        190.90000000596046,
+        196.59999999403954,
+        191.59999999403954,
+        191.5,
+        193.90000000596046,
         191.69999998807907,
-        187.69999998807907,
-        191.6000000089407,
-        188.09999999403954,
-        190
+        193.69999998807907,
+        192.2000000178814
       ],
       "redraw": [
-        36.099999994039536,
-        29,
-        27.200000002980232,
-        35.79999999701977,
-        45.400000005960464,
-        34.400000005960464,
-        39.70000000298023,
-        35,
-        39.099999994039536,
-        38.599999994039536,
-        29.400000005960464,
-        29,
-        37.29999999701977,
-        30.799999997019768,
-        32.6000000089407
+        34.30000001192093,
+        35.10000002384186,
+        36,
+        29.100000023841858,
+        29.599999994039536,
+        34,
+        26.80000001192093,
+        25.69999998807907,
+        35.20000001788139,
+        39.79999998211861,
+        35.400000005960464,
+        30.599999994039536,
+        40.099999994039536,
+        34,
+        39
       ],
       "sinceNavigation": [
-        584.6999999880791,
-        634.7999999970198,
-        571.1000000089407,
-        817.0999999940395,
-        1094.5,
-        933.6999999880791,
-        892.2999999970198,
-        1074,
-        836.0999999940395,
-        1189.0999999940395,
-        1144.5,
-        1298,
-        709.6000000089407,
-        1096.2000000029802,
-        1045.2000000029802
+        543.0999999940395,
+        549.1999999880791,
+        524.7000000178814,
+        617.5999999940395,
+        816,
+        541.5,
+        548.5,
+        562.3000000119209,
+        553.7999999821186,
+        546.5999999940395,
+        571.2999999821186,
+        526.9000000059605,
+        530.5999999940395,
+        526.7999999821186,
+        545.4000000059605
       ]
     }
   },
   "budgets": [
     {
       "name": "E5 timeline, running example: cold time",
-      "value": 1.8571670079836622,
+      "value": 1.3984169927425683,
       "unit": "ms",
       "budget": 150,
       "verdict": "PASS"
     },
     {
       "name": "E5 timeline, running example: warm time (median)",
-      "value": 1.4792089932598174,
+      "value": 1.2323330156505108,
       "unit": "ms",
       "budget": 20,
       "verdict": "PASS"
     },
     {
       "name": "E5 timeline, running example: plain body",
-      "value": 11.609,
+      "value": 11.621,
       "unit": "kB",
       "budget": 60,
       "verdict": "PASS"
     },
     {
       "name": "E6 200 rows, running example: cold time",
-      "value": 2.7829169994220138,
+      "value": 2.7415420045144856,
       "unit": "ms",
       "budget": 150,
       "verdict": "PASS"
     },
     {
       "name": "E6 200 rows, running example: warm time (median)",
-      "value": 2.893957993364893,
+      "value": 2.5213329936377704,
       "unit": "ms",
       "budget": 150,
       "verdict": "PASS"
     },
     {
       "name": "E7 one transaction, running example: cold time",
-      "value": 2.6952500047627836,
+      "value": 1.2765419960487634,
       "unit": "ms",
       "budget": 150,
       "verdict": "PASS"
     },
     {
       "name": "E7 one transaction, running example: warm time (median)",
-      "value": 1.4922499976819381,
+      "value": 1.1520839761942625,
       "unit": "ms",
       "budget": 150,
       "verdict": "PASS"
@@ -434,77 +462,77 @@
     },
     {
       "name": "E8 what-if, running example: cold time",
-      "value": 326.9590830022935,
+      "value": 354.48229100438766,
       "unit": "ms",
       "budget": 700,
       "verdict": "PASS"
     },
     {
       "name": "E8 what-if, running example: warm time (median)",
-      "value": 274.2972499981988,
+      "value": 277.481083991006,
       "unit": "ms",
       "budget": 700,
       "verdict": "PASS"
     },
     {
       "name": "E9 curve of 41, running example: cold time",
-      "value": 214.31491601106245,
+      "value": 203.1753339979332,
       "unit": "ms",
       "budget": 1500,
       "verdict": "PASS"
     },
     {
       "name": "E9 curve of 41, running example: warm time (median)",
-      "value": 210.0486249983078,
+      "value": 202.209250011947,
       "unit": "ms",
       "budget": 1500,
       "verdict": "PASS"
     },
     {
       "name": "E5 timeline, largest: cold time",
-      "value": 1.5743749972898513,
+      "value": 1.5255830076057464,
       "unit": "ms",
       "budget": 150,
       "verdict": "PASS"
     },
     {
       "name": "E5 timeline, largest: warm time (median)",
-      "value": 1.312958003836684,
+      "value": 1.2725419946946204,
       "unit": "ms",
       "budget": 20,
       "verdict": "PASS"
     },
     {
       "name": "E5 timeline, largest: plain body",
-      "value": 18.445,
+      "value": 18.457,
       "unit": "kB",
       "budget": 60,
       "verdict": "PASS"
     },
     {
       "name": "E6 200 rows, largest: cold time",
-      "value": 2.8304579900577664,
+      "value": 2.7913750091101974,
       "unit": "ms",
       "budget": 150,
       "verdict": "PASS"
     },
     {
       "name": "E6 200 rows, largest: warm time (median)",
-      "value": 2.624667002237402,
+      "value": 2.585415990324691,
       "unit": "ms",
       "budget": 150,
       "verdict": "PASS"
     },
     {
       "name": "E7 one transaction, largest: cold time",
-      "value": 1.3972500019008294,
+      "value": 1.2624160153791308,
       "unit": "ms",
       "budget": 150,
       "verdict": "PASS"
     },
     {
       "name": "E7 one transaction, largest: warm time (median)",
-      "value": 1.2268749997019768,
+      "value": 1.1827090056613088,
       "unit": "ms",
       "budget": 150,
       "verdict": "PASS"
@@ -518,77 +546,77 @@
     },
     {
       "name": "E8 what-if, largest: cold time",
-      "value": 331.5273329935735,
+      "value": 351.59316699719056,
       "unit": "ms",
       "budget": 700,
       "verdict": "PASS"
     },
     {
       "name": "E8 what-if, largest: warm time (median)",
-      "value": 372.331958002178,
+      "value": 344.4881249743048,
       "unit": "ms",
       "budget": 700,
       "verdict": "PASS"
     },
     {
       "name": "E9 curve of 41, largest: cold time",
-      "value": 340.5479579960229,
+      "value": 348.01387501647696,
       "unit": "ms",
       "budget": 1500,
       "verdict": "PASS"
     },
     {
       "name": "E9 curve of 41, largest: warm time (median)",
-      "value": 435.73591599124484,
+      "value": 371.6336659854278,
       "unit": "ms",
       "budget": 1500,
       "verdict": "PASS"
     },
     {
       "name": "First-screen JavaScript, gzip -9",
-      "value": 145.297,
+      "value": 147.957,
       "unit": "kB",
       "budget": 150,
       "verdict": "PASS"
     },
     {
       "name": "G1 first chart after opening the page, Plotly included (median)",
-      "value": 332.79999999701977,
+      "value": 336.40000000596046,
       "unit": "ms",
       "budget": 1500,
       "verdict": "PASS"
     },
     {
       "name": "G1 redraw after new data (median)",
-      "value": 72.5,
+      "value": 72.7000000178814,
       "unit": "ms",
       "budget": 300,
       "verdict": "PASS"
     },
     {
       "name": "G2 first chart after opening the page, Plotly included (median)",
-      "value": 370.1000000089407,
+      "value": 372.59999999403954,
       "unit": "ms",
       "budget": 1500,
       "verdict": "PASS"
     },
     {
       "name": "G2 redraw after new data (median)",
-      "value": 43.70000000298023,
+      "value": 43.20000001788139,
       "unit": "ms",
       "budget": 300,
       "verdict": "PASS"
     },
     {
       "name": "G5 first chart after opening the page, Plotly included (median)",
-      "value": 933.6999999880791,
+      "value": 546.5999999940395,
       "unit": "ms",
       "budget": 1500,
       "verdict": "PASS"
     },
     {
       "name": "G5 redraw after new data (median)",
-      "value": 35,
+      "value": 34.30000001192093,
       "unit": "ms",
       "budget": 300,
       "verdict": "PASS"

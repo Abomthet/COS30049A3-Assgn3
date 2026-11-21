@@ -33,7 +33,7 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 |---|---|---|
 | MS1 walking skeleton | Sun 15 Nov | **Passed 11 Nov** (`docs/TEST_LOG.md`) |
 | MS2 minimum viable demonstration | Sun 22 Nov | **Passed 12 Nov** (`docs/TEST_LOG.md`; re-run with `tools/ms_gate_check.py`) |
-| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | **All 12 Should items built** (S-10 and S-11 finished 19 Nov) |
+| MS3 feature freeze (Should items finished or cut) | Fri 27 Nov | **Passed 21 Nov** (`docs/TEST_LOG.md`): all 12 finished, none cut |
 | MS4 code freeze, `v1.0-rc`, clean install Win + Mac | Sun 29 Nov | |
 | MS5 submit on Canvas | Sat 5 Dec | |
 

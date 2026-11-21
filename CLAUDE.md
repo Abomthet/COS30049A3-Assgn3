@@ -9,8 +9,9 @@ disagrees with it, the plan wins, except for the decisions recorded in the work 
 ## State (19 Nov 2026): resumed on 19 Nov; nothing is paused
 - Work resumed on Thu 19 Nov 2026 (paused 13 Nov). MS1 passed 11 Nov; MS2 passed 12 Nov (`docs/TEST_LOG.md`). Every
   Must item and all 12 Should items are built (S-10 generated types and S-11 browser tests finished 19 Nov).
-- **Next:** screenshots, accessibility checks and fixes, then the **MS3 gate (Fri 27 Nov)**, run on Opus or Fable with a detailed
-  record. The order of work is the wrap-up plan in `TODO.md`.
+- **MS3 passed Sat 21 Nov** (`2041d49`, fresh clone; `docs/TEST_LOG.md`). Next: MS4 (Sun 29 Nov): clean install from a
+  trial zip (Mac here, Windows by the team), browsers, tag `v1.0-rc`. The order of work is the wrap-up plan in `TODO.md`.
+- **First-screen JS is 148.0 of 150 kB gzip**: any new screen must load lazily; re-run `tools/measure.py --build` after front-end changes.
 - `main` is pushed to the team repo after each verified task (`git log assgn3/main`). Last full check (19 Nov): back end 739 passed + 2 skipped, front
   end 653, typecheck and build clean, first-screen JS 147.8 kB (budget 150).
 - **GitHub: work only in the team repo** `Abomthet/COS30049A3-Assgn3` (remote `assgn3`; `main` tracks

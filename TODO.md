@@ -20,8 +20,8 @@ Report text and video narration stay people-only until the tutor's AI-use email 
 | 1.3 | Re-take all screenshots | Haiku | ✅ 19 Nov |
 | 2.1 | Automated accessibility checks, light and dark, 3 widths (T40) | Sonnet | ✅ 20 Nov |
 | 2.5 | Fix severity 3–4 issues and retest (T41) | Sonnet | ✅ 21 Nov (A-01 to A-03) |
-| 3.1 | MS3 gate from a fresh clone (T42) | Opus | Fri 27 Nov |
-| 3.2 | Should items and cut list in `docs/TEST_LOG.md` | Opus | 27 Nov |
+| 3.1 | MS3 gate from a fresh clone (T42) | Opus | ✅ 21 Nov (passed) |
+| 3.2 | Should items and cut list in `docs/TEST_LOG.md` | Opus | ✅ 21 Nov |
 | 4.1 | README complete, incl. `npm run types` (T43) | Sonnet | ✅ 21 Nov |
 | 4.2 | Docstrings, `MODIFICATIONS.md`, `LICENSES.md` line (T43) | Haiku | ✅ 21 Nov |
 | 4.3 | Clean install from a trial zip, macOS (T44) | Opus | 29 Nov |
@@ -137,7 +137,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [~] T39 **[you]** Usability walkthrough, two sessions: pack ready in `docs/usability/` (`7c3dd25`); book participants
 - [~] T40 Accessibility inspection: automated checks done 20 Nov (`npm run e2e:a11y`; findings A-01 to A-03 in `docs/usability/a11y-automated-findings.md`); **[you]** keyboard and screen-reader pass still to do
 - [ ] T41 Fix every severity 3–4 issue; retest (the three automated findings A-01 to A-03 are fixed and retested, 21 Nov; the usability and manual findings may still add more)
-- [ ] T42 **MS3 (Fri 27 Nov)**: feature freeze; cut list recorded in the change log
+- [x] T42 **MS3 passed Sat 21 Nov** (`2041d49`, `docs/TEST_LOG.md`): all 12 Should items finished, none cut; Could items C-01–C-07 not started, cut recommended (team decides, 3.3)
 - [x] T43 README, `LICENSES.md` and docstrings done (21 Nov, wrap-up 4.1 and 4.2; lead review pending)
 - [ ] T44 Clean install from a trial zip: macOS (Claude); **[you]** Windows PC
 - [ ] T45 Browsers and devices; test log complete; **MS4 (Sun 29 Nov)**: tag `v1.0-rc`

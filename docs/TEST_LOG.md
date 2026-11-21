@@ -5,6 +5,69 @@ says what was run, on which commit, by whom (or which model), and what was seen.
 
 ---
 
+## **MS3 — feature freeze: PASSED** (Sat 21 Nov 2026, 6 days early)
+
+**Commit:** `2041d49` (`assgn3/main`, the team repo). **Run by:** the lead (Claude Opus 5.5), on the Mac (Apple M5,
+macOS 26.6.2, Node 24.22.2, Python 3.11.18 in `cos30049-a3`), under `caffeinate` (idle sleep had frozen earlier runs).
+**Set-up:** a fresh `git clone` of `github.com/Abomthet/COS30049A3-Assgn3` into a scratch folder; `npm ci`; the back end
+started from the README route (`uvicorn app.main:app`, with `EXPLORER_LIVE_LOOKUP=on` for the live shots) on port
+8100 and Vite on 5300 (8000 and 5173 avoided). The back end logged `Explorer ready: 28 addresses, 9 methods (snapshot
+2026-10-22, 0.8 s since start)`. The script and its full log are reproduced by the commands under "How to repeat".
+
+**The gate** (plan §14.4: Should items finished or cut; the cut list recorded):
+
+| # | Should item | State | Evidence (tests on `2041d49`; screenshots from this run) |
+|---|---|---|---|
+| S-01 | Method selector (`?method=`), both tiers | **Finished** | `methodMenu.test.tsx`, `methodNames.test.tsx`, `test_explorer_api.py`, `test_parity.py` (every method's flags equal `scores.csv`); shot 48 |
+| S-02 | G4: each model's score against its own threshold (ranks) | **Finished** | `g4ModelVerdicts.test.tsx`, `test_ranks.py`; J2 browser test draws "Where each model ranks it"; shots 53, 54 |
+| S-03 | G6: planted-test recall with intervals, on V5 | **Finished** | `g6PlantedRecall.test.tsx`, `modelsScreen.test.tsx`; shots 36–38 |
+| S-04 | Watchlist (E13–E15), recent addresses, preferences | **Finished** | `test_watchlist_api.py`, `watchlist.test.tsx`, `settings.test.tsx`; a11y spec (watch dialog focus trap, toast live region); shots 49–52, 57 |
+| S-05 | Assistant explanations (E12): guarded, cached, prepared answers | **Finished** | `test_assistant_api.py`, `test_precompute_assistant.py`, `assistantPanel.test.tsx`; works without the weights (Mod-15); shots 58, 59 |
+| S-06 | Replay | **Finished** | `replay.test.tsx`; a11y spec (no autoplay under reduced motion); shots 55, 56 |
+| S-07 | Linked selection | **Finished** | `selection.test.tsx`; shots 60, 61 |
+| S-08 | Scenario table: keep, compare, export | **Finished** | `scenarios.test.tsx`; J4 browser test keeps two scenarios; shots 62, 63 |
+| S-09 | Live lookup (E16–E20), off by default | **Finished** | `test_live_api.py` (a snapshot address pushed through the live route scores as the snapshot does), `liveLookup.test.tsx`, `liveHttp.test.ts`; a real fetch of 500 of 1,164 transactions during this run; shots `live-01`–`live-03` |
+| S-10 | TS types from OpenAPI; tests and builds on every push | **Finished** | `generatedTypes.test.ts` (staleness), `typeAgreement.check.ts` (typecheck); `npm run types` on the clone changed 0 files; CI green on the team repo |
+| S-11 | Browser tests of the journeys at three widths | **Finished** | `npm run e2e`: **462 passed, 42 skipped (by design), 0 failed** in 5.0 min — J1–J6, the wider-text checks and the accessibility spec, in Chromium, Firefox and WebKit at 390, 820 and 1280 px |
+| S-12 | Measurement script for the report | **Finished** | `tools/measure.py --build --charts`: **27 of 27 budgets PASS** (below); output in `docs/report-material/measured/` |
+
+**Cut list: no Should item is cut.** Could items C-01 to C-07 (plan §4) were not started. The lead recommends cutting
+all seven so the remaining time goes to the report, the video and the usability sessions; **the team decides (wrap-up
+3.3) and the decision goes in the minutes and the change log.** Until then none is built.
+
+**Everything else on the same commit, from the fresh clone:**
+- `tools/vendor_a2.py --check`: every vendored A2 file matches its hash.
+- Back end `pytest` (full, warnings are errors): **739 passed, 2 skipped** (the real-model and opt-in network tests).
+- Front end `npm test`: **657 passed** in 36 files; `npm run typecheck` clean.
+- `tools/ms_gate_check.py` through Vite's proxy: all **28** addresses (3 short-history), **7,966** transaction rows,
+  **822** transaction details (681 flagged), **945** bodies scanned for the banned words, **20** operations (DELETE,
+  GET, POST, PUT): **PASS**.
+- `measure.py` highlights: E5 warm 1.2 ms (budget 20), E8 what-if warm 277.5 ms (700), E9 curve of 41 at the largest
+  address 371.6 ms (1,500), G1 first chart from opening the page 336 ms (1,500), **first-screen JavaScript 148.0 kB
+  gzip (budget 150)**.
+- `npm run screenshots`: all 70 re-taken (normal run, live run, mock-only states); each run ended "Responsive check
+  passed: no page scrolls sideways at any width"; 23 images changed: 13 phone shots (the tighter tab spacing from `303f5fb`),
+  the rest from live data, watchlist state, scenario order or timing.
+- Server log: 0 warnings, 0 errors; the only 5xx is the expected `GET /api/health 503` while the models loaded,
+  before "Explorer ready".
+
+**Known limits and risks carried forward (none blocks MS3):**
+- **First-screen JavaScript has 2.0 kB of headroom** (148.0 of 150 kB; it was 145.3 on 13 Nov). Any new screen must
+  load lazily; re-measure after any front-end change.
+- Scrolling past a chart has not been verified on a real phone (wrap-up 1.6, a person).
+- The automated accessibility checks run axe in Chromium only; the VoiceOver and keyboard-by-hand passes are the
+  team's (checklist `docs/usability/accessibility-checklist.md`).
+- WebKit skips the keyboard group (Safari does not Tab to links by default).
+- Plotly's range slider is not keyboard-operable by itself; the period buttons and G1's arrow keys cover zoom.
+- The Windows clean install is untested until 29 Nov (4.4).
+
+**How to repeat:** clone the team repo; `npm ci` in `frontend/`; run the back end and Vite as in the README; then
+`python tools/vendor_a2.py --check`, `cd backend && python -m pytest -q`, `cd frontend && npm test && npm run
+typecheck && npm run e2e`, `python tools/ms_gate_check.py`, `python tools/measure.py --build --charts`, `npm run
+screenshots` (plus `LIVE=1 ONLY='^live'` with live lookup on, and `MOCK=1 ONLY='^(04|11|4[0-4])'` on the mock).
+
+---
+
 ## MS1 recheck and **MS2 — the minimum viable demonstration: PASSED** (12 Nov 2026, 10 days early)
 
 **Commit:** `3a83414` (`origin/main`). **Run by:** the lead (Claude Opus 5.5), on the Mac (Apple M5,
