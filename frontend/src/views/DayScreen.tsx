@@ -10,6 +10,7 @@ import { Loading, StatePanel } from '../components/StatePanel';
 import { formatDay, formatTime, isDayKey } from '../lib/dates';
 import { formatBtc, plural, shortAddress, shortTxid } from '../lib/format';
 import { paths } from '../lib/router';
+import { useMethodFallback } from '../hooks/useMethodFallback';
 import { useRequest } from '../hooks/useRequest';
 import { useSettings } from '../hooks/useSettings';
 import { TransactionPanel } from './TransactionPanel';
@@ -25,6 +26,7 @@ export function DayScreen({ address, date, txid, method }: { address: string; da
   const pageSize = settings.web.lists.maxPageSize;
   // An invalid day in the link is answered here, so nothing is sent for it.
   const day = useRequest(validDate ? `day:${address}:${date}:${method}` : null, (signal) => api.transactions(address, { date, pageSize, method }, { signal }));
+  const switching = useMethodFallback(day.status === 'error' ? day.error : undefined, method);
   // After a change of method the day's list for the old one stays on screen, dimmed, until the new one arrives.
   const shownDay = day.status === 'success' ? day.data : day.previous;
   const updating = day.status === 'loading' && shownDay !== undefined;
@@ -42,7 +44,7 @@ export function DayScreen({ address, date, txid, method }: { address: string; da
         <p className="eyebrow mono">{shortAddress(address, 12, 8)}</p>
         <PageHeading>{validDate ? formatDay(date) : 'Unknown day'}</PageHeading>
         <p className="source-line">Transactions confirmed on this day (UTC)</p>
-        <MethodMenu method={method} updating={updating} />
+        <MethodMenu method={method} updating={updating} live={timeline.status === 'success' && !!timeline.data.live} />
       </header>
 
       {timeline.status === 'success' && validDate ? <DayNav timeline={timeline.data} date={date} method={method} /> : null}
@@ -62,8 +64,8 @@ export function DayScreen({ address, date, txid, method }: { address: string; da
         </StatePanel>
       ) : (
         <>
-          {shownDay === undefined && day.status === 'loading' ? <Loading label="Loading the day's transactions…" block /> : null}
-          {day.status === 'error' ? <ErrorState error={day.error} onRetry={day.retry} /> : null}
+          {shownDay === undefined && (day.status === 'loading' || switching) ? <Loading label="Loading the day's transactions…" block /> : null}
+          {day.status === 'error' && !switching ? <ErrorState error={day.error} onRetry={day.retry} /> : null}
           {shownDay !== undefined && day.status !== 'error' ? <DayBody day={shownDay} date={date} txid={txid} method={method} updating={updating} /> : null}
         </>
       )}

@@ -39,3 +39,10 @@ export function withMethod(hash: string, method: MethodId): string {
   const rest = params.toString();
   return rest ? `${path}?${rest}` : path;
 }
+
+/** Methods whose scores are prepared in advance for the snapshot; the service has none for a fetched (live) address. */
+export const SNAPSHOT_ONLY: readonly MethodId[] = ['txgpt_method'];
+
+/** True when a 400 names the `method` field: the address is fine, the method cannot score it. */
+export const refusesMethod = (body: { status: string; fields?: Array<{ name: string }> }): boolean =>
+  body.status === 'invalid' && !!body.fields?.some((f) => f.name === 'method');

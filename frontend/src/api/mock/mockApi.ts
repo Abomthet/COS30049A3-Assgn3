@@ -236,6 +236,15 @@ function requireAddress(input: string): RecordedAddress {
 /** What was recorded under `method`: the default's for every address, another method's for the running example only, and only the parts that were recorded. */
 function recordedFor(recorded: RecordedAddress, method: MethodId = DEFAULT_METHOD): Omit<RecordedAddress, 'address'> {
   if (!METHODS.some((m) => m.id === method)) throw invalid('That is not one of the methods.', 'Choose one from the method menu.', 'method');
+  // As the service answers: TxGPT's scores are prepared in advance for the snapshot, so a fetched address has none.
+  if (method === 'txgpt_method' && recorded.timeline.live) {
+    throw new ApiError(400, {
+      status: 'invalid',
+      message: 'This method has no scores for a fetched address.',
+      hint: "TxGPT's scores are prepared in advance for the snapshot; choose another method.",
+      fields: [{ name: 'method', message: 'Not available for a fetched address.' }],
+    });
+  }
   const run = method === DEFAULT_METHOD ? recorded : recorded.address === METHOD_RUNS.address ? METHOD_RUNS.runs[method] : undefined;
   if (!run) throw new ApiError(404, { status: 'not_found', message: 'The mock has no recorded answer for this method.' });
   return run;

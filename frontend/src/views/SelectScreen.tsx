@@ -14,6 +14,7 @@ import { navigate, paths } from '../lib/router';
 import { isTransient, runRequest, useRequest } from '../hooks/useRequest';
 import { usePreferences } from '../hooks/usePreferences';
 import { useServiceStatus } from '../hooks/useServiceStatus';
+import { useSettings } from '../hooks/useSettings';
 import { useSlow } from '../hooks/useSlow';
 
 // The live lookup's dialog (V8) is fetched only when the user asks for it.
@@ -37,6 +38,7 @@ export function SelectScreen({ query }: { query: string | null }) {
   const [value, setValue] = useState(query ?? '');
   const [lookup, setLookup] = useState<Lookup>({ status: 'idle' });
   const [fetching, setFetching] = useState(false);
+  const { settings } = useSettings();
   const inputRef = useRef<HTMLInputElement>(null);
   // An address opens with the method the user chose last (V2's method menu remembers it).
   const [{ method, recent }] = usePreferences();
@@ -110,7 +112,10 @@ export function SelectScreen({ query }: { query: string | null }) {
             Bitcoin address
           </label>
           <p id="address-help" className="field-help">
-            Addresses start with 1, 3 or bc1. Only addresses in the snapshot have results.
+            Addresses start with 1, 3 or bc1.{' '}
+            {settings.capabilities.liveLookup
+              ? 'Addresses in the snapshot open at once; any other address can be fetched from the public blockchain.'
+              : 'Only addresses in the snapshot have results.'}
           </p>
           <div className="input-row">
             <input
@@ -165,25 +170,27 @@ export function SelectScreen({ query }: { query: string | null }) {
             live="alert"
             testId="state-unsupported"
             actions={
-              <>
-                {lookup.canLookupLive ? (
-                  <button type="button" className="btn btn-primary" aria-haspopup="dialog" onClick={() => setFetching(true)}>
-                    Fetch this address's public history
-                  </button>
-                ) : null}
-                <button type="button" className="btn btn-secondary" onClick={reset}>
-                  Clear and try another address
-                </button>
-              </>
+              <button type="button" className="btn btn-secondary" onClick={reset}>
+                Clear and try another address
+              </button>
             }
           >
             <p>{lookup.message}</p>
             {lookup.canLookupLive ? (
-              <p>
-                Or fetch its most recent confirmed transactions from the public blockchain service. Only the address is sent to it, and the result is marked as live data.
-              </p>
-            ) : null}
-            <p>The explorer only covers a fixed set of addresses chosen before any analysis. Try one of these instead:</p>
+              <>
+                <p>
+                  You can fetch its most recent confirmed transactions from the public blockchain service. Only the address is sent to it, and the result is marked as live data.
+                </p>
+                <p>
+                  <button type="button" className="btn btn-primary" aria-haspopup="dialog" onClick={() => setFetching(true)}>
+                    Fetch this address's public history
+                  </button>
+                </p>
+                <p>Or open one of these snapshot addresses:</p>
+              </>
+            ) : (
+              <p>The explorer only covers a fixed set of addresses chosen before any analysis. Try one of these instead:</p>
+            )}
             <ul className="example-list">
               {lookup.examples.map((a) => (
                 <li key={a}>

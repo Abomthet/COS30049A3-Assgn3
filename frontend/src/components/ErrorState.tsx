@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { ApiError } from '../api/types';
 import { useOnline } from '../hooks/useOnline';
-import { paths } from '../lib/router';
+import { DEFAULT_METHOD, refusesMethod, withMethod } from '../lib/methods';
+import { navigate, paths } from '../lib/router';
+import { useMethodLabels } from '../hooks/useMethods';
 import { AddressLink } from './AddressLink';
 import { plural } from '../lib/format';
 import { CopyButton } from './CopyButton';
@@ -57,6 +59,7 @@ function BusyPanel({ seconds, onRetry, headingLevel }: { seconds: number; onRetr
 export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiError; onRetry: () => void; headingLevel?: 2 | 3 }) {
   const body = error.body;
   const online = useOnline();
+  const labels = useMethodLabels();
   const retry = (
     <button type="button" className="btn btn-secondary" onClick={onRetry}>
       Try again
@@ -64,6 +67,27 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
   );
   switch (body.status) {
     case 'invalid':
+      // The address is fine; the chosen method cannot score it (a fetched address has no TxGPT scores).
+      if (refusesMethod(body)) {
+        return (
+          <StatePanel
+            tone="info"
+            title="This method can't score this address"
+            headingLevel={headingLevel}
+            live="alert"
+            testId="state-method"
+            actions={
+              <button type="button" className="btn btn-secondary" onClick={() => navigate(withMethod(window.location.hash, DEFAULT_METHOD), { replace: true })}>
+                Use {labels[DEFAULT_METHOD].name} (the default method)
+              </button>
+            }
+          >
+            <p>
+              {body.message} {body.hint}
+            </p>
+          </StatePanel>
+        );
+      }
       return (
         <StatePanel
           tone="error"

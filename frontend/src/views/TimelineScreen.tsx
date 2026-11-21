@@ -16,6 +16,7 @@ import { formatCount, formatSpanDays, plural, shortAddress } from '../lib/format
 import { navigate, paths } from '../lib/router';
 import { methodSearch } from '../lib/methods';
 import { useMethodLabels } from '../hooks/useMethods';
+import { useMethodFallback } from '../hooks/useMethodFallback';
 import { rememberAddress } from '../hooks/usePreferences';
 import { useRequest } from '../hooks/useRequest';
 import { useSettings } from '../hooks/useSettings';
@@ -42,6 +43,7 @@ const TAB_TITLE: Record<AddressTab['name'], string> = { overview: 'Activity', tr
 export function TimelineScreen({ address, tab, method }: { address: string; tab: AddressTab; method: MethodId }) {
   useDocumentTitle(`${TAB_TITLE[tab.name]} for ${shortAddress(address)}`);
   const timeline = useRequest(`timeline:${address}:${method}`, (signal) => api.timeline(address, { signal, method }));
+  const switching = useMethodFallback(timeline.status === 'error' ? timeline.error : undefined, method);
   // After a change of method the answer for the old one stays on screen, dimmed, until the new one arrives.
   const shown = timeline.status === 'success' ? timeline.data : timeline.previous;
   // An address counts as opened once its page has loaded, so V1's "Recently opened" never lists one that failed.
@@ -53,13 +55,13 @@ export function TimelineScreen({ address, tab, method }: { address: string; tab:
   return (
     <div className="page page-timeline">
       <Breadcrumbs items={[{ label: 'Addresses', href: paths.select() }, { label: shortAddress(address), mono: true }]} />
-      {shown === undefined && timeline.status === 'loading' ? (
+      {shown === undefined && (timeline.status === 'loading' || switching) ? (
         <>
           <PageHeading className="sr-only">Activity for {address}</PageHeading>
           <Loading label="Loading this address's activity…" block />
         </>
       ) : null}
-      {timeline.status === 'error' ? (
+      {timeline.status === 'error' && !switching ? (
         <>
           <PageHeading>Address activity</PageHeading>
           <MethodMenu method={method} updating={false} />
@@ -102,7 +104,7 @@ function Timeline({ data, tab, method, updating }: { data: TimelineResponse; tab
             <LiveBanner address={data.address} live={data.live} />
           </Suspense>
         ) : null}
-        <MethodMenu method={method} updating={updating} />
+        <MethodMenu method={method} updating={updating} live={!!data.live} />
       </header>
 
       <dl className={`stat-row${updating ? ' is-updating' : ''}`} aria-busy={updating}>
