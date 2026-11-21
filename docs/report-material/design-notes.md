@@ -2,9 +2,9 @@
 
 Collected from `docs/WORKLOG.md` by `docs/report-material/make_design_notes.py`. Each bullet is copied
 verbatim from the work log (its wording is not changed). The topic grouping is the script's TOPIC table.
-Bullets found: **55** in 11 entries of the work log.
+Bullets found: **67** in 14 entries of the work log.
 
-## Back end (20)
+## Back end (28)
 
 <!-- source: 2026-11-11 — Wave 1, back end: T03, T05–T09 reviewed and committed -->
 - **Models load once, in the background.** The Predictor loads in the lifespan on a worker thread and
@@ -115,7 +115,41 @@ Bullets found: **55** in 11 entries of the work log.
 - **No file at import.** The database opens in the lifespan (`create_app(database=…)`, then `EXPLORER_DB`,
   then `backend/var/explorer.db`), so tests and tools that build the app write nothing.
 
-## Front end (15)
+<!-- source: 2026-11-12 — Wave B reviewed (Assistant back end; watchlist UI, G4, replay); worktree parallelism; usability pack -->
+- **The replay is honest:** each row carries its snapshot verdict, which never used later transactions (the
+  time-safety rule), so replaying forward shows what the Explorer would have said on the day; replaying every row
+  reproduces E5's days and totals exactly (a test asserts it). The charts' axes stay fixed to the full history.
+
+<!-- source: 2026-11-12 — Wave B reviewed (Assistant back end; watchlist UI, G4, replay); worktree parallelism; usability pack -->
+- **One answer at a time, without queueing:** a try-lock answers 429 at once and the client counts down from
+  `Retry-After`; memory and prepared answers bypass the lock, so only new writing is serialised.
+
+<!-- source: 2026-11-12 — Wave B reviewed (Assistant back end; watchlist UI, G4, replay); worktree parallelism; usability pack -->
+- **Greedy decoding makes caching sound:** same facts, same answer, so the cache key is the SHA-256 of A2's facts
+  summary, and failures are cached too. Prepared answers use the same key and are re-checked by the guardrail when
+  served.
+
+<!-- source: 2026-11-12 — Wave B reviewed (Assistant back end; watchlist UI, G4, replay); worktree parallelism; usability pack -->
+- **Torch is optional:** `find_spec` decides "not installed" without importing it. With the Assistant off or absent,
+  E12 answers the template and the reason. The Must tier and every test run without torch.
+
+<!-- source: 2026-11-12 — Wave B reviewed (Assistant back end; watchlist UI, G4, replay); worktree parallelism; usability pack -->
+- **A rejected answer cannot leak:** the service keeps only the names of failed checks, never the rejected text.
+
+<!-- source: 2026-11-13 — S-09 live lookup merged; **work paused at the user's request** -->
+- **A fetched address takes A2's held-out route:** `build_transactions` → `build_features` → the 70 % split → every
+  frozen method. The regression's per-address residual scale is recomputed by the training's rule. Parity within
+  1e-9 is the evidence.
+
+<!-- source: 2026-11-13 — S-09 live lookup merged; **work paused at the user's request** -->
+- **Progress is an append-only event list:** E17 returns the current state; E18 replays the list from the start, then
+  follows it. A late or reconnecting client misses nothing, and polling E17 needs no new code.
+
+<!-- source: 2026-11-13 — S-09 live lookup merged; **work paused at the user's request** -->
+- **Politeness and privacy are structural:** only the address is sent; requests are paced; one lookup at a time and
+  6 an hour; the cache is local and "Forget" deletes it together with the watchlist entry.
+
+## Front end (16)
 
 <!-- source: 2026-11-11 — Wave 1, front end: T04 and T16 reviewed and committed -->
 - **One client, one error type.** A single Axios instance (D-A3-4) owns the base URL, the time limit
@@ -193,7 +227,11 @@ Bullets found: **55** in 11 entries of the work log.
 - **The link decides the method.** `method=` is in the URL (left out for the default), so a shared link reproduces the
   view exactly; the remembered preference only seeds links out of V1. Requests and caches are keyed by method.
 
-## Charts (13)
+<!-- source: 2026-11-12 — Wave B reviewed (Assistant back end; watchlist UI, G4, replay); worktree parallelism; usability pack -->
+- **The watchlist is a store, not a request cache:** a module-level `useSyncExternalStore` keeps the star, V1 and V6
+  in step, with optimistic removal rolled back if the service refuses.
+
+## Charts (14)
 
 <!-- source: 2026-11-11 — Wave 2, charts: T23, T24, T26 reviewed and committed -->
 - **One wrapper; a chart is a figure function.** Every chart goes through `PlotlyChart`. A chart
@@ -265,6 +303,10 @@ Bullets found: **55** in 11 entries of the work log.
 - **G6 is honest about what it measures.** Recall per planted pattern with 95 % intervals, straight from E11,
   captioned as measured on planted test transactions, which says nothing about accuracy on real activity.
 
+<!-- source: 2026-11-12 — Wave B reviewed (Assistant back end; watchlist UI, G4, replay); worktree parallelism; usability pack -->
+- **G4** shows where a transaction ranks among the address's own transactions for each model, on each model's own
+  scale (E7/E8 `ranks`), with the deciding method ringed.
+
 ## Testing (5)
 
 <!-- source: 2026-11-11 — T17 reviewed; **MS1 passed** (4 days early) -->
@@ -290,7 +332,7 @@ Bullets found: **55** in 11 entries of the work log.
 - **Waiting for the state, not the first event.** Tests of charts whose words come from a second request wait for
   the redraw that carries them; reading the first draw raced under load.
 
-## Tooling (2)
+## Tooling (4)
 
 <!-- source: 2026-11-11 — Wave 1, back end: T03, T05–T09 reviewed and committed -->
 - **Copying with proof.** A2's runtime is copied from a commit (`git cat-file`), never from a working
@@ -302,3 +344,12 @@ Bullets found: **55** in 11 entries of the work log.
 <!-- source: 2026-11-11 — T17 reviewed; **MS1 passed** (4 days early) -->
 - **The mock cannot ship.** It is reachable only through a condition on `import.meta.env`, which the
   build replaces with a literal, so production bundles contain neither the mock nor its data.
+
+<!-- source: 2026-11-13 — S-12 measure.py and CI merged (first branch merged from a worktree) -->
+- **One script, one table.** The report quotes `measure.py`'s generated table (date, commit, machine, repeats) rather
+  than hand-copied numbers. Each figure with a plan budget gets pass/fail, and the script exits 1 on a failure.
+
+<!-- source: 2026-11-13 — S-12 measure.py and CI merged (first branch merged from a worktree) -->
+- **CI as the README's commands.** Two independent jobs (back end without PyTorch, so the Assistant's tests skip;
+  front end from the lock file), caches keyed on the dependency files, and a newer push cancels the older run to save
+  private-repo minutes.

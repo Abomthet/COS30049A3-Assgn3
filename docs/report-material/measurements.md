@@ -1,9 +1,10 @@
 # Measurements so far
 
-**Read this first.** These figures are copied exactly from `docs/WORKLOG.md` and `docs/TEST_LOG.md`. They come from
-different runs, on different commits and under different conditions, so they are not one consistent set. The
-measurement script `tools/measure.py` (task S-12, not built yet) will replace all of them with **one consistent run**
-on one commit and one machine. Until then, do not mix these numbers in one table without the conditions column.
+**Read this first.** The consistent figures are now in `docs/report-material/measured/measure.md`: one run of
+`tools/measure.py --build --charts` on commit `2041d49` (the MS3 gate, 21 Nov 2026). Every budget in that run is met,
+and first-screen JavaScript is 148.0 kB gzip against a 150 kB budget. The older figures below are kept for history.
+They are copied exactly from `docs/WORKLOG.md` and `docs/TEST_LOG.md`, come from different runs, on different commits
+and under different conditions, so do not mix them in one table without the conditions column.
 
 Figures are copied as written in the sources: no rounding, no estimates. Where the source gives no value, the cell says
 "not measured yet". Machine: the entries do not name one; the work ran on the Mac (Apple M5, macOS 26.6, `docs/HANDOFF.md` §4)

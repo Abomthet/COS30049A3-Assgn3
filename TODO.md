@@ -27,7 +27,7 @@ Report text and video narration stay people-only until the tutor's AI-use email 
 | 4.3 | Clean install from a trial zip, macOS (T44) | Opus | ✅ 21 Nov |
 | 4.5a | Chrome, Safari, Firefox via automated runs (T45) | Sonnet | ✅ 21 Nov (`npm run e2e`: Chromium, WebKit, Firefox engines at 3 widths, 462 passed; branded Safari/Chrome by hand in 4.5b) |
 | 4.6 | Tag `v1.0-rc`, push (MS4) | Opus | Sun 29 Nov |
-| 5.2 | Final report figures and tables (T47) | Sonnet | 30 Nov |
+| 5.2 | Final report figures and tables (T47) | Sonnet | ✅ 21 Nov |
 | 5.5 | Video shot list and timing (T48) | Opus | 1 Dec |
 | 5.4 | Report check vs rubric, pages, Harvard refs (T49) | Opus | 3 Dec |
 | 6.1 | Tag `v1.0`, zip from the tag, checksums, clean unzip-and-run (T50) | Opus | 4 Dec |
@@ -144,7 +144,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 
 ## 1.4.7 Report, video, submission (28 Nov–5 Dec)
 - [ ] T46 **[you/team]** Report sections (8 pages max) — Claude supplies generated material only
-- [~] T47 Figures, screenshots, API tables from `openapi.json` (done: `docs/report-material/`), measured table from `measure.py` (`@C-tools`); architecture figures done (`docs/report-material/figures/`)
+- [~] T47 Figures, screenshots, API tables from `openapi.json` (done: `docs/report-material/`), measured table from `measure.py` (`@C-tools`); architecture figures done (`docs/report-material/figures/`); report material refreshed 21 Nov (Haiku 5.5, `WORKLOG`): screenshot index, design notes and API reference regenerated, figures README corrected; the figure drawing still says S-09 "in progress" and the measurement budget count (27 in the logs, 31 rows in `measured/measure.md`) needs confirming
 - [ ] T48 **[you/team]** Video (7 min): Claude drafts the shot list and checks timing; recording, narration and unlisted upload are yours
 - [ ] T49 Report review against the rubric; page count; Harvard references; AI acknowledgement from the log
 - [ ] T50 Tag `v1.0`; build the zip from the tag (no `node_modules`); checksums; unzip and run clean

@@ -1,7 +1,7 @@
 # Architecture figures for the report and the video
 
 Three figures, each as TikZ (`.tex`), as a compiled PDF (`.pdf`) and as SVG (`.svg`). They show the code **as built on
-`main`**, last checked against the files on 13 Nov 2026; they do not show what the plan intends. Where the plan and the code
+`main`**, last checked against the files on 13 Nov 2026 (the live-lookup rows and the operation count were re-checked on 21 Nov 2026); they do not show what the plan intends. Where the plan and the code
 differ, the code is drawn and the difference is listed in section 5.
 
 | Figure | Files | Size at full text width (16.4 cm) | Used in |
@@ -42,7 +42,7 @@ the optional parts.
 **Caption.** *The Explorer as built: a React application in the browser reaches a FastAPI service through Vite's
 same-origin `/api` proxy, and the service wraps Assignment 2's frozen `Predictor`, copied in with a SHA-256 hash for every
 file. Every request passes five middleware layers, every failure is turned into one error body by `core/errors.py`, and the
-dashed parts (the Assistant's weights and the live lookup, S-09) are optional or still in progress.*
+dashed parts (the Assistant's weights and the live lookup, S-09, which is off by default) are optional.*
 
 | Box or arrow | Checked against |
 |---|---|
@@ -56,13 +56,13 @@ dashed parts (the Assistant's weights and the live lookup, S-09) are optional or
 | What each middleware does | `backend/app/core/middleware.py`, `core/body_limit.py`; `GZIP_MIN_BYTES = 1000` in `main.py`; `web.limits.maxBodyBytes` = 10240 |
 | BodyLimit → `core/errors.py` (413) | `core/body_limit.py::_refuse` calls `handle_api_error` |
 | `core/errors.py` | `backend/app/core/errors.py` (`error_response`, `register_handlers`), `backend/app/schemas/errors.py` (`ErrorBody`) |
-| Routers and their endpoints | `backend/app/main.py` lines 140–147 (the order drawn), `backend/app/api/*.py`, `backend/openapi.json` (14 paths, 15 operations: E1–E15) |
+| Routers and their endpoints | `backend/app/main.py` lines 140–147 (the order drawn), `backend/app/api/*.py`, `backend/openapi.json` (18 paths, 20 operations: E1–E15 and the live lookup's five, E16–E20) |
 | Services | `backend/app/services/explorer_service.py` (the `lru_cache` keyed by method and address, `warm`), `whatif_service.py`, `whatif_batch.py`, `export_service.py`, `methods_service.py`, `store.py`, `system_service.py`, `model_service.py`, `watchlist_service.py`, `watchlist_repo.py`, `assistant_service.py`; the lifespan in `main.py` (`load_models`, `warm_cache`) |
 | A2's frozen runtime, hashes | `backend/A2_VENDOR.json` (49 files: 24 in `explorer/`, 11 in `models/`, 7 in `lm/`, 5 in `data/`, 2 in `reports/`; commit `aa56a26`), `backend/MODIFICATIONS.md`, `tools/vendor_a2.py` |
 | `var/explorer.db` | `DEFAULT_DATABASE` in `main.py`; `watchlist_repo.py` |
 | `assistant_answers.json`, 677 answers | `backend/data/assistant_answers.json` (677 entries counted), `core/config.py` (`ASSISTANT_ANSWERS_PATH`), Mod-15 |
 | Assistant weights, PyTorch, tokenizers (dashed) | `assistant_service.py` (`LIBRARIES`, `_load`), `backend/requirements-assistant.txt`, Mod-9 and Mod-16 |
-| Esplora, "S-09, in progress" (dashed) | Not on `main`: no `api/live.py`, no live service, no E16–E20 in `openapi.json`. Only the hooks for it exist (`store.py`'s `AddressStore` protocol, `web.live` in the settings, `EXPLORER_LIVE_LOOKUP`, off by default). The branch was not inspected |
+| Esplora, live lookup (dashed; S-09, finished in T36, `8ff1519`) | `backend/app/api/live.py` (E16–E20), `services/live_service.py`, `live_store.py`, `live_scoring.py`; `EXPLORER_LIVE_LOOKUP`, off by default. The drawing still labels this box "S-09, in progress": the label is out of date and `make_figures.py` needs changing and re-running (not done on 21 Nov) |
 
 ## 3. `whatif-flow`
 
@@ -116,11 +116,11 @@ Starlette's outermost error layer, outside the five, which is why `error_respons
 
 | No. | Plan (`s05-architecture.tex` unless named) | Code on `main` |
 |---|---|---|
-| 1 | Views V1–V8 | V1–V7. V8, the live lookup dialog, is not on `main` |
+| 1 | Views V1–V8 | V1–V7. The live lookup dialog (V8 in the plan) is `frontend/src/views/LiveLookupDialog.tsx`, opened from V1 (S-09, on `main`) |
 | 2 | Charts G1–G9 | G1–G6 |
-| 3 | Routers for E1–E22 | E1–E15 (`openapi.json`: 14 paths, 15 operations). No `api/live.py`; `addresses.py` has no E20 |
-| 4 | Services "explorer, what-if, export, assistant, live" | No live service. Also present: methods, watchlist (service and repository), system, model, and the store |
-| 5 | An `AddressStore` with a snapshot store and a live store | The `AddressStore` protocol and `SnapshotStore` only |
+| 3 | Routers for E1–E22 | E1–E20 (`openapi.json`: 18 paths, 20 operations); the live routes are in `api/live.py`. E21 and E22 are not on `main` |
+| 4 | Services "explorer, what-if, export, assistant, live" | Live service present (`live_service.py`, `live_store.py`, `live_scoring.py`). Also present: methods, watchlist (service and repository), system, model, and the store |
+| 5 | An `AddressStore` with a snapshot store and a live store | The `AddressStore` protocol, `SnapshotStore`, and the live store (`live_store.py`) |
 | 6 | SQLite file: "watchlist, live cache index" | One table, `watchlist` |
 | 7 | API client: "Axios, `ApiError`, request cache" | The cache of answers is in the hook `useRequest`, not in the Axios client |
 | 8 | Hooks `useDebounced`, `useEventSource`; views "one folder each" | `useDebouncedValue`; no `useEventSource`; views are single files |
@@ -131,7 +131,7 @@ Starlette's outermost error layer, outside the five, which is why `error_respons
 | 13 | The figure has no middleware; `main.py`'s own docstring names three (request context, CORS, compression) | Five: BodyLimit and ETag as well |
 | 14 | V3 calls E12 (section 8) | As planned since `ea70d25`: V3 and V4 call E12 through the Assistant panel (S-05); the figures were first drawn before that merge, and the footer was updated |
 | 15 | Vendored: `explorer/`, `lm/`, `models/`, `data/processed/esplora/` | Also `reports/tables/` (two evaluation tables that E11 reads). `data/assistant_answers.json` is Assignment 3's own file (Mod-15), not vendored |
-| 16 | The figure's "Optional" box holds the Esplora API as a drawn, optional part | Drawn dashed and labelled "S-09, in progress": nothing of it runs on `main` |
+| 16 | The figure's "Optional" box holds the Esplora API as a drawn, optional part | Drawn dashed and labelled "S-09, in progress", but the live lookup is on `main` (off by default); the label needs updating when the figure is rebuilt |
 
 Two comments in the code that no longer match the code (not plan differences, found while checking):
 `backend/app/core/middleware.py` says the browser supplies its own `X-Request-ID`, but `frontend/src/api/http.ts` sends
@@ -154,4 +154,4 @@ none; `frontend/src/api/endpoints.ts` says the service exposes only `X-Request-I
   the scores and the threshold; which pair of points it lies between comes from the server's flags.
 - **`request-lifecycle`:** POST, PUT and DELETE; Starlette's own outer and inner error layers (see the note in section 4);
   the cache warm-up; measured times (they are in `../measurements.md`).
-- **Not inspected:** the S-09 branch (no git commands were run). The one-command mode (C-05) was not checked and is not drawn.
+- **Not inspected:** the one-command mode (C-05) was not checked and is not drawn.
