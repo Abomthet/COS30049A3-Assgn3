@@ -55,10 +55,10 @@ Width is the viewport in CSS pixels (the script uses device scale 1, so pixels e
 | `09-not-scored-detail.png` | V3 transaction | 1280 | desktop | light | 1098 | no | V3 transaction of the short-history address: facts shown, not scored, reason given. |
 | `10-early-transaction-not-scored.png` | V3 transaction | 1280 | desktop | light | 1098 | no | V3 early transaction of the example address: too little earlier history. |
 | `13-flagged-detail-tablet.png` | V3 transaction | 820 | tablet | light | 3685 | no | V3 flagged transaction at 820 px. |
-| `16-flagged-detail-mobile.png` | V3 transaction | 390 | phone | light | 5596 | no | V3 flagged transaction at 390 px (cards, no sideways scroll). |
+| `16-flagged-detail-mobile.png` | V3 transaction | 390 | phone | light | 5574 | no | V3 flagged transaction at 390 px (cards, no sideways scroll). |
 | `17-flagged-detail-dark.png` | V3 transaction | 1280 | desktop | dark | 3393 | no | V3 flagged transaction in the dark theme. |
 | `53-model-verdicts.png` | V3 transaction | 1280 | desktop | light | 3393 | no | V3 flagged transaction, nine verdicts. Byte-identical to 08. |
-| `54-model-verdicts-mobile.png` | V3 transaction | 390 | phone | light | 5596 | no | V3 flagged transaction at 390 px. Byte-identical to 16. |
+| `54-model-verdicts-mobile.png` | V3 transaction | 390 | phone | light | 5574 | no | V3 flagged transaction at 390 px. Byte-identical to 16. |
 | `58-assistant-prepared.png` | V3 transaction | 1280 | desktop | light | 900 | no | V3 flagged transaction at 1280 px, first screen only: the Explorer Assistant's 'Why this transaction stands out' panel under the transaction details. Light theme. |
 | `59-assistant-prepared-mobile.png` | V3 transaction | 390 | phone | light | 844 | no | V3 flagged transaction at 390 px, first screen only: the day's one transaction and its details; the Assistant's panel is below the first screen. |
 
