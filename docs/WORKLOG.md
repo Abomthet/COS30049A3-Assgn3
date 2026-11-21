@@ -1213,3 +1213,12 @@ transaction windows and are unchanged); the index changed only the height of 16 
 
 **Note.** The main checkout's `frontend/node_modules` predates S-10/S-11 (no `@playwright/test`, `@axe-core/playwright`,
 or the `tools/typegen` workspace); run `npm ci` in `frontend/` before using the browser tests or `npm test` there.
+
+## 2026-11-21 — Report outline (Sonnet 5.5; lead Opus 5.5)
+
+`docs/report-material/report-outline.md`: format rules from the brief (each with its line), the six sections with the
+plan's page budgets (`s13-report.tex:16-25`, 7.75 of 8 pages), topic prompts (no report wording: the brief bans
+generated content, the team writes the text), figures and evidence per section, appendix candidates, all 17 rubric rows
+mapped, and what is still missing. Lead review: every line reference and file checked; the cook's claim that the
+brief's rubric has 16 rows was wrong (Usability 2 is at brief:158); flagged the plan's "Harvard style, numbered as in
+Assignments 1 and 2" (`s13-report.tex:27`), since Harvard is author-date: a team decision before writing.
