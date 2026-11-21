@@ -1180,3 +1180,16 @@ the title card, the real-phone clip, one rehearsal of the stop-and-restart, the 
 **Done.** The mock answers the same 400 for TxGPT on a fetched address. `tests/liveMethod.test.tsx` (8 tests; 6 fail on the old components). Front end 665 tests; first-screen JS 148.3 of 150 kB gzip (+0.3).
 
 **Open.** Lead review.
+
+## 2026-11-21 — Evening: a bug found in the walkthrough, the Apple-inspired remake branch (lead, Opus 5.5)
+
+- During the user's walkthrough, a live address opened with TxGPT remembered as the method showed "That isn't a valid
+  Bitcoin address". Fixed (menu disables TxGPT for fetched addresses, falls back to the default with a note; a
+  method-specific error otherwise) with two V1 wording fixes; `6144d2b`, CI green.
+- At the user's request: a design study of current Apple pages (headless screenshots, kept outside the repo in
+  `~/Desktop/COS30049/design-ref/apple-2026-11-21/`) and branch **`ui-remake-apple`**: surfaces instead of borders,
+  one blue accent with pill buttons, segmented controls, a bigger type scale, a translucent header, quieter charts,
+  a coherent dark theme, and a hero on V1 (headline, the lookup as the main action, a stats strip from E3/E11).
+  Visual only; tests, accessibility and wider-text checks green; first-screen JS 148.65 kB. A proposal for the team:
+  not merged into `main`. The old 13 Nov servers on 8000/5173 were stopped at the user's request.
+

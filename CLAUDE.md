@@ -11,6 +11,9 @@ disagrees with it, the plan wins, except for the decisions recorded in the work 
   Must item and all 12 Should items are built (S-10 generated types and S-11 browser tests finished 19 Nov).
 - **MS3 passed Sat 21 Nov** (`2041d49`, fresh clone; `docs/TEST_LOG.md`). Next: MS4 (Sun 29 Nov): clean install from a
   trial zip (Mac here, Windows by the team), browsers, tag `v1.0-rc`. The order of work is the wrap-up plan in `TODO.md`.
+- **Branch `ui-remake-apple` (21 Nov): an Apple-inspired restyle plus a hero on V1, proposed to the team, NOT on
+  `main`** (pushed to `assgn3` as its own branch; all suites and 462 browser tests green on it). See
+  `docs/ui-remake-apple.md` on that branch. Merge only if the team agrees.
 - **First-screen JS is 148.0 of 150 kB gzip**: any new screen must load lazily; re-run `tools/measure.py --build` after front-end changes.
 - `main` is pushed to the team repo after each verified task (`git log assgn3/main`). Last full check (MS3 gate, 21 Nov): back end 739
   passed + 2 skipped, front end 657, browser tests 462 passed, 31 of 31 budgets.

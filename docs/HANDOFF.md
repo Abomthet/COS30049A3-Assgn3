@@ -255,7 +255,8 @@ Sonnet for features and tests; Haiku for mechanical work.
 - **The Mac's idle sleep freezes long runs** for 15 minutes at a time (the server log shows the gaps, and every
   process stops, the lead's own checks too). Run long jobs under `caffeinate -ims` (add `-d` only if the display
   must stay on).
-- **Check that your own server started.** Old servers from 13 Nov may still be on 8000 and 5173. Uvicorn then exits
+- **Check that your own server started.** (The old 13 Nov servers on 8000 and 5173 were stopped on 21 Nov, but any
+  leftover server causes the same trap.) Uvicorn then exits
   with "address already in use" while Vite quietly moves to 5174 and still forwards `/api` to the old back end on
   8000, so checks pass against the wrong code. Look for "Explorer ready" in your server's log and a small
   `uptimeSeconds` before trusting an answer; use your own ports (`--port`, `VITE_PROXY_TARGET`, `E2E_*_PORT`).
