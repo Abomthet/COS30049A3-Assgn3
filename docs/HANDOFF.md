@@ -252,6 +252,16 @@ Sonnet for features and tests; Haiku for mechanical work.
 
 ## 10. Lessons and traps (each one cost time once)
 
+- **The Mac's idle sleep freezes long runs** for 15 minutes at a time (the server log shows the gaps, and every
+  process stops, the lead's own checks too). Run long jobs under `caffeinate -ims` (add `-d` only if the display
+  must stay on).
+- **Check that your own server started.** Old servers from 13 Nov may still be on 8000 and 5173. Uvicorn then exits
+  with "address already in use" while Vite quietly moves to 5174 and still forwards `/api` to the old back end on
+  8000, so checks pass against the wrong code. Look for "Explorer ready" in your server's log and a small
+  `uptimeSeconds` before trusting an answer; use your own ports (`--port`, `VITE_PROXY_TARGET`, `E2E_*_PORT`).
+- **Linux and Windows fonts are wider than the Mac's.** A layout that fits at 390 px here can scroll sideways on CI.
+  The browser tests re-check key pages with `WIDER_TEXT_CSS` (0.2em); keep that check when adding screens.
+- **The first-screen JavaScript is 148.0 of 150 kB.** New screens load lazily; re-run `tools/measure.py --build`.
 - **E5 `range.start`/`end` are timestamps, not days.** Use `dayKey()` on the front end.
 - **Floating-point noise.** Regression, fusion and k-means scores differ in the 15th digit between
   code paths and even between runs (multithreaded BLAS). Compare flags exactly and scores with the

@@ -25,7 +25,7 @@ Report text and video narration stay people-only until the tutor's AI-use email 
 | 4.1 | README complete, incl. `npm run types` (T43) | Sonnet | ✅ 21 Nov |
 | 4.2 | Docstrings, `MODIFICATIONS.md`, `LICENSES.md` line (T43) | Haiku | ✅ 21 Nov |
 | 4.3 | Clean install from a trial zip, macOS (T44) | Opus | ✅ 21 Nov |
-| 4.5a | Chrome, Safari, Firefox via automated runs (T45) | Sonnet | 29 Nov |
+| 4.5a | Chrome, Safari, Firefox via automated runs (T45) | Sonnet | ✅ 21 Nov (`npm run e2e`: Chromium, WebKit, Firefox engines at 3 widths, 462 passed; branded Safari/Chrome by hand in 4.5b) |
 | 4.6 | Tag `v1.0-rc`, push (MS4) | Opus | Sun 29 Nov |
 | 5.2 | Final report figures and tables (T47) | Sonnet | 30 Nov |
 | 5.5 | Video shot list and timing (T48) | Opus | 1 Dec |
