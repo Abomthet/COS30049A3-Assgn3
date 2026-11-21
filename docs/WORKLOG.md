@@ -1163,3 +1163,10 @@ changes" although the gate's clone was clean: `measure.py` read an empty `git st
 "unknown" for no output), so every run carried that label. Fixed in `2339d66` with a test that fails on the old code;
 `measured/` re-run on the clean tree. `make_api_reference.py` now numbers the live operations E16–E20.
 
+## 2026-11-21 — Video shot list brought up to date (lead, Opus 5.5)
+
+`docs/report-material/video-shotlist.md` dated from 12 Nov. Now: 20 operations; J2 shows the Assistant's prepared
+explanation and G4; J5 opens a point from the chart (confirmed by the J5 browser test); 4:40–5:15 shows the live
+lookup (fetch once beforehand, kept 7 days); the architecture figure exists. Still 6:35 of 7:00. People still need:
+the title card, the real-phone clip, one rehearsal of the stop-and-restart, the timed rehearsal.
+

@@ -28,7 +28,7 @@ Report text and video narration stay people-only until the tutor's AI-use email 
 | 4.5a | Chrome, Safari, Firefox via automated runs (T45) | Sonnet | ✅ 21 Nov (`npm run e2e`: Chromium, WebKit, Firefox engines at 3 widths, 462 passed; branded Safari/Chrome by hand in 4.5b) |
 | 4.6 | Tag `v1.0-rc`, push (MS4) | Opus | Sun 29 Nov |
 | 5.2 | Final report figures and tables (T47) | Sonnet | ✅ 21 Nov |
-| 5.5 | Video shot list and timing (T48) | Opus | 1 Dec |
+| 5.5 | Video shot list and timing (T48) | Opus | ✅ 21 Nov (`docs/report-material/video-shotlist.md`, 6:35 of 7:00) |
 | 5.4 | Report check vs rubric, pages, Harvard refs (T49) | Opus | 3 Dec |
 | 6.1 | Tag `v1.0`, zip from the tag, checksums, clean unzip-and-run (T50) | Opus | 4 Dec |
 
