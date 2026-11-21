@@ -108,6 +108,9 @@ const replay20 = drive(`
 `);
 // Chooses the box tool in G2's tool bar and draws a box over the middle of the plot with the mouse, as a person does.
 async function boxSelect(send) {
+  // The chart draws once it is in view; with a taller page header it starts below the first screen.
+  await send('Runtime.evaluate', { expression: 'window.scrollTo(0, 600)' });
+  await sleep(1500);
   await send('Runtime.evaluate', {
     expression: `(() => {
       document.querySelector('.modebar-btn[data-title="Box Select"]').click();
