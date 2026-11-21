@@ -25,7 +25,7 @@ from ..core.validation import amount_problem, gap_problem, passed
 from ..schemas.errors import FieldError
 from ..schemas.whatif import Amount, CurveRequest, CurveResponse, Points, WhatIfRequest, WhatIfResult
 from .ranks import rank_among
-from .reasons import reword
+from .reasons import reword, reword_comparison
 from .store import AddressData, AddressStore, predictor_for
 from .whatif_batch import hypothetical_frame, score_frame, usable_methods
 
@@ -76,7 +76,8 @@ class WhatIfService:
         data = self._store.get(address)
         result = self.scored_what_if(address, request)
         seconds = int(request.time.astimezone(timezone.utc).timestamp())
-        return WhatIfResult.model_validate({**result, "explanation": reword(result["explanation"]), "notAvailable": self._not_available,
+        return WhatIfResult.model_validate({**result, "explanation": reword(result["explanation"]),
+                                            "comparison": reword_comparison(result["comparison"]), "notAvailable": self._not_available,
                                             "ranks": self._ranks(data, seconds, result["scores"])})
 
     def scored_what_if(self, address: str, request: WhatIfRequest) -> dict[str, Any]:

@@ -18,7 +18,7 @@ import pytest
 from explorer.explain import headline, reasons_for
 from fastapi.testclient import TestClient
 
-from app.services.reasons import REWORDED, reword
+from app.services.reasons import REWORDED, reword, reword_comparison
 
 from .conftest import LARGEST, RUNNING_EXAMPLE
 
@@ -124,3 +124,81 @@ def test_a_what_if_explanation_is_reworded_too(shared_client: TestClient) -> Non
 def test_the_export_carries_the_reworded_reason(shared_client: TestClient) -> None:
     exported = shared_client.get(f"/api/addresses/{LARGEST}/export", params={"format": "json", "status": "flagged"}).text
     assert "ratio to the usual amount than usual" not in exported
+
+
+# ---------------------------------------------------------------- Mod-18: the comparison groups
+
+def group(count: int, extended: bool, window: int = 30, min_tx: int = 20) -> dict[str, Any]:
+    """A comparison group written the way `Predictor.comparison` writes it (explorer/predict.py)."""
+    text = f"{count} earlier transactions: the previous {window} days" + (f", extended back to reach {min_tx}" if extended else "")
+    return {"features": ["F2", "F3"], "label": "All earlier transactions", "description": text, "txCount": count,
+            "start": "2024-05-16T05:16:19Z", "end": "2024-07-11T03:32:50Z"}
+
+
+def test_an_extended_group_below_the_minimum_says_it_holds_all_there_are() -> None:
+    (out,) = reword_comparison([group(10, True)], 20)
+    assert out["description"] == "10 earlier transactions: all there are, as fewer than 20 exist"
+    assert {k: v for k, v in out.items() if k != "description"} == {k: v for k, v in group(10, True).items() if k != "description"}
+    assert BANNED.search(out["description"]) is None
+
+
+def test_a_group_of_one_is_singular() -> None:
+    (out,) = reword_comparison([group(1, True)], 20)
+    assert out["description"] == "1 earlier transaction: all there are, as fewer than 20 exist"
+
+
+def test_a_group_of_exactly_the_minimum_is_as_a2_wrote_it() -> None:
+    assert reword_comparison([group(20, True)], 20) == [group(20, True)]
+
+
+def test_a_group_that_was_not_extended_is_as_a2_wrote_it_whatever_its_size() -> None:
+    assert reword_comparison([group(3, False), group(24, False)], 20) == [group(3, False), group(24, False)]
+
+
+def test_the_minimum_is_read_from_the_settings_not_written_into_the_rewrite() -> None:
+    from explorer.settings import SETTINGS
+
+    minimum = SETTINGS["features"]["comparisonMinTx"]
+    window = SETTINGS["features"]["comparisonWindowDays"]
+    (out,) = reword_comparison([group(5, True, window, minimum)])
+    assert out["description"] == f"5 earlier transactions: all there are, as fewer than {minimum} exist"
+    (other,) = reword_comparison([group(5, True, window, 7)], 7)  # a different minimum is used where it is given
+    assert other["description"] == "5 earlier transactions: all there are, as fewer than 7 exist"
+
+
+def test_the_input_is_not_changed() -> None:
+    original = group(10, True)
+    reword_comparison([original], 20)
+    assert original == group(10, True)
+
+
+def test_e7_of_the_running_examples_flagged_transaction_has_the_new_text_in_both_groups(shared_client: TestClient) -> None:
+    """The address's 11th transaction: 10 earlier transactions exist, so neither window could reach 20."""
+    body = shared_client.get(f"/api/transactions/{FLAGGED_TX}", params={"address": RUNNING_EXAMPLE, "method": "baseline"}).json()
+    assert [(c["txCount"], c["description"]) for c in body["comparison"]] == [
+        (10, "10 earlier transactions: all there are, as fewer than 20 exist")] * 2
+
+
+def test_e7_groups_that_reached_the_minimum_keep_a2s_text(shared_client: TestClient, predictor: Any) -> None:
+    rows = shared_client.get(f"/api/addresses/{RUNNING_EXAMPLE}/transactions", params={"pageSize": 200}).json()["transactions"]
+    seen = set()
+    for row in rows:
+        if row["score"] is None:
+            continue
+        for c in shared_client.get(f"/api/transactions/{row['txid']}", params={"address": RUNNING_EXAMPLE, "method": "baseline"}).json()["comparison"]:
+            seen.add(c["description"] if c["txCount"] >= 20 else None)
+            if c["txCount"] >= 20:
+                assert c["description"].startswith(f"{c['txCount']} earlier transactions: the previous 30 days")
+            else:
+                plural = "" if c["txCount"] == 1 else "s"
+                assert c["description"] == f"{c['txCount']} earlier transaction{plural}: all there are, as fewer than 20 exist"
+    assert any(d and "extended back to reach 20" in d for d in seen)  # the unchanged kind is exercised
+
+
+def test_e8_a_what_if_whose_timing_group_holds_11_says_all_there_are(shared_client: TestClient) -> None:
+    """From the recorded what-ifs: 0.001 BTC sent at 2024-07-11 12:00 has 11 earlier transactions for the timing group."""
+    body = shared_client.post(f"/api/addresses/{RUNNING_EXAMPLE}/what-if",
+                              json={"amountBtc": 0.001, "direction": "out", "time": "2024-07-11T12:00:00Z"}).json()
+    timing = next(c for c in body["comparison"] if c["features"] == ["F2", "F3"])
+    assert (timing["txCount"], timing["description"]) == (11, "11 earlier transactions: all there are, as fewer than 20 exist")
+    assert all("extended back to reach" not in c["description"] for c in body["comparison"])

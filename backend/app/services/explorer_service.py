@@ -32,7 +32,7 @@ from ..schemas.common import DataSource, SnapshotInfo
 from ..schemas.errors import FieldError
 from ..schemas.transactions import TransactionDetail
 from .ranks import pools_of, ranks_of
-from .reasons import reword
+from .reasons import reword, reword_comparison
 from .store import AddressData, AddressStore, predictor_for
 
 PAGE_SIZE = TypeAdapter(PageSize)
@@ -155,10 +155,11 @@ class ExplorerService:
         if not data.features["scorable"].any():
             return self._unscored_view(predictor, data)
         result = predictor.score_address(address)
-        # The explanation is A2's template text; its repeating phrases are reworded here (Mod-12).
+        # The explanation is A2's template text; its repeating phrases are reworded here (Mod-12), and the comparison groups (Mod-18).
         scored = [tx for tx in result["transactions"] if tx.get("scored", False)]
         pools = pools_of([tx["scores"] for tx in scored], list(scored[0]["scores"]))
         transactions = {tx["txid"]: {**tx, "explanation": reword(tx["explanation"]),
+                                     **({"comparison": reword_comparison(tx["comparison"])} if "comparison" in tx else {}),
                                      **({"ranks": ranks_of(tx["scores"], pools)} if tx.get("scored", False) else {})}
                         for tx in result["transactions"]}
         timeline = TimelineResponse.model_validate({
