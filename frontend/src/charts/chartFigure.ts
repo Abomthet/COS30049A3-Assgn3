@@ -63,15 +63,18 @@ export function baseLayout(palette: ChartPalette, { compact, touch, zoomable, re
   const size = compact ? 11 : 12;
   const axis = {
     automargin: true,
-    ticks: 'outside' as const,
-    tickcolor: palette.axis,
+    // Quiet furniture (Apple HIG Charts): faint dotted grid, no tick marks, few labels.
+    ticks: '' as const,
     tickfont: { color: palette.axisInk, size },
     gridcolor: palette.grid,
+    griddash: 'dot' as const,
+    gridwidth: 1,
     linecolor: palette.axis,
     zerolinecolor: palette.axis,
+    zerolinewidth: 1,
     title: { font: { color: palette.axisInk, size } },
     fixedrange: !zoomable,
-    nticks: compact ? 4 : undefined,
+    nticks: compact ? 4 : 6,
   };
   return {
     autosize: true,

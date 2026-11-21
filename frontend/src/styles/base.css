@@ -1,121 +1,143 @@
 /* Bitcoin Address Activity Explorer — one stylesheet, tokens first.
-   Chart colours come from a validated colour-blind-safe pair (blue = ordinary, orange = flagged),
-   checked for light and dark surfaces. Flags are orange, never red: unusual is not wrong. */
+   Apple-inspired remake (branch ui-remake-apple, docs/ui-remake-apple.md): surfaces instead of borders, one blue
+   accent for actions, pills, a big type scale. Chart colours stay a colour-blind-safe pair (blue = ordinary,
+   orange = flagged), checked for light and dark surfaces. Flags are orange, never red: unusual is not wrong. */
 
 :root {
   color-scheme: light;
-  --page: #f6f6f3;
-  --surface: #fcfcfb;
-  --surface-2: #f1f0ec;
-  --border: rgba(11, 11, 11, 0.12);
-  --border-strong: rgba(11, 11, 11, 0.24);
-  --text: #0b0b0b;
-  --text-2: #52514e;
-  --text-muted: #686762;
-  --axis-ink: #74726c;
-  --grid: #e1e0d9;
-  --axis: #c3c2b7;
-  --series-1: #2a78d6;
+  --page: #f5f5f7;
+  --surface: #ffffff;
+  --surface-2: #f5f5f7;
+  --track: #ececf0;
+  --tint: #e8f1fc;
+  --tint-hover: #dfecfb;
+  --hover-bg: #f0f0f3;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --control-border: #86868b;
+  --text: #1d1d1f;
+  --text-2: #424245;
+  --text-muted: #6e6e73;
+  --axis-ink: #6e6e73;
+  --grid: #e5e5ea;
+  --axis: #d2d2d7;
+  --series-1: #0071e3;
   --series-2: #eb6834;
-  --bar-neutral: #b4b2aa;
-  --ref: #9a988f;
-  --accent: #1c5cab;
-  --accent-hover: #184f95;
+  --bar-neutral: #a1a1a6;
+  --ref: #8e8e93;
+  --accent: #0071e3;
+  --accent-hover: #0066cc;
   --on-accent: #ffffff;
-  --link: #1c5cab;
-  --focus: #2a78d6;
-  --flag-bg: #fdf0ea;
-  --flag-border: #f0b598;
+  --link: #0066cc;
+  --focus: #0071e3;
+  --flag-bg: #fff3ec;
+  --flag-border: #f6d3bf;
   --flag-ink: #8f3511;
   --warn-bg: #fbf5e4;
-  --warn-border: #e4c776;
+  --warn-border: #eadba6;
   --warn-ink: #614600;
   --error-bg: #fcefef;
-  --error-border: #eab0b0;
+  --error-border: #efc4c4;
   --error-ink: #a12c2c;
-  --info-bg: #eef4fc;
-  --info-border: #b7d3f6;
-  --info-ink: #184f95;
-  --shadow: 0 1px 2px rgba(11, 11, 11, 0.05), 0 4px 16px rgba(11, 11, 11, 0.04);
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --info-bg: #edf4fc;
+  --info-border: #c3dbf7;
+  --info-ink: #0b4fa6;
+  --shadow: none;
+  --header-bg: rgba(255, 255, 255, 0.72);
+  --header-solid: #ffffff;
+  --font-sans: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Mono', 'Cascadia Code', Consolas, 'SF Mono', Menlo, monospace;
-  --radius: 12px;
-  --radius-sm: 8px;
+  --radius: 18px;
+  --radius-sm: 12px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --surface-2: #242422;
+    --page: #000000;
+    --surface: #1c1c1e;
+    --surface-2: #2c2c2e;
+    --track: #2c2c2e;
+    --tint: #112a45;
+    --tint-hover: #0e2238;
+    --hover-bg: #38383a;
     --border: rgba(255, 255, 255, 0.1);
-    --border-strong: rgba(255, 255, 255, 0.22);
-    --text: #f4f4f2;
-    --text-2: #c3c2b7;
-    --text-muted: #a3a29a;
-    --axis-ink: #9a988f;
-    --grid: #2c2c2a;
-    --axis: #45443f;
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --bar-neutral: #5d5c57;
-    --ref: #77756e;
-    --accent: #86b6ef;
-    --accent-hover: #9ec5f4;
-    --on-accent: #0b0b0b;
-    --link: #9ec5f4;
-    --focus: #86b6ef;
-    --flag-bg: #36201a;
-    --flag-border: #7c3d20;
+    --border-strong: rgba(255, 255, 255, 0.2);
+    --control-border: #8e8e93;
+    --text: #f5f5f7;
+    --text-2: #d1d1d6;
+    --text-muted: #a1a1a6;
+    --axis-ink: #a1a1a6;
+    --grid: #38383a;
+    --axis: #48484a;
+    --series-1: #2997ff;
+    --series-2: #ff7a45;
+    --bar-neutral: #636366;
+    --ref: #8e8e93;
+    --accent: #0071e3;
+    --accent-hover: #0066cc;
+    --on-accent: #ffffff;
+    --link: #2997ff;
+    --focus: #2997ff;
+    --flag-bg: #3a2218;
+    --flag-border: #5e3420;
     --flag-ink: #ffbc9c;
     --warn-bg: #2f2812;
-    --warn-border: #6b5616;
+    --warn-border: #54451a;
     --warn-ink: #f1d488;
     --error-bg: #361b1b;
-    --error-border: #7a3030;
+    --error-border: #5f2b2b;
     --error-ink: #ffa3a3;
-    --info-bg: #142338;
-    --info-border: #284c7c;
+    --info-bg: #14263b;
+    --info-border: #234469;
     --info-ink: #b0cff5;
     --shadow: none;
+    --header-bg: rgba(28, 28, 30, 0.72);
+    --header-solid: #1c1c1e;
   }
 }
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --page: #0d0d0d;
-  --surface: #1a1a19;
-  --surface-2: #242422;
+  --page: #000000;
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
+  --track: #2c2c2e;
+  --tint: #112a45;
+  --tint-hover: #0e2238;
+  --hover-bg: #38383a;
   --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.22);
-  --text: #f4f4f2;
-  --text-2: #c3c2b7;
-  --text-muted: #a3a29a;
-  --axis-ink: #9a988f;
-  --grid: #2c2c2a;
-  --axis: #45443f;
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --bar-neutral: #5d5c57;
-  --ref: #77756e;
-  --accent: #86b6ef;
-  --accent-hover: #9ec5f4;
-  --on-accent: #0b0b0b;
-  --link: #9ec5f4;
-  --focus: #86b6ef;
-  --flag-bg: #36201a;
-  --flag-border: #7c3d20;
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --control-border: #8e8e93;
+  --text: #f5f5f7;
+  --text-2: #d1d1d6;
+  --text-muted: #a1a1a6;
+  --axis-ink: #a1a1a6;
+  --grid: #38383a;
+  --axis: #48484a;
+  --series-1: #2997ff;
+  --series-2: #ff7a45;
+  --bar-neutral: #636366;
+  --ref: #8e8e93;
+  --accent: #0071e3;
+  --accent-hover: #0066cc;
+  --on-accent: #ffffff;
+  --link: #2997ff;
+  --focus: #2997ff;
+  --flag-bg: #3a2218;
+  --flag-border: #5e3420;
   --flag-ink: #ffbc9c;
   --warn-bg: #2f2812;
-  --warn-border: #6b5616;
+  --warn-border: #54451a;
   --warn-ink: #f1d488;
   --error-bg: #361b1b;
-  --error-border: #7a3030;
+  --error-border: #5f2b2b;
   --error-ink: #ffa3a3;
-  --info-bg: #142338;
-  --info-border: #284c7c;
+  --info-bg: #14263b;
+  --info-border: #234469;
   --info-ink: #b0cff5;
   --shadow: none;
+  --header-bg: rgba(28, 28, 30, 0.72);
+  --header-solid: #1c1c1e;
 }
 
 /* ------------------------------------------------------------------ base */
@@ -2368,4 +2390,434 @@ main.container {
 }
 .live-banner .btn {
   min-height: 44px;
+}
+
+/* ================================================================== Apple-inspired layer
+   Later rules win over the ones above: this is the one place the remake lives (docs/ui-remake-apple.md).
+   Pattern numbers refer to design-ref NOTES.md. */
+
+/* 5. Type: body 17 px, big tight titles. */
+body {
+  font-size: 1.0625rem;
+  line-height: 1.47;
+  letter-spacing: -0.012em;
+}
+h1 {
+  font-size: clamp(2rem, 1.35rem + 2.8vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.07;
+  letter-spacing: -0.03em;
+}
+h2 {
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+h3 {
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: -0.014em;
+}
+.page-head h1 {
+  margin-bottom: 8px;
+}
+.page-about .lede,
+.page-models .lede,
+.lookup-lede {
+  font-size: 1.1875rem;
+  line-height: 1.42;
+  letter-spacing: -0.016em;
+}
+.address-title {
+  font-size: clamp(1.05rem, 0.7rem + 1.6vw, 1.8rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.source-line {
+  font-size: 0.9375rem;
+}
+
+/* 4. Eyebrow: a small coloured label above a title. */
+.eyebrow {
+  margin: 0 0 4px;
+  color: var(--link);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* 1. Surfaces, not lines. */
+.card,
+.stat,
+.dialog {
+  border: 0;
+  border-radius: var(--radius);
+}
+.card {
+  padding: 24px;
+}
+@media (max-width: 639px) {
+  .card {
+    padding: 18px;
+  }
+}
+.page {
+  gap: 20px;
+}
+main.container {
+  padding-top: 32px;
+  padding-bottom: 72px;
+}
+.stat {
+  padding: 16px 20px 18px;
+}
+.stat dt {
+  font-size: 0.8125rem;
+  letter-spacing: -0.005em;
+}
+.stat dd {
+  margin: 4px 0 0;
+  font-size: clamp(1.4rem, 1.1rem + 1vw, 1.9rem);
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.stat-sub {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  letter-spacing: -0.005em;
+}
+.stat-row {
+  gap: 16px;
+}
+.address-table th,
+.address-table td {
+  padding: 16px 24px;
+}
+.address-table thead th {
+  background: transparent;
+  letter-spacing: 0;
+  border-bottom-color: var(--border);
+}
+.address-table tbody tr:hover {
+  background: var(--surface-2);
+}
+.state-panel {
+  border: 0;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.tone-empty {
+  border-left-style: solid;
+}
+.day-link {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.day-link:hover {
+  background: color-mix(in srgb, var(--flag-bg) 82%, var(--series-2));
+}
+.tx-row {
+  border: 0;
+  border-left: 4px solid transparent;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.tx-row:hover {
+  background: var(--hover-bg);
+}
+.tx-row.is-selected,
+.tx-row.is-selected.is-flagged {
+  background: var(--info-bg);
+  border-color: transparent;
+  box-shadow: inset 0 0 0 2px var(--series-1);
+}
+.tx-row.is-flagged,
+.tx-row.is-selected.is-flagged {
+  border-left-color: var(--series-2);
+}
+.filter-foot {
+  border-top-color: var(--border);
+}
+.live-banner {
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--tint);
+  padding: 14px 18px;
+  font-size: 0.9375rem;
+}
+.dialog {
+  padding: 28px;
+  border-radius: 22px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+}
+.dialog-title {
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
+}
+.dialog-backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.toast {
+  border: 0;
+  border-radius: 16px;
+  padding: 12px 14px 12px 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+}
+.toast-info {
+  box-shadow: inset 4px 0 0 var(--info-ink), 0 8px 32px rgba(0, 0, 0, 0.22);
+}
+.toast-success {
+  box-shadow: inset 4px 0 0 var(--status-ok), 0 8px 32px rgba(0, 0, 0, 0.22);
+}
+.toast-error {
+  box-shadow: inset 4px 0 0 var(--error-ink), 0 8px 32px rgba(0, 0, 0, 0.22);
+}
+.app-footer {
+  background: transparent;
+  border-top: 1px solid var(--border);
+}
+
+/* 2. One accent for actions; pill buttons. */
+.btn {
+  border-radius: 999px;
+  padding: 0 22px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  transition: background-color 120ms ease;
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+.btn-secondary {
+  background: var(--tint);
+  color: var(--link);
+  border-color: transparent;
+}
+.btn-secondary:hover {
+  background: var(--tint-hover);
+}
+.btn-ghost {
+  color: var(--link);
+}
+.icon-button,
+.status-button,
+.nav-toggle {
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 500;
+}
+.icon-button:hover,
+.status-button:hover {
+  background: var(--hover-bg);
+}
+.icon-button {
+  min-height: 36px;
+  padding: 0 14px;
+}
+.text-input,
+select.text-input {
+  border: 1px solid var(--control-border);
+  border-radius: 12px;
+  font-size: 1rem;
+  letter-spacing: -0.012em;
+}
+.text-input:focus-visible {
+  outline-offset: 1px;
+}
+.text-area {
+  border-radius: 12px;
+}
+.example-list {
+  gap: 8px;
+}
+.example-list a {
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-2);
+  padding: 0 14px;
+  color: var(--link);
+}
+.example-list a:hover {
+  background: var(--tint);
+}
+.badge {
+  letter-spacing: -0.005em;
+}
+
+/* 3. Segmented controls: filter chips, address tabs, the what-if switch. */
+.chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  background: var(--track);
+  border-radius: 999px;
+  max-width: 100%;
+}
+.chip {
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  border-radius: 999px;
+  padding: 0 16px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+.chip:hover {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+.chip[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 650;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+}
+.tabs ul {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--track);
+  border-radius: 999px;
+  border-bottom: 0;
+  max-width: 100%;
+}
+.tabs a {
+  margin: 0;
+  border: 0;
+  padding: 0 20px;
+  border-radius: 999px;
+  color: var(--text-2);
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+.tabs a:hover {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+.tabs a[aria-current='page'] {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 650;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+}
+@media (max-width: 480px) {
+  .tabs a {
+    padding: 0 12px;
+  }
+  .chip {
+    padding: 0 12px;
+  }
+}
+.segmented {
+  border: 0;
+  padding: 3px;
+  gap: 2px;
+  background: var(--track);
+  border-radius: 999px;
+}
+.segmented span {
+  background: transparent;
+  border-radius: 999px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+.segmented label + label span {
+  border-left: 0;
+}
+.segmented input:checked + span {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 650;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+}
+.segmented input:focus-visible + span {
+  outline-offset: 0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .chip[aria-pressed='true'],
+  :root:not([data-theme='light']) .tabs a[aria-current='page'],
+  :root:not([data-theme='light']) .segmented input:checked + span {
+    background: #636366;
+    color: #ffffff;
+    box-shadow: none;
+  }
+}
+:root[data-theme='dark'] .chip[aria-pressed='true'],
+:root[data-theme='dark'] .tabs a[aria-current='page'],
+:root[data-theme='dark'] .segmented input:checked + span {
+  background: #636366;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+/* 6. Charts: quiet furniture. */
+.pchart-title {
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+.pchart .modebar-group {
+  opacity: 0.6;
+}
+.pchart .modebar-btn path {
+  fill: var(--text-muted) !important;
+}
+.pchart .modebar-btn.active path,
+.pchart .modebar-btn:hover path {
+  fill: var(--accent) !important;
+}
+.star-button {
+  border-radius: 999px;
+}
+.star-button.has-text {
+  border: 0;
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 0 18px;
+  font-weight: 500;
+}
+.star-button.has-text:hover {
+  background: var(--hover-bg);
+}
+.star-button.is-watched {
+  color: var(--accent);
+}
+.stat dd {
+  font-size: clamp(1.3rem, 1rem + 0.7vw, 1.65rem);
+}
+/* A track that wraps onto two lines keeps a soft, not a capsule, corner. */
+.chips,
+.tabs ul,
+.segmented {
+  border-radius: 26px;
+}
+.nav-link {
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  padding: 4px 16px;
+}
+.nav-link:hover {
+  background: var(--hover-bg);
+}
+.nav-link-flag {
+  background: var(--flag-bg);
+}
+.nav-link-disabled {
+  background: transparent;
+}
+.flag-callout,
+.whatif-note,
+.limitation {
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+.limitation {
+  background: var(--surface);
 }
