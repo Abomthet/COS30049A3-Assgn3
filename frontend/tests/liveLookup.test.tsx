@@ -132,7 +132,7 @@ describe('a fetched address', () => {
     expect(screen.getByRole('link', { name: 'Transactions' })).toBeInTheDocument();
     window.location.hash = '#/';
     await waitFor(() => {
-      const row = screen.getAllByRole('link', { name: `Open activity for ${OUTSIDE}` }).map((link) => link.closest('tr')).find((tr) => tr !== null);
+      const row = screen.getAllByRole('link', { name: new RegExp(`full address ${OUTSIDE}`) }).map((link) => link.closest('tr')).find((tr) => tr !== null);
       expect(row).toHaveTextContent('live data');
     });
     window.location.hash = `#/address/${OUTSIDE}/what-if`;

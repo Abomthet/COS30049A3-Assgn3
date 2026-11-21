@@ -32,7 +32,7 @@ afterEach(() => {
 describe('usability walkthrough tasks', () => {
   test('1. open a sample address: timeline with date range and source (AC-01)', async () => {
     const user = start();
-    await user.click(await screen.findByRole('link', { name: `Open activity for ${ex.mainAddress}` }));
+    await user.click(await screen.findByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) }));
     expect(await screen.findByRole('heading', { level: 1, name: ex.mainAddress })).toBeInTheDocument();
     expect(screen.getByText(/Source: Blockstream Esplora · snapshot of 22 Oct 2026/)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Transactions per day' })).toBeInTheDocument();
@@ -81,7 +81,7 @@ describe('the address list (V1)', () => {
     const table = await screen.findByRole('table');
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(28);
-    const main = rows.find((r) => within(r).queryByRole('link', { name: `Open activity for ${ex.mainAddress}` }))!;
+    const main = rows.find((r) => within(r).queryByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) }))!;
     expect(main).toHaveTextContent('Legacy (P2PKH)');
     expect(within(main).getByText('377')).toBeInTheDocument();
     expect(within(main).getByText('367')).toBeInTheDocument();

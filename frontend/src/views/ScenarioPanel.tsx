@@ -7,6 +7,7 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useSettings } from '../hooks/useSettings';
 import { useToasts } from '../hooks/useToasts';
 import { DIRECTION_LABEL, plural } from '../lib/format';
+import { TableScroll } from '../components/TableScroll';
 import { compareScenarios, scenarioCsvRows, scenarioOf } from '../lib/scenarioTable';
 import { SCENARIOS_MAX } from '../lib/scenarios';
 
@@ -78,7 +79,7 @@ export default function ScenarioPanel({ address, current }: Props) {
       </p>
 
       {kept.length === 0 ? null : (
-        <div className="table-scroll">
+        <TableScroll label="Kept what-if scenarios">
           <table className="data-table scenario-table">
             <caption className="sr-only">Kept what-if scenarios of this address, with the verdict of the deciding method</caption>
             <thead>
@@ -131,7 +132,7 @@ export default function ScenarioPanel({ address, current }: Props) {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       )}
 
       {pair.length === 2 ? (

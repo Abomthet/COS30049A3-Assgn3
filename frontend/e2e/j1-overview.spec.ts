@@ -11,7 +11,7 @@ test('J1: pick an address from the list and read its overview', async ({ page, g
   // The address list names the snapshot's source and date.
   await expect(page.getByText(/snapshot of \d+ \w+ \d{4}/).first()).toBeVisible();
 
-  await list.getByRole('link', { name: `Open activity for ${examples.mainAddress}` }).click();
+  await list.getByRole('link', { name: `full address ${examples.mainAddress}` }).click();
   await expect(page).toHaveURL(new RegExp(`#/address/${examples.mainAddress}`));
   await expect(page.getByRole('heading', { level: 1, name: examples.mainAddress })).toBeVisible();
 

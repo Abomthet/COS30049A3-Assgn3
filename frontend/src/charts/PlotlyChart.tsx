@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { Data, Layout, PlotMouseEvent, PlotRelayoutEvent, PlotSelectionEvent } from 'plotly.js';
 import { StatePanel } from '../components/StatePanel';
+import { TableScroll } from '../components/TableScroll';
 import { useSettings } from '../hooks/useSettings';
 import { useToasts } from '../hooks/useToasts';
 import { plural } from '../lib/format';
@@ -420,9 +421,8 @@ export function PlotlyChart({
 }
 
 function DataTable({ table, title, links }: { table: ChartTable; title: string; links: boolean }) {
-  return (
-    <div className="table-scroll">
-      <table className="data-table">
+  const tableEl = (
+    <table className="data-table">
         <caption className="sr-only">{title}</caption>
         <thead>
           <tr>
@@ -457,6 +457,7 @@ function DataTable({ table, title, links }: { table: ChartTable; title: string; 
           ))}
         </tbody>
       </table>
-    </div>
   );
+  // A hidden (screen-reader-only) table is not a scroll box: a focus stop nobody can see would be worse than none.
+  return links ? <TableScroll label={`${title}, table`}>{tableEl}</TableScroll> : tableEl;
 }

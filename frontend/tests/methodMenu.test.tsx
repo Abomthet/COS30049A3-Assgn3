@@ -68,14 +68,14 @@ describe('the menu', () => {
   test('the next address opens with the method last chosen', async () => {
     localStorage.setItem('explorer.preferences.v1', JSON.stringify({ theme: null, method: 'fusion' }));
     start('#/');
-    const link = await screen.findByRole('link', { name: `Open activity for ${ex.mainAddress}` });
+    const link = await screen.findByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) });
     expect(link.getAttribute('href')).toBe(`#/address/${ex.mainAddress}?method=fusion`);
   });
 
   test('a preference that is not a method is ignored', async () => {
     localStorage.setItem('explorer.preferences.v1', JSON.stringify({ theme: null, method: 'bogus' }));
     start('#/');
-    const link = await screen.findByRole('link', { name: `Open activity for ${ex.mainAddress}` });
+    const link = await screen.findByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) });
     expect(link.getAttribute('href')).toBe(`#/address/${ex.mainAddress}`);
   });
 });

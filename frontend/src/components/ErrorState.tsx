@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import type { ApiError } from '../api/types';
 import { useOnline } from '../hooks/useOnline';
 import { paths } from '../lib/router';
-import { plural, shortAddress } from '../lib/format';
+import { AddressLink } from './AddressLink';
+import { plural } from '../lib/format';
 import { CopyButton } from './CopyButton';
 import { StatePanel } from './StatePanel';
 
@@ -92,9 +93,7 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
               <ul className="example-list">
                 {body.examples.map((a) => (
                   <li key={a}>
-                    <a className="mono" href={paths.timeline(a)}>
-                      {shortAddress(a, 12, 8)}
-                    </a>
+                    <AddressLink className="mono" address={a} href={paths.timeline(a)} />
                   </li>
                 ))}
               </ul>

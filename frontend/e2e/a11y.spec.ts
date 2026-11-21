@@ -24,13 +24,8 @@ type Theme = (typeof THEMES)[number];
 
 /** Scans whose result is a known finding: key is "<scan name>|<theme>" (a trailing "|<width>" narrows it to one width). */
 const KNOWN: Record<string, string> = {};
-// A-01: label-content-name-mismatch (serious) on the address links: the visible text is the shortened address, the
-// accessible name is "Open activity for <full address>", which does not contain it. V1 is also what the open watch dialog sits over.
-// A-02: scrollable-region-focusable (serious): a `.table-scroll` wrapper that can scroll sideways has no keyboard stop.
-// Both were found on 21 Nov 2026; see docs/usability/a11y-automated-findings.md.
-for (const name of ['V1 list', 'V1 typo error', 'V1 unsupported address', 'watch dialog open', 'V6 watchlist']) for (const theme of THEMES) KNOWN[`${name}|${theme}`] = 'A-01';
-for (const name of ['V2 overview', 'V2 transactions tab', 'V3 flagged transaction', 'V4 what-if empty', 'V4 what-if flagged, one kept scenario', 'V5 models', 'short-history notice', 'export menu open'])
-  for (const theme of THEMES) KNOWN[`${name}|${theme}`] = 'A-02';
+// A-01 (address links) and A-02 (table scroll boxes) were found on 21 Nov 2026 and fixed the same day, so their entries are gone: those scans must pass outright.
+// See docs/usability/a11y-automated-findings.md. A scan that fails for a new known reason goes here as KNOWN['<scan name>|<theme>'] = '<finding ID>'.
 
 interface Hit {
   id: string;
@@ -271,7 +266,7 @@ test.describe('keyboard', () => {
         if (!el) return '';
         if (el.id === 'address-input') return 'field';
         if (el.tagName === 'BUTTON' && /Look up/.test(el.textContent ?? '')) return 'lookup';
-        if (el.tagName === 'A' && el.closest('table') && /Open activity for/.test(el.getAttribute('aria-label') ?? el.textContent ?? '')) return 'rowlink';
+        if (el.tagName === 'A' && el.closest('table') && /, full address /.test(el.textContent ?? '')) return 'rowlink';
         return '';
       });
       if (mark && !seen.includes(mark)) seen.push(mark);

@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import type { AddressSummary, ApiError } from '../api/types';
+import { AddressLink } from '../components/AddressLink';
 import { ErrorState } from '../components/ErrorState';
 import { Icon } from '../components/Icon';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
@@ -207,9 +208,7 @@ export function SelectScreen({ query }: { query: string | null }) {
           <ul className="example-list">
             {recent.map((a) => (
               <li key={a}>
-                <a className="mono" href={paths.timeline(a, method ?? undefined)} aria-label={`Open activity for ${a}`}>
-                  {shortAddress(a, 12, 8)}
-                </a>
+                <AddressLink className="mono" address={a} href={paths.timeline(a, method ?? undefined)} />
               </li>
             ))}
           </ul>
@@ -269,9 +268,7 @@ function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
                   <span className="address-cell">
                     <WatchStar address={a.address} />
                     <span>
-                      <a className="address-link mono" href={paths.timeline(a.address, method ?? undefined)} aria-label={`Open activity for ${a.address}`}>
-                        {shortAddress(a.address, 12, 8)}
-                      </a>
+                      <AddressLink className="address-link mono" address={a.address} href={paths.timeline(a.address, method ?? undefined)} />
                       <span className="cell-sub">{KIND_LABEL[a.kind]}{a.source === 'live' ? ' · live data' : ''}</span>
                     </span>
                   </span>

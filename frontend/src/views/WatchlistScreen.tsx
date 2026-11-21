@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { WatchlistEntry } from '../api/types';
+import { AddressLink } from '../components/AddressLink';
 import { ErrorState } from '../components/ErrorState';
 import { Icon } from '../components/Icon';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
@@ -7,7 +8,7 @@ import { Loading, StatePanel } from '../components/StatePanel';
 import WatchDialog from '../components/WatchDialog';
 import { KIND_LABEL } from '../lib/address';
 import { dayKey, formatDay } from '../lib/dates';
-import { formatCount, plural, shortAddress } from '../lib/format';
+import { formatCount, plural } from '../lib/format';
 import { paths } from '../lib/router';
 import { useRemoveWithUndo, useWatchlist } from '../hooks/useWatchlist';
 import { useSettings } from '../hooks/useSettings';
@@ -22,9 +23,7 @@ function Entry({ entry, onEdit, onRemove }: { entry: WatchlistEntry; onEdit: () 
     <li className="card watch-entry">
       <div className="watch-head">
         <h2 className="watch-label">{entry.label || <span className="muted">No label</span>}</h2>
-        <a className="mono watch-address" href={paths.timeline(entry.address)} aria-label={`Open the activity of ${entry.address}`}>
-          {shortAddress(entry.address, 14, 10)}
-        </a>
+        <AddressLink className="mono watch-address" address={entry.address} href={paths.timeline(entry.address)} head={14} tail={10} />
         <span className="cell-sub">{KIND_LABEL[summary.kind]}</span>
       </div>
       {entry.note ? <p className="watch-note">{entry.note}</p> : null}

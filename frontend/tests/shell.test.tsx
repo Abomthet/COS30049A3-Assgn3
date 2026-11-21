@@ -112,10 +112,10 @@ describe('service status', () => {
   test('a service that drops out while the user reads is announced', async () => {
     const user = start();
     await screen.findByText('Service ready');
-    await screen.findByRole('link', { name: `Open activity for ${ex.mainAddress}` });
+    await screen.findByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) });
     mockControls.offline = true;
     // Opening an address fails; that failure triggers an immediate check, not a wait for the next poll.
-    await user.click(screen.getByRole('link', { name: `Open activity for ${ex.mainAddress}` }));
+    await user.click(screen.getByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) }));
     expect(await screen.findByText('Service not responding')).toBeInTheDocument();
     expect(await within(screen.getByRole('region', { name: 'Notifications' })).findByText('The explorer service stopped responding.')).toBeInTheDocument();
   });
