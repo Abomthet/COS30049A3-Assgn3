@@ -155,6 +155,7 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
   };
 }
 
+/** Chart G1: one bar per active day on a continuous date axis, with unusual days marked; shown on the address overview and in the replay. */
 export function G1DailyActivity({ timeline, onOpenDay }: Props) {
   const { address, days, range, snapshot } = timeline;
   const methodName = useMethodLabels()[snapshot.method.id].name;

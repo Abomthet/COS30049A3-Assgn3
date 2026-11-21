@@ -55,6 +55,7 @@ export function checkAmount(input: unknown): Check<Amount> {
   return { ok: true, value: { btc: `${whole || '0'}.${kept}`.replace(/\.?0+$/, ''), sats: Number(sats) } };
 }
 
+/** Accepts only 'in' or 'out' as a what-if direction, and says so otherwise. */
 export function checkDirection(input: unknown): Check<WhatIfDirection> {
   return input === 'in' || input === 'out' ? { ok: true, value: input } : { ok: false, message: 'Must be "in" or "out".' };
 }

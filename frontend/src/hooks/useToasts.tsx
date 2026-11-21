@@ -30,6 +30,7 @@ interface ToastApi {
 
 const ToastContext = createContext<ToastApi>({ notify: () => {}, dismiss: () => {} });
 
+/** Provides the toast controls to the app and draws the toast region beneath its children. */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const nextId = useRef(1);
@@ -52,6 +53,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** The toast controls (notify and dismiss) for the component that calls it. */
 export function useToasts(): ToastApi {
   return useContext(ToastContext);
 }

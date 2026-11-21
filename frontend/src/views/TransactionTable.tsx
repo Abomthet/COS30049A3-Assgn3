@@ -18,6 +18,7 @@ interface Props {
   pageHref: (page: number) => string;
 }
 
+/** The transaction table of the transactions tab: one page of rows, each linking to its transaction; becomes cards on a phone. */
 export function TransactionTable({ page, method, pageHref }: Props) {
   const pages = Math.max(1, Math.ceil(page.total / page.pageSize));
   const first = (page.page - 1) * page.pageSize + 1;

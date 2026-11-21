@@ -54,6 +54,7 @@ function MethodCard({ method }: { method: MethodDescription }) {
   );
 }
 
+/** V5, the models and limits screen: a card for each of the nine methods, and what a flag does and does not mean. */
 export function ModelsScreen() {
   useDocumentTitle('Models and limits');
   const methods = useMethods();

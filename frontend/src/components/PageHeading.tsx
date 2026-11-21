@@ -10,6 +10,7 @@ if (typeof window !== 'undefined') {
   });
 }
 
+/** The page's main heading, which takes focus after a move to another screen so screen-reader users start at the new content. */
 export function PageHeading({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -22,6 +23,7 @@ export function PageHeading({ children, className }: { children: ReactNode; clas
   );
 }
 
+/** Sets the browser tab's title to the page's title and the app name, or to the app name alone when the title is empty. */
 export function useDocumentTitle(title: string): void {
   useEffect(() => {
     document.title = title ? `${title} · Bitcoin Address Activity Explorer` : 'Bitcoin Address Activity Explorer';

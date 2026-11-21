@@ -139,6 +139,7 @@ def create_app(settings: Settings | None = None, loader: Callable[[], Predictor]
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        """Start loading the models in the background, then close the live client and the watchlist database on shutdown."""
         database_path = Path(database or os.environ.get("EXPLORER_DB") or DEFAULT_DATABASE)
         repo = WatchlistRepo(database_path, settings.web.watchlist.max_entries)
         task = asyncio.create_task(load_models(runtime, loader, warm, repo, database_path.parent / "live", esplora))

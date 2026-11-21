@@ -46,6 +46,7 @@ const PATHS: Record<IconName, string> = {
   'chevron-right': 'M8.6 6.4 10 5l7 7-7 7-1.4-1.4 5.6-5.6Z',
 };
 
+/** An inline SVG icon by name; it is hidden from screen readers unless it has a title. */
 export function Icon({ name, className, title }: { name: IconName; className?: string; title?: string }) {
   return (
     <svg

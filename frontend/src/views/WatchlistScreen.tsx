@@ -57,6 +57,7 @@ function Entry({ entry, onEdit, onRemove }: { entry: WatchlistEntry; onEdit: () 
   );
 }
 
+/** V6, the watchlist screen: the addresses the user has kept, with their labels, notes and counts. */
 export default function WatchlistScreen() {
   useDocumentTitle('Watchlist');
   const { state, reload } = useWatchlist();

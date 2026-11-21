@@ -64,6 +64,7 @@ function CountedField({ id, label, help, value, max, serviceError, multiline, on
 const fieldMessage = (error: ApiError | null, name: string): string | undefined =>
   error?.body.status === 'invalid' ? (error.body.fields as FieldError[] | undefined)?.find((f) => f.name === name)?.message : undefined;
 
+/** The dialog that adds an address to the watchlist or edits its label and note; opened from the star and the watchlist screen. */
 export default function WatchDialog({ address, entry, onClose }: { address: string; entry: WatchlistEntry | undefined; onClose: () => void }) {
   const { settings } = useSettings();
   const { notify } = useToasts();

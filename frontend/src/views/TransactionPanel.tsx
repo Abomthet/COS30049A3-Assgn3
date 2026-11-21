@@ -23,6 +23,7 @@ import { useRequest } from '../hooks/useRequest';
 // every scored one, the feature chart and what each of the nine methods says. A transaction too early
 // in its address's history to score (422) keeps its facts and says why.
 
+/** The transaction detail panel: the explanation of an unusual transaction, its features and the nine methods' verdicts; used on the day screen. */
 export function TransactionPanel({ address, date, txid, method }: { address: string; date: string; txid: string | null; method: MethodId }) {
   const detail = useRequest(txid ? `tx:${address}:${txid}:${method}` : null, (signal) => api.transaction(txid!, address, { signal, method }));
   const headingRef = useRef<HTMLHeadingElement>(null);

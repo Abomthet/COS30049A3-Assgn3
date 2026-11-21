@@ -21,6 +21,7 @@ interface Props {
   current: { amountBtc: string; result: WhatIfResult } | null;
 }
 
+/** The scenario table of the what-if lab: keeps what-if answers as rows, compares two, removes them and downloads them as CSV. */
 export default function ScenarioPanel({ address, current }: Props) {
   const [prefs, update] = usePreferences();
   const { settings } = useSettings();

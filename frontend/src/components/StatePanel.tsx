@@ -26,6 +26,7 @@ interface Props {
   testId?: string;
 }
 
+/** The one panel for every feedback state (empty, info, warning or error), with an icon, a title and next actions; used across the screens. */
 export function StatePanel({ tone, title, children, actions, icon, live, headingLevel = 2, testId }: Props) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
@@ -40,6 +41,7 @@ export function StatePanel({ tone, title, children, actions, icon, live, heading
   );
 }
 
+/** A loading indicator with a label, which adds a note when the wait is long; used wherever a request is pending. */
 export function Loading({ label, block = false }: { label: string; block?: boolean }) {
   // Loading is mounted for exactly as long as the request is pending, so its own clock is the request's.
   const slow = useSlow(true);

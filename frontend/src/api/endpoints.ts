@@ -12,6 +12,7 @@ export function attachmentName(header: unknown): string | null {
   return typeof header === 'string' ? (/filename="([^"]+)"/.exec(header)?.[1] ?? null) : null;
 }
 
+/** Builds the typed API, one function per endpoint, over an Axios client; the app's shared client is made in client.ts. */
 export function createHttpApi(client: AxiosInstance): ExplorerApi {
   const enc = encodeURIComponent;
   // `params` may hold arrays (E6's repeatable `status` and `direction`); the client serialises them

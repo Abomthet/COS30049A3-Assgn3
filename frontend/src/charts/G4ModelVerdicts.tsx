@@ -140,6 +140,7 @@ function buildFigure(rows: Row[], deciding: MethodId, { palette, compact }: Figu
   };
 }
 
+/** Chart G4: where one transaction's score ranks among the address's own scored transactions, for each of the nine methods; loaded through LazyG4. */
 export function G4ModelVerdicts({ ranks, scores, flags, deciding, subject, address, txid }: Props) {
   const labels = useMethodLabels();
   const { settings } = useSettings();

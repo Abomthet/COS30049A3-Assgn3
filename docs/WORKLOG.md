@@ -1108,3 +1108,14 @@ One flake met in the full `npm run e2e`: WebKit, V4 "flagged, one kept scenario"
 ## 2026-11-21 — README completed, LICENSES.md (Sonnet 5.5)
 
 `README.md` now follows the plan's ten items (what this is with a screenshot and folder map; what you need; back end; front end with `npm ci`; check it works; a two-minute tour; the API table E1 to E20 from `backend/openapi.json`; model integration and configuration including every `EXPLORER_*` variable; tests including `npm run types` and the Playwright runs; troubleshooting; libraries and AI use). The Assistant and live-lookup sections were kept. `LICENSES.md` lists every direct dependency with the licence read from installed metadata. Checked on a server on port 8090: `/api/health`, the what-if call, `vendor_a2.py --check`, `npm ci`, `npm run types` (no change), `npm test` (657), `npm run typecheck`. Not run: the browser tests, anything on Windows. Docstring pass is 4.2.
+
+
+---
+
+## 2026-11-21 — Docstring pass (Haiku 5.5)
+
+**Built.** One-line docstrings on the seven back-end helpers the review listed: `main.py` `lifespan`, `core/openapi.py` `openapi`, `Job.finished` in `services/live_service.py`, and the nested ASGI functions `receive` (`core/body_limit.py`), `send_with_id`, `send_with_etag` and `send_complete` (`core/middleware.py`). Front end: a one-line JSDoc above each of the 78 exported functions and components in `frontend/src/` that had no comment (not `api/mock/` or `api/generated.ts`), in 58 files. The brief estimated about 45; the finder's full list was documented. Every change is a comment: no line of code was added, removed or changed.
+
+**Checks.** Back end `pytest -m "not slow"`: 569 passed. Front end `npm test`: 657 passed; `npm run typecheck` clean. Both diff checks (non-comment added lines, removed lines) print nothing.
+
+**Not covered.** The TODO row for 4.2 also names `MODIFICATIONS.md`; this pass did not check it.

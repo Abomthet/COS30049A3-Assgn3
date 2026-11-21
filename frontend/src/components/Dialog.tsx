@@ -16,6 +16,7 @@ interface Props {
   children: ReactNode;
 }
 
+/** A modal dialog with focus held inside it, closed by Escape or a click on the backdrop; used by the watchlist dialog and the live lookup. */
 export function Dialog({ title, describedBy, onClose, children }: Props) {
   const panel = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);

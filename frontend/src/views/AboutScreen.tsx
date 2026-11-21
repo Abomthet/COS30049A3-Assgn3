@@ -21,6 +21,7 @@ const KEYS: Array<{ keys: string; does: string }> = [
   { keys: 'Enter or Space on a chart', does: 'Open the day or the transaction the arrow keys have reached.' },
 ];
 
+/** V7, the about and help screen: what the explorer is for, how to read a flag and the charts, the data source and the keyboard. */
 export function AboutScreen() {
   useDocumentTitle('About and help');
   const { settings } = useSettings();

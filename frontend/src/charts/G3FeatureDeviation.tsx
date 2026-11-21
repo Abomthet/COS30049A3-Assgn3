@@ -111,6 +111,7 @@ function buildFigure(features: FeatureDetail[], units: Units, thresholds: AppSet
   };
 }
 
+/** Chart G3: how far each feature of one transaction sits from the address's usual value, as a bar of robust z; shown in the transaction panel and the what-if lab. */
 export function G3FeatureDeviation({ features, address }: Props) {
   const { settings } = useSettings();
   const { thresholds } = settings;

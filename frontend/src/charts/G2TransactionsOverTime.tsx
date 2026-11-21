@@ -185,6 +185,7 @@ function buildFigure(model: Model, selection: Props['selection'], { palette, com
   };
 }
 
+/** Chart G2: one point per transaction, its time against its amount, coloured and shaped by status; shown on the transactions tab and in the replay. */
 export function G2TransactionsOverTime({ address, method, rows, frame, loading, revision, onOpenTransaction, onZoomDays, selection, onSelect }: Props) {
   const { settings } = useSettings();
   const methodName = useMethodLabels()[method].name;

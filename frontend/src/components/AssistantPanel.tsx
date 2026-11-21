@@ -43,6 +43,7 @@ interface Props {
   limitation: string;
 }
 
+/** The Explorer Assistant's control for one explanation: it starts with the template, can ask for a written one, and keeps the template if the answer fails a check. */
 export default function AssistantPanel({ request, template, flagged, limitation }: Props) {
   const { settings, origin } = useSettings();
   const capable = settings.capabilities.assistant;

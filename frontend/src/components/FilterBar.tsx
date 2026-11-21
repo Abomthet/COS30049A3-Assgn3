@@ -82,6 +82,7 @@ function DateField({ label, value, min, max, error, onChange }: { label: string;
   );
 }
 
+/** The transaction filter bar: status and direction chips, a date range, the sort menu and Reset filters; used on the transactions tab. */
 export function FilterBar({ filters, errors, period, count, updating, onChange, onReset, actions }: Props) {
   const sortId = useId();
   const invalid = errors.from !== undefined || errors.to !== undefined;

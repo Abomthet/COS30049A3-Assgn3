@@ -25,6 +25,7 @@ export function daysOf(rows: TransactionRow[]): TimelineDay[] {
   return [...days.values()];
 }
 
+/** The tile counts for a set of transactions: how many there are, how many are scored, how many are unusual, and on how many days. */
 export function countsOf(rows: TransactionRow[], days: TimelineDay[]): ReplayCounts {
   return {
     txCount: rows.length,

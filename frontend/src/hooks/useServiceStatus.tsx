@@ -25,6 +25,7 @@ const ServiceStatusContext = createContext<ServiceStatus>({
   recheck: () => {},
 });
 
+/** Checks the service's health on a timer and shares its state (checking, ready, starting or unreachable) with the app. */
 export function ServiceStatusProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ServiceState>('checking');
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -60,6 +61,7 @@ export function ServiceStatusProvider({ children }: { children: ReactNode }) {
   return <ServiceStatusContext.Provider value={value}>{children}</ServiceStatusContext.Provider>;
 }
 
+/** The service's current state, health answer and recheck function, from the nearest ServiceStatusProvider. */
 export function useServiceStatus(): ServiceStatus {
   return useContext(ServiceStatusContext);
 }

@@ -12,6 +12,7 @@ export type RequestState<T> =
 // fetched once never changes, and going back never shows a second loading state.
 const cache = new Map<string, unknown>();
 
+/** Forgets every cached successful answer, so the next request asks the service again. */
 export function clearRequestCache(): void {
   cache.clear();
 }

@@ -21,6 +21,7 @@ import { NO_FILTERS, toQuery } from '../lib/transactionFilters';
 // again). Charts G1 and G2 grow, the tiles count up and a flag appears when its transaction does. It is a replay
 // of recorded history, never "live". With reduced motion it does not run by itself: only Step moves it.
 
+/** The replay player: plays an address's recorded history one transaction at a time, with charts G1 and G2 and the tiles growing; shown inside the replay panel. */
 export default function ReplayStage({ timeline, method }: { timeline: TimelineResponse; method: MethodId }) {
   const { address } = timeline;
   const loaded = useAllTransactions(address, toQuery({ ...NO_FILTERS, method }));

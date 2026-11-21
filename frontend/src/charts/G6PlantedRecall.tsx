@@ -79,6 +79,7 @@ function buildFigure(methods: MethodDescription[], names: string[], { palette, c
   };
 }
 
+/** Chart G6: the share of planted test transactions each method flagged, per pattern with its 95% interval; shown on the models and limits screen. */
 export function G6PlantedRecall({ methods }: { methods: MethodDescription[] }) {
   const names = useMemo(() => methods.map((m) => m.name), [methods]);
   const figure = useCallback((context: FigureContext) => buildFigure(methods, names, context), [methods, names]);

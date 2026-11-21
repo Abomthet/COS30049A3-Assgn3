@@ -31,6 +31,7 @@ const SelectionBar = lazy(() => import('./SelectionBar'));
 // all driven by the filters in the address bar. A change of filter writes the address bar, which
 // sends E6 again and redraws the chart and the table together.
 
+/** The transactions tab of an address: the filter bar, chart G2, the selection bar and the transaction table, all driven by the address bar. */
 export function TransactionsTab({ timeline, search }: { timeline: TimelineResponse; search: string }) {
   const { address, range, totals } = timeline;
   const { settings } = useSettings();

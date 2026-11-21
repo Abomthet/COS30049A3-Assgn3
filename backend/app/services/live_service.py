@@ -75,6 +75,7 @@ class Job:
 
     @property
     def finished(self) -> bool:
+        """Whether the lookup has reached a final status (done, failed or cancelled), so it no longer changes."""
         return self.status in TERMINAL
 
 

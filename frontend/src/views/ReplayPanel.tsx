@@ -8,6 +8,7 @@ import { formatDay } from '../lib/dates';
 // when the user asks for it, so the overview opens as quickly as before and asks for no extra rows.
 const ReplayStage = lazy(() => import('./ReplayStage'));
 
+/** The replay's entry on the address overview: a button that opens the replay player the first time it is pressed. */
 export function ReplayPanel({ timeline, method }: { timeline: TimelineResponse; method: MethodId }) {
   const [started, setStarted] = useState(false);
   return (

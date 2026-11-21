@@ -41,6 +41,7 @@ const TOKENS: Record<keyof ChartPalette, string> = {
   fontFamily: '--font-sans',
 };
 
+/** Reads the chart colours from the page's CSS tokens for the theme in force, as a palette Plotly can use. */
 export function readPalette(): ChartPalette {
   const style = getComputedStyle(document.documentElement);
   const read = (token: string) => style.getPropertyValue(token).trim();

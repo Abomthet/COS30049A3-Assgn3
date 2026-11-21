@@ -17,6 +17,7 @@ interface SettingsState {
 
 const SettingsContext = createContext<SettingsState>({ settings: BUNDLED_SETTINGS, origin: 'bundled' });
 
+/** Loads the service's settings at start and again when it recovers, using the bundled settings until it answers. */
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const { recoveries } = useServiceStatus();
   const [state, setState] = useState<SettingsState>({ settings: BUNDLED_SETTINGS, origin: 'loading' });
@@ -36,6 +37,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   return <SettingsContext.Provider value={state}>{children}</SettingsContext.Provider>;
 }
 
+/** The current settings and where they came from (loading, service or bundled), from the nearest SettingsProvider. */
 export function useSettings(): SettingsState {
   return useContext(SettingsContext);
 }

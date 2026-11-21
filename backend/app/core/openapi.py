@@ -45,6 +45,7 @@ def install_openapi(app: FastAPI) -> None:
     """Serve `build_openapi` from `/openapi.json`, built once."""
 
     def openapi() -> dict[str, Any]:
+        """Return the app's OpenAPI document, building and caching it on first use."""
         if app.openapi_schema is None:
             app.openapi_schema = build_openapi(app)
         return app.openapi_schema

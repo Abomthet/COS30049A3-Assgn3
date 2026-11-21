@@ -139,6 +139,7 @@ export function chooseTraceTypes(data: Data[], minPoints: number, hasWebgl: () =
 
 let webglSupported: boolean | undefined;
 
+/** Whether the browser can make a WebGL canvas, checked once and remembered, so large scatter charts fall back when it cannot. */
 export function webglAvailable(): boolean {
   webglSupported ??= (() => {
     try {

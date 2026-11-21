@@ -11,6 +11,7 @@ const WORDS: Record<ServiceState, string> = {
   unreachable: 'Service not responding',
 };
 
+/** The service status line in the shell: a dot and words for checking, ready, starting or unreachable, with Check again when it is down. */
 export function ServiceStatus() {
   const { state, recheck } = useServiceStatus();
   const { origin } = useSettings();

@@ -51,6 +51,7 @@ function toApiError(error: unknown): unknown {
   return new ApiError(response?.status ?? 0, { status: 'network', message: 'The explorer service did not respond.' });
 }
 
+/** Makes the Axios client with the base address and time limit, turning every failure into an ApiError the views can read. */
 export function createHttpClient({ baseUrl, timeoutMs = WEB.requests.timeoutMs }: HttpClientOptions): AxiosInstance {
   const client = axios.create({
     baseURL: baseUrl,

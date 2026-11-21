@@ -26,6 +26,7 @@ function invalid(message: string, hint = FORMAT_HINT): AddressCheck {
   return { ok: false, message, hint };
 }
 
+/** Checks a typed Bitcoin address in the browser, format and checksum, and says what is wrong before any request is sent. */
 export function validateAddress(input: string): AddressCheck {
   const value = input.trim();
   if (value === '') {
@@ -54,6 +55,7 @@ export function validateAddress(input: string): AddressCheck {
 
 const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
+/** Decodes Base58 text to bytes, or returns null when it contains a character outside the alphabet. */
 export function base58Decode(s: string): Uint8Array | null {
   let n = 0n;
   for (const ch of s) {
@@ -73,6 +75,7 @@ export function base58Decode(s: string): Uint8Array | null {
   return Uint8Array.from(bytes.reverse());
 }
 
+/** Encodes bytes as Base58 text, keeping each leading zero byte as a '1' character. */
 export function base58Encode(bytes: Uint8Array): string {
   let n = 0n;
   for (const b of bytes) n = (n << 8n) | BigInt(b);
@@ -90,6 +93,7 @@ export function base58Encode(bytes: Uint8Array): string {
 
 const doubleSha = (b: Uint8Array) => sha256(sha256(b));
 
+/** Encodes a version byte and payload as a Base58Check string, with the double-SHA-256 checksum appended. */
 export function base58CheckEncode(version: number, payload: Uint8Array): string {
   const body = new Uint8Array(1 + payload.length);
   body[0] = version;
@@ -168,6 +172,7 @@ function convertBits(data: number[], from: number, to: number, pad: boolean): nu
   return out;
 }
 
+/** Encodes a SegWit program as a Bech32 address (Bech32m from version 1 on) with the given prefix, 'bc' by default. */
 export function segwitEncode(version: number, program: Uint8Array, hrp = 'bc'): string {
   const data = [version, ...(convertBits([...program], 8, 5, true) ?? [])];
   const constant = version === 0 ? BECH32_CONST : BECH32M_CONST;

@@ -24,10 +24,12 @@ export const formatShare = (share: number): string => `${Math.round(share * 100)
 /** A measured share with its 95% interval: '66% (58% to 73%)'. */
 export const formatInterval = ({ value, ciLow, ciHigh }: { value: number; ciLow: number; ciHigh: number }): string => `${formatShare(value)} (${formatShare(ciLow)} to ${formatShare(ciHigh)})`;
 
+/** A whole number with thousands separators: formatCount(1204) is '1,204'. */
 export function formatCount(n: number): string {
   return n.toLocaleString('en-US');
 }
 
+/** A count with its noun in the right form: plural(1, 'transaction') is '1 transaction', plural(2, 'transaction') is '2 transactions'. */
 export function plural(n: number, one: string, many = `${one}s`): string {
   return `${formatCount(n)} ${n === 1 ? one : many}`;
 }
@@ -43,6 +45,7 @@ export function formatHours(hours: number): string {
   return `${days < 10 ? Number(days.toFixed(1)) : Math.round(days)} days`;
 }
 
+/** A ratio with a times sign and few decimals: formatRatio(12.34) is '12×', formatRatio(0.5) is '0.5×'. */
 export function formatRatio(r: number): string {
   if (r >= 100) return `${Math.round(r).toLocaleString('en-US')}×`;
   if (r >= 10) return `${r.toFixed(0)}×`;
@@ -72,6 +75,7 @@ export function formatSpanDays(days: number): string {
   return days < 1 ? 'under a day' : plural(Math.floor(days), 'day');
 }
 
+/** A robust z-score with its sign: formatZ(5.9) is '+5.9', formatZ(-12.4) is '−12'. */
 export function formatZ(z: number): string {
   const s = Math.abs(z) >= 10 ? Math.abs(z).toFixed(0) : Math.abs(z).toFixed(1);
   return `${z < 0 ? '−' : '+'}${s}`;
@@ -82,6 +86,7 @@ export function shortAddress(address: string, head = 8, tail = 6): string {
   return address.length <= head + tail + 1 ? address : `${address.slice(0, head)}…${address.slice(-tail)}`;
 }
 
+/** A transaction ID shortened for display: its first 10 and last 6 characters with an ellipsis between. */
 export function shortTxid(txid: string): string {
   return `${txid.slice(0, 10)}…${txid.slice(-6)}`;
 }
@@ -97,4 +102,5 @@ const LIST = new Intl.ListFormat('en-GB', { style: 'long', type: 'conjunction' }
 /** Items in a sentence: 'Size, Burst, Gap and Relative size'. British style, with no comma before the "and", as in the rest of the text. */
 export const formatList = (items: string[]): string => LIST.format(items);
 
+/** Capitalises the first letter of a text: capitalised('unusual') is 'Unusual'. */
 export const capitalised = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);

@@ -79,6 +79,7 @@ function Field({ id, label, hint, error, children, after }: { id: string; label:
   );
 }
 
+/** V4, the what-if lab: amount, direction and time fields, with the models' answer for a transaction like that; the what-if tab of an address. */
 export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; search: string }) {
   const { address, range } = timeline;
   const { settings } = useSettings();

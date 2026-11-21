@@ -11,12 +11,14 @@ export function dayKey(value: string | Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Whether a string is a real calendar day in 'YYYY-MM-DD' form: isDayKey('2026-10-20') is true, isDayKey('2026-02-30') is false. */
 export function isDayKey(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const d = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
 }
 
+/** The day a number of days after a 'YYYY-MM-DD' day (before it, when negative): addDays('2026-10-31', 1) is '2026-11-01'. */
 export function addDays(key: string, days: number): string {
   return dayKey(new Date(Date.parse(`${key}T00:00:00Z`) + days * DAY_MS));
 }
@@ -28,6 +30,7 @@ export function daysBetween(start: string, end: string): string[] {
   return out;
 }
 
+/** How many days a range covers, both ends counted: dayCount('2026-10-01', '2026-10-03') is 3. */
 export function dayCount(start: string, end: string): number {
   return Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / DAY_MS) + 1;
 }
@@ -60,6 +63,7 @@ export function formatDateTime(iso: string): string {
   return `${formatDay(dayKey(iso))}, ${formatTime(iso)}`;
 }
 
+/** A range of days as text, '7 Sep 2026 – 9 Sep 2026', or one day alone when both ends are the same. */
 export function formatDayRange(start: string, end: string): string {
   return start === end ? formatDay(start) : `${formatDay(start)} – ${formatDay(end)}`;
 }

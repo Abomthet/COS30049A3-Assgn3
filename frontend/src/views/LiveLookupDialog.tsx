@@ -27,6 +27,7 @@ function describe(lookup: LiveLookup): string {
   return `Fetched ${formatCount(transactions)} of ${formatCount(cap)} transactions (${plural(pages, 'page')}).`;
 }
 
+/** V8, the live lookup dialog: starts fetching an address's public history and follows its progress until it is done or cancelled. */
 export default function LiveLookupDialog({ address, method, onClose }: { address: string; method?: string; onClose: () => void }) {
   const [view, setView] = useState<View>({ phase: 'starting' });
   const { notify } = useToasts();

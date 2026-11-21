@@ -17,6 +17,7 @@ interface Props {
   caption: string;
 }
 
+/** The table of what each of the nine methods says about one transaction: score, flag line and verdict; used in the transaction panel and the what-if lab. */
 export function VerdictTable({ scores, flags, deciding, unavailableText = 'Not available', caption }: Props) {
   // The names, families and flag lines come from E11; until it answers the flag column shows a dash.
   const thresholds = useThresholds();

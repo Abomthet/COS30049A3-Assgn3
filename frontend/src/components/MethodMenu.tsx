@@ -10,6 +10,7 @@ import { navigate } from '../lib/router';
 // is remembered, so the next address opens with it. The screens read the method from the link and ask
 // the service again, so the menu itself holds nothing.
 
+/** The deciding-method menu on the address screens; a choice rewrites the address bar and is remembered for the next address. */
 export function MethodMenu({ method, updating }: { method: MethodId; updating: boolean }) {
   const id = useId();
   const labels = useMethodLabels();

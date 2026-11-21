@@ -16,6 +16,7 @@ interface Props {
   onClear: () => void;
 }
 
+/** The bar above the transaction table that shows the selection, with a form to select a span of days and a Clear selection button. */
 export default function SelectionBar({ rows, selected, onSelect, onClear }: Props) {
   const ids = { from: useId(), to: useId(), error: useId() };
   const [span, setSpan] = useState({ from: '', to: '' });

@@ -4,6 +4,7 @@
 
 export type ExplanationBlock = { kind: 'text'; text: string } | { kind: 'list'; items: string[] };
 
+/** Splits the service's plain-text explanation into paragraphs and bullet lists, leaving out the limitation line, which is shown separately. */
 export function explanationBlocks(explanation: string, limitation: string): ExplanationBlock[] {
   const blocks: ExplanationBlock[] = [];
   for (const line of explanation.split('\n').map((l) => l.trim())) {

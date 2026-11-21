@@ -37,6 +37,7 @@ export interface Run {
   to: number;
 }
 
+/** The stretches of consecutive flagged points, as index ranges, so each can be shaded on the what-if curve. */
 export function flaggedRuns(flags: boolean[]): Run[] {
   const runs: Run[] = [];
   flags.forEach((flag, i) => {

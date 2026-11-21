@@ -30,6 +30,7 @@ type Lookup =
   | { status: 'unsupported'; address: string; message: string; examples: string[]; canLookupLive: boolean }
   | { status: 'failed'; error: ApiError };
 
+/** Screen 1, choose an address: a lookup box and the list of addresses in the snapshot. */
 export function SelectScreen({ query }: { query: string | null }) {
   useDocumentTitle('');
   const list = useRequest('addresses', (signal) => api.listAddresses({ signal }));

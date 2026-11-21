@@ -38,6 +38,7 @@ export type AddressTab = { name: 'overview' } | { name: 'transactions'; search: 
 
 const TAB_TITLE: Record<AddressTab['name'], string> = { overview: 'Activity', transactions: 'Transactions', 'what-if': 'What-if' };
 
+/** V2, the address overview: its date range, tiles and the overview, transactions and what-if tabs, for one address. */
 export function TimelineScreen({ address, tab, method }: { address: string; tab: AddressTab; method: MethodId }) {
   useDocumentTitle(`${TAB_TITLE[tab.name]} for ${shortAddress(address)}`);
   const timeline = useRequest(`timeline:${address}:${method}`, (signal) => api.timeline(address, { signal, method }));

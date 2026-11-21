@@ -58,6 +58,7 @@ def _replay(body: bytes) -> Receive:
     pending: list[Message] = [{"type": "http.request", "body": body, "more_body": False}]
 
     async def receive() -> Message:
+        """Deliver the saved body once, then report that the client has disconnected."""
         return pending.pop(0) if pending else {"type": "http.disconnect"}
 
     return receive

@@ -25,6 +25,7 @@ export type Route =
   | { screen: 'about' }
   | { screen: 'not-found'; path: string };
 
+/** Reads an address bar hash (such as '#/address/…/transactions') into its screen and parts; anything unknown becomes the not-found screen. */
 export function parseRoute(hash: string): Route {
   const raw = hash.replace(/^#/, '') || '/';
   const [path, search = ''] = raw.split('?');
@@ -74,6 +75,7 @@ export const paths = {
     `#/address/${encodeURIComponent(address)}/day/${date}/tx/${txid}${query(method ? methodSearch(method) : '')}`,
 };
 
+/** Moves to a hash in the address bar; with replace it changes the bar without adding a history entry. */
 export function navigate(hash: string, opts: { replace?: boolean } = {}): void {
   if (opts.replace) {
     history.replaceState(null, '', hash);
@@ -88,6 +90,7 @@ function subscribe(onChange: () => void) {
   return () => window.removeEventListener('hashchange', onChange);
 }
 
+/** The current route, which updates whenever the address bar's hash changes. */
 export function useRoute(): Route {
   const hash = useSyncExternalStore(subscribe, () => window.location.hash, () => '');
   return parseRoute(hash);

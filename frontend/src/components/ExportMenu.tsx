@@ -25,6 +25,7 @@ interface Props {
   rows: number;
 }
 
+/** The menu that downloads the filtered transactions as a CSV or JSON file; used on the transactions tab. */
 export function ExportMenu({ address, query, rows }: Props) {
   const { notify } = useToasts();
   const [open, setOpen] = useState(false);

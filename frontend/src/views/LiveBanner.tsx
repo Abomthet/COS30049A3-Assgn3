@@ -16,6 +16,7 @@ export function formatFetched(iso: string): string {
   return `${formatDay(iso.slice(0, 10))} ${iso.slice(11, 16)} UTC`;
 }
 
+/** The banner on a fetched address that shows when its data was fetched, with a Forget this address action; used on the address overview. */
 export default function LiveBanner({ address, live }: { address: string; live: LiveInfo }) {
   const { notify } = useToasts();
   const [busy, setBusy] = useState(false);

@@ -89,6 +89,7 @@ interface Props {
 
 type Phase = 'loading' | 'ready' | 'failed';
 
+/** The shared wrapper for every chart (G1 to G6): a Plotly figure with its title, a table alternative and a next step when there is nothing to draw. */
 export function PlotlyChart({
   fileName,
   title,

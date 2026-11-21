@@ -11,6 +11,7 @@ export const STATUS_TEXT: Record<ScoreStatus, string> = {
   'not-scored': 'Not scored',
 };
 
+/** The badge for a transaction's status ('Unusual', 'Not unusual' or 'Not scored'), with a flag icon when it is unusual. */
 export function StatusBadge({ status }: { status: ScoreStatus }) {
   return (
     <span className={`badge badge-${status}`}>
@@ -20,6 +21,7 @@ export function StatusBadge({ status }: { status: ScoreStatus }) {
   );
 }
 
+/** The badge for a transaction's direction ('Received', 'Sent' or 'No net change'), with an icon when there is a direction. */
 export function DirectionBadge({ direction }: { direction: Direction }) {
   return (
     <span className={`direction direction-${direction}`}>

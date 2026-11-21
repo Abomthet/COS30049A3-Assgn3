@@ -135,6 +135,7 @@ function buildFigure(line: CurveLine, curve: WhatIfCurve, methodName: string, ma
   };
 }
 
+/** Chart G5: the score a method gives as the amount grows, with its flag line and the flagged stretches shaded; shown in the what-if lab. */
 export function G5WhatIfResponse({ curve, address, methodId, onMethodChange, marker, onPickAmount }: Props) {
   const { settings } = useSettings();
   const menuId = useId();

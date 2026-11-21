@@ -10,6 +10,7 @@ const SECTIONS: Array<{ label: string; href: string; screens: Route['screen'][] 
   { label: 'About', href: paths.about(), screens: ['about'] },
 ];
 
+/** The main navigation links (Addresses, Models, Watchlist, About), with the current section marked; used in the shell. */
 export function MainNav({ route, id, open }: { route: Route; id: string; open: boolean }) {
   return (
     <nav id={id} className={`main-nav${open ? ' is-open' : ''}`} aria-label="Main">

@@ -83,6 +83,7 @@ function update(patch: Partial<Preferences>): void {
   listeners.forEach((notify) => notify());
 }
 
+/** The saved preferences and a function that changes them; every component that reads them updates on a change. */
 export function usePreferences(): [Preferences, (patch: Partial<Preferences>) => void] {
   return [useSyncExternalStore(subscribe, getSnapshot), update];
 }

@@ -16,6 +16,7 @@ import { TransactionPanel } from './TransactionPanel';
 
 // Screen 3 — one day's transactions beside the transaction detail (FR-03).
 
+/** Screen 3: one day's transactions beside the detail of the chosen transaction. */
 export function DayScreen({ address, date, txid, method }: { address: string; date: string; txid: string | null; method: MethodId }) {
   const validDate = isDayKey(date);
   useDocumentTitle(validDate ? `${formatDay(date)} · ${shortAddress(address)}` : shortAddress(address));

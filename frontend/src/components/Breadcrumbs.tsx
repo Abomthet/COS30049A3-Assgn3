@@ -4,6 +4,7 @@ export interface Crumb {
   mono?: boolean;
 }
 
+/** The breadcrumb trail for a screen, with the last crumb marked as the current page; used on the day and timeline screens. */
 export function Breadcrumbs({ items }: { items: Crumb[] }) {
   return (
     <nav aria-label="Breadcrumb" className="breadcrumbs">

@@ -50,6 +50,7 @@ class RequestContextMiddleware:
         started = time.perf_counter()
 
         async def send_with_id(message: Message) -> None:
+            """Record the response status and add the request ID header to the response start, then pass the message on."""
             nonlocal status
             if message["type"] == "http.response.start":
                 status = message["status"]
@@ -84,6 +85,7 @@ class ETagMiddleware:
         body = bytearray()
 
         async def send_with_etag(message: Message) -> None:
+            """Hold back a 200 response marked no-cache until its body is complete, then pass other messages straight on."""
             nonlocal held
             if message["type"] == "http.response.start" and message["status"] == 200 \
                     and Headers(scope=message).get("cache-control") == "no-cache":
@@ -96,6 +98,7 @@ class ETagMiddleware:
                     await send_complete(held, bytes(body))
 
         async def send_complete(start: Message, content: bytes) -> None:
+            """Send the held response with its ETag, or a bare 304 when the client's copy still matches."""
             etag = f'W/"{hashlib.sha256(content).hexdigest()[:20]}"'
             if _matches(offered, etag):
                 await send({"type": "http.response.start", "status": 304,

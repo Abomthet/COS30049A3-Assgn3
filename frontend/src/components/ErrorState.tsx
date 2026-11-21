@@ -53,6 +53,7 @@ function BusyPanel({ seconds, onRetry, headingLevel }: { seconds: number; onRetr
   );
 }
 
+/** The feedback panel for an API error: it says what happened and offers a next action, such as Try again; used across the screens and dialogs. */
 export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiError; onRetry: () => void; headingLevel?: 2 | 3 }) {
   const body = error.body;
   const online = useOnline();
