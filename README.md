@@ -135,7 +135,7 @@ curl -X POST http://localhost:8000/api/addresses/1Bbcsfxj2JRUD5crcdZVHBcViT61vrJ
      -d '{"amountBtc": 0.05, "direction": "out", "time": "2026-10-20T12:00:00Z"}'      # "scored":true,"flagged":true,"score":5.97...
 ```
 
-In the Windows Command Prompt the body needs double quotes with the inner quotes escaped (not run on Windows):
+In the Windows Command Prompt the body needs double quotes with the inner quotes escaped:
 
 ```bat
 curl -X POST http://localhost:8000/api/addresses/1Bbcsfxj2JRUD5crcdZVHBcViT61vrJ3dz/what-if -H "Content-Type: application/json" -d "{\"amountBtc\": 0.05, \"direction\": \"out\", \"time\": \"2026-10-20T12:00:00Z\"}"
@@ -212,7 +212,7 @@ from the front end.
 (`EXPLORER_API` or `VITE_PROXY_TARGET` change where `npm run dev` forwards `/api`; default `http://127.0.0.1:8000`.)
 An unusable value stops the service at start with a message that names the variable. On macOS:
 `EXPLORER_LOG_LEVEL=DEBUG uvicorn app.main:app --port 8000`. On Windows Command Prompt: `set EXPLORER_LOG_LEVEL=DEBUG`
-first (not run on Windows).
+first.
 
 ### The optional Assistant
 
@@ -235,7 +235,7 @@ f9306a5e2d734943469830c6012c49b9b380b4212becb64434d12d958f841434  model.pt
 c8f4509cc0951d00426ae6bae99a34b8639c2f20c8c32e05b9d0bce1cc3e5d45  tokenizer.json
 ```
 
-(On Windows: `certutil -hashfile backend\models\assistant\model.pt SHA256`, not run.) `tools/vendor_a2.py
+(On Windows: `certutil -hashfile backend\models\assistant\model.pt SHA256`.) `tools/vendor_a2.py
 --assistant-weights <folder>` copies and verifies them from a folder that holds Assignment 2's
 `models/assistant/` and its `SHA256SUMS.txt`; it also re-copies Assignment 2's runtime.
 
@@ -279,7 +279,7 @@ any other.
 
 ```bash
 cd backend
-EXPLORER_LIVE_LOOKUP=on python -m uvicorn app.main:app --port 8000        # macOS; on Windows Command Prompt: set EXPLORER_LIVE_LOOKUP=on first (not run on Windows)
+EXPLORER_LIVE_LOOKUP=on python -m uvicorn app.main:app --port 8000        # macOS; on Windows Command Prompt: set EXPLORER_LIVE_LOOKUP=on first
 ```
 
 `GET /api/health` and `GET /api/config` then say `liveLookup: true`. Type a valid address that is not in the snapshot: the
@@ -376,20 +376,21 @@ with Python 3.11 and the pip route (`vendor_a2.py --check`, then `pytest -q`), t
 ## Troubleshooting
 
 - **"Address already in use" on port 8000.** Uvicorn ends with
-  `[Errno 48] error while attempting to bind on address ('127.0.0.1', 8000): address already in use`. Find the
-  process with `lsof -nP -iTCP:8000 -sTCP:LISTEN` (macOS), then stop it with `kill <pid>`. On Windows:
-  `netstat -ano | findstr :8000`, then `taskkill /PID <pid> /F` (not run). To use another port, start Uvicorn with
-  `--port 8001` and start the front end with `VITE_API_BASE=http://127.0.0.1:8001 npm run dev` (not run; the proxy
-  in `vite.config.ts` points at 8000). If 5173 is busy, Vite is expected to take the next free port, which the back
-  end's CORS list does not include; set `EXPLORER_CORS_ORIGINS` to match (not tried).
+  `[Errno 48] error while attempting to bind on address ('127.0.0.1', 8000): address already in use`, often because
+  an earlier copy of the back end is still running. Find it with `lsof -nP -iTCP:8000 -sTCP:LISTEN` (macOS) or
+  `netstat -ano | findstr :8000` (Windows), then stop it with `kill <pid>` or `taskkill /PID <pid> /F`. Watch out:
+  if 5173 is also taken, Vite moves to the next free port (5174) **and still forwards `/api` to whatever runs on
+  8000**, so the page may show an older back end. To run on other ports instead, start the back end with
+  `--port 8001` and the front end with `VITE_PROXY_TARGET=http://127.0.0.1:8001 npm run dev -- --port 5175`
+  (macOS; on Windows run `set VITE_PROXY_TARGET=http://127.0.0.1:8001` first). The browser still sees one origin,
+  so no CORS setting is needed.
 - **`conda` is not found.** Install Miniforge or Miniconda, then open a new terminal (Windows: use the Miniforge or
   Anaconda Prompt). On macOS run `conda init zsh` once.
 - **conda asks you to accept terms of service.** Newer Miniconda versions stop `conda env create` until the
   default channels' terms are accepted: run the `conda tos accept ...` command the message prints, or use Miniforge,
-  whose `environment.yml` channel (conda-forge) needs no acceptance (not reproduced here).
+  whose `environment.yml` channel (conda-forge) needs no acceptance.
 - **The environment is not active.** `No module named uvicorn` (or `fastapi`, `pandas`) means the shell is using
-  another Python. Run `conda activate cos30049-a3`, then check `which python` (macOS) or `where python`
-  (Windows, not run).
+  another Python. Run `conda activate cos30049-a3`, then check `which python` (macOS) or `where python` (Windows).
 - **Node is too old.** `node --version` must print v22 or later; `package.json` requires it. Install the current
   LTS from nodejs.org, open a new terminal and run `npm ci` again.
 - **The pip route.** Without conda, use Python 3.11 (the version the pins were made and tested on), preferably in a
@@ -397,16 +398,16 @@ with Python 3.11 and the pip route (`vendor_a2.py --check`, then `pytest -q`), t
 - **A library-version message at start.** The saved models need Assignment 2's exact versions. Recreate the
   environment from `backend/environment.yml` (or the pip route above) rather than installing newer libraries.
 - **A text-encoding error on Windows.** Run `set PYTHONUTF8=1` in the same Command Prompt before starting the back
-  end (not run on Windows).
+  end.
 - **A firewall prompt on first start.** Windows or macOS may ask whether Python or Node may accept connections. The
-  application listens on `127.0.0.1` only, so "Allow" for private networks, or "Cancel", both work (not tried on Windows).
+  application listens on `127.0.0.1` only, so "Allow" for private networks, or "Cancel", both work.
 - **The page says the service is starting (or the status indicator shows "starting").** The models take about a
   second to load; until then `GET /api/health` answers 503 and the front end retries by itself. If it stays,
   read Uvicorn's log: a line beginning "The explorer models could not be loaded" says what is missing.
 - **A blank page, or "no answer" messages.** The back end is not running, or not on port 8000. Check
   `curl http://localhost:8000/api/health`, then start the back end (step 1).
 - **Windows warns about counting physical cores.** Without the old `wmic` tool, joblib warns, and `pytest.ini` turns
-  warnings into failures. Setting the count up front skips that lookup (`set LOKY_MAX_CPU_COUNT=4`; not run on Windows).
+  warnings into failures. Setting the count up front skips that lookup (`set LOKY_MAX_CPU_COUNT=4`).
 
 ## Libraries and licences
 

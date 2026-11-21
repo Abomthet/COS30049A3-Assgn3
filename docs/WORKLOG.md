@@ -1135,3 +1135,11 @@ items not started; cutting all seven is recommended to the team (3.3). New risk:
 but missed the tone. Eight such lines are rewritten as plain instructions, with a short "Tested on" note; the honest
 "(not run on Windows)" heading stays until the team's Windows install. Two similar remarks in `LICENSES.md` removed.
 
+## 2026-11-21 — Trial-zip install on macOS (lead, Opus 5.5)
+
+Passed; record in `docs/TEST_LOG.md`. A fresh conda environment was not built: the safety check refused a script that
+created and then removed one, so the solve was checked with `--dry-run` and the existing environment used. Lesson:
+the 13 Nov servers on 8000 and 5173 are still running (an earlier check that said they were gone used a bad filter);
+an install check must confirm its own server started ("Explorer ready", small uptime) before trusting any answer.
+README: the port item now gives the tested `VITE_PROXY_TARGET` route; ten more "(not run …)" remarks removed.
+

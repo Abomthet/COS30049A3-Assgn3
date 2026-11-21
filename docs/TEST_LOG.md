@@ -5,6 +5,29 @@ says what was run, on which commit, by whom (or which model), and what was seen.
 
 ---
 
+## Clean install from a trial zip, macOS (T44, wrap-up 4.3): PASSED (21 Nov 2026)
+
+**Zip:** `git archive --format=zip HEAD` of `76e39c1` (tracked files only), 60.4 MB; no `node_modules`, `var/`,
+database or `__pycache__` entries. Unzipped into a new, empty folder and installed by the README's macOS route.
+**Run by:** the lead (Claude Opus 5.5), on the Mac above.
+
+| README step | Result |
+|---|---|
+| 1. `conda env create -f environment.yml` | The environment file solves on conda-forge (`--dry-run`); the existing `cos30049-a3` environment, built from the same file, was used to run (a fresh environment build is part of the Windows install, 4.4) |
+| 1. `python -m pytest -q` | **739 passed, 2 skipped** |
+| 1. `uvicorn app.main:app` | `Explorer ready: 28 addresses, 9 methods (snapshot 2026-10-22, 0.8 s since start)`; `assistant: not_installed` (the 610 MB weights are a separate download, as the README says) |
+| 2. `npm ci`; `npm run dev` | Installs from the lock file; Vite ready in under a second |
+| 3. Check it works | `/api/health` answers the same on the back end and through Vite; the page answers 200; `tools/ms_gate_check.py` **PASS** (28 addresses, 945 bodies scanned) |
+| Also | `npm test` 657 passed; `npm run build` clean; back-end log 0 warnings, 0 errors |
+
+**Found and fixed in the README.** The first attempt ran into old servers still on 8000 and 5173: Uvicorn stopped with
+"address already in use", and Vite silently moved to 5174 while still forwarding `/api` to the old back end on 8000,
+so the checks reached the old servers (32 hours' uptime). The run was repeated on 8001 and 5175 with
+`VITE_PROXY_TARGET`, which passed. The README's port item had suggested `VITE_API_BASE` (untested, and it bypasses
+the proxy, so CORS applies); it now gives the tested `VITE_PROXY_TARGET` route and warns about Vite's silent move.
+
+---
+
 ## **MS3 — feature freeze: PASSED** (Sat 21 Nov 2026, 6 days early)
 
 **Commit:** `2041d49` (`assgn3/main`, the team repo). **Run by:** the lead (Claude Opus 5.5), on the Mac (Apple M5,

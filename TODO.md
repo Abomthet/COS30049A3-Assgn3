@@ -24,7 +24,7 @@ Report text and video narration stay people-only until the tutor's AI-use email 
 | 3.2 | Should items and cut list in `docs/TEST_LOG.md` | Opus | ✅ 21 Nov |
 | 4.1 | README complete, incl. `npm run types` (T43) | Sonnet | ✅ 21 Nov |
 | 4.2 | Docstrings, `MODIFICATIONS.md`, `LICENSES.md` line (T43) | Haiku | ✅ 21 Nov |
-| 4.3 | Clean install from a trial zip, macOS (T44) | Opus | 29 Nov |
+| 4.3 | Clean install from a trial zip, macOS (T44) | Opus | ✅ 21 Nov |
 | 4.5a | Chrome, Safari, Firefox via automated runs (T45) | Sonnet | 29 Nov |
 | 4.6 | Tag `v1.0-rc`, push (MS4) | Opus | Sun 29 Nov |
 | 5.2 | Final report figures and tables (T47) | Sonnet | 30 Nov |
@@ -139,7 +139,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [ ] T41 Fix every severity 3–4 issue; retest (the three automated findings A-01 to A-03 are fixed and retested, 21 Nov; the usability and manual findings may still add more)
 - [x] T42 **MS3 passed Sat 21 Nov** (`2041d49`, `docs/TEST_LOG.md`): all 12 Should items finished, none cut; Could items C-01–C-07 not started, cut recommended (team decides, 3.3)
 - [x] T43 README, `LICENSES.md` and docstrings done (21 Nov, wrap-up 4.1 and 4.2; lead review pending)
-- [ ] T44 Clean install from a trial zip: macOS (Claude); **[you]** Windows PC
+- [~] T44 Clean install from a trial zip: macOS passed 21 Nov (`docs/TEST_LOG.md`); **[you]** Windows PC still to do
 - [ ] T45 Browsers and devices; test log complete; **MS4 (Sun 29 Nov)**: tag `v1.0-rc`
 
 ## 1.4.7 Report, video, submission (28 Nov–5 Dec)
