@@ -1,5 +1,5 @@
 % architecture.tex -- the system as built: browser, dev proxy, FastAPI service, Assignment 2's runtime, files, optional parts
-% COS30049 Assignment 3, Bitcoin Address Activity Explorer. Drawn from the code on main (13 Nov 2026).
+% COS30049 Assignment 3, Bitcoin Address Activity Explorer. Drawn from the code on main (21 Nov 2026).
 % Compiles on its own:  pdflatex architecture.tex   (one cropped page; needs only tikz and lmodern).
 % It does not use the standalone class, which a small TeX installation may lack; the last lines of
 % this file crop the page to the picture instead. To place it in the report: \includegraphics{architecture.pdf}.
@@ -50,7 +50,7 @@
   % ---- boxes
   \node[fe, minimum width=4.00cm, minimum height=1.90cm] (client) at (2.00,-0.95) {{\small \textbf{API client}}\\ \texttt{endpoints.ts}: typed calls\\ \texttt{http.ts}: one Axios instance\\ every failure is one \texttt{ApiError}};
   \node[fe, minimum width=4.00cm, minimum height=1.90cm] (hooks) at (6.20,-0.95) {{\small \textbf{Hooks}}\\ \texttt{useRequest}: cancels, caches\\ \texttt{useServiceStatus}: polls E1\\ \texttt{useSettings}: reads E2};
-  \node[fe, minimum width=4.60cm, minimum height=1.90cm] (views) at (10.70,-0.95) {{\small \textbf{Views V1--V7} (hash router)}\\ V1 select $\cdot$ V2 overview $\cdot$ V3 day\\ V4 what-if $\cdot$ V5 models\\ V6 watchlist $\cdot$ V7 about};
+  \node[fe, minimum width=4.60cm, minimum height=1.90cm] (views) at (10.70,-0.95) {{\small \textbf{Views V1--V8} (hash router)}\\ V1 select $\cdot$ V2 overview $\cdot$ V3 day\\ V4 what-if $\cdot$ V5 models\\ V6 watchlist $\cdot$ V7 about $\cdot$ V8 live};
   \node[fe, minimum width=3.80cm, minimum height=1.90cm] (charts) at (15.10,-0.95) {{\small \textbf{Charts G1--G6}}\\ wrapper: \texttt{PlotlyChart.tsx}\\ Plotly fetched on demand\\ (\texttt{plotlyLoader.ts})};
   \node[plain, minimum width=4.30cm, minimum height=1.30cm] (proxy) at (2.40,-3.55) {{\small \textbf{Vite dev server} :5173}\\ proxies \texttt{/api} to 127.0.0.1:8000:\\ one origin (D-A3-11)};
   \node[st, minimum width=9.40cm, minimum height=1.30cm] (settings) at (12.30,-3.55) {{\small \textbf{\texttt{backend/config/settings.json}}: the one settings file}\\ A2's thresholds, the limitation line, the wording rule, the \texttt{web} block\\ (what-if limits, \texttt{debounceMs}, page sizes, time limits, body limit)};
@@ -60,7 +60,7 @@
   \node[be, minimum width=3.80cm, minimum height=1.05cm] (mw4) at (2.30,-10.22) {\textbf{4 $\cdot$ GZip}\\ bodies of 1000 B or more};
   \node[be, minimum width=3.80cm, minimum height=1.05cm] (mw5) at (2.30,-11.62) {\textbf{5 $\cdot$ ETag}\\ snapshot GETs: tag, 304};
   \node[er, minimum width=12.20cm, minimum height=1.20cm] (errors) at (10.90,-6.10) {\textbf{\texttt{core/errors.py}}: the one place that decides a status code and builds the error body\\ \{status, message, hint, fields, requestId\}; never a stack trace or an echo of the input\\ validation: 400 $\cdot$ \texttt{Unsupported}: 404 $\cdot$ \texttt{InsufficientHistory}: 422 $\cdot$ 413 $\cdot$ 429 $\cdot$ 503 $\cdot$ else 500};
-  \node[be, minimum width=2.70cm, minimum height=5.97cm] (routers) at (6.15,-10.23) {{\small \textbf{Routers}}\\ \texttt{api/*.py}\\ prefix \texttt{/api};\\ one service\\ call each\\ \\ system  E1--E2\\ addresses  E3--E6\\ transactions  E7\\ what-if  E8--E9\\ exports  E10\\ methods  E11\\ watchlist  E13--E15\\ explanations  E12};
+  \node[be, minimum width=2.70cm, minimum height=5.97cm] (routers) at (6.15,-10.23) {{\small \textbf{Routers}}\\ \texttt{api/*.py}\\ prefix \texttt{/api};\\ one service\\ call each\\ \\ system  E1--E2\\ addresses  E3--E6\\ transactions  E7\\ what-if  E8--E9\\ exports  E10\\ methods  E11\\ watchlist  E13--E15\\ explanations  E12\\ live  E16--E20};
   \node[be, minimum width=4.25cm, minimum height=1.20cm] (s_explorer) at (10.38,-8.30) {\textbf{ExplorerService} E3--E7\\ one cache entry per (method,\\ address); warmed at start};
   \node[be, minimum width=4.30cm, minimum height=1.20cm] (s_whatif) at (14.85,-8.30) {\textbf{WhatIfService} E8, E9\\ E8: \texttt{score\_what\_if} as it is\\ E9: one \texttt{build\_features} call};
   \node[be, minimum width=4.25cm, minimum height=1.20cm] (s_export) at (10.38,-9.70) {\textbf{ExportService} E10\\ the rows E6 lists, as CSV or\\ JSON, from the cached view};
@@ -73,7 +73,7 @@
   \node[ml, minimum width=3.25cm, minimum height=1.20cm] (a_lm) at (5.03,-15.33) {\textbf{\texttt{lm/}}\\ the Assistant writer's\\ modules (PyTorch)};
   \node[ml, minimum width=3.25cm, minimum height=1.20cm] (a_models) at (1.62,-16.65) {\textbf{\texttt{models/}}\\ nine saved methods\\ (\texttt{.joblib}, \texttt{.json})};
   \node[ml, minimum width=3.25cm, minimum height=1.20cm] (a_data) at (5.03,-16.65) {\textbf{\texttt{data/}}, \textbf{\texttt{reports/}}\\ the snapshot's tables,\\ A2's test results};
-  \node[plain, dashed, minimum width=2.80cm, minimum height=1.50cm] (esplora) at (8.50,-14.95) {\textbf{Esplora API}\\ live lookup\\ \textbf{S-09, in progress}\\ {\scriptsize (a branch, not \texttt{main})}};
+  \node[plain, dashed, minimum width=2.80cm, minimum height=1.50cm] (esplora) at (8.50,-14.95) {\textbf{Esplora API}\\ live lookup\\ \textbf{S-09, optional}\\ {\scriptsize (off by default)}};
   \node[st, minimum width=2.65cm, minimum height=1.10cm] (db) at (11.43,-14.75) {\textbf{\texttt{var/explorer.db}}\\ SQLite: watchlist};
   \node[st, minimum width=3.50cm, minimum height=1.10cm] (answers) at (14.70,-14.75) {\textbf{\texttt{assistant\_answers.json}}\\ 677 prepared answers};
   \node[plain, dashed, minimum width=6.00cm, minimum height=1.05cm] (weights) at (14.00,-16.48) {\textbf{Optional}: Assistant weights (610 MB),\\ PyTorch and tokenizers; loaded on first use};
@@ -112,7 +112,7 @@
   \draw[err] (15.60,-7.25) -- (15.60,-6.70);
   % services -> A2 runtime
   \draw[arr] (8.50,-13.22) -- (8.50,-13.82) -- (6.62,-13.82) -- (6.62,-14.53);
-  % live lookup -> services (S-09, in progress; not on main)
+  % live lookup -> services (S-09, optional; off by default)
   \draw[opt] (9.30,-14.20) -- (9.30,-13.22);
   % WatchlistRepo -> SQLite file
   \draw[arr] (12.00,-13.10) -- (12.00,-14.20);
@@ -137,10 +137,10 @@
   \node[txt, anchor=west, text=warn, font=\scriptsize] at (15.75,-6.98) {raise};
   \node[txt, anchor=east, font=\scriptsize] at (6.45,-13.82) {A2's code, called as it is};
   \node[txt, anchor=west, font=\scriptsize] at (-0.20,-17.72) {Hashes: \texttt{A2\_VENDOR.json} holds the SHA-256 of 49 files $\cdot$ \texttt{tools/vendor\_a2.py -{}-{}check} $\cdot$ A2 commit \texttt{aa56a26} (tag v1.0)};
-  \node[txt, anchor=west, font=\scriptsize] at (-0.20,-18.05) {V3 and V4 call E12 through the Assistant panel (S-05); prepared answers need no weights. The live lookup's endpoints are not on \texttt{main} yet.};
-  \node[txt, anchor=west, font=\scriptsize] at (9.45,-13.82) {S-09, in progress};
+  \node[txt, anchor=west, font=\scriptsize] at (-0.20,-18.05) {V3 and V4 call E12 through the Assistant panel (S-05); prepared answers need no weights. The live lookup (E16--E20, the V8 dialog) is off by default (\texttt{EXPLORER\_LIVE\_LOOKUP}).};
+  \node[txt, anchor=west, font=\scriptsize] at (9.45,-13.82) {S-09, optional};
   \node[txt, anchor=west, font=\scriptsize] at (7.90,-16.10) {a call on \texttt{main}};
-  \node[txt, anchor=west, font=\scriptsize] at (7.90,-16.50) {optional / not on \texttt{main}};
+  \node[txt, anchor=west, font=\scriptsize] at (7.90,-16.50) {optional (off by default)};
   \node[txt, anchor=west, font=\scriptsize] at (7.90,-16.90) {an error raised};
 \end{tikzpicture}%
 \end{lrbox}

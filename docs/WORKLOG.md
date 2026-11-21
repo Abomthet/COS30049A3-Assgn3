@@ -1126,7 +1126,7 @@ One flake met in the full `npm run e2e`: WebKit, V4 "flagged, one kept scenario"
 
 A fresh clone of the team repo at `2041d49`, run by one script under `caffeinate`: vendor check, back end 739 + 2
 skipped, Vitest 657, typecheck, `npm run types` (no change), `npm run e2e` 462 passed / 42 skipped / 0 failed,
-`ms_gate_check.py` PASS (28 addresses, 945 bodies scanned), `measure.py --build --charts` 27 of 27 budgets, all 70
+`ms_gate_check.py` PASS (28 addresses, 945 bodies scanned), `measure.py --build --charts` 31 of 31 budgets, all 70
 screenshots re-taken (normal, live, mock). Record: `docs/TEST_LOG.md`. All 12 Should items finished; none cut. Could
 items not started; cutting all seven is recommended to the team (3.3). New risk: first-screen JS 148.0 of 150 kB.
 
@@ -1156,3 +1156,10 @@ Mechanical pass in the `report-material` worktree; no app code changed.
 - **`measurements.md`.** The "Read this first" paragraph now points to `measured/measure.md`. Count to confirm: that file's Budgets table has 31 rows, all PASS, while the MS3 entry above and `TEST_LOG.md` say 27 of 27. The paragraph states that every budget passes and gives no count.
 - **`figures/README.md`.** The live lookup (S-09, T36 `8ff1519`) is built, so the "in progress, not on `main`" statements and the endpoint count are corrected. The architecture drawing still labels the Esplora box "S-09, in progress": `make_figures.py` needs that label changed and the figures rebuilt (not done here).
 - `measured/measure.md` records its commit as `2041d49 (uncommitted changes)`; the MS3 gate was a fresh clone, so the lead should check which tree the measured run used.
+
+**Lead review of 5.2 and a measure.py bug (Opus 5.5).** The cook was right twice. The MS3 record said 27 of 27
+budgets: the lead had counted part of the table; there are 31, all met (corrected). And `measure.md` said "uncommitted
+changes" although the gate's clone was clean: `measure.py` read an empty `git status` as dirty (its helper answers
+"unknown" for no output), so every run carried that label. Fixed in `2339d66` with a test that fails on the old code;
+`measured/` re-run on the clean tree. `make_api_reference.py` now numbers the live operations E16–E20.
+

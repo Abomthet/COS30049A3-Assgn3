@@ -12,8 +12,8 @@ disagrees with it, the plan wins, except for the decisions recorded in the work 
 - **MS3 passed Sat 21 Nov** (`2041d49`, fresh clone; `docs/TEST_LOG.md`). Next: MS4 (Sun 29 Nov): clean install from a
   trial zip (Mac here, Windows by the team), browsers, tag `v1.0-rc`. The order of work is the wrap-up plan in `TODO.md`.
 - **First-screen JS is 148.0 of 150 kB gzip**: any new screen must load lazily; re-run `tools/measure.py --build` after front-end changes.
-- `main` is pushed to the team repo after each verified task (`git log assgn3/main`). Last full check (19 Nov): back end 739 passed + 2 skipped, front
-  end 653, typecheck and build clean, first-screen JS 147.8 kB (budget 150).
+- `main` is pushed to the team repo after each verified task (`git log assgn3/main`). Last full check (MS3 gate, 21 Nov): back end 739
+  passed + 2 skipped, front end 657, browser tests 462 passed, 31 of 31 budgets.
 - **GitHub: work only in the team repo** `Abomthet/COS30049A3-Assgn3` (remote `assgn3`; `main` tracks
   `assgn3/main`). It is **public** (Abomthet is admin). Fetch and merge it before every push; never force-push.
   `origin` (`Defaul119/COS30049A3`, private) is the old copy: no more pushes there. The UI remake was scrapped on

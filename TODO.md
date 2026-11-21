@@ -144,7 +144,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 
 ## 1.4.7 Report, video, submission (28 Nov–5 Dec)
 - [ ] T46 **[you/team]** Report sections (8 pages max) — Claude supplies generated material only
-- [~] T47 Figures, screenshots, API tables from `openapi.json` (done: `docs/report-material/`), measured table from `measure.py` (`@C-tools`); architecture figures done (`docs/report-material/figures/`); report material refreshed 21 Nov (Haiku 5.5, `WORKLOG`): screenshot index, design notes and API reference regenerated, figures README corrected; the figure drawing still says S-09 "in progress" and the measurement budget count (27 in the logs, 31 rows in `measured/measure.md`) needs confirming
+- [~] T47 Figures, screenshots, API tables from `openapi.json` (done: `docs/report-material/`), measured table from `measure.py` (`@C-tools`); architecture figures done (`docs/report-material/figures/`); report material refreshed 21 Nov (Haiku 5.5, `WORKLOG`): screenshot index, design notes and API reference regenerated, figures README corrected; lead: figures rebuilt with live lookup as built (E16–E20, V8), budget count corrected to 31 of 31, `measure.py` dirty-label bug fixed
 - [ ] T48 **[you/team]** Video (7 min): Claude drafts the shot list and checks timing; recording, narration and unlisted upload are yours
 - [ ] T49 Report review against the rubric; page count; Harvard references; AI acknowledgement from the log
 - [ ] T50 Tag `v1.0`; build the zip from the tag (no `node_modules`); checksums; unzip and run clean

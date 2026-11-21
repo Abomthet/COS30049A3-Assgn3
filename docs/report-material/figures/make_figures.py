@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 
 HERE = pathlib.Path(__file__).resolve().parent
 SETTINGS = HERE.parents[2] / "backend" / "config" / "settings.json"
-CODE_DATE = "13 Nov 2026"  # the day the boxes were last checked against the code on main
+CODE_DATE = "21 Nov 2026"  # the day the boxes were last checked against the code on main
 S = 40.0  # px per cm in the SVG
 COL = {"ink": "1F2933", "accent": "1D4ED8", "accentsoft": "E8EEFC", "teal": "0F766E", "tealsoft": "E6F4F2",
        "violet": "6D28D9", "violetsoft": "F1EBFD", "grey": "6B7280", "greysoft": "F3F4F6", "warn": "B45309",
@@ -394,7 +394,7 @@ def architecture() -> Figure:
     f.group("g_fe", -0.2, 17.2, 0.22, -2.12, "accent", "**Browser** · React + TypeScript app, built by Vite (`frontend/src/`)")
     f.box("client", 0.0, 4.0, 0.0, -1.9, "fe", ["!sm **API client**", "`endpoints.ts`: typed calls", "`http.ts`: one Axios instance", "every failure is one `ApiError`"])
     f.box("hooks", 4.2, 8.2, 0.0, -1.9, "fe", ["!sm **Hooks**", "`useRequest`: cancels, caches", "`useServiceStatus`: polls E1", "`useSettings`: reads E2"])
-    f.box("views", 8.4, 13.0, 0.0, -1.9, "fe", ["!sm **Views V1–V7** (hash router)", "V1 select · V2 overview · V3 day", "V4 what-if · V5 models", "V6 watchlist · V7 about"])
+    f.box("views", 8.4, 13.0, 0.0, -1.9, "fe", ["!sm **Views V1–V8** (hash router)", "V1 select · V2 overview · V3 day", "V4 what-if · V5 models", "V6 watchlist · V7 about · V8 live"])
     f.box("charts", 13.2, 17.0, 0.0, -1.9, "fe", ["!sm **Charts G1–G6**", "wrapper: `PlotlyChart.tsx`", "Plotly fetched on demand", "(`plotlyLoader.ts`)"])
     f.arrow([(8.4, -0.95), (8.2, -0.95)], comment="views -> hooks")
     f.arrow([(4.2, -0.95), (4.0, -0.95)], comment="hooks -> client")
@@ -429,7 +429,7 @@ def architecture() -> Figure:
         "validation: 400 · `Unsupported`: 404 · `InsufficientHistory`: 422 · 413 · 429 · 503 · else 500"])
     f.box("routers", 4.8, 7.5, -7.25, -13.22, "be", [
         "!sm **Routers**", "`api/*.py`", "prefix `/api`;", "one service", "call each", "", "system  E1–E2", "addresses  E3–E6", "transactions  E7",
-        "what-if  E8–E9", "exports  E10", "methods  E11", "watchlist  E13–E15", "explanations  E12"])
+        "what-if  E8–E9", "exports  E10", "methods  E11", "watchlist  E13–E15", "explanations  E12", "live  E16–E20"])
     f.group("g_sv", 8.1, 17.12, -7.25, -13.22, "teal", "")
     f.label(8.25, -7.48, "**Services** · `services/*.py`: no HTTP inside, they only raise", "west", size="sc")
     cells = [
@@ -463,10 +463,10 @@ def architecture() -> Figure:
     f.box("a_models", 0.0, 3.25, -16.05, -17.25, "ml", ["**`models/`**", "nine saved methods", "(`.joblib`, `.json`)"])
     f.box("a_data", 3.4, 6.65, -16.05, -17.25, "ml", ["**`data/`**, **`reports/`**", "the snapshot's tables,", "A2's test results"])
     f.label(-0.2, -17.72, "Hashes: `A2_VENDOR.json` holds the SHA-256 of 49 files · `tools/vendor_a2.py --check` · A2 commit `aa56a26` (tag v1.0)", "west", size="sc")
-    f.label(-0.2, -18.05, "V3 and V4 call E12 through the Assistant panel (S-05); prepared answers need no weights. The live lookup's endpoints are not on `main` yet.", "west", size="sc")
-    f.box("esplora", 7.1, 9.9, -14.2, -15.7, "plain", ["**Esplora API**", "live lookup", "**S-09, in progress**", "!sc (a branch, not `main`)"], dashed=True)
-    f.arrow([(9.3, -14.2), (9.3, -13.22)], "opt", "live lookup -> services (S-09, in progress; not on main)")
-    f.label(9.45, -13.82, "S-09, in progress", "west")
+    f.label(-0.2, -18.05, "V3 and V4 call E12 through the Assistant panel (S-05); prepared answers need no weights. The live lookup (E16–E20, the V8 dialog) is off by default (`EXPLORER_LIVE_LOOKUP`).", "west", size="sc")
+    f.box("esplora", 7.1, 9.9, -14.2, -15.7, "plain", ["**Esplora API**", "live lookup", "**S-09, optional**", "!sc (off by default)"], dashed=True)
+    f.arrow([(9.3, -14.2), (9.3, -13.22)], "opt", "live lookup -> services (S-09, optional; off by default)")
+    f.label(9.45, -13.82, "S-09, optional", "west")
     f.box("db", 10.1, 12.75, -14.2, -15.3, "st", ["**`var/explorer.db`**", "SQLite: watchlist"])
     f.arrow([(12.0, -13.1), (12.0, -14.2)], comment="WatchlistRepo -> SQLite file")
     f.box("answers", 12.95, 16.45, -14.2, -15.3, "st", ["**`assistant_answers.json`**", "677 prepared answers"])
@@ -475,7 +475,7 @@ def architecture() -> Figure:
     f.arrow([(16.75, -13.1), (16.75, -15.95)], "opt", "AssistantService -> weights and torch (optional)")
     # ---------------- legend
     f.arrow([(7.1, -16.1), (7.75, -16.1)]); f.label(7.9, -16.1, "a call on `main`", "west")
-    f.arrow([(7.1, -16.5), (7.75, -16.5)], "opt"); f.label(7.9, -16.5, "optional / not on `main`", "west")
+    f.arrow([(7.1, -16.5), (7.75, -16.5)], "opt"); f.label(7.9, -16.5, "optional (off by default)", "west")
     f.arrow([(7.1, -16.9), (7.75, -16.9)], "err"); f.label(7.9, -16.9, "an error raised", "west")
     return f
 

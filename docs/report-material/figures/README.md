@@ -62,7 +62,7 @@ dashed parts (the Assistant's weights and the live lookup, S-09, which is off by
 | `var/explorer.db` | `DEFAULT_DATABASE` in `main.py`; `watchlist_repo.py` |
 | `assistant_answers.json`, 677 answers | `backend/data/assistant_answers.json` (677 entries counted), `core/config.py` (`ASSISTANT_ANSWERS_PATH`), Mod-15 |
 | Assistant weights, PyTorch, tokenizers (dashed) | `assistant_service.py` (`LIBRARIES`, `_load`), `backend/requirements-assistant.txt`, Mod-9 and Mod-16 |
-| Esplora, live lookup (dashed; S-09, finished in T36, `8ff1519`) | `backend/app/api/live.py` (E16–E20), `services/live_service.py`, `live_store.py`, `live_scoring.py`; `EXPLORER_LIVE_LOOKUP`, off by default. The drawing still labels this box "S-09, in progress": the label is out of date and `make_figures.py` needs changing and re-running (not done on 21 Nov) |
+| Esplora, live lookup (dashed; S-09, finished in T36, `8ff1519`) | `backend/app/api/live.py` (E16–E20), `services/live_service.py`, `live_store.py`, `live_scoring.py`; `EXPLORER_LIVE_LOOKUP`, off by default. Labelled "S-09, optional (off by default)" since the rebuild of 21 Nov |
 
 ## 3. `whatif-flow`
 
@@ -131,7 +131,7 @@ Starlette's outermost error layer, outside the five, which is why `error_respons
 | 13 | The figure has no middleware; `main.py`'s own docstring names three (request context, CORS, compression) | Five: BodyLimit and ETag as well |
 | 14 | V3 calls E12 (section 8) | As planned since `ea70d25`: V3 and V4 call E12 through the Assistant panel (S-05); the figures were first drawn before that merge, and the footer was updated |
 | 15 | Vendored: `explorer/`, `lm/`, `models/`, `data/processed/esplora/` | Also `reports/tables/` (two evaluation tables that E11 reads). `data/assistant_answers.json` is Assignment 3's own file (Mod-15), not vendored |
-| 16 | The figure's "Optional" box holds the Esplora API as a drawn, optional part | Drawn dashed and labelled "S-09, in progress", but the live lookup is on `main` (off by default); the label needs updating when the figure is rebuilt |
+| 16 | The figure's "Optional" box holds the Esplora API as a drawn, optional part | Drawn dashed and labelled "S-09, optional (off by default)"; the live lookup is on `main`, off by default (rebuilt 21 Nov) |
 
 Two comments in the code that no longer match the code (not plan differences, found while checking):
 `backend/app/core/middleware.py` says the browser supplies its own `X-Request-ID`, but `frontend/src/api/http.ts` sends

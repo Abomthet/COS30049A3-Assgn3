@@ -1,7 +1,7 @@
 # Measurements so far
 
 **Read this first.** The consistent figures are now in `docs/report-material/measured/measure.md`: one run of
-`tools/measure.py --build --charts` on commit `2041d49` (the MS3 gate, 21 Nov 2026). Every budget in that run is met,
+`tools/measure.py --build --charts` on a clean tree at commit `2339d66` (21 Nov 2026, after the MS3 gate). All 31 budgets are met,
 and first-screen JavaScript is 148.0 kB gzip against a 150 kB budget. The older figures below are kept for history.
 They are copied exactly from `docs/WORKLOG.md` and `docs/TEST_LOG.md`, come from different runs, on different commits
 and under different conditions, so do not mix them in one table without the conditions column.

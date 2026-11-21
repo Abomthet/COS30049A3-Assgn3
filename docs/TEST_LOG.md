@@ -52,7 +52,7 @@ started from the README route (`uvicorn app.main:app`, with `EXPLORER_LIVE_LOOKU
 | S-09 | Live lookup (E16–E20), off by default | **Finished** | `test_live_api.py` (a snapshot address pushed through the live route scores as the snapshot does), `liveLookup.test.tsx`, `liveHttp.test.ts`; a real fetch of 500 of 1,164 transactions during this run; shots `live-01`–`live-03` |
 | S-10 | TS types from OpenAPI; tests and builds on every push | **Finished** | `generatedTypes.test.ts` (staleness), `typeAgreement.check.ts` (typecheck); `npm run types` on the clone changed 0 files; CI green on the team repo |
 | S-11 | Browser tests of the journeys at three widths | **Finished** | `npm run e2e`: **462 passed, 42 skipped (by design), 0 failed** in 5.0 min — J1–J6, the wider-text checks and the accessibility spec, in Chromium, Firefox and WebKit at 390, 820 and 1280 px |
-| S-12 | Measurement script for the report | **Finished** | `tools/measure.py --build --charts`: **27 of 27 budgets PASS** (below); output in `docs/report-material/measured/` |
+| S-12 | Measurement script for the report | **Finished** | `tools/measure.py --build --charts`: **31 of 31 budgets PASS** (below) |
 
 **Cut list: no Should item is cut.** Could items C-01 to C-07 (plan §4) were not started. The lead recommends cutting
 all seven so the remaining time goes to the report, the video and the usability sessions; **the team decides (wrap-up
@@ -65,9 +65,12 @@ all seven so the remaining time goes to the report, the video and the usability 
 - `tools/ms_gate_check.py` through Vite's proxy: all **28** addresses (3 short-history), **7,966** transaction rows,
   **822** transaction details (681 flagged), **945** bodies scanned for the banned words, **20** operations (DELETE,
   GET, POST, PUT): **PASS**.
-- `measure.py` highlights: E5 warm 1.2 ms (budget 20), E8 what-if warm 277.5 ms (700), E9 curve of 41 at the largest
+- `measure.py` (31 of 31 budgets met) highlights: E5 warm 1.2 ms (budget 20), E8 what-if warm 277.5 ms (700), E9 curve of 41 at the largest
   address 371.6 ms (1,500), G1 first chart from opening the page 336 ms (1,500), **first-screen JavaScript 148.0 kB
   gzip (budget 150)**.
+  The gate run's header said "uncommitted changes": a bug in `measure.py` (an empty `git status` read as dirty), fixed
+  in `2339d66` with a test. `docs/report-material/measured/` now holds a re-run on the clean tree at `2339d66` (back-end
+  code unchanged): the same verdicts, first-screen JavaScript 148.0 kB, E8 warm 278.3 ms, E9 largest warm 347.4 ms.
 - `npm run screenshots`: all 70 re-taken (normal run, live run, mock-only states); each run ended "Responsive check
   passed: no page scrolls sideways at any width"; 23 images changed: 13 phone shots (the tighter tab spacing from `303f5fb`),
   the rest from live data, watchlist state, scenario order or timing.
