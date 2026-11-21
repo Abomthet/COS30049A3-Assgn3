@@ -38,7 +38,7 @@ Report text and video narration stay people-only until the tutor's AI-use email 
 |---|---|---|---|
 | 2.2 | Keyboard pass | AI: tab-order and focus tests; person: 10 min by keyboard | — |
 | 3.3 | Could items | AI recommends cutting all; team decides | — |
-| 5.3 | AI acknowledgement | AI drafts from `docs/AI_USE_LOG.md`; person checks, adds tutor email | — |
+| 5.3 | AI acknowledgement | AI drafts from `docs/AI_USE_LOG.md`; person checks, adds tutor email | Draft done 21 Nov: `docs/report-material/ai-acknowledgement-draft.md`; **[you]** check, add the tutor's email and other members' use |
 | 5.1 | Report (8 pages, T46) | AI: figures, tables, outlines only; team writes the text | — |
 | 5.7 | Explain-it-back practice | AI runs the A3 walkthrough; user learns it | — |
 | P4 | Tutor questions, CR votes (T01) | AI drafts; user sends | — |
