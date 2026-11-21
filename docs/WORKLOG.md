@@ -1093,3 +1093,10 @@ at 0.2em they fail on the old CSS (overview, short-history) and pass with the fi
 **Traps met.** The service keeps the watchlist, so tests that add entries use an address of their own per project (`spareAddress`) and delete it afterwards. Chromium's `isMobile` emulation made a skipped zoom test fail the sideways-scroll guard on a blank page (fixed with `isMobile: false` for that group). The Mac slept in the middle of runs under `caffeinate -i` (a 15-minute gap in the server log); `caffeinate -dims` held it awake and a full a11y run takes 1.4 minutes.
 
 **Proof that the checks bite.** A grey (`#cccccc`) colour on the About page's lead paragraph made `axe: V7 about (light)` fail with `color-contrast (serious): .lede`; renaming the skip link's target made `the first Tab shows the skip link, and it moves focus into main` fail. Both reverted.
+
+
+---
+
+## 2026-11-21 — Accessibility findings A-01 to A-03 fixed (Sonnet 5.5)
+
+**A-01** (Label in Name): new `AddressLink` component replaces the `aria-label="Open activity for <full address>"` on the address links (V1 list, Recently opened, unsupported-address examples, V6). The text is the short address; a visually hidden `, full address <address>` follows, so the accessible name starts with the visible text and screen readers still get the whole address. **A-02** (scrollable region): new `TableScroll` (`role="region"`, `tabIndex={0}`, named) around the visible chart tables and the kept-scenarios table; the screen-reader-only table copy is not a scroll box. **A-03** was real, not an artefact: the loading line sat inside `.is-updating` (`opacity: 0.6`), which takes light-theme contrast from 7.7 to about 2.9 to 1; `.is-updating:has(.loading)` is no longer dimmed, and a new scan covers it. The `KNOWN` table in `a11y.spec.ts` is empty. Vitest 653 to 657; first-screen JS 105.28 kB gzip. Details and numbers: `docs/usability/a11y-automated-findings.md`.
