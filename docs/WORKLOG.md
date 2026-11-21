@@ -1231,3 +1231,20 @@ skipped, front end 665, browser tests 462; 70 screenshots; the report outline an
 section 4 (macOS 26.7.3; the main checkout's stale `node_modules`), section 8 (done items struck through; the subagent
 policy), section 9 (the branch vote; the bibliography style), and the README status, Mod count and test counts in
 sections 3 and 5. `CLAUDE.md`: State to 21 Nov and the user's rule of one subagent task at a time.
+
+## 2026-11-22 — Decorative icons removed (Sonnet 5.5, Haiku 5.5; lead Opus 5.5)
+
+**Context.** Looking at the finished app, the user asked to remove all unneeded "emojis". There were no emoji
+characters anywhere (front end, back end, Assistant answers, mock data); what read as emoji were the SVG line icons
+of `components/Icon.tsx` and the chart shapes. The user chose to remove the icons that sit beside a text label and to
+keep the flag ▲ (it marks unusual, matching the charts), the watch star (it is the button) and the chart shapes (they
+mark unusual without relying on colour).
+
+**Done.** 17 icons and their uses removed (info, error, check, copy, in/out arrows, external, chevrons, replay,
+search, offline, empty, history), with the maps, props and CSS that only served them; `IconName` is now flag, star,
+star-filled. The state panel and the flagged-day links lose their icon columns. A pressed filter chip, which was
+filled and ticked, is now filled with a 2 px outline and bold text, so it still differs by more than colour (new test).
+All 70 screenshots re-taken (normal, live, mock); 13 index heights changed. First-screen JS 147.5 kB.
+
+**Note.** `ui-remake-apple` styles some of the removed icons; if the team keeps that branch, merging it needs a small
+clean-up.
