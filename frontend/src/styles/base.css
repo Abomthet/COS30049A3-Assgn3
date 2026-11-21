@@ -452,8 +452,7 @@ main.container {
   display: grid;
   /* minmax(0, 1fr), not 1fr: a 1fr track never shrinks below its longest unbreakable line, so with a wider font
      (Linux's DejaVu Sans, Windows' Segoe UI) a one-line button widened the page past a 390 px phone. */
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
   padding: 16px 18px;
   border-radius: var(--radius);
   border: 1px solid;
@@ -461,11 +460,6 @@ main.container {
 }
 .state-panel p:last-child {
   margin-bottom: 0;
-}
-.state-icon {
-  width: 22px;
-  height: 22px;
-  margin-top: 1px;
 }
 .state-title {
   font-size: 1.02rem;
@@ -487,7 +481,6 @@ main.container {
   background: var(--info-bg);
   border-color: var(--info-border);
 }
-.tone-info .state-icon,
 .tone-info .state-title {
   color: var(--info-ink);
 }
@@ -495,7 +488,6 @@ main.container {
   background: var(--warn-bg);
   border-color: var(--warn-border);
 }
-.tone-warning .state-icon,
 .tone-warning .state-title {
   color: var(--warn-ink);
 }
@@ -503,7 +495,6 @@ main.container {
   background: var(--error-bg);
   border-color: var(--error-border);
 }
-.tone-error .state-icon,
 .tone-error .state-title {
   color: var(--error-ink);
 }
@@ -511,9 +502,6 @@ main.container {
   background: var(--surface-2);
   border-color: var(--border);
   border-left-style: dashed;
-}
-.tone-empty .state-icon {
-  color: var(--text-muted);
 }
 
 .loading {
@@ -617,9 +605,6 @@ main.container {
   align-items: flex-start;
   margin: 10px 0 0;
   color: var(--error-ink);
-}
-.field-error .icon {
-  margin-top: 3px;
 }
 .example-list {
   list-style: none;
@@ -1015,8 +1000,8 @@ main.container {
 }
 .day-link {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-areas: 'icon date arrow' 'icon count arrow';
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'icon date' 'icon count';
   align-items: center;
   column-gap: 10px;
   padding: 10px 12px;
@@ -1040,10 +1025,6 @@ main.container {
   grid-area: count;
   font-size: 0.82rem;
   color: var(--text-2);
-}
-.day-link-arrow {
-  grid-area: arrow;
-  color: var(--text-muted);
 }
 
 /* ------------------------------------------------------------------ Screen 3 */
@@ -1280,10 +1261,6 @@ main.container {
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   font-weight: 600;
-}
-.limitation .icon {
-  margin-top: 3px;
-  color: var(--text-2);
 }
 /* The selection above the transaction table (views/SelectionBar.tsx). */
 .selection-bar {
@@ -1544,11 +1521,12 @@ main.container {
 .chip:hover {
   background: var(--surface-2);
 }
-/* A pressed chip is filled and ticked, so it differs from an unpressed one by more than colour. */
+/* A pressed chip is filled, has a heavier outline (the 1px border plus a 1px inset ring, so 2px) and bolder text, so it differs from an unpressed one by more than colour. */
 .chip[aria-pressed='true'] {
   background: var(--info-bg);
   border-color: var(--accent);
   color: var(--info-ink);
+  box-shadow: inset 0 0 0 1px var(--accent);
   font-weight: 600;
 }
 .filter-group .field-error {
@@ -1797,9 +1775,6 @@ main.container {
   border: 1px solid var(--info-border);
   border-radius: var(--radius-sm);
   color: var(--info-ink);
-}
-.whatif-note .icon {
-  margin-top: 3px;
 }
 /* The form beside the verdict and the curve; on a phone they stack, form first. */
 .whatif-layout {

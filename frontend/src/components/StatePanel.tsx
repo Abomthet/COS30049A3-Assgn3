@@ -1,37 +1,27 @@
 import type { ReactNode } from 'react';
 import { useSlow } from '../hooks/useSlow';
-import { Icon, type IconName } from './Icon';
 
 // One component for every feedback state (FR-05): it always says what happened and offers
-// a next action. Tone sets the colour; the icon and title carry the meaning without colour.
+// a next action. Tone sets the colour; the title says what happened, so no meaning rests on colour.
 
 export type Tone = 'info' | 'warning' | 'error' | 'empty';
-
-const DEFAULT_ICON: Record<Tone, IconName> = {
-  info: 'info',
-  warning: 'history',
-  error: 'error',
-  empty: 'empty',
-};
 
 interface Props {
   tone: Tone;
   title: string;
   children?: ReactNode;
   actions?: ReactNode;
-  icon?: IconName;
   /** 'alert' for results of something the user just did; 'status' for passive states. */
   live?: 'alert' | 'status';
   headingLevel?: 2 | 3;
   testId?: string;
 }
 
-/** The one panel for every feedback state (empty, info, warning or error), with an icon, a title and next actions; used across the screens. */
-export function StatePanel({ tone, title, children, actions, icon, live, headingLevel = 2, testId }: Props) {
+/** The one panel for every feedback state (empty, info, warning or error), with a title and next actions; used across the screens. */
+export function StatePanel({ tone, title, children, actions, live, headingLevel = 2, testId }: Props) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
     <section className={`state-panel tone-${tone}`} role={live} data-testid={testId}>
-      <Icon name={icon ?? DEFAULT_ICON[tone]} className="state-icon" />
       <div className="state-body">
         <Heading className="state-title">{title}</Heading>
         {children}

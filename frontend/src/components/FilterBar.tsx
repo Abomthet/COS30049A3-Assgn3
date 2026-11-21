@@ -5,7 +5,6 @@ import { isDayKey } from '../lib/dates';
 import { DIRECTION_LABEL, formatCount, plural } from '../lib/format';
 import { DIRECTIONS, SORTS, STATUSES, isFiltered, type FilterErrors, type Filters, type SortValue } from '../lib/transactionFilters';
 import { STATUS_TEXT } from './Badges';
-import { Icon } from './Icon';
 
 // V2's filter bar (plan section 8): status and direction chips, a date range limited to the address's
 // active period, the sort menu and "Reset filters". It holds no state of its own: every control reads
@@ -28,7 +27,6 @@ interface Props {
 function Chip({ pressed, onClick, children }: { pressed: boolean; onClick: () => void; children: string }) {
   return (
     <button type="button" className="chip" aria-pressed={pressed} onClick={onClick}>
-      {pressed ? <Icon name="check" /> : null}
       {children}
     </button>
   );
@@ -74,7 +72,6 @@ function DateField({ label, value, min, max, error, onChange }: { label: string;
       />
       {error ? (
         <p id={`${id}-error`} className="field-error" role="alert">
-          <Icon name="error" />
           <span>{error}</span>
         </p>
       ) : null}

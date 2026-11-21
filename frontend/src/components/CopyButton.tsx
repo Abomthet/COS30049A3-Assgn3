@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Icon } from './Icon';
 
 /** A button that copies a value to the clipboard and says so for two seconds; used in the error panel, the address overview and the transaction panel. */
 export function CopyButton({ value, label }: { value: string; label: string }) {
@@ -22,7 +21,6 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
 
   return (
     <button type="button" className="icon-button" onClick={copy} aria-label={copied ? `${label} copied` : `Copy ${label}`}>
-      <Icon name={copied ? 'check' : 'copy'} />
       <span className="icon-button-text" aria-live="polite">
         {copied ? 'Copied' : 'Copy'}
       </span>

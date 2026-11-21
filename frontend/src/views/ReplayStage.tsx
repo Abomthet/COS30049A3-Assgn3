@@ -4,7 +4,6 @@ import { G1DailyActivity } from '../charts/G1DailyActivity';
 import { G2TransactionsOverTime } from '../charts/G2TransactionsOverTime';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { ErrorState } from '../components/ErrorState';
-import { Icon } from '../components/Icon';
 import { Loading } from '../components/StatePanel';
 import { useAllTransactions } from '../hooks/useAllTransactions';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -61,18 +60,18 @@ function Player({ timeline, method, rows }: { timeline: TimelineResponse; method
       <div className="replay-controls" role="group" aria-label="Replay controls">
         {reduced ? null : playing ? (
           <button type="button" className="btn btn-primary" onClick={replay.pause}>
-            <Icon name="pause" /> Pause
+            Pause
           </button>
         ) : (
           <button type="button" className="btn btn-primary" onClick={replay.play}>
-            <Icon name="play" /> {finished ? 'Play again' : position === 0 ? 'Play' : 'Resume'}
+            {finished ? 'Play again' : position === 0 ? 'Play' : 'Resume'}
           </button>
         )}
         <button type="button" className="btn btn-secondary" onClick={replay.step} disabled={finished}>
-          <Icon name="step" /> Step
+          Step
         </button>
         <button type="button" className="btn btn-secondary" onClick={replay.restart} disabled={position === 0}>
-          <Icon name="restart" /> Restart
+          Restart
         </button>
         {reduced ? null : (
           <div className="replay-speed" role="group" aria-label="Speed, in transactions a second">

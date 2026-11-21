@@ -6,7 +6,6 @@ import { useToasts } from '../hooks/useToasts';
 import { formatCount } from '../lib/format';
 import { Dialog } from './Dialog';
 import { ErrorState } from './ErrorState';
-import { Icon } from './Icon';
 
 // The dialog of S-04's star: a label and a note, each with its character count against the limit from E2, saved
 // through E14. It is fetched when the first star is selected, so the first screen does not carry it.
@@ -53,7 +52,6 @@ function CountedField({ id, label, help, value, max, serviceError, multiline, on
       </p>
       {error ? (
         <p id={`${id}-error`} className="field-error" role="alert">
-          <Icon name="error" />
           <span>{error}</span>
         </p>
       ) : null}

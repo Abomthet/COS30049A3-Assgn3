@@ -245,7 +245,6 @@ function FlaggedDays({ address, days, insufficient, method }: { address: string;
                     {d.flaggedCount} of {plural(d.txCount, 'transaction')}
                     {reasons.has(d.date) ? ` · ${reasons.get(d.date)}` : ''}
                   </span>
-                  <Icon name="chevron-right" className="day-link-arrow" />
                 </a>
               </li>
             ))}

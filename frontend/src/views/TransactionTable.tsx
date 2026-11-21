@@ -1,6 +1,5 @@
 import type { MethodId, TransactionsResponse } from '../api/types';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
-import { Icon } from '../components/Icon';
 import { formatDateTime, dayKey } from '../lib/dates';
 import { formatBtc, formatCount } from '../lib/format';
 import { METHODS } from '../lib/methods';
@@ -88,12 +87,12 @@ export function TransactionTable({ page, method, pageHref }: Props) {
         <div className="pager-links">
           {page.page > 1 ? (
             <a className="btn btn-secondary" href={pageHref(page.page - 1)} rel="prev">
-              <Icon name="chevron-left" /> Previous page
+              Previous page
             </a>
           ) : null}
           {page.page < pages ? (
             <a className="btn btn-secondary" href={pageHref(page.page + 1)} rel="next">
-              Next page <Icon name="chevron-right" />
+              Next page
             </a>
           ) : null}
         </div>

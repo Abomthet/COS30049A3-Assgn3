@@ -8,7 +8,6 @@ import { CopyButton } from '../components/CopyButton';
 import { NotFlaggedExplanation } from '../components/Explanation';
 import { ErrorState } from '../components/ErrorState';
 import { FlagCallout } from '../components/FlagCallout';
-import { Icon } from '../components/Icon';
 import { Loading, StatePanel } from '../components/StatePanel';
 import { VerdictTable } from '../components/VerdictTable';
 import { formatDateTime, formatDay } from '../lib/dates';
@@ -110,7 +109,7 @@ function Facts({ tx }: { tx: TransactionCore }) {
         <dd>
           {tx.sourceUrl ? (
             <a href={tx.sourceUrl} target="_blank" rel="noopener noreferrer">
-              View on blockstream.info <Icon name="external" />
+              View on blockstream.info
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
           ) : (

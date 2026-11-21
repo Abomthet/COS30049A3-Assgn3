@@ -5,7 +5,6 @@ import { useSettings } from '../hooks/useSettings';
 import { runRequest } from '../hooks/useRequest';
 import { ErrorState } from './ErrorState';
 import { ExplanationBlocks, TEMPLATE_LABEL } from './Explanation';
-import { Icon } from './Icon';
 
 // The Explorer Assistant's control (S-05; plan section 7, "The Explorer Assistant"; R7). The explanation starts as the
 // template. A flagged snapshot transaction is asked of E12 at once on a computer that cannot run the Assistant, because the
@@ -83,7 +82,7 @@ export default function AssistantPanel({ request, template, flagged, limitation 
       <div className="assistant-control" aria-live="polite">
         {phase.name === 'template' && capable ? (
           <button type="button" className="btn btn-secondary" onClick={ask}>
-            <Icon name="info" /> Ask the Assistant to write this
+            Ask the Assistant to write this
           </button>
         ) : null}
         {phase.name === 'template' && !capable && !prepared && origin !== 'loading' ? <p className="assistant-note">{NOT_INSTALLED}</p> : null}

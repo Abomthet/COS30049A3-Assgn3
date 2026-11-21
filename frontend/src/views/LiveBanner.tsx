@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api/client';
 import type { LiveInfo } from '../api/types';
-import { Icon } from '../components/Icon';
 import { clearRequestCache } from '../hooks/useRequest';
 import { useToasts } from '../hooks/useToasts';
 import { formatDay } from '../lib/dates';
@@ -36,7 +35,6 @@ export default function LiveBanner({ address, live }: { address: string; live: L
 
   return (
     <aside className="live-banner" aria-label="Live data" data-testid="live-banner">
-      <Icon name="info" className="state-icon" />
       <div className="live-banner-body">
         <p>
           <strong>Live data</strong>, fetched {formatFetched(live.fetchedAt)}, {live.truncated ? 'the most recent ' : ''}

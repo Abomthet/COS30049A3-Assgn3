@@ -29,7 +29,6 @@ export function FlagCallout({ tx, title, request }: { tx: Pick<TransactionDetail
         ))}
       </ul>
       <p className="limitation" data-testid="limitation-line">
-        <Icon name="info" />
         <span>{tx.limitation}</span>
       </p>
     </section>

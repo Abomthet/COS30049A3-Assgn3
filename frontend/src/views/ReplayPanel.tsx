@@ -1,6 +1,5 @@
 import { Suspense, lazy, useState } from 'react';
 import type { MethodId, TimelineResponse } from '../api/types';
-import { Icon } from '../components/Icon';
 import { Loading } from '../components/StatePanel';
 import { formatDay } from '../lib/dates';
 
@@ -24,7 +23,7 @@ export function ReplayPanel({ timeline, method }: { timeline: TimelineResponse; 
         </Suspense>
       ) : (
         <button type="button" className="btn btn-secondary" onClick={() => setStarted(true)}>
-          <Icon name="play" /> Open the replay
+          Open the replay
         </button>
       )}
     </section>

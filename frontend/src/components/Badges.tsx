@@ -25,7 +25,6 @@ export function StatusBadge({ status }: { status: ScoreStatus }) {
 export function DirectionBadge({ direction }: { direction: Direction }) {
   return (
     <span className={`direction direction-${direction}`}>
-      {direction !== 'none' ? <Icon name={direction} /> : null}
       {DIRECTION_LABEL[direction]}
     </span>
   );

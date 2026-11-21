@@ -3,7 +3,6 @@ import { api } from '../api/client';
 import { ApiError, LOOKUP_ENDED, type LiveLookup } from '../api/types';
 import { Dialog } from '../components/Dialog';
 import { ErrorState } from '../components/ErrorState';
-import { Icon } from '../components/Icon';
 import { clearRequestCache } from '../hooks/useRequest';
 import { useToasts } from '../hooks/useToasts';
 import { formatCount, plural, shortAddress } from '../lib/format';
@@ -118,7 +117,6 @@ export default function LiveLookupDialog({ address, method, onClose }: { address
       {view.phase === 'error' ? (
         plain ? (
           <p className="field-error" role="alert" data-testid="live-error">
-            <Icon name="error" />
             <span>
               <strong>{body!.message}</strong> {'hint' in body! ? body!.hint : ''}
             </span>

@@ -142,14 +142,13 @@ export function SelectScreen({ query }: { query: string | null }) {
                 </>
               ) : (
                 <>
-                  <Icon name="search" /> Look up
+                  Look up
                 </>
               )}
             </button>
           </div>
           {invalid ? (
             <p id="address-error" className="field-error" role="alert">
-              <Icon name="error" />
               <span>
                 <strong>{lookup.message}</strong> {lookup.hint}
               </span>

@@ -1,5 +1,4 @@
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
-import { Icon } from '../components/Icon';
 import { useMethodLabels } from '../hooks/useMethods';
 import { useServiceStatus } from '../hooks/useServiceStatus';
 import { useSettings } from '../hooks/useSettings';
@@ -43,7 +42,6 @@ export function AboutScreen() {
       <section className="card prose" aria-labelledby="claims-title">
         <h2 id="claims-title">What it does not claim</h2>
         <p className="limitation">
-          <Icon name="info" />
           <span>{settings.limitationLine}</span>
         </p>
         <ul>
@@ -64,7 +62,7 @@ export function AboutScreen() {
               <dt>Source</dt>
               <dd>
                 <a href={snapshot.sourceUrl} target="_blank" rel="noopener noreferrer">
-                  {snapshot.source} <Icon name="external" />
+                  {snapshot.source}
                   <span className="sr-only"> (opens in a new tab)</span>
                 </a>
               </dd>
