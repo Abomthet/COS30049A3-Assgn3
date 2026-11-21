@@ -2,7 +2,7 @@
 
 Owner: Cam Dan Bui (`docs/plan/sections/s14-schedule.tex`, T40, Thursday 26 November 2026). Run on the MS2 build, after the walkthrough's second session. Use the same build for every check, and record it at the top of the log.
 
-**Before the manual pass.** Run the automated checks: `cd frontend && npm test` (the axe checks in Vitest) must pass with no automatic violation on any view. Record the result. The manual checks below are what the automated checks cannot see.
+**Before the manual pass.** Run the automated checks: `cd frontend && npm run e2e:a11y` (axe scans of every view in light and dark, plus the keyboard, reduced-motion, 200% zoom and live-region checks, in Playwright) must pass with no unexpected failure. Record the result, and read `a11y-automated-findings.md` for what it found and what is still open. The manual checks below are what the automated checks cannot see.
 
 **Views.** V1 address selection `#/`; V2 overview `#/address/{address}`; V2 Transactions tab `.../transactions`; V3 day `.../day/{date}` and transaction `.../tx/{txid}`; V4 what-if lab `.../what-if`; V5 models `#/models`; V7 about `#/about`. V6 watchlist `#/watchlist` and the watchlist and live-lookup dialogs are S-04 and S-09 items: check them only if they are in the build.
 

@@ -18,7 +18,7 @@ Report text and video narration stay people-only until the tutor's AI-use email 
 | 1.5 | Chart owners in `explainers/a3/t05-people-rules.tex` | Haiku | ✅ 19 Nov |
 | 1.2 | S-11 browser tests at 390/820/1280 (T38) | Sonnet | ✅ 19 Nov |
 | 1.3 | Re-take all screenshots | Haiku | ✅ 19 Nov |
-| 2.1 | Automated accessibility checks, light and dark, 3 widths (T40) | Sonnet | 24 Nov |
+| 2.1 | Automated accessibility checks, light and dark, 3 widths (T40) | Sonnet | ✅ 20 Nov |
 | 2.5 | Fix severity 3–4 issues and retest (T41) | Sonnet | 25–26 Nov |
 | 3.1 | MS3 gate from a fresh clone (T42) | Opus | Fri 27 Nov |
 | 3.2 | Should items and cut list in `docs/TEST_LOG.md` | Opus | 27 Nov |
@@ -135,7 +135,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 
 ## 1.4.6 Test and fix (25–29 Nov)
 - [~] T39 **[you]** Usability walkthrough, two sessions: pack ready in `docs/usability/` (`7c3dd25`); book participants
-- [ ] T40 Accessibility inspection (Claude runs the automated checks; **[you]** keyboard and screen-reader pass)
+- [~] T40 Accessibility inspection: automated checks done 20 Nov (`npm run e2e:a11y`; findings A-01 to A-03 in `docs/usability/a11y-automated-findings.md`); **[you]** keyboard and screen-reader pass still to do
 - [ ] T41 Fix every severity 3–4 issue; retest
 - [ ] T42 **MS3 (Fri 27 Nov)**: feature freeze; cut list recorded in the change log
 - [~] T43 (README draft `ee858f7`) README complete; comment and docstring pass; `MODIFICATIONS.md`; `LICENSES.md` line
