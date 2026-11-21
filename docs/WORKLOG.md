@@ -1170,3 +1170,13 @@ explanation and G4; J5 opens a point from the chart (confirmed by the J5 browser
 lookup (fetch once beforehand, kept 7 days); the architecture figure exists. Still 6:35 of 7:00. People still need:
 the title card, the real-phone clip, one rehearsal of the stop-and-restart, the timed rehearsal.
 
+
+## 2026-11-21 — Live address with an unavailable method; V1 wording (Sonnet 5.5)
+
+**Context.** A walkthrough fetched a live address with "TxGPT surprisal" remembered. The back end rightly answered 400 naming the field `method` ("This method has no scores for a fetched address."), but the overview showed the generic "That isn't a valid Bitcoin address" with "Choose an address".
+
+**Decisions.** Two layers, front end only. (a) `MethodMenu` takes `live`; for a fetched address the methods in `SNAPSHOT_ONLY` (TxGPT) are disabled and labelled "snapshot addresses only". `useMethodFallback` (overview and day screens): when a 400 names `method` and that method is the remembered one, the address opens with the default method (`DEFAULT_METHOD`, not hard-coded text) and a toast says so; the remembered choice is kept for snapshot addresses. (b) A link that names the method itself reaches `ErrorState`, which for a 400 on `method` shows "This method can't score this address", the server's message and hint, and a button to the default method keeping the address and tab; other 400s keep the generic panel. V1: the address help line follows `capabilities.liveLookup`; the unsupported panel now reads what happened, the fetch offer with its button and the privacy sentence, then "Or open one of these snapshot addresses:" with the examples (off: unchanged).
+
+**Done.** The mock answers the same 400 for TxGPT on a fetched address. `tests/liveMethod.test.tsx` (8 tests; 6 fail on the old components). Front end 665 tests; first-screen JS 148.3 of 150 kB gzip (+0.3).
+
+**Open.** Lead review.

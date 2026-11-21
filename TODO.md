@@ -158,6 +158,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [x] Fix the chart owners in `explainers/a3/t05-people-rules.tex` to match the plan (19 Nov: G2 Dan+Tri, G3 Dan+Khang, G5 Tri+Khang, G4/G6 Tri+Dan, wrapper Tri+Khang, G1 Khang; `a3.pdf` rebuilt, 17 pages; backup `explainers/a3.bak-20261119`)
 
 ## Review findings to fix later
+- [x] Live-address walkthrough (branch `live-method-fix`): (1) a fetched address with TxGPT chosen or remembered showed "That isn't a valid Bitcoin address"; the method menu now disables TxGPT for a fetched address, a remembered TxGPT falls back to the default with a toast, and a 400 naming `method` shows "This method can't score this address" with a button to the default method; (2) V1's help line is true when live lookup is on; (3) the unsupported panel reads what happened, the fetch offer with its button, then the snapshot examples
 - [x] E14: a non-text `note` gets "Must be text." (was "Must be text of an acceptable length"); a length error now names its limit (`errors.py::_describe`)
 - [x] (`55c0b98`) G5: log-axis tick labels overlap at desktop width (T28)
 - [x] (`55c0b98`) Method names: E11 vs the front end's `lib/methods.ts`; use E11 everywhere
