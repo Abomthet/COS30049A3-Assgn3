@@ -1180,3 +1180,8 @@ the title card, the real-phone clip, one rehearsal of the stop-and-restart, the 
 **Done.** The mock answers the same 400 for TxGPT on a fetched address. `tests/liveMethod.test.tsx` (8 tests; 6 fail on the old components). Front end 665 tests; first-screen JS 148.3 of 150 kB gzip (+0.3).
 
 **Open.** Lead review.
+
+## 2026-11-21 — Apple-inspired UI remake on branch ui-remake-apple (Sonnet 5.5)
+
+A proposal for the team, **not merged** (branch `ui-remake-apple` from `1e861c9`, in its own worktree). Visual only: tokens and one appended CSS layer in `base.css`, header rules in `shell.css`, grid and ticks in `chartFigure.ts`. Surfaces instead of borders, one blue accent, pill buttons, segmented controls for chips, tabs and the what-if switch, bigger type scale, translucent sticky header, dotted quiet chart grid, coherent dark theme. Contrast table and file list: `docs/ui-remake-apple.md`. No wording, role or behaviour changed; back end untouched. **Open.** Lead review; the team decides whether to merge.
+
