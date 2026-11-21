@@ -14,6 +14,7 @@ import { navigate, paths } from '../lib/router';
 import { isTransient, runRequest, useRequest } from '../hooks/useRequest';
 import { usePreferences } from '../hooks/usePreferences';
 import { useServiceStatus } from '../hooks/useServiceStatus';
+import { useMethods } from '../hooks/useMethods';
 import { useSettings } from '../hooks/useSettings';
 import { useSlow } from '../hooks/useSlow';
 
@@ -23,6 +24,8 @@ const LiveLookupDialog = lazy(() => import('./LiveLookupDialog'));
 // Screen 1 — choose an address: a lookup box plus the list of addresses in the snapshot.
 // The lookup validates in the browser first (invalid never reaches the API), then asks the
 // API whether the address is in the snapshot (supported / unsupported).
+
+const NUMBER_WORDS: Record<number, string> = { 2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven', 12: 'twelve' };
 
 type Lookup =
   | { status: 'idle' }
@@ -94,19 +97,26 @@ export function SelectScreen({ query }: { query: string | null }) {
   const invalid = lookup.status === 'invalid';
   const slowLookup = useSlow(lookup.status === 'checking');
   const snapshot = list.status === 'success' ? list.data.snapshot : null;
+  const methods = useMethods();
+  const modelCount = methods.status === 'success' ? methods.data.methods.length : 0;
+  // The hero's figures all come from E3 (and E11 for the models); null shows a calm placeholder.
+  const stats: [string, string | null][] = [
+    ['Addresses', snapshot ? formatCount(snapshot.addressCount) : null],
+    ['Transactions', list.status === 'success' ? formatCount(list.data.addresses.reduce((n, a) => n + a.txCount, 0)) : null],
+    ...(modelCount ? ([['Models', formatCount(modelCount)]] as [string, string][]) : []),
+    ['Snapshot', snapshot ? formatDay(snapshot.snapshotDate) : null],
+  ];
 
   return (
     <div className="page page-select">
-      <section className="intro">
-        <PageHeading>Explore a Bitcoin address's activity</PageHeading>
-        <p className="lede">
-          Pick an address to see its transactions day by day. Open any day to check which transactions are unusual
-          compared with that address's own history, and why.
+      <div className="hero">
+        <PageHeading className="hero-title">See what's unusual in a Bitcoin address.</PageHeading>
+        <p className="hero-sub">
+          Each transaction is compared with the address's own history, by {modelCount ? `${NUMBER_WORDS[modelCount] ?? modelCount} models` : 'several models'}.
         </p>
-      </section>
 
-      <section className="card lookup-card" aria-labelledby="lookup-title">
-        <h2 id="lookup-title">Look up an address</h2>
+        <section className="lookup-card hero-lookup" aria-labelledby="lookup-title">
+        <h2 id="lookup-title" className="sr-only">Look up an address</h2>
         <form onSubmit={onSubmit} noValidate className="lookup-form">
           <label htmlFor="address-input" className="field-label">
             Bitcoin address
@@ -208,7 +218,20 @@ export function SelectScreen({ query }: { query: string | null }) {
           </Suspense>
         ) : null}
         {lookup.status === 'failed' ? <ErrorState error={lookup.error} onRetry={() => void check(value)} headingLevel={3} /> : null}
-      </section>
+        </section>
+
+        {list.status !== 'error' ? (
+          <dl className="hero-stats" aria-busy={list.status === 'loading'}>
+            {stats.map(([label, shown]) => (
+              <div key={label} className="hero-stat">
+                <dt>{label}</dt>
+                <dd>{shown ?? <span className="hero-stat-wait" aria-hidden="true" />}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+        <p className="hero-limitation">{settings.limitationLine}</p>
+      </div>
 
       {recent.length > 0 ? (
         <section className="recent-section" aria-labelledby="recent-title">

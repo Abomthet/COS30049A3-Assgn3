@@ -61,3 +61,20 @@ Before and after screenshots (same script, same 58 shots) live outside the repo:
 `/private/tmp/claude-501/-Users-tritran2411/5c910deb-8527-4e18-a891-220d7e6a04f4/scratchpad/remake/before` and `.../after`.
 Regenerate: start the servers, then `BASE_URL=http://localhost:5297 node frontend/scripts/screenshots.mjs <folder>`.
 `docs/screenshots/` was not touched on this branch.
+
+## Hero on the first screen (V1)
+
+The old intro paragraph is replaced by an Apple-style hero in `frontend/src/views/SelectScreen.tsx` (CSS at the end of `base.css`):
+
+- **h1** (still the only one): "See what's unusual in a Bitcoin address.", `clamp(2.25rem, ..., 4.25rem)`, weight 700, tracking -0.035em, centred.
+- **Subhead**: "Each transaction is compared with the address's own history, by nine models." The number is E11's `methods.length` (cached request `useMethods`, also used by V4), written as a word up to twelve; until E11 answers, or if it fails, the line says "by several models".
+- **Lookup** is the hero's main action: the same form, field ("Bitcoin address"), help text, validation, errors, unsupported and live-lookup panels, now on a large white card (radius 24) with a pill input and a large blue pill "Look up". The "Look up an address" h2 is visually hidden (`sr-only`) and still labels the section.
+- **Stats strip**: Addresses (E3 `snapshot.addressCount`), Transactions (sum of E3 `txCount`), Models (E11, omitted without it), Snapshot (E3 `snapshot.snapshotDate`, via `formatCount` / `formatDay`). Calm grey placeholders while E3 loads; the strip disappears if E3 fails. On phones it is a 2x2 grid and the page does not scroll sideways.
+- The **limitation line** (from settings, not a copy) shows once in small muted text under the strip; the footer still carries it.
+
+## Two polish fixes
+
+- **Copy and Watch** (V2 title, V3 transaction ID) are grey pills (`--track`, hover `--hover-bg`) with 44 px height, light and dark.
+- **V2's "Active" tile** fits its date range on one line at desktop width: from 900 px the four tiles use `0.8fr 1.7fr 1.3fr 1.2fr` columns and the tile's value is a little smaller; on phones it still wraps.
+
+First-screen JS: 148.65 of 150 kB gzip.

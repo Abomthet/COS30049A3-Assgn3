@@ -3,7 +3,7 @@ import { drawnChart, examples, expect, test, WIDER_TEXT_CSS } from './fixtures';
 
 test('J1: pick an address from the list and read its overview', async ({ page, guard }) => {
   await page.goto('/#/');
-  await expect(page.getByRole('heading', { level: 1, name: /Explore a Bitcoin address/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /See what's unusual in a Bitcoin address/ })).toBeVisible();
   const list = page.getByRole('table', { name: /Addresses in the snapshot/ });
   await expect(list.getByRole('row')).not.toHaveCount(1);
   await guard.noSidewaysScroll('on the address list');

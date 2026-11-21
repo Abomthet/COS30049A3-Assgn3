@@ -1185,3 +1185,7 @@ the title card, the real-phone clip, one rehearsal of the stop-and-restart, the 
 
 A proposal for the team, **not merged** (branch `ui-remake-apple` from `1e861c9`, in its own worktree). Visual only: tokens and one appended CSS layer in `base.css`, header rules in `shell.css`, grid and ticks in `chartFigure.ts`. Surfaces instead of borders, one blue accent, pill buttons, segmented controls for chips, tabs and the what-if switch, bigger type scale, translucent sticky header, dotted quiet chart grid, coherent dark theme. Contrast table and file list: `docs/ui-remake-apple.md`. No wording, role or behaviour changed; back end untouched. **Open.** Lead review; the team decides whether to merge.
 
+
+## 2026-11-21 — Hero on V1 and two polish fixes, branch ui-remake-apple (Sonnet 5.5)
+
+Apple-style hero on the first screen (headline, subhead with the model count from E11, large lookup, stats strip from E3/E11, limitation line), Copy and Watch as grey pills, wider "Active" tile on V2. Vitest `heroSelect.test.tsx` added; the J1 e2e headline updated. Details in `docs/ui-remake-apple.md`. First-screen JS 148.65 kB. **Open.** Lead review.

@@ -2821,3 +2821,158 @@ select.text-input {
 .limitation {
   background: var(--surface);
 }
+
+/* ================================================================== Hero on the first screen (V1) */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 0 8px;
+}
+.hero-title {
+  max-width: 16ch;
+  margin: 0;
+  font-size: clamp(2.25rem, 1.2rem + 5vw, 4.25rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.hero-sub {
+  max-width: 34em;
+  margin: 18px 0 0;
+  color: var(--text-muted);
+  font-size: clamp(1.1875rem, 1.05rem + 0.6vw, 1.5rem);
+  line-height: 1.35;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+.hero-lookup {
+  width: 100%;
+  max-width: 720px;
+  margin-top: 36px;
+  padding: 24px 28px 26px;
+  background: var(--surface);
+  border-radius: 24px;
+  text-align: left;
+}
+.hero-lookup .field-label {
+  font-size: 1.0625rem;
+}
+.hero-lookup .input-row {
+  gap: 10px;
+}
+.hero-lookup .text-input {
+  min-height: 52px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-size: 1rem;
+}
+.hero-lookup .btn-primary {
+  min-height: 52px;
+  padding: 0 28px;
+  font-size: 1.0625rem;
+}
+.hero-stats {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 960px;
+  margin: 48px 0 0;
+  padding: 0;
+}
+.hero-stat {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 4px;
+  min-width: 0;
+}
+.hero-stat dt {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  letter-spacing: -0.005em;
+}
+.hero-stat dd {
+  margin: 0;
+  min-height: 1.15em;
+  font-size: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
+  overflow-wrap: anywhere;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.hero-stat-wait {
+  display: inline-block;
+  width: 3.2ch;
+  height: 0.8em;
+  border-radius: 8px;
+  background: var(--track);
+  vertical-align: middle;
+}
+.hero-limitation {
+  max-width: 62ch;
+  margin: 28px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+@media (max-width: 639px) {
+  .hero {
+    padding-top: 8px;
+  }
+  .hero-lookup {
+    margin-top: 24px;
+    padding: 18px;
+    border-radius: 20px;
+  }
+  .hero-stats {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 32px;
+    gap: 24px 16px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-stat-wait {
+    animation: hero-wait 1.6s ease-in-out infinite;
+  }
+  @keyframes hero-wait {
+    50% {
+      opacity: 0.5;
+    }
+  }
+}
+
+/* Utility buttons next to a title (Copy, Watch) read as buttons: a grey pill on the card, 44 px to hit. */
+.icon-button,
+.star-button.has-text {
+  min-height: 44px;
+  background: var(--track);
+  color: var(--text);
+}
+.icon-button:hover,
+.star-button.has-text:hover {
+  background: var(--hover-bg);
+  filter: brightness(0.97);
+}
+.star-button.has-text {
+  padding: 0 18px;
+}
+.star-button.is-watched.has-text {
+  color: var(--link);
+}
+
+/* V2's "Active" tile: the date range fits one line on desktop, and wraps only on a phone. */
+.stat-row .stat:nth-child(2) dd {
+  font-size: clamp(1.2rem, 0.9rem + 0.75vw, 1.4rem);
+  letter-spacing: -0.025em;
+}
+@media (min-width: 900px) {
+  .stat-row {
+    grid-template-columns: 0.8fr 1.7fr 1.3fr 1.2fr;
+  }
+}
