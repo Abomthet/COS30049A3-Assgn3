@@ -27,7 +27,7 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 - **Brief and rubric:** `docs/brief/` (Markdown). 40 of the 45 marks are judged from the running app and
   the 7-minute video; the report (8 pages) is 5 marks.
 
-## 2. Status — resumed on 19 Nov 2026 (paused 13 Nov; nothing is paused now)
+## 2. Status — updated Sat 21 Nov 2026 (MS3 passed)
 
 | Milestone | Date | State |
 |---|---|---|
@@ -37,9 +37,10 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
 | MS4 code freeze, `v1.0-rc`, clean install Win + Mac | Sun 29 Nov | |
 | MS5 submit on Canvas | Sat 5 Dec | |
 
-**`main` = `4e29a72`, pushed to the team repo `Abomthet/COS30049A3-Assgn3` (remote `assgn3`).**
-- Clean worktree: back end **739 passed, 2 skipped** (the real-model and opt-in network tests), front end **653**,
-  build clean, no mock in `dist/`, first-screen JS **147.8 kB gzip** (budget 150; keep new screens lazy).
+**`main` is pushed to the team repo `Abomthet/COS30049A3-Assgn3` (remote `assgn3`) after each verified task; last full check on `ed4ad0c`.**
+- Clean worktree (fresh `npm ci`, 21 Nov): back end **750 passed, 2 skipped** (the real-model and opt-in network tests), front end **665**,
+  build clean, no mock in `dist/`, first-screen JS **about 148 kB gzip** (budget 150; keep new screens lazy).
+- Browser tests (`npm run e2e`, 21 Nov): **462 passed**.
 - `tools/ms_gate_check.py` passes on the running app.
 
 **Built:**
@@ -62,12 +63,16 @@ whole file first, then `TODO.md`, then the newest entries of `docs/WORKLOG.md`.
   - `npm run types` writes `frontend/src/api/generated.ts` from `backend/openapi.json`; a test fails when it is stale (S-10, 19 Nov);
   - report material, API reference and three architecture figures (`docs/report-material/`);
   - usability pack (`docs/usability/`);
-  - 64 screenshots (`docs/screenshots/`).
+  - report outline (`docs/report-material/report-outline.md`): structure, page budgets, evidence pointers and the rubric map; no report text;
+  - comparison wording (Mod-18 in `backend/MODIFICATIONS.md`): "10 earlier transactions: all there are, as fewer than 20 exist";
+  - 70 screenshots (`docs/screenshots/`).
 
 **GitHub:** `main` is pushed to the team repo, and its CI is green again (it failed on 18 Nov from a timing flake,
 fixed by `7820c5e`).
 
-**Cooks work in temporary worktrees (`../COS30049A3-<task>`) that the lead removes after merging.**
+**Cooks work in git worktrees inside the repo, at `.claude/worktrees/<task>` (git-ignored).** The lead creates each one from `main` (`git worktree add -b <branch> .claude/worktrees/<task> main`) and removes it after merging. Do not let a tool create a worktree on its own: one did on 21 Nov and was based on the old `origin/main` (52 commits behind). In a worktree, run `npm ci` in `frontend/`: a symlinked `node_modules` lacks the `tools/typegen` workspace, so two tests and typecheck fail.
+
+**Branch `ui-remake-apple`** (21 Nov): an Apple-inspired restyle plus a hero on V1, pushed to the team repo as its own branch. **Not merged into `main`.** The team votes keep or drop by Fri 27 Nov. Its notes: `docs/ui-remake-apple.md` on that branch.
 
 ## 3. Where everything is
 
@@ -79,8 +84,8 @@ fixed by `7820c5e`).
 | AI use log (source of the report's AI declaration) | `docs/AI_USE_LOG.md` |
 | The plan | `docs/plan/main.pdf`, `docs/plan/sections/*.tex` |
 | Brief | `docs/brief/` |
-| README (draft; T43 completes it) | `README.md` |
-| Web changes to A2 code, each with its test | `backend/MODIFICATIONS.md` (Mod-1…Mod-14 so far) |
+| README (set-up, running, checks, API table; complete 21 Nov) | `README.md` |
+| Web changes to A2 code, each with its test | `backend/MODIFICATIONS.md` (Mod-1 to Mod-18; Mod-10 planned, not built) |
 | API contract | `backend/openapi.json` (regenerate: `python -m app.core.openapi` from `backend/`) |
 | Front-end contract | `frontend/src/api/types.ts` (a back-end test parses it, see §6) |
 | Shared test vectors (pytest **and** Vitest) | `shared/address_vectors.json`, `shared/whatif_vectors.json` |
@@ -89,7 +94,7 @@ fixed by `7820c5e`).
 | Assistant weights (610 MB, verified, git-ignored) | `~/Desktop/COS30049/A2_submitted_artifacts/models/assistant/` (also copied into `backend/models/assistant/`) |
 | A1 prototype (origin of the front end) | `~/Desktop/COS30049/asm1_demo` (commit `8375cf0`) |
 
-## 4. Machine and tools (Mac, Apple M5, macOS 26.6)
+## 4. Machine and tools (Mac, Apple M5, macOS 26.7.3)
 
 - **Node v24.22.2** in `~/.local/node`, linked from `~/.local/bin` (already on the zsh PATH). In
   non-interactive shells run `export PATH="$HOME/.local/bin:$PATH"` first.
@@ -102,6 +107,7 @@ fixed by `7820c5e`).
   `~/miniconda3/envs/tools/bin/git` (conda-forge git 2.56.1). Use the conda Python for project work in any case.
 - **GitHub CLI:** `~/.local/bin/gh`, logged in as `Defaul119`. Pushing over HTTPS works.
 - **No sudo, no Homebrew.** Never try to use either.
+- **The main checkout's `frontend/node_modules` is stale** (it predates S-10 and S-11: no `@playwright/test`, `@axe-core/playwright` or `tools/typegen` workspace). Run `npm ci` in `frontend/` before `npm test` or the browser tests there. `npx vite` works as it is.
 
 ## 5. How to run, test and verify
 
@@ -111,14 +117,14 @@ P=~/miniconda3/envs/cos30049-a3/bin/python
 
 # back end
 cd backend && $P -m uvicorn app.main:app --port 8000      # ready ~1 s; /docs lists every endpoint
-$P -m pytest -q                      # full suite, 739 passed + 2 skipped, warnings are errors
+$P -m pytest -q                      # full suite, 750 passed + 2 skipped, warnings are errors
 $P -m pytest -q -m "not slow"        # quick run (inner loop only)
 PARITY_FULL=1 $P -m pytest -q tests/test_whatif_parity.py   # 1,517 amounts, ~8 min (optional)
 cd .. && $P tools/vendor_a2.py --check                       # A2 files unchanged (hashes)
 
 # front end (second terminal; Vite proxies /api to 127.0.0.1:8000)
 cd frontend && npm ci && npm run dev  # http://localhost:5173
-npm test                              # Vitest, 653 tests, 0 skipped
+npm test                              # Vitest, 665 tests, 0 skipped
 npm run typecheck && npm run build    # must be clean, no warnings
 VITE_API_MODE=mock npm run dev        # runs on the recorded fixtures, no back end
 npm run fixtures                      # re-record fixtures from a running back end
@@ -218,24 +224,29 @@ Sonnet for features and tests; Haiku for mechanical work.
 
 1. ~~1.5 chart owners in the briefing~~ done 19 Nov.
 2. ~~**1.2 S-11 browser tests**~~ done 19 Nov (`npm run e2e`; CI runs `e2e:quick`).
-3. **1.3** Re-take all screenshots (Haiku). Several older shots predate the Assistant panel. The `LIVE=1` shots need a
-   back end with live lookup on and network access.
-4. **2.1 and 2.5:** automated accessibility checks, light and dark, at 3 widths (Sonnet, 24 Nov, T40); then fix
-   severity 3–4 issues and retest (Sonnet, 25–26 Nov, T41).
-5. **MS3 gate, Fri 27 Nov (3.1, Opus), with a detailed record in `docs/TEST_LOG.md`:** each Should item finished and
+3. ~~**1.3** Re-take all screenshots (Haiku). Several older shots predate the Assistant panel. The `LIVE=1` shots need a
+   back end with live lookup on and network access.~~ done 19 Nov.
+4. ~~**2.1 and 2.5:** automated accessibility checks, light and dark, at 3 widths (Sonnet, 24 Nov, T40); then fix
+   severity 3–4 issues and retest (Sonnet, 25–26 Nov, T41).~~ done 20 Nov (2.1) and 21 Nov (2.5, automated findings
+   A-01 to A-03). Still open: the usability and manual findings (AI, after 26 Nov).
+5. ~~**MS3 gate, Fri 27 Nov (3.1, Opus), with a detailed record in `docs/TEST_LOG.md`:** each Should item finished and
    tested, or cut (3.2, with the cut list); re-run `tools/ms_gate_check.py`, `tools/measure.py --build --charts` and the
-   screenshots from a fresh clone.
+   screenshots from a fresh clone.~~ done 21 Nov (MS3 passed from a fresh clone; no Should item cut; `docs/TEST_LOG.md`).
 6. **Freeze and package:**
-   - 4.1 README complete, including `npm run types` (Sonnet, 28 Nov); 4.2 docstrings, `MODIFICATIONS.md`, `LICENSES.md`
-     line (Haiku, 28 Nov);
-   - 4.3 clean install from a trial zip on macOS (Opus, 29 Nov); 4.4 clean install on the Windows PC (person, 29 Nov);
-   - 4.5a Chrome, Safari and Firefox via automated runs (Sonnet, 29 Nov); 4.5b real-phone check (person, 29 Nov);
+   - ~~4.1 README complete, including `npm run types` (Sonnet, 28 Nov); 4.2 docstrings, `MODIFICATIONS.md`, `LICENSES.md`
+     line (Haiku, 28 Nov);~~ done 21 Nov;
+   - ~~4.3 clean install from a trial zip on macOS (Opus, 29 Nov);~~ done 21 Nov (macOS); 4.4 clean install on the Windows PC (person, 29 Nov);
+   - ~~4.5a Chrome, Safari and Firefox via automated runs (Sonnet, 29 Nov);~~ done 21 Nov (462 passed); 4.5b real-phone check (person, 29 Nov);
      4.6 tag `v1.0-rc` and push, MS4 (Opus, Sun 29 Nov);
    - 6.1 tag `v1.0`, zip from the tag (no `node_modules`), checksums, clean unzip-and-run (Opus, 4 Dec).
-7. **Report and video support** (the team writes the report text and narration; AI supplies material only): 5.2 figures
-   and tables from `docs/report-material/` (Sonnet, 30 Nov); 5.5 video shot list and timing (Opus, 1 Dec); 5.4 check
-   against the rubric, page count and Harvard references (Opus, 3 Dec). Whether the architecture figure goes in the body
-   or the appendix is the team's call.
+7. **Report and video support** (the team writes the report text and narration; AI supplies material only): ~~5.2 figures
+   and tables from `docs/report-material/` (Sonnet, 30 Nov);~~ done 21 Nov; ~~5.5 video shot list and timing (Opus, 1 Dec);~~
+   done 21 Nov (6:35 of 7:00); 5.4 check against the rubric, page count and Harvard references (Opus, 3 Dec). Whether the
+   architecture figure goes in the body or the appendix is the team's call.
+
+**Subagent policy (the user's rule, 21 Nov):** one subagent task at a time. It sends a detailed report; the lead checks every
+claim against the files and tests, fixes or sends it back, commits and pushes, and only then starts the next task. Never run
+several in parallel.
 
 **Open review findings:** see the bottom of `TODO.md` (scrolling past a chart on a real phone is not verified: 1.6).
 
@@ -249,6 +260,9 @@ Sonnet for features and tests; Haiku for mechanical work.
 - **Push A2's `v1.0` tag** if wanted (`git -C ~/Desktop/COS30049/COS30049A2 push origin v1.0`; that repo is public).
 - **Usability sessions, the Windows clean install, the video (recording and narration), report writing,
   minutes, the contribution form, the Canvas upload.**
+- **Vote on `ui-remake-apple`** (the Apple-inspired restyle, not merged): the team votes keep or drop by Fri 27 Nov. Merge only if kept.
+- **Bibliography style:** the plan says "Harvard style, numbered", but Harvard is author-date. The report outline
+  (`docs/report-material/report-outline.md`) flags this as a team decision.
 
 ## 10. Lessons and traps (each one cost time once)
 
@@ -262,7 +276,7 @@ Sonnet for features and tests; Haiku for mechanical work.
   `uptimeSeconds` before trusting an answer; use your own ports (`--port`, `VITE_PROXY_TARGET`, `E2E_*_PORT`).
 - **Linux and Windows fonts are wider than the Mac's.** A layout that fits at 390 px here can scroll sideways on CI.
   The browser tests re-check key pages with `WIDER_TEXT_CSS` (0.2em); keep that check when adding screens.
-- **The first-screen JavaScript is 148.0 of 150 kB.** New screens load lazily; re-run `tools/measure.py --build`.
+- **The first-screen JavaScript is about 148 of 150 kB.** New screens load lazily; re-run `tools/measure.py --build`.
 - **E5 `range.start`/`end` are timestamps, not days.** Use `dayKey()` on the front end.
 - **Floating-point noise.** Regression, fusion and k-means scores differ in the 15th digit between
   code paths and even between runs (multithreaded BLAS). Compare flags exactly and scores with the

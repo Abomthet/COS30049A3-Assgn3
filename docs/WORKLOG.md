@@ -1222,3 +1222,12 @@ generated content, the team writes the text), figures and evidence per section, 
 mapped, and what is still missing. Lead review: every line reference and file checked; the cook's claim that the
 brief's rubric has 16 rows was wrong (Usability 2 is at brief:158); flagged the plan's "Harvard style, numbered as in
 Assignments 1 and 2" (`s13-report.tex:27`), since Harvard is author-date: a team decision before writing.
+
+## 2026-11-21 — Status documents after MS3 (Haiku 5.5; lead Opus 5.5)
+
+`TODO.md` banner and T43/T45/T46/T48; `docs/HANDOFF.md`: section 2 (last full check on `ed4ad0c`: back end 750 + 2
+skipped, front end 665, browser tests 462; 70 screenshots; the report outline and Mod-18; worktrees now in
+`.claude/worktrees/<task>`, created from `main` by the lead, with `npm ci` in each; the `ui-remake-apple` branch),
+section 4 (macOS 26.7.3; the main checkout's stale `node_modules`), section 8 (done items struck through; the subagent
+policy), section 9 (the branch vote; the bibliography style), and the README status, Mod count and test counts in
+sections 3 and 5. `CLAUDE.md`: State to 21 Nov and the user's rule of one subagent task at a time.

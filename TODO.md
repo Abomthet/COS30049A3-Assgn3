@@ -2,7 +2,9 @@
 
 > **Picking this up in a new session or with another model? Read `docs/HANDOFF.md` first, then `docs/PLAN_SHOULD.md` (waves after MS2).**
 >
-> **Resumed Thu 19 Nov; nothing is paused.** `main` = `4e29a72`, pushed to the team repo, CI green. Back end 739 passed + 2 skipped, front end 653. S-10 (generated types) and E14 are done. Left: S-11 browser tests, then the MS3 gate (Fri 27 Nov). The order of work is the wrap-up plan below.
+> **Status Sat 21 Nov (evening): MS3 passed.** Last full check on `ed4ad0c` (pushed to the team repo, CI green): Back end 750 passed + 2 skipped, front end 665, browser tests 462 passed.
+> Next: MS4 on Sun 29 Nov (tag `v1.0-rc`, after the Windows clean install and the real-phone check).
+> Branch `ui-remake-apple` is pushed but NOT merged; the team votes keep or drop by Fri 27 Nov. The order of work is the wrap-up plan below.
 
 ## Wrap-up plan (from 19 Nov): who does what
 
@@ -138,14 +140,14 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · **[you]** needs you · 
 - [~] T40 Accessibility inspection: automated checks done 20 Nov (`npm run e2e:a11y`; findings A-01 to A-03 in `docs/usability/a11y-automated-findings.md`); **[you]** keyboard and screen-reader pass still to do
 - [ ] T41 Fix every severity 3–4 issue; retest (the three automated findings A-01 to A-03 are fixed and retested, 21 Nov; the usability and manual findings may still add more)
 - [x] T42 **MS3 passed Sat 21 Nov** (`2041d49`, `docs/TEST_LOG.md`): all 12 Should items finished, none cut; Could items C-01–C-07 not started, cut recommended (team decides, 3.3)
-- [x] T43 README, `LICENSES.md` and docstrings done (21 Nov, wrap-up 4.1 and 4.2; lead review pending)
+- [x] T43 README, `LICENSES.md` and docstrings done (21 Nov, wrap-up 4.1 and 4.2; lead reviewed and tidied the same day)
 - [~] T44 Clean install from a trial zip: macOS passed 21 Nov (`docs/TEST_LOG.md`); **[you]** Windows PC still to do
-- [ ] T45 Browsers and devices; test log complete; **MS4 (Sun 29 Nov)**: tag `v1.0-rc`
+- [~] T45 Browsers and devices: automated Chromium, WebKit and Firefox runs done 21 Nov (462 passed); **[you]** real phone and branded Safari/Chrome by hand; test log complete; **MS4 (Sun 29 Nov)**: tag `v1.0-rc`
 
 ## 1.4.7 Report, video, submission (28 Nov–5 Dec)
-- [ ] T46 **[you/team]** Report sections (8 pages max) — Claude supplies generated material only
+- [ ] T46 **[you/team]** Report sections (8 pages max) — Claude supplies generated material only (outline: `docs/report-material/report-outline.md`)
 - [~] T47 Figures, screenshots, API tables from `openapi.json` (done: `docs/report-material/`), measured table from `measure.py` (`@C-tools`); architecture figures done (`docs/report-material/figures/`); report material refreshed 21 Nov (Haiku 5.5, `WORKLOG`): screenshot index, design notes and API reference regenerated, figures README corrected; lead: figures rebuilt with live lookup as built (E16–E20, V8), budget count corrected to 31 of 31, `measure.py` dirty-label bug fixed
-- [ ] T48 **[you/team]** Video (7 min): Claude drafts the shot list and checks timing; recording, narration and unlisted upload are yours
+- [~] T48 **[you/team]** Video (7 min): Claude drafts the shot list and checks timing (done 21 Nov, 6:35 of 7:00); recording, narration and unlisted upload are yours
 - [ ] T49 Report review against the rubric; page count; Harvard references; AI acknowledgement from the log
 - [ ] T50 Tag `v1.0`; build the zip from the tag (no `node_modules`); checksums; unzip and run clean
 - [ ] T51 **[you/team]** Minutes for Weeks 1–12; contribution form signed
