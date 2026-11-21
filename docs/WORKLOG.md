@@ -1193,3 +1193,23 @@ the title card, the real-phone clip, one rehearsal of the stop-and-restart, the 
   Visual only; tests, accessibility and wider-text checks green; first-screen JS 148.65 kB. A proposal for the team:
   not merged into `main`. The old 13 Nov servers on 8000/5173 were stopped at the user's request.
 
+
+## 2026-11-21 — Comparison wording when fewer than 20 earlier transactions exist (Sonnet 5.5, Haiku 5.5; lead Opus 5.5)
+
+**Context.** In the walkthrough, the running example's flagged transaction (11 Jul 2024, `c91d9fbb`, the address's
+11th transaction) said "10 earlier transactions: the previous 30 days, extended back to reach 20", which reads as a
+contradiction. The text is A2's (`explorer/predict.py:178`, never edited).
+
+**Decisions.** A2's `collect_window` (`features.py:152-176`) keeps extending back until `comparisonMinTx` are held and
+has no cap, so an extended window that holds fewer holds every earlier transaction of its kind. The web layer
+(`services/reasons.py::reword_comparison`, Mod-18) rewrites only that case to "N earlier transactions: all there are,
+as fewer than 20 exist" (singular for 1; A2 writes no singular), in E7 (`_build_view`) and E8 (`what_if`); the
+minimum is read from the settings. E10 and E12 carry no comparison text. Three mock fixtures changed by string (7
+strings; the recorder also rewrote unrelated fields, so its output was not kept).
+
+**Done.** Six screenshots of the flagged transaction re-taken (08, 13, 16, 17, 53, 54; the what-if shots use 20-
+transaction windows and are unchanged); the index changed only the height of 16 and 54. Clean worktree with a fresh
+`npm ci`: back end 750 passed + 2 skipped, Vitest 665, typecheck, build, vendor check, J2 browser test 3 passed.
+
+**Note.** The main checkout's `frontend/node_modules` predates S-10/S-11 (no `@playwright/test`, `@axe-core/playwright`,
+or the `tools/typegen` workspace); run `npm ci` in `frontend/` before using the browser tests or `npm test` there.
