@@ -218,6 +218,24 @@ test.describe('axe scans', () => {
   }
 });
 
+// A-03: a "Loading…" line inside a dimmed (`.is-updating`, opacity 0.6) box failed contrast while the V4 lab was loading.
+// The loading states of the real service last too short to scan reliably, so the markup of one is put into a dimmed box.
+for (const theme of THEMES) {
+  test(`axe: a loading line inside an updating box (${theme})`, async ({ page }) => {
+    await setTheme(page, theme, '#/about');
+    await expect(page.locator('main')).toBeVisible();
+    await page.evaluate(() => {
+      const box = document.createElement('div');
+      box.className = 'is-updating';
+      box.innerHTML = '<div class="loading loading-block" role="status"><span class="spinner" aria-hidden="true"></span><span>Drawing the curve…</span></div>';
+      document.querySelector('main')!.prepend(box);
+    });
+    await page.waitForTimeout(400); // past the 150 ms opacity transition
+    const result = await new AxeBuilder({ page }).withTags(TAGS).include('.is-updating').analyze();
+    expect(result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
+  });
+}
+
 // ------------------------------------------------------------------ B. keyboard
 
 /** Presses Tab until `target` has focus (at most `limit` times), so the focus came from the keyboard and :focus-visible applies. */

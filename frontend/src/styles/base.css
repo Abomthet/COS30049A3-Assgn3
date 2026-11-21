@@ -1488,10 +1488,15 @@ main.container {
   flex-direction: column;
   gap: 16px;
 }
-/* The previous rows stay in place, dimmed, while the next ones load. */
+/* The previous rows stay in place, dimmed, while the next ones load. A box that holds a "Loading…" line is not dimmed:
+   the line's own colour passes contrast (7.7 to 1 light, 9.7 to 1 dark) but under this opacity it falls to 2.9 to 1
+   in the light theme (A-03), and with the line on screen there are no previous rows left to tell apart. */
 .is-updating {
   opacity: 0.6;
   transition: opacity 150ms;
+}
+.is-updating:has(.loading) {
+  opacity: 1;
 }
 
 .filter-bar h2 {
