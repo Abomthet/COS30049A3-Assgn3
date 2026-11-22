@@ -1301,3 +1301,14 @@ commit:
   beside the flag level, three status tiles and the four measures.
 - **CR-09** (in `docs/ui-remake-apple.md`): the new limitation line, once per screen, and chart CSVs; decided with the
   remake vote.
+
+## 2026-11-22 (late) — Replay day chart fix (lead, Opus 5.5)
+
+The owner saw every bar of the replay's "Transactions per day" at the same height, with axis labels "0, 1, 1, 2, 2".
+Two causes, both also on `main` (same chart code): the count scale was left to Plotly, which kept the range it fitted on
+the first frame under one `uirevision`; and once the scale was fixed, the shared layout's `transition` (present even at
+0 ms) sent every `Plotly.react` down its animation path, which drew the growing bar chart black with no legend. Fixes:
+G1 sets its count scale and whole-number tick step itself, the replay draws it to the busiest day of the whole history,
+the replay's charts do not animate, and the layout carries a `transition` only when animating. Checked with the
+owner's fetched address at 20 a second, light and dark. Commits `f4e6b46`, `eee47fe`, `76a7e49` (a draw queue tried in
+between was taken out again).
