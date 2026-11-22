@@ -1,7 +1,8 @@
 # Apple-inspired visual remake (branch `ui-remake-apple`)
 
-A proposal for the team, **not merged**. Visual only: the design tokens, the stylesheet and one chart helper changed;
-no behaviour, wording, ARIA role or accessible name changed. Study material: `design-ref/apple-2026-11-21/NOTES.md`
+A proposal for the team, **not merged**. The first pass (21 Nov) was visual only: the design tokens, the stylesheet and one chart
+helper changed; no behaviour, wording, ARIA role or accessible name changed. The second pass (22 Nov) is a wording pass from the
+owner's feedback: see "Wording pass" and "CR-09" at the end. Study material: `design-ref/apple-2026-11-21/NOTES.md`
 (Apple's screenshots are not in the repo). We borrow principles, not Apple's fonts, images or branding.
 
 ## What changed, by pattern
@@ -78,3 +79,36 @@ The old intro paragraph is replaced by an Apple-style hero in `frontend/src/view
 - **V2's "Active" tile** fits its date range on one line at desktop width: from 900 px the four tiles use `0.8fr 1.7fr 1.3fr 1.2fr` columns and the tile's value is a little smaller; on phones it still wraps.
 
 First-screen JS: 148.65 of 150 kB gzip.
+
+## Wording pass (22 Nov 2026)
+
+The owner tested this branch and asked for less explaining text: facts said once, the key number first, no internal words
+on screen. A 133-row wording list (current text, proposed text, where) was approved by the owner before anything changed;
+it and a study of how Apple shows extra information (footnotes, disclaimers, "learn more") are kept outside the repository.
+Each change is its own commit, so the wording can be copied onto `main` if the remake itself is dropped (`main` was merged
+into this branch first). In short:
+
+- **Limitation line** "Worth investigating, not proof of wrongdoing." (Mod-19, `shared/wording.json` for both tiers), once per
+  screen: in the flag box where a flagged item shows, otherwise in the footer; in every CSV row, chart downloads included.
+- **Why it stands out**: the strongest reason as a big figure ("0.4× its usual size"), one short line per other reason,
+  "Compared with its last 10 received"; reasons come from the API as data (Mod-20); short model names (Mod-21).
+- **Charts**: title, one-line subtitle, a source footnote under each chart (the chart contract keeps source and date on every
+  chart), a closed "How to read this chart", plain axis words; G5 leads with "Flagged from 0.023 BTC".
+- **Screens**: one format hint on V1; "3 days" as the headline of the days list; one-line live banner; the replay's
+  look-ahead note folded away; "95× usual" and the score against its flag line in the what-if lab; plain error messages
+  with no setup words on screen (both tiers, shared vectors); Models and Watchlist in short lines; About reordered to start
+  with what the Explorer does, with "What unusual means" as status tiles, the flag level and the four measures.
+
+## CR-09 (raised 22 Nov 2026; decision pending, with the remake vote)
+
+| Field | Entry |
+|---|---|
+| ID | CR-09 |
+| Requestor | Cao Tri Tran (Data/ML Lead), from the usability feedback of 22 Nov |
+| Proposal | (1) The limitation line becomes "Worth investigating, not proof of wrongdoing." on screens and in exports (A2's settings stay untouched; the web layer replaces the line, Mod-19). (2) It is shown once per screen: on the flagged item when one is on the screen, otherwise in the footer (plan s08 says "in the footer" and "on every flagged item"; the footer leaves out its copy while a flagged item shows it). (3) Chart CSV downloads carry it on every row too ("in every export"). |
+| Reason | The owner's walkthrough found the line long and repeated up to four times on one screen; the shorter line keeps both halves (worth a look; not wrongdoing), so a flag still reads as "needs investigation" (NFR-01 condition 4). |
+| Impact on scope | None: wording and placement only; every flagged item and every export row still carries the line. |
+| Impact on quality | Tests on both tiers check the new line on every flag, once per screen, and on every CSV row (`backend/tests/test_limitation_line.py`, `frontend/tests/limitationOnce.test.tsx`). |
+| Decision | Pending: keep or drop with the `ui-remake-apple` vote (by Fri 27 Nov). If dropped, `main` keeps A2's line. |
+| Changed artefacts | `backend/MODIFICATIONS.md` (Mod-19); the plan's quoted line (s08 "Always show", b-json examples) to be updated if approved |
+

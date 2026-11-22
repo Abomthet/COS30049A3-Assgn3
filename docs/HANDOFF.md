@@ -164,8 +164,9 @@ planning, gates and review, and the cheapest on mechanical work.
 - **Wording rule.** Never use the words in `backend/config/settings.json` → `bannedWords` (fraud,
   criminal, illicit, guilty, suspicious) in any UI string, API message, test name, document or commit
   message. Say "unusual", "flag", "worth a look". Every flagged item carries the limitation line:
-  *"Unusual activity requires investigation; it does not indicate wrongdoing."*, and so does every
-  export (CSV: every row; JSON: at the top).
+  *"Worth investigating, not proof of wrongdoing."* (Mod-19, from `shared/wording.json`; on branch
+  `ui-remake-apple` until the team's vote, CR-09; `main` still shows A2's *"Unusual activity requires
+  investigation; it does not indicate wrongdoing."*), and so does every export (CSV: every row; JSON: at the top).
 - **A2's numbers are frozen** (scope W-06). Never retrain, re-tune or regenerate any model or data file.
 - **The vendored A2 code is never edited**: `backend/explorer/`, `backend/lm/`, `backend/models/`,
   `backend/data/` (hashes in `backend/A2_VENDOR.json`). Web changes go in `backend/app/` and get a
