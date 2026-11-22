@@ -32,13 +32,13 @@ export const amountText = (btc: number): string => plainDecimal(Number(btc.toFix
  * than guessed at. Digits beyond the eighth are fine only when they are zeros.
  */
 export function checkAmount(input: unknown): Check<Amount> {
-  if (typeof input !== 'string' && typeof input !== 'number') return { ok: false, message: 'Must be a number.' };
+  if (typeof input !== 'string' && typeof input !== 'number') return { ok: false, message: 'Enter a number, like 0.05.' };
   const text = (typeof input === 'number' ? (Number.isFinite(input) ? plainDecimal(input) : '') : input).trim();
   if (text === '') return { ok: false, message: NOT_AN_AMOUNT };
 
   const commas = text.split(',').length - 1;
   if (commas > 1 || (commas === 1 && text.includes('.'))) {
-    return { ok: false, message: 'Write the amount without thousands separators, such as 1250.5.' };
+    return { ok: false, message: 'Leave out thousands separators: 1250.5.' };
   }
   const match = /^(-?)(\d*)(?:\.(\d*))?$/.exec(text.replace(',', '.'));
   if (!match || (match[2] === '' && !match[3])) return { ok: false, message: NOT_AN_AMOUNT };
@@ -48,19 +48,19 @@ export function checkAmount(input: unknown): Check<Amount> {
   const sats = BigInt(whole || '0') * SATS_PER_BTC + BigInt(kept);
   const extra = /[1-9]/.test(fraction.slice(MAX_DECIMALS));
 
-  if (minus || (sats === 0n && !extra)) return { ok: false, message: 'Must be greater than 0.' };
-  if (sats === 0n) return { ok: false, message: 'Must be at least 0.00000001 BTC (one satoshi).' };
-  if (sats > MAX_SATS || (sats === MAX_SATS && extra)) return { ok: false, message: 'Must be at most 21,000,000 BTC.' };
+  if (minus || (sats === 0n && !extra)) return { ok: false, message: 'Enter more than 0 BTC.' };
+  if (sats === 0n) return { ok: false, message: 'Enter at least 0.00000001 BTC (one satoshi).' };
+  if (sats > MAX_SATS || (sats === MAX_SATS && extra)) return { ok: false, message: 'Enter at most 21,000,000 BTC.' };
   if (extra) return { ok: false, message: `Use at most ${MAX_DECIMALS} decimal places.` };
   return { ok: true, value: { btc: `${whole || '0'}.${kept}`.replace(/\.?0+$/, ''), sats: Number(sats) } };
 }
 
 /** Accepts only 'in' or 'out' as a what-if direction, and says so otherwise. */
 export function checkDirection(input: unknown): Check<WhatIfDirection> {
-  return input === 'in' || input === 'out' ? { ok: true, value: input } : { ok: false, message: 'Must be "in" or "out".' };
+  return input === 'in' || input === 'out' ? { ok: true, value: input } : { ok: false, message: 'Pick Sent or Received.' };
 }
 
-const BAD_TIME = 'Use a date and time such as 2026-10-20T12:00:00Z.';
+const BAD_TIME = 'Enter a valid date and time.';
 const ISO_WITH_ZONE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
 /** A real date and time with a zone, as E8 reads it; the value is that moment in UTC, as `2026-10-20T12:00:00Z`. */
@@ -82,12 +82,12 @@ export function checkWhen(date: string, clock: string, range: { start: string; e
   const time = checkTime(`${date}T${clock}:00Z`);
   if (!time.ok) return time;
   if (Date.parse(time.value) < Date.parse(range.start)) {
-    return { ok: false, message: `Must not be before this address's first transaction (${formatDateTime(range.start)}).` };
+    return { ok: false, message: `Pick a time after its first transaction (${formatDateTime(range.start)}).` };
   }
   const latest = new Date(range.end);
   latest.setUTCFullYear(latest.getUTCFullYear() + maxGapYears);
   if (Date.parse(time.value) > latest.getTime()) {
-    return { ok: false, message: `At most ${maxGapYears} years after this address's last transaction.` };
+    return { ok: false, message: `Pick a time within ${maxGapYears} years of its last transaction.` };
   }
   return time;
 }

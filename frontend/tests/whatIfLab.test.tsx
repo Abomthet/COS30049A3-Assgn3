@@ -35,6 +35,7 @@ const clockField = () => screen.getByLabelText('Time of day');
 /** What chart G5 was last given (the lab also draws G3, which is another chart on the page). */
 const curveDraw = () => [...fakePlotly.chartDraws()].reverse().find((d) => d.layout.xaxis?.type === 'log')!;
 const verdict = () => screen.findByTestId('verdict-card', undefined, LATE);
+const statusLine = () => document.querySelector('.whatif-status') as HTMLElement;
 
 async function typeAmount(user: ReturnType<typeof userEvent.setup>, text: string) {
   const field = await amountField();
@@ -53,8 +54,8 @@ describe('J4: the running example', () => {
     await typeAmount(user, '0.05');
     setTime('2026-10-20');
     const card = await verdict();
-    expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent(/^Flagged by Baseline/);
-    expect(card).toHaveTextContent('Score 5.98 against a flag line of 5.00');
+    expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent(/^Would be flagged/);
+    expect(within(card).getByTestId('verdict-score')).toHaveTextContent('Score 5.98 flag line 5.00');
     const why = within(card).getByTestId('flag-explanation');
     expect(within(why).getAllByRole('listitem').length).toBeGreaterThan(1);
     expect(within(why).getByTestId('limitation-line')).toHaveTextContent(LIMITATION_LINE);
@@ -79,16 +80,26 @@ describe('J4: the running example', () => {
     const user = openLab();
     await typeAmount(user, '0.05');
     await verdict();
-    expect(await screen.findByText(/0\.05 BTC is about 95 times this address's usual sent amount/)).toBeInTheDocument();
-    expect(screen.getByText(/after this address's previous transaction/)).toBeInTheDocument();
+    expect(await screen.findByTestId('amount-figure')).toHaveTextContent('95× usual its usual sent amount');
+    expect(screen.getByTestId('gap-figure')).toHaveTextContent(/^\d+(\.\d+)? (min|hours?|days) since its last transaction$/);
+  });
+
+  test('the ratio figure follows the Direction field: received for Received, sent for Sent', async () => {
+    const user = openLab('in');
+    await typeAmount(user, '0.0005');
+    await verdict();
+    expect(await screen.findByTestId('amount-figure')).toHaveTextContent(/^\d+(\.\d+)?× usual its usual received amount$/);
+    expect(screen.getByTestId('gap-figure')).toHaveTextContent(/since its last transaction$/);
+    await user.click(screen.getByRole('radio', { name: 'Sent' }));
+    await waitFor(() => expect(screen.getByTestId('amount-figure')).toHaveTextContent(/^\d+(\.\d+)?× usual its usual sent amount$/), LATE);
   });
 
   test('changing the amount changes the verdict, and the curve gets the marker where the answer is', async () => {
     const user = openLab();
     await typeAmount(user, '0.05');
-    expect(await verdict()).toHaveTextContent('Flagged by');
+    expect(within(await verdict()).getByRole('heading', { level: 2 })).toHaveTextContent('Would be flagged');
     await typeAmount(user, '0.0005');
-    await waitFor(() => expect(screen.getByTestId('verdict-card')).toHaveTextContent('Not flagged'), LATE);
+    await waitFor(() => expect(within(screen.getByTestId('verdict-card')).getByRole('heading', { level: 2 })).toHaveTextContent('Would not be flagged'), LATE);
     await waitFor(() => {
       const marker = (curveDraw().data as any[]).find((t) => t.name === 'Amount in the form');
       expect(marker.x).toEqual([0.0005]);
@@ -109,10 +120,10 @@ describe('the form', () => {
     const user = openLab();
     const field = await amountField();
     for (const [text, message] of [
-      ['0', 'Must be greater than 0.'],
+      ['0', 'Enter more than 0 BTC.'],
       ['abc', 'Enter an amount in BTC, such as 0.05.'],
       ['0.123456789', 'Use at most 8 decimal places.'],
-      ['1,000.5', 'Write the amount without thousands separators, such as 1250.5.'],
+      ['1,000.5', 'Leave out thousands separators: 1250.5.'],
     ]) {
       await user.clear(field);
       await user.type(field, text);
@@ -129,9 +140,9 @@ describe('the form', () => {
     const user = openLab();
     await typeAmount(user, '0.05');
     setTime('2024-05-01');
-    expect(await screen.findByRole('alert')).toHaveTextContent("Must not be before this address's first transaction (16 May 2024, 05:16 UTC).");
+    expect(await screen.findByRole('alert')).toHaveTextContent('Pick a time after its first transaction (16 May 2024, 05:16 UTC).');
     setTime('2040-01-01');
-    expect(await screen.findByRole('alert')).toHaveTextContent("At most 5 years after this address's last transaction.");
+    expect(await screen.findByRole('alert')).toHaveTextContent('Pick a time within 5 years of its last transaction.');
   });
 
   test('"Score it" on an invalid form puts the focus on the field and keeps what was typed', async () => {
@@ -168,9 +179,9 @@ describe('the form', () => {
   test('the time chips jump to quiet days after the last transaction', async () => {
     const user = openLab();
     await amountField();
-    await user.click(screen.getByRole('button', { name: 'After 30 quiet days' }));
+    await user.click(screen.getByRole('button', { name: '30 days later' }));
     expect(dateField()).toHaveValue('2026-11-18');
-    await user.click(screen.getByRole('button', { name: 'The day after its last transaction' }));
+    await user.click(screen.getByRole('button', { name: '1 day later' }));
     expect(dateField()).toHaveValue('2026-10-20');
   });
 
@@ -202,7 +213,7 @@ describe('real time (R1)', () => {
     await user.clear(field);
     await user.type(field, '12');
     expect(screen.getByText('Updating…', { selector: '.whatif-status' })).toBeInTheDocument();
-    expect(screen.getByTestId('verdict-card')).toHaveTextContent('Flagged by');
+    expect(within(screen.getByTestId('verdict-card')).getByRole('heading', { level: 2 })).toHaveTextContent('Would be flagged');
     expect(screen.getByTestId('verdict-card').closest('.whatif-result')).toHaveClass('is-updating');
     await waitFor(() => expect(signals.length).toBe(first + 1), LATE);
     // Nothing more is sent afterwards.
@@ -230,7 +241,7 @@ describe('real time (R1)', () => {
     await typeAmount(user, '0.05');
     const card = await verdict();
     await waitFor(() => expect(card.closest('.whatif-result')).not.toHaveClass('is-updating'), LATE);
-    expect(screen.getByText('The verdict below is for these values.')).toBeInTheDocument();
+    expect(statusLine()).toHaveTextContent(/^$/);
   });
 
   test('a network failure keeps every value in the form and offers another try', async () => {
@@ -250,7 +261,7 @@ describe('real time (R1)', () => {
 describe('states', () => {
   test('before an amount is typed the lab says what to do, and the curve is already drawn', async () => {
     openLab();
-    expect(await screen.findByTestId('state-whatif-empty')).toHaveTextContent('Enter an amount to score it');
+    expect(await screen.findByTestId('state-whatif-empty')).toHaveTextContent('Enter an amount to see the verdict');
     expect(await screen.findByTestId('curve-reading', undefined, LATE)).toBeInTheDocument();
   });
 
@@ -259,10 +270,12 @@ describe('states', () => {
     await typeAmount(user, '0.05');
     setTime('2024-06-01', '00:00');
     const panel = await screen.findByTestId('state-insufficient', undefined, LATE);
-    expect(panel).toHaveTextContent(/At that time this address had 2 earlier transactions, over 15 days; scoring needs 10 over 14 days\./);
+    expect(within(panel).getByTestId('insufficient-lead')).toHaveTextContent('2 earlier transactions over 15 days');
+    expect(panel).toHaveTextContent('Scoring needs 10 transactions over 14 days.');
+    expect(within(panel).getByRole('heading', { level: 2 })).toHaveTextContent('Too little history at that time');
     expect(screen.queryByTestId('verdict-card')).not.toBeInTheDocument();
     const send = vi.spyOn(mockApi, 'whatIf');
-    await user.click(within(panel).getByRole('button', { name: 'Use the first date that works (11 Jul 2024)' }));
+    await user.click(within(panel).getByRole('button', { name: 'Use 11 Jul 2024, the first that works' }));
     expect(dateField()).toHaveValue('2024-07-11');
     expect(await amountField()).toHaveValue('0.05');
     await waitFor(() => expect(send).toHaveBeenCalledWith(ex.mainAddress, { amountBtc: '0.05', direction: 'out', time: '2024-07-11T00:00:00Z' }, expect.anything()), LATE);
@@ -273,9 +286,9 @@ describe('states', () => {
     const user = openLab();
     await typeAmount(user, '0.001');
     setTime('2024-07-11');
-    expect(await screen.findByText(/has not sent anything before this time/, undefined, LATE)).toBeInTheDocument();
+    expect(await screen.findByText('No usual amount yet, so the curve is centred on your amount.', undefined, LATE)).toBeInTheDocument();
     expect(curve).toHaveBeenCalledWith(ex.mainAddress, expect.objectContaining({ minBtc: 0.00001, maxBtc: 1, points: 41 }), expect.anything());
-    expect(await verdict()).toHaveTextContent(/Not flagged|Flagged by/);
+    expect(await verdict()).toHaveTextContent(/Would (not )?be flagged/);
     await waitFor(() => expect((curveDraw().data as any[])[0].x[0]).toBe(0.00001), LATE);
   });
 });
@@ -293,5 +306,107 @@ describe('V2 links to the lab', () => {
     render(<App />);
     const link = await screen.findByRole('link', { name: 'Try a what-if from here' });
     expect(link.getAttribute('href')).toMatch(new RegExp(`^#/address/${ex.mainAddress}/what-if\\?direction=(in|out)$`));
+  });
+});
+
+describe('the wording pass (R6)', () => {
+  const POSITION = /\b(above|below|on the (left|right)|to the (left|right))\b/i;
+  /** The visible text of the lab's own parts (intro, form, verdict or state panel, scenarios), less the not-flagged line, which compares a score with the flag line ("below the flag line of 5.00"). The charts and their "How to read" help are not the lab's wording. */
+  const labText = () =>
+    [...document.querySelectorAll('.whatif-note, .whatif-form, .whatif-result > .verdict-card, .whatif-result > .state-panel, .scenarios')]
+      .map((part) => {
+        const copy = part.cloneNode(true) as HTMLElement;
+        copy.querySelectorAll('.not-flagged-note').forEach((n) => n.remove());
+        return copy.textContent ?? '';
+      })
+      .join(' ');
+
+  test('the intro is one plain line, and says which model decides only when the menu holds another one', async () => {
+    openLab();
+    expect(await screen.findByText('See whether an amount would be flagged. Nothing is sent to the Bitcoin network.')).toBeInTheDocument();
+    expect(document.querySelector('.whatif-note')).not.toHaveTextContent('Verdicts here always come from');
+  });
+
+  test('the status line in its four states: fresh says nothing, invalid says what to do, updating says so, settled says nothing', async () => {
+    const user = openLab();
+    await amountField();
+    expect(statusLine()).toHaveTextContent(/^$/);
+    expect(statusLine()).toHaveAttribute('role', 'status');
+
+    await user.type(await amountField(), 'abc');
+    expect(statusLine()).toHaveTextContent('Fix the marked fields to update the verdict.');
+
+    await typeAmount(user, '0.05');
+    expect(statusLine()).toHaveTextContent('Updating…');
+    const card = await verdict();
+    await waitFor(() => expect(card.closest('.whatif-result')).not.toHaveClass('is-updating'), LATE);
+    expect(statusLine()).toHaveTextContent(/^$/);
+  });
+
+  test('the verdict card: the heading says what the model would do, the score is a figure against the flag line, and the amount line and the note are gone', async () => {
+    const user = openLab();
+    await typeAmount(user, '0.05');
+    let card = await verdict();
+    expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent(/^Would be flagged/);
+    expect(within(card).getByText('Unusual')).toBeInTheDocument();
+    expect(within(card).getByTestId('verdict-score')).toHaveTextContent('Score 5.98 flag line 5.00');
+    expect(within(card).getByTestId('score-bar')).toHaveAttribute('aria-hidden', 'true');
+    expect(card).not.toHaveTextContent(/A hypothetical transaction, compared with/);
+    expect(card).not.toHaveTextContent(/UTC\./);
+
+    await typeAmount(user, '0.0005');
+    await waitFor(() => expect(within(screen.getByTestId('verdict-card')).getByRole('heading', { level: 2 })).toHaveTextContent('Would not be flagged'), LATE);
+    card = screen.getByTestId('verdict-card');
+    expect(within(card).getByText('Not unusual')).toBeInTheDocument();
+    expect(within(card).getByTestId('verdict-score')).toHaveTextContent(/^Score \d+\.\d\d flag line 5\.00$/);
+    expect(card).not.toHaveTextContent(/A hypothetical transaction, compared with/);
+  });
+
+  test('no position word anywhere in the lab, fresh, flagged or not flagged', async () => {
+    const user = openLab();
+    await screen.findByTestId('curve-reading', undefined, LATE);
+    expect(labText()).not.toMatch(POSITION);
+    await typeAmount(user, '0.05');
+    await verdict();
+    expect(labText()).not.toMatch(POSITION);
+    await typeAmount(user, '0.0005');
+    await waitFor(() => expect(screen.getByTestId('verdict-card')).toHaveTextContent('Would not be flagged'), LATE);
+    expect(labText()).not.toMatch(POSITION);
+    await user.clear(await amountField());
+    await user.type(await amountField(), '0');
+    expect(labText()).not.toMatch(POSITION);
+  });
+
+  describe('the history panel lead', () => {
+    /** E8's real 422 for a too early time, with the counts replaced. */
+    async function tooLittle(earlierTx: number, spanDays: number) {
+      const real = await mockApi.whatIf(ex.mainAddress, { amountBtc: '0.05', direction: 'out', time: ex.whatIf.tooEarlyTime }).catch((e) => e);
+      const body = { ...real.body, history: { ...real.body.history, earlierTx, spanDays } };
+      vi.spyOn(mockApi, 'whatIf').mockRejectedValue(new (await import('../src/api/types')).ApiError(422, body));
+    }
+
+    test('one earlier transaction: "1 earlier transaction within a day" or over its days, then what scoring needs', async () => {
+      await tooLittle(1, 4.2);
+      const user = openLab();
+      await typeAmount(user, '0.05');
+      const panel = await screen.findByTestId('state-insufficient', undefined, LATE);
+      expect(within(panel).getByTestId('insufficient-lead')).toHaveTextContent('1 earlier transaction over 4 days');
+      expect(panel).toHaveTextContent('Scoring needs 10 transactions over 14 days.');
+      expect(panel).not.toHaveTextContent(/Nothing is scored/);
+    });
+
+    test('many earlier transactions, and none', async () => {
+      await tooLittle(9, 53.4);
+      const user = openLab();
+      await typeAmount(user, '0.05');
+      expect(await screen.findByTestId('insufficient-lead', undefined, LATE)).toHaveTextContent('9 earlier transactions over 53 days');
+    });
+
+    test('a span under a day does not read "over less than a day"', async () => {
+      await tooLittle(1, 0.2);
+      const user = openLab();
+      await typeAmount(user, '0.05');
+      expect(await screen.findByTestId('insufficient-lead', undefined, LATE)).toHaveTextContent('1 earlier transaction within a day');
+    });
   });
 });

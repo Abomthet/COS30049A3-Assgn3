@@ -118,8 +118,8 @@ def test_a_wrong_type_is_400_with_fields_never_422(rigged: TestClient) -> None:
     assert body["message"] == "Three values need correcting."
     assert {f["name"] for f in body["fields"]} == {"amountBtc", "direction", "time"}
     by_name = {f["name"]: f["message"] for f in body["fields"]}
-    assert by_name["direction"] == 'Must be "in" or "out".'
-    assert by_name["time"] == "Use a date and time such as 2026-10-20T12:00:00Z."
+    assert by_name["direction"] == "Pick Sent or Received."
+    assert by_name["time"] == "Enter a valid date and time."
     assert "input" not in response.text.lower() or "Input should" not in response.text
 
 

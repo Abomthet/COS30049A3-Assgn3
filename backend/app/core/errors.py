@@ -178,7 +178,7 @@ def _describe(error: dict[str, Any]) -> str:
     if kind.startswith(("int_", "decimal_", "float_")):
         return "Must be a whole number." if kind.startswith("int_") else "Must be a number."
     if kind.startswith(("datetime", "timezone")):
-        return "Use a date and time such as 2026-10-20T12:00:00Z."
+        return "Enter a valid date and time."
     if kind.startswith("date"):
         return "Enter a date like 2026-10-20."
     if kind == "string_type":

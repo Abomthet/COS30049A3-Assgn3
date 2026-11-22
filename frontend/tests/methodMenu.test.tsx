@@ -119,7 +119,8 @@ describe('the overview follows the method', () => {
   test('the lab says it decides with the default method, and the tabs keep the method', async () => {
     start(`#/address/${ex.mainAddress}/what-if?method=regression`);
     expect(await menu()).toHaveValue('regression');
-    expect(await screen.findByText(/The lab always decides with the default model/)).toBeInTheDocument();
+    const defaultName = METHODS_ANSWER.methods.find((m) => m.id === 'baseline')!.name;
+    expect(await screen.findByText(`Verdicts here always come from ${defaultName}; the table shows every model.`, { exact: false })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Overview' }).getAttribute('href')).toBe(`#/address/${ex.mainAddress}?method=regression`);
   });
 });

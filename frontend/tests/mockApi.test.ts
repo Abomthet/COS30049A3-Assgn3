@@ -278,8 +278,8 @@ describe('the what-if endpoints (E8, E9)', () => {
       status: 'invalid',
       fields: [
         { name: 'amountBtc', message: 'Use at most 8 decimal places.' },
-        { name: 'direction', message: 'Must be "in" or "out".' },
-        { name: 'time', message: 'Use a date and time such as 2026-10-20T12:00:00Z.' },
+        { name: 'direction', message: 'Pick Sent or Received.' },
+        { name: 'time', message: 'Enter a valid date and time.' },
       ],
     });
   });

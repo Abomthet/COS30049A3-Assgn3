@@ -11,7 +11,7 @@ import { TableScroll } from '../components/TableScroll';
 import { compareScenarios, scenarioCsvRows, scenarioOf } from '../lib/scenarioTable';
 import { SCENARIOS_MAX } from '../lib/scenarios';
 
-// The scenario table of the what-if lab (S-08; plan section 8, V4): "Keep this scenario" adds the what-if on screen as a row;
+// The scenario table of the what-if lab (S-08; plan section 8, V4): "Save this scenario" adds the what-if on screen as a row;
 // rows can be compared two at a time, removed, and downloaded as a CSV made in the browser. The rows are kept in the
 // preferences for each address, so they are there when the lab is opened again.
 
@@ -37,7 +37,7 @@ export default function ScenarioPanel({ address, current }: Props) {
   const keep = () => {
     if (!scenario || already || full) return;
     store([...kept, scenario]);
-    notify({ message: 'Scenario kept', tone: 'success' });
+    notify({ message: 'Saved', tone: 'success' });
   };
   const remove = (id: string) => {
     store(kept.filter((s) => s.id !== id));
@@ -59,10 +59,10 @@ export default function ScenarioPanel({ address, current }: Props) {
   return (
     <section className="card scenarios" aria-labelledby="scenarios-title">
       <div className="scenarios-head">
-        <h2 id="scenarios-title">Kept scenarios</h2>
+        <h2 id="scenarios-title">Saved scenarios</h2>
         <div className="scenarios-actions">
           <button type="button" className="btn btn-primary" onClick={keep} disabled={scenario === null || already || full}>
-            Keep this scenario
+            Save this scenario
           </button>
           <button type="button" className="btn btn-secondary" onClick={download} disabled={kept.length === 0}>
             Download CSV
@@ -71,18 +71,17 @@ export default function ScenarioPanel({ address, current }: Props) {
       </div>
       <p className="card-sub" role="status">
         {full
-          ? `The table holds ${SCENARIOS_MAX} scenarios. Remove one to keep another.`
+          ? 'Full: remove one to save another.'
           : already
-            ? 'This scenario is already in the table.'
-            : scenario === null
-              ? 'Enter an amount and wait for its verdict, then keep it here to compare it with others. Scenarios stay in this browser.'
-              : `Keep what the verdict above says to compare it with other amounts and times. Up to ${SCENARIOS_MAX} are kept for this address, in this browser.`}
+            ? 'Already saved.'
+            : 'Save amounts here to compare them.'}
       </p>
+      <p className="muted small">Stays in this browser · up to {SCENARIOS_MAX} per address.</p>
 
       {kept.length === 0 ? null : (
-        <TableScroll label="Kept what-if scenarios">
+        <TableScroll label="Saved what-if scenarios">
           <table className="data-table scenario-table">
-            <caption className="sr-only">Kept what-if scenarios of this address, with the verdict of the deciding model</caption>
+            <caption className="sr-only">Saved what-if scenarios of this address, with the verdict of the deciding model</caption>
             <thead>
               <tr>
                 <th scope="col">Compare</th>
@@ -116,7 +115,7 @@ export default function ScenarioPanel({ address, current }: Props) {
                   <td data-label="Direction">{DIRECTION_LABEL[s.direction]}</td>
                   <td data-label="Time (UTC)">{s.time.slice(0, 16).replace('T', ' ')}</td>
                   <td data-label="Verdict">
-                    <StatusBadge status={s.flagged ? 'flagged' : 'not-flagged'} /> <span className="muted small">{labels[s.method].name}</span>
+                    <StatusBadge status={s.flagged ? 'flagged' : 'not-flagged'} />
                   </td>
                   <td data-label="Score" className="num">
                     {s.score.toFixed(2)}
@@ -137,15 +136,24 @@ export default function ScenarioPanel({ address, current }: Props) {
       )}
 
       {pair.length === 2 ? (
-        <p className="scenario-compare" role="status">
-          <strong>
-            Scenario {number(pair[1].id)} against scenario {number(pair[0].id)}:
-          </strong>{' '}
-          {compareScenarios(pair[0], pair[1])}.
-        </p>
+        <div className="scenario-compare" role="status">
+          <table>
+            <caption>
+              Scenario {number(pair[1].id)} vs scenario {number(pair[0].id)}
+            </caption>
+            <tbody>
+              {compareScenarios(pair[0], pair[1]).map((row) => (
+                <tr key={row.label}>
+                  <th scope="row">{row.label}</th>
+                  <td>{row.text}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : kept.length > 1 ? (
         <p className="muted small" role="status">
-          Tick two scenarios to compare them.
+          Tick two to compare.
         </p>
       ) : null}
     </section>

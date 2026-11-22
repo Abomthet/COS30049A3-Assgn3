@@ -30,13 +30,20 @@ export function scenarioCsvRows(scenarios: Scenario[], methodName: (id: MethodId
 
 const times = (ratio: number) => (ratio >= 10 ? Math.round(ratio) : Number(ratio.toPrecision(2)));
 
-/** How the second scenario differs from the first, in a sentence: the amount, the score and the number of models that flag it. */
-export function compareScenarios(a: Scenario, b: Scenario): string {
+/** One line of the comparison table: what is compared and how the second scenario differs from the first. */
+export interface CompareRow {
+  label: string;
+  text: string;
+}
+
+/** How the second scenario differs from the first, as the rows of a small table: the amount, the score and the number of models that flag it. */
+export function compareScenarios(a: Scenario, b: Scenario): CompareRow[] {
   const amount = Number(b.amountBtc) / Number(a.amountBtc);
-  const parts = [amount === 1 ? 'the same amount' : `${times(amount >= 1 ? amount : 1 / amount)} times ${amount > 1 ? 'larger' : 'smaller'}`];
   const score = b.score - a.score;
-  parts.push(Math.abs(score) < 0.005 ? 'the same score' : `a score ${Math.abs(score).toFixed(2)} ${score > 0 ? 'higher' : 'lower'}`);
   const by = b.flaggedBy - a.flaggedBy;
-  parts.push(by === 0 ? 'the same number of models flagging it' : `${Math.abs(by)} ${Math.abs(by) === 1 ? 'model' : 'models'} ${by > 0 ? 'more' : 'fewer'} flagging it`);
-  return parts.join(', ');
+  return [
+    { label: 'Amount', text: amount === 1 ? 'Same' : `${times(amount >= 1 ? amount : 1 / amount)}× ${amount > 1 ? 'larger' : 'smaller'}` },
+    { label: 'Score', text: Math.abs(score) < 0.005 ? 'Same' : `${Math.abs(score).toFixed(2)} ${score > 0 ? 'higher' : 'lower'}` },
+    { label: 'Flagged by', text: by === 0 ? 'Same' : `${Math.abs(by)} ${by > 0 ? 'more' : 'fewer'} ${Math.abs(by) === 1 ? 'model' : 'models'}` },
+  ];
 }

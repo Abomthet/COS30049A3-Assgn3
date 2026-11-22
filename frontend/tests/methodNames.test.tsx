@@ -29,11 +29,12 @@ describe('E11 names the methods everywhere', () => {
     expect(screen.getByText('The row marked Deciding sets the status; the others are for comparison.')).toBeInTheDocument();
   });
 
-  test('V4: the verdict heading and the table row say the same', async () => {
+  test('V4: the verdict heading names no model, and the table row names the deciding one', async () => {
     open(`#/address/${ex.mainAddress}/what-if?direction=out`);
     await userEvent.setup().type(await screen.findByLabelText('Amount (BTC)'), '0.05');
     const card = await screen.findByTestId('verdict-card', undefined, { timeout: 3000 });
-    expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent(`Flagged by ${E11_NAME('baseline')}`);
+    expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent('Would be flagged');
+    expect(card).not.toHaveTextContent(E11_NAME('baseline'));
     const table = await screen.findByRole('table', { name: /each model for this hypothetical transaction/ });
     expect(verdictRow(table, 'baseline')).toBeInTheDocument();
   });

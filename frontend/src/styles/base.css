@@ -1931,10 +1931,8 @@ main.container {
 .when .text-input {
   flex: 1 1 9rem;
 }
-.whatif-feedback {
-  margin: 8px 0 0;
-  color: var(--text-2);
-  font-size: 0.9rem;
+.whatif-form .whatif-figure {
+  margin-top: 12px;
 }
 /* A two-way switch: two labelled radio buttons that look like one control. The checked side is filled and ticked by its text colour and weight too. */
 .segmented {
@@ -2006,7 +2004,35 @@ main.container {
   margin: 0;
 }
 .verdict-score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin: 0;
+}
+/* The score against the flag line: a track, the score filled in, a tick at the line. The numbers beside it carry the meaning. */
+.score-bar {
+  position: relative;
+  height: 10px;
+  max-width: 28rem;
+  border-radius: 999px;
+  background: var(--track);
+}
+.score-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.score-bar.is-flagged .score-bar-fill {
+  background: var(--flag-ink);
+}
+.score-bar-line {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
 }
 .updating-mark {
   margin-left: auto;
@@ -2400,6 +2426,26 @@ main.container {
   padding: 10px 12px;
   background: var(--surface-2);
   border-radius: var(--radius-sm);
+}
+.scenario-compare table {
+  border-collapse: collapse;
+}
+.scenario-compare caption {
+  padding: 0 0 6px;
+  font-weight: 650;
+  text-align: left;
+}
+.scenario-compare th,
+.scenario-compare td {
+  padding: 4px 24px 4px 0;
+  text-align: left;
+  font-weight: 400;
+}
+.scenario-compare th {
+  color: var(--text-muted);
+}
+.scenario-compare td {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ------------------------------------------------------------------ Live lookup (S-09): V8's dialog and V2's mark */

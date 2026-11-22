@@ -142,14 +142,14 @@ describe('a transaction that is not flagged', () => {
     inOrder(line, details);
   });
 
-  test('V4 says the same line, from the response', async () => {
+  test('V4 shows the score once, as the figure with its flag line, and no repeating sentence', async () => {
     window.location.hash = `#/address/${ex.mainAddress}/what-if?direction=out`;
     const user = userEvent.setup();
     render(<App />);
     await user.type(await screen.findByLabelText('Amount (BTC)'), '0.0005');
     const card = await screen.findByTestId('verdict-card', undefined, LATE);
-    const note = await within(card).findByText(/^Score \d+\.\d\d, below the flag line of /);
-    expect(note).toHaveTextContent(/^Score \d+\.\d\d, below the flag line of \d+\.\d\d\.$/);
+    expect(within(card).getByTestId('verdict-score')).toHaveTextContent(/Score\s*\d+\.\d\d\s*flag line \d+\.\d\d/);
+    expect(card).not.toHaveTextContent(/below the flag line/);
     expect(card).not.toHaveTextContent(/No feature was|Not flagged\./);
     const details = within(card).getByTestId('not-flagged-details') as HTMLDetailsElement;
     expect(details.open).toBe(false);

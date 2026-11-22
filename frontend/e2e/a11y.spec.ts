@@ -91,7 +91,7 @@ const settled = async (page: Page) => {
 const typeAmount = async (page: Page) => {
   await page.getByRole('radio', { name: 'Sent' }).check();
   await page.getByLabel('Amount (BTC)').fill(examples.whatIf.amountBtc);
-  await expect(page.getByTestId('verdict-card').getByRole('heading', { name: /^Flagged by / })).toBeVisible();
+  await expect(page.getByTestId('verdict-card').getByRole('heading', { name: /^Would be flagged/ })).toBeVisible();
   await drawnChart(page, 'How the score changes with the amount');
 };
 
@@ -141,8 +141,8 @@ const VIEWS: View[] = [
     ready: async (p) => void (await expect(p.getByTestId('state-whatif-empty')).toBeVisible()),
     after: async (p) => {
       await typeAmount(p);
-      await p.getByRole('button', { name: 'Keep this scenario' }).click();
-      await expect(p.getByRole('table', { name: /Kept what-if scenarios/ })).toBeVisible();
+      await p.getByRole('button', { name: 'Save this scenario' }).click();
+      await expect(p.getByRole('table', { name: /Saved what-if scenarios/ })).toBeVisible();
     },
   },
   { name: 'V5 models', hash: '#/models', ready: settled },

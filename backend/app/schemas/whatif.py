@@ -9,12 +9,17 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import AwareDatetime, BeforeValidator, Field, model_validator
+from pydantic import AfterValidator, AwareDatetime, BeforeValidator, Field, model_validator
 
 from .common import CamelModel, MethodId, RequestModel, ShortNamed
 from .transactions import TransactionFacts, Verdict
 
-WhatIfDirection = Literal["in", "out"]
+WhatIfDirection = Annotated[Literal["in", "out"], BeforeValidator(lambda v: v if v in ("in", "out") else _refuse_direction())]
+
+
+def _refuse_direction() -> Any:
+    """The words for a direction that is neither "in" nor "out" (the same as `lib/whatIf.ts`, tied by the shared vectors)."""
+    raise ValueError("Pick Sent or Received.")
 
 
 def read_amount(value: Any) -> Any:
@@ -22,22 +27,30 @@ def read_amount(value: Any) -> Any:
 
     Strings go through `Decimal` so no binary rounding is involved. Anything else is left for Pydantic to judge.
     """
+    if isinstance(value, bool) or not isinstance(value, (str, int, float, Decimal)):
+        raise ValueError("Enter a number, like 0.05.")
     if not isinstance(value, str):
         return value
     text = value.strip()
     if text.count(",") == 1 and "." not in text:
         text = text.replace(",", ".")
     elif "," in text:
-        raise ValueError("Write the amount without thousands separators, such as 1250.5.")
+        raise ValueError("Leave out thousands separators: 1250.5.")
     try:
         return Decimal(text)
     except InvalidOperation:
         raise ValueError("Enter an amount in BTC, such as 0.05.") from None
 
 
+def _more_than_zero(value: Decimal) -> Decimal:
+    if value <= 0:
+        raise ValueError("Enter more than 0 BTC.")
+    return value
+
+
 # Greater than zero is part of what an amount is; the smallest and largest amount come from settings. The reader is part
 # of the type, so a list of amounts reads each item, and the service can judge one raw value exactly as a body field is.
-Amount = Annotated[Decimal, BeforeValidator(read_amount), Field(gt=0)]
+Amount = Annotated[Decimal, BeforeValidator(read_amount), AfterValidator(_more_than_zero), Field(json_schema_extra={"gt": 0})]
 # At least two points make a curve.
 Points = Annotated[int, Field(ge=2)]
 

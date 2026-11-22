@@ -136,7 +136,7 @@ def test_a_time_more_than_max_gap_years_after_the_last_transaction_is_400(shared
     assert what_if(shared_client, time="2031-10-19T12:00:00Z").status_code == 200
     response = what_if(shared_client, time="2031-10-21T00:00:00Z")
     assert response.status_code == 400
-    assert response.json()["fields"] == [{"name": "time", "message": "At most 5 years after this address's last transaction."}]
+    assert response.json()["fields"] == [{"name": "time", "message": "Pick a time within 5 years of its last transaction."}]
     assert curve(shared_client, time="2031-10-21T00:00:00Z", amountsBtc=[1]).status_code == 400
 
 
@@ -291,8 +291,8 @@ def test_e9_a_400_names_the_amount_that_fails_the_schema_and_the_one_that_fails_
     body = curve(shared_client, amountsBtc=[0.01, 0, 0.02, 1e-9]).json()
     assert [f["name"] for f in body["fields"]] == ["amountsBtc.1", "amountsBtc.3"]
     assert body["message"] == "Two values need correcting."
-    assert body["fields"][0]["message"] == "Must be greater than 0."
-    assert body["fields"][1]["message"].startswith("Must be at least")
+    assert body["fields"][0]["message"] == "Enter more than 0 BTC."
+    assert body["fields"][1]["message"].startswith("Enter at least")
 
 
 def test_a_400_judges_every_value_that_passed_its_type_whichever_other_field_failed(shared_client: TestClient) -> None:

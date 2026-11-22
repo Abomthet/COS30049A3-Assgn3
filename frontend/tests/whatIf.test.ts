@@ -97,13 +97,13 @@ describe('checkWhen: the time field against the address', () => {
   });
 
   test('before the first transaction, and more than maxGapYears after the last, are refused', () => {
-    expect(checkWhen('2024-05-16', '04:00', range, 5)).toEqual({ ok: false, message: "Must not be before this address's first transaction (16 May 2024, 05:16 UTC)." });
+    expect(checkWhen('2024-05-16', '04:00', range, 5)).toEqual({ ok: false, message: 'Pick a time after its first transaction (16 May 2024, 05:16 UTC).' });
     expect(checkWhen('2031-10-19', '14:10', range, 5)).toMatchObject({ ok: true });
-    expect(checkWhen('2031-10-19', '14:11', range, 5)).toEqual({ ok: false, message: "At most 5 years after this address's last transaction." });
+    expect(checkWhen('2031-10-19', '14:11', range, 5)).toEqual({ ok: false, message: 'Pick a time within 5 years of its last transaction.' });
   });
 
   test('an empty date or time of day is the shared message for a time that is not a time', () => {
-    expect(checkWhen('', '12:00', range, 5)).toEqual({ ok: false, message: 'Use a date and time such as 2026-10-20T12:00:00Z.' });
+    expect(checkWhen('', '12:00', range, 5)).toEqual({ ok: false, message: 'Enter a valid date and time.' });
     expect(checkWhen('2026-10-20', '', range, 5)).toMatchObject({ ok: false });
   });
 });

@@ -285,9 +285,9 @@ def amount_problem(amount: Decimal, limits: WhatIfLimits) -> str | None:
     settings.json -> web.whatIf. An amount is at most eight decimal places because a satoshi is the smallest unit.
     """
     if amount < Decimal(str(limits.min_amount_btc)):
-        return f"Must be at least {limits.min_amount_btc:.8f} BTC (one satoshi)."
+        return f"Enter at least {limits.min_amount_btc:.8f} BTC (one satoshi)."
     if amount > Decimal(str(limits.max_amount_btc)):
-        return f"Must be at most {limits.max_amount_btc:,.0f} BTC."
+        return f"Enter at most {limits.max_amount_btc:,.0f} BTC."
     if amount * SATS_PER_BTC % 1 != 0:
         return "Use at most 8 decimal places."
     return None
@@ -300,7 +300,7 @@ def gap_problem(time: datetime, last: datetime, limits: WhatIfLimits) -> str | N
     a validation problem: it is a 422, because the address then has no earlier history to compare with.
     """
     if time - last > timedelta(days=DAYS_PER_YEAR * limits.max_gap_years):
-        return f"At most {limits.max_gap_years} years after this address's last transaction."
+        return f"Pick a time within {limits.max_gap_years} years of its last transaction."
     return None
 
 

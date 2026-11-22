@@ -5,6 +5,7 @@ import { G3FeatureDeviation } from '../charts/G3FeatureDeviation';
 import { LazyG4 } from '../charts/LazyG4';
 import { G5WhatIfResponse } from '../charts/G5WhatIfResponse';
 import { StatusBadge } from '../components/Badges';
+import { StatBlock } from '../components/StatBlock';
 import { ErrorState } from '../components/ErrorState';
 import { NotFlaggedExplanation } from '../components/Explanation';
 import { FlagCallout } from '../components/FlagCallout';
@@ -17,7 +18,7 @@ import { useRequest } from '../hooks/useRequest';
 import { useSettings } from '../hooks/useSettings';
 import { useSlow } from '../hooks/useSlow';
 import { addDays, dayKey, formatDay } from '../lib/dates';
-import { DIRECTION_LABEL, formatBtc, formatHours, formatSpanDays, plural } from '../lib/format';
+import { DIRECTION_LABEL, formatHours, formatSpanDays } from '../lib/format';
 import { DEFAULT_METHOD, parseMethod } from '../lib/methods';
 import { paths } from '../lib/router';
 import { amountText, checkAmount, checkWhen, splitTime } from '../lib/whatIf';
@@ -34,7 +35,7 @@ const ScenarioPanel = lazy(() => import('./ScenarioPanel'));
 const DIRECTIONS: WhatIfDirection[] = ['out', 'in'];
 /** The quiet stretches the time chips jump to, in days after the address's last transaction. */
 const QUIET_DAYS = [1, 30, 90];
-const QUIET_LABEL: Record<number, string> = { 1: 'The day after its last transaction', 30: 'After 30 quiet days', 90: 'After 90 quiet days' };
+const QUIET_LABEL: Record<number, string> = { 1: '1 day later', 30: '30 days later', 90: '90 days later' };
 /** The amount chips: multiples of the address's usual amount in the chosen direction. */
 const USUAL_MULTIPLES = [
   { times: 1, label: 'Usual' },
@@ -81,6 +82,7 @@ function Field({ id, label, hint, error, children, after }: { id: string; label:
 export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; search: string }) {
   const { address, range } = timeline;
   const { settings } = useSettings();
+  const labels = useMethodLabels();
   const { debounceMs, maxGapYears } = settings.web.whatIf;
   const ids = { amount: useId(), date: useId(), clock: useId() };
   const fields = useRef<Record<'amount' | 'date' | 'clock', HTMLInputElement | null>>({ amount: null, date: null, clock: null });
@@ -140,7 +142,8 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
   // The last result stays up while the next loads or the form is being corrected; after a failure it would be out of date.
   const view: VerdictView = verdict.status === 'error' ? { error: verdict.error, retry: verdict.retry } : (shown ?? (verdict.status === 'loading' ? 'loading' : null));
   const details = verdict.status === 'error' || insufficient ? null : shown;
-  const status = request === null ? 'Correct the marked fields and the verdict will update.' : pending ? (slow ? STILL_WORKING : 'Updating…') : 'The verdict below is for these values.';
+  // Said only while it helps: when a marked field blocks the verdict, and while the next one is on its way. A fresh page and a settled one say nothing.
+  const status = request === null ? (amountError || timeError ? 'Fix the marked fields to update the verdict.' : '') : pending ? (slow ? STILL_WORKING : 'Updating…') : '';
 
   // What helps fill the amount in: the slider along the curve, the usual-amount chips, and what the answer says about it.
   const amountHelp = (
@@ -168,15 +171,15 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
           ))}
         </div>
       ) : null}
-      {answered && amount.ok ? <AmountFeedback result={answered} amountBtc={amount.value.btc} /> : null}
+      {answered && amount.ok ? <AmountFeedback result={answered} /> : null}
     </>
   );
 
   return (
     <div className="whatif">
       <p className="whatif-note">
-        A what-if is hypothetical. Nothing is sent to the Bitcoin network and nothing is stored.
-        {parseMethod(search) === DEFAULT_METHOD ? '' : ' The lab always decides with the default model; its table shows all nine.'}
+        See whether an amount would be flagged. Nothing is sent to the Bitcoin network.
+        {parseMethod(search) === DEFAULT_METHOD ? '' : ` Verdicts here always come from ${labels[DEFAULT_METHOD].name}; the table shows every model.`}
       </p>
 
       <div className="whatif-layout">
@@ -271,10 +274,7 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
           {!insufficient && curveShown ? (
             <>
               {curve.aroundTypedAmount ? (
-                <p className="card-sub">
-                  This address has not {curveDirection === 'out' ? 'sent' : 'received'} anything before this time, so there is no usual amount to centre the curve on. It is drawn from{' '}
-                  {formatBtc(lowest * 1e8)} to {formatBtc(highest * 1e8)}, around the amount in the form.
-                </p>
+                <p className="card-sub">No usual amount yet, so the curve is centred on your amount.</p>
               ) : null}
               <div className="card chart-card">
                 <G5WhatIfResponse
@@ -321,39 +321,52 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
   );
 }
 
-/** "0.05 BTC is about 95 times this address's usual sent amount": F4 is the amount divided by the usual one. */
-function AmountFeedback({ result, amountBtc }: { result: WhatIfResult; amountBtc: string }) {
+/** A big "95× usual" over "its usual sent amount": F4 is the amount divided by the usual one, and the Direction field says which usual it is. */
+function AmountFeedback({ result }: { result: WhatIfResult }) {
   const ratio = result.features.find((f) => f.id === 'F4')?.value;
   if (ratio == null) return null;
   const times = ratio >= 10 ? Math.round(ratio) : Number(ratio.toPrecision(2));
-  return (
-    <p className="whatif-feedback">
-      {amountBtc} BTC is about {times} {times === 1 ? 'time' : 'times'} this address's usual {result.direction === 'out' ? 'sent' : 'received'} amount.
-    </p>
-  );
+  return <StatBlock className="whatif-figure" testId="amount-figure" value={`${times}×`} unit="usual" note={`its usual ${result.direction === 'out' ? 'sent' : 'received'} amount`} />;
 }
 
 /** The gap since the address's previous transaction (F3), which the time field decides. */
 function GapFeedback({ result }: { result: WhatIfResult }) {
   const hours = result.features.find((f) => f.id === 'F3')?.value;
-  return hours == null ? null : <p className="whatif-feedback">{formatHours(hours)} after this address's previous transaction.</p>;
+  return hours == null ? null : <StatBlock className="whatif-figure" testId="gap-figure" value={formatHours(hours)} note="since its last transaction" />;
+}
+
+/** The score as a bar against the flag line; decoration only, the figures beside it say the same in words. */
+function ScoreBar({ score, line, flagged }: { score: number; line: number; flagged: boolean }) {
+  const top = Math.max(Math.abs(score), line) * 1.25;
+  const percent = (n: number) => `${Math.min(100, (Math.abs(n) / top) * 100)}%`;
+  return (
+    <div className={flagged ? 'score-bar is-flagged' : 'score-bar'} aria-hidden="true" data-testid="score-bar">
+      <span className="score-bar-fill" style={{ width: percent(score) }} />
+      <span className="score-bar-line" style={{ left: percent(line) }} />
+    </div>
+  );
 }
 
 type VerdictView = WhatIfResult | 'loading' | { error: ApiError; retry: () => void } | null;
 
+/** The lead of the too-little-history panel: "9" "earlier transactions over 53 days", "1" "earlier transaction within a day", "No" "earlier transactions". */
+function earlierLead(earlierTx: number, spanDays: number): { value: string; unit: string } {
+  if (earlierTx === 0) return { value: 'No', unit: 'earlier transactions' };
+  return { value: String(earlierTx), unit: `earlier ${earlierTx === 1 ? 'transaction' : 'transactions'} ${spanDays < 1 ? 'within a day' : `over ${formatSpanDays(spanDays)}`}` };
+}
+
 function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView; insufficient: InsufficientHistoryBody | undefined; onUseDate: (day: string) => void; pending: string | null }) {
-  const labels = useMethodLabels();
   if (insufficient) {
     const h = insufficient.history;
     return (
       <StatePanel
         tone="warning"
-        title="Not enough history at that time"
+        title="Too little history at that time"
         testId="state-insufficient"
         actions={
           insufficient.firstScoredDate ? (
             <button type="button" className="btn btn-secondary" onClick={() => onUseDate(insufficient.firstScoredDate!)}>
-              Use the first date that works ({formatDay(insufficient.firstScoredDate)})
+              Use {formatDay(insufficient.firstScoredDate)}, the first that works
             </button>
           ) : (
             <a className="btn btn-secondary" href={paths.select()}>
@@ -362,18 +375,16 @@ function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView
           )
         }
       >
+        <StatBlock testId="insufficient-lead" {...earlierLead(h.earlierTx, h.spanDays)} />
         <p>
-          At that time this address had {plural(h.earlierTx, 'earlier transaction')}, over {formatSpanDays(h.spanDays)}; scoring needs {h.required.minTx} over {h.required.minSpanDays} days.
-          Nothing is scored until the time is later.
+          Scoring needs {h.required.minTx} transactions over {h.required.minSpanDays} days.
         </p>
       </StatePanel>
     );
   }
   if (view === null) {
     return (
-      <StatePanel tone="empty" title="Enter an amount to score it" testId="state-whatif-empty">
-        <p>The verdict of every model that can score a new amount appears here, and updates as you type.</p>
-      </StatePanel>
+      <StatePanel tone="empty" title="Enter an amount to see the verdict" testId="state-whatif-empty" />
     );
   }
   if (view === 'loading') return <Loading label="Scoring…" block />;
@@ -381,11 +392,7 @@ function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView
     const body = view.error.body;
     // The browser has checked the fields, so a 400 here means the two tiers disagree; the server's words are under the field.
     return body.status === 'invalid' ? (
-      <StatePanel tone="warning" title="Check the values" live="alert" testId="state-whatif-invalid">
-        <p>
-          {body.message} {body.hint}
-        </p>
-      </StatePanel>
+      <StatePanel tone="warning" title="Check the amount and time" live="alert" testId="state-whatif-invalid" />
     ) : (
       <ErrorState error={view.error} onRetry={view.retry} />
     );
@@ -397,27 +404,20 @@ function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView
   return (
     <section className="card verdict-card" aria-labelledby="verdict-title" data-testid="verdict-card">
       <header className="verdict-head">
-        <h2 id="verdict-title">{tx.flagged ? `Flagged by ${labels[tx.method.id].name}` : 'Not flagged'}</h2>
+        <h2 id="verdict-title">{tx.flagged ? 'Would be flagged' : 'Would not be flagged'}</h2>
         <StatusBadge status={tx.flagged ? 'flagged' : 'not-flagged'} />
         {pending ? <span className="updating-mark">{pending}</span> : null}
       </header>
-      <p className="verdict-score">
-        Score <strong className="mono">{tx.score.toFixed(2)}</strong> against a flag line of <span className="mono">{tx.method.flagAbsZ.toFixed(2)}</span>.{' '}
-        <span className="muted">
-          {DIRECTION_LABEL[tx.direction]} {formatBtc(Math.abs(tx.netSats))}, at {tx.time.slice(0, 16).replace('T', ' ')} UTC.
-        </span>
-      </p>
+      <div className="verdict-score">
+        <StatBlock testId="verdict-score" label="Score" value={tx.score.toFixed(2)} note={`flag line ${tx.method.flagAbsZ.toFixed(2)}`} />
+        <ScoreBar score={tx.score} line={tx.method.flagAbsZ} flagged={tx.flagged} />
+      </div>
       {tx.flagged ? (
         <FlagCallout tx={tx} title="Why it stands out" request={request} />
       ) : (
-        <>
-          <p className="not-flagged-note">
-            Score {tx.score.toFixed(2)}, below the flag line of {tx.method.flagAbsZ.toFixed(2)}.
-          </p>
-          <NotFlaggedExplanation request={request} tx={tx} />
-        </>
+        // The score and its flag line are already the card's figure, so no sentence repeats them.
+        <NotFlaggedExplanation request={request} tx={tx} />
       )}
-      <p className="muted small">{tx.note}</p>
     </section>
   );
 }
