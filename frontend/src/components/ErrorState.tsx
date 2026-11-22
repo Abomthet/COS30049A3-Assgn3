@@ -37,7 +37,6 @@ function BusyPanel({ seconds, onRetry, headingLevel }: { seconds: number; onRetr
   return (
     <StatePanel
       tone="warning"
-      icon="history"
       title="The service is busy"
       headingLevel={headingLevel}
       testId="state-rate-limited"
@@ -140,7 +139,7 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
       );
     case 'network':
       return (
-        <StatePanel tone="error" icon="offline" title="Couldn't reach the explorer service" headingLevel={headingLevel} live="alert" actions={retry}>
+        <StatePanel tone="error" title="Couldn't reach the explorer service" headingLevel={headingLevel} live="alert" actions={retry}>
           <p>
             {online ? body.message : "Your browser is offline."} This page reloads by itself when {online ? 'the service is back' : 'your connection returns'}, or you can try again now.
           </p>
@@ -166,7 +165,6 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
       return (
         <StatePanel
           tone="error"
-          icon="offline"
           title="The public blockchain service did not answer"
           headingLevel={headingLevel}
           live="alert"
@@ -211,13 +209,13 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
       );
     case 'timeout':
       return (
-        <StatePanel tone="error" icon="history" title="This is taking longer than it should" headingLevel={headingLevel} live="alert" actions={retry}>
+        <StatePanel tone="error" title="This is taking longer than it should" headingLevel={headingLevel} live="alert" actions={retry}>
           <p>The explorer service did not answer in time. Try again in a moment.</p>
         </StatePanel>
       );
     case 'unavailable':
       return (
-        <StatePanel tone="warning" icon="history" title="The service is starting" headingLevel={headingLevel} live="status">
+        <StatePanel tone="warning" title="The service is starting" headingLevel={headingLevel} live="status">
           <p>This page will load by itself as soon as the service is ready. Nothing else is needed.</p>
         </StatePanel>
       );

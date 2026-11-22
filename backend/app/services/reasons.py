@@ -13,13 +13,20 @@ and so E10):
 
 The reason mapping is keyed by A2's own phrases, read from `headline`, so a change in A2's wording cannot leave a stale
 key behind unnoticed: `tests/test_reasons.py` lists every phrase A2 can produce and what each becomes.
+
+A third rewrite (Mod-18) is for the comparison groups of E7 and E8: when A2 extended a window back to reach
+`comparisonMinTx` earlier transactions but fewer exist, its line "10 earlier transactions: the previous 30 days, extended
+back to reach 20" contradicts itself; `reword_comparison` says that the group holds all there are.
 """
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from decimal import Decimal
+from typing import Any
 
 from explorer.explain import check_wording, headline
+from explorer.settings import SETTINGS
 
 # F4 only. "relative to the usual for this direction" is what F4 measures: the amount divided by the address's usual
 # amount in the same direction (explain.FEATURE_DESCRIPTIONS["F4"]). A positive z is a larger ratio than usual.
@@ -51,3 +58,26 @@ def reword(text: str) -> str:
     for old, new in REWORDED.items():
         text = text.replace(old, new)
     return _BTC_AMOUNT.sub(_eight_places, text)
+
+
+# A2's clause (explorer/predict.py, `comparison`): present only when the window was extended past the period.
+_EXTENDED = ", extended back to reach "
+
+
+def reword_comparison(basis: Iterable[dict[str, Any]], min_tx: int | None = None) -> list[dict[str, Any]]:
+    """The comparison groups of E7 and E8 with the description of a group that could not reach `min_tx` made consistent (Mod-18).
+
+    A2's window collects every earlier transaction of the period, then older ones until `comparisonMinTx` are held
+    (`features.collect_window`). A window that was extended (A2 writes ", extended back to reach N") and still holds fewer
+    than `min_tx` therefore holds every earlier transaction of its kind, and says so. Every other group is returned as A2
+    wrote it. `min_tx` defaults to `features.comparisonMinTx` of the settings, the value A2 wrote into the text.
+    """
+    limit = SETTINGS["features"]["comparisonMinTx"] if min_tx is None else min_tx
+    out = []
+    for group in basis:
+        if _EXTENDED in group["description"] and group["txCount"] < limit:
+            n = group["txCount"]
+            group = {**group, "description": f"{n} earlier transaction{'' if n == 1 else 's'}: all there are, as fewer than {limit} exist"}
+            check_wording(group["description"])
+        out.append(group)
+    return out

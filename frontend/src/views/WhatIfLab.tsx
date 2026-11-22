@@ -8,7 +8,6 @@ import { StatusBadge } from '../components/Badges';
 import { ErrorState } from '../components/ErrorState';
 import { NotFlaggedExplanation } from '../components/Explanation';
 import { FlagCallout } from '../components/FlagCallout';
-import { Icon } from '../components/Icon';
 import { Loading, StatePanel } from '../components/StatePanel';
 import { VerdictTable } from '../components/VerdictTable';
 import { useCurve } from '../hooks/useCurve';
@@ -70,7 +69,6 @@ function Field({ id, label, hint, error, children, after }: { id: string; label:
       {children}
       {error ? (
         <p id={`${id}-error`} className="field-error" role="alert">
-          <Icon name="error" />
           <span>{error}</span>
         </p>
       ) : null}
@@ -177,7 +175,7 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
   return (
     <div className="whatif">
       <p className="whatif-note">
-        <Icon name="info" /> A what-if is hypothetical. Nothing is sent to the Bitcoin network and nothing is stored.
+        A what-if is hypothetical. Nothing is sent to the Bitcoin network and nothing is stored.
         {parseMethod(search) === DEFAULT_METHOD ? '' : ' The lab always decides with the default method; its table shows all nine.'}
       </p>
 
@@ -245,8 +243,7 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
             </div>
             {timeError ? (
               <p id={`${ids.date}-error`} className="field-error" role="alert">
-                <Icon name="error" />
-                <span>{timeError}</span>
+                      <span>{timeError}</span>
               </p>
             ) : null}
             <div className="chips" role="group" aria-label="Times after this address's last transaction">

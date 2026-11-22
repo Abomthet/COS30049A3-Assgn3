@@ -4,7 +4,6 @@ import { useSettings } from '../hooks/useSettings';
 import { useToasts } from '../hooks/useToasts';
 import { formatDay } from '../lib/dates';
 import { paths, useRoute } from '../lib/router';
-import { Icon } from './Icon';
 import { MainNav } from './MainNav';
 import { OfflineBanner } from './OfflineBanner';
 import { ServiceStatus } from './ServiceStatus';
@@ -97,7 +96,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <footer className="app-footer">
         <div className="container footer-inner">
           <p className="footer-limitation">
-            <Icon name="info" /> {settings.limitationLine}
+            {settings.limitationLine}
           </p>
           <p>
             Unusual means different from the same address's own earlier activity. Days and times are in UTC. COS30049

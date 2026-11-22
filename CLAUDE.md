@@ -6,11 +6,16 @@ Assignment 2's frozen `Predictor`. Group HCMC_COS30049.1_4. **Due Sun 6 Dec 2026
 the newest entries of `docs/WORKLOG.md`. The plan (the specification) is `docs/plan/sections/*.tex`; where anything
 disagrees with it, the plan wins, except for the decisions recorded in the work log.
 
-## State (19 Nov 2026): resumed on 19 Nov; nothing is paused
+## State (21 Nov 2026): nothing is paused
 - Work resumed on Thu 19 Nov 2026 (paused 13 Nov). MS1 passed 11 Nov; MS2 passed 12 Nov (`docs/TEST_LOG.md`). Every
   Must item and all 12 Should items are built (S-10 generated types and S-11 browser tests finished 19 Nov).
 - **MS3 passed Sat 21 Nov** (`2041d49`, fresh clone; `docs/TEST_LOG.md`). Next: MS4 (Sun 29 Nov): clean install from a
   trial zip (Mac here, Windows by the team), browsers, tag `v1.0-rc`. The order of work is the wrap-up plan in `TODO.md`.
+- **Branch `ui-remake-apple` (21 Nov): an Apple-inspired restyle plus a hero on V1, proposed to the team, NOT on
+  `main`** (pushed to `assgn3` as its own branch; all suites and 462 browser tests green on it). See
+  `docs/ui-remake-apple.md` on that branch. Merge only if the team agrees.
+- Since MS3 (21 Nov): Mod-18 comparison wording (`6e00914`) and the report outline (`docs/report-material/report-outline.md`).
+  Last clean check on `ed4ad0c` (fresh `npm ci`): back end 750 passed + 2 skipped, front end 665.
 - **First-screen JS is 148.0 of 150 kB gzip**: any new screen must load lazily; re-run `tools/measure.py --build` after front-end changes.
 - `main` is pushed to the team repo after each verified task (`git log assgn3/main`). Last full check (MS3 gate, 21 Nov): back end 739
   passed + 2 skipped, front end 657, browser tests 462 passed, 31 of 31 budgets.
@@ -40,6 +45,8 @@ disagrees with it, the plan wins, except for the decisions recorded in the work 
   - Opus / Fable: replanning, gates, high-stakes work, with a detailed written plan;
   - Sonnet (medium): features;
   - Haiku: mechanical work.
+- **One subagent task at a time (the user's rule, 21 Nov):** it reports in detail; the lead checks every claim, fixes or
+  sends it back, commits and pushes, then starts the next. Never several in parallel.
 - **Code cooks work in their own git worktree and branch (D-W-16):** they commit there (no attribution), never push;
   the lead reviews, merges and resolves overlaps. Docs-only cooks write only in their own `docs/` folder.
 - Cooks' claims are checked against `git status`, the build and the tests: about a third of reports contained a false

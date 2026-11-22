@@ -1,8 +1,5 @@
 import { useEffect } from 'react';
-import type { Toast, ToastTone } from '../hooks/useToasts';
-import { Icon, type IconName } from './Icon';
-
-const ICON: Record<ToastTone, IconName> = { info: 'info', success: 'check', error: 'error' };
+import type { Toast } from '../hooks/useToasts';
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number) => void }) {
   const { id, message, tone = 'info', action, durationMs = action ? 10_000 : 5_000, leaving } = toast;
@@ -14,7 +11,6 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
 
   return (
     <div className={`toast toast-${tone}${leaving ? ' toast-leaving' : ''}`}>
-      <Icon name={ICON[tone]} className="toast-icon" />
       <p className="toast-message">{message}</p>
       {action ? (
         <button

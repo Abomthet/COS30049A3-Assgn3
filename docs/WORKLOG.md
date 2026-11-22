@@ -1181,6 +1181,73 @@ the title card, the real-phone clip, one rehearsal of the stop-and-restart, the 
 
 **Open.** Lead review.
 
+## 2026-11-21 — Evening: a bug found in the walkthrough, the Apple-inspired remake branch (lead, Opus 5.5)
+
+- During the user's walkthrough, a live address opened with TxGPT remembered as the method showed "That isn't a valid
+  Bitcoin address". Fixed (menu disables TxGPT for fetched addresses, falls back to the default with a note; a
+  method-specific error otherwise) with two V1 wording fixes; `6144d2b`, CI green.
+- At the user's request: a design study of current Apple pages (headless screenshots, kept outside the repo in
+  `~/Desktop/COS30049/design-ref/apple-2026-11-21/`) and branch **`ui-remake-apple`**: surfaces instead of borders,
+  one blue accent with pill buttons, segmented controls, a bigger type scale, a translucent header, quieter charts,
+  a coherent dark theme, and a hero on V1 (headline, the lookup as the main action, a stats strip from E3/E11).
+  Visual only; tests, accessibility and wider-text checks green; first-screen JS 148.65 kB. A proposal for the team:
+  not merged into `main`. The old 13 Nov servers on 8000/5173 were stopped at the user's request.
+
+
+## 2026-11-21 — Comparison wording when fewer than 20 earlier transactions exist (Sonnet 5.5, Haiku 5.5; lead Opus 5.5)
+
+**Context.** In the walkthrough, the running example's flagged transaction (11 Jul 2024, `c91d9fbb`, the address's
+11th transaction) said "10 earlier transactions: the previous 30 days, extended back to reach 20", which reads as a
+contradiction. The text is A2's (`explorer/predict.py:178`, never edited).
+
+**Decisions.** A2's `collect_window` (`features.py:152-176`) keeps extending back until `comparisonMinTx` are held and
+has no cap, so an extended window that holds fewer holds every earlier transaction of its kind. The web layer
+(`services/reasons.py::reword_comparison`, Mod-18) rewrites only that case to "N earlier transactions: all there are,
+as fewer than 20 exist" (singular for 1; A2 writes no singular), in E7 (`_build_view`) and E8 (`what_if`); the
+minimum is read from the settings. E10 and E12 carry no comparison text. Three mock fixtures changed by string (7
+strings; the recorder also rewrote unrelated fields, so its output was not kept).
+
+**Done.** Six screenshots of the flagged transaction re-taken (08, 13, 16, 17, 53, 54; the what-if shots use 20-
+transaction windows and are unchanged); the index changed only the height of 16 and 54. Clean worktree with a fresh
+`npm ci`: back end 750 passed + 2 skipped, Vitest 665, typecheck, build, vendor check, J2 browser test 3 passed.
+
+**Note.** The main checkout's `frontend/node_modules` predates S-10/S-11 (no `@playwright/test`, `@axe-core/playwright`,
+or the `tools/typegen` workspace); run `npm ci` in `frontend/` before using the browser tests or `npm test` there.
+
+## 2026-11-21 — Report outline (Sonnet 5.5; lead Opus 5.5)
+
+`docs/report-material/report-outline.md`: format rules from the brief (each with its line), the six sections with the
+plan's page budgets (`s13-report.tex:16-25`, 7.75 of 8 pages), topic prompts (no report wording: the brief bans
+generated content, the team writes the text), figures and evidence per section, appendix candidates, all 17 rubric rows
+mapped, and what is still missing. Lead review: every line reference and file checked; the cook's claim that the
+brief's rubric has 16 rows was wrong (Usability 2 is at brief:158); flagged the plan's "Harvard style, numbered as in
+Assignments 1 and 2" (`s13-report.tex:27`), since Harvard is author-date: a team decision before writing.
+
+## 2026-11-21 — Status documents after MS3 (Haiku 5.5; lead Opus 5.5)
+
+`TODO.md` banner and T43/T45/T46/T48; `docs/HANDOFF.md`: section 2 (last full check on `ed4ad0c`: back end 750 + 2
+skipped, front end 665, browser tests 462; 70 screenshots; the report outline and Mod-18; worktrees now in
+`.claude/worktrees/<task>`, created from `main` by the lead, with `npm ci` in each; the `ui-remake-apple` branch),
+section 4 (macOS 26.7.3; the main checkout's stale `node_modules`), section 8 (done items struck through; the subagent
+policy), section 9 (the branch vote; the bibliography style), and the README status, Mod count and test counts in
+sections 3 and 5. `CLAUDE.md`: State to 21 Nov and the user's rule of one subagent task at a time.
+
+## 2026-11-22 — Decorative icons removed (Sonnet 5.5, Haiku 5.5; lead Opus 5.5)
+
+**Context.** Looking at the finished app, the user asked to remove all unneeded "emojis". There were no emoji
+characters anywhere (front end, back end, Assistant answers, mock data); what read as emoji were the SVG line icons
+of `components/Icon.tsx` and the chart shapes. The user chose to remove the icons that sit beside a text label and to
+keep the flag ▲ (it marks unusual, matching the charts), the watch star (it is the button) and the chart shapes (they
+mark unusual without relying on colour).
+
+**Done.** 17 icons and their uses removed (info, error, check, copy, in/out arrows, external, chevrons, replay,
+search, offline, empty, history), with the maps, props and CSS that only served them; `IconName` is now flag, star,
+star-filled. The state panel and the flagged-day links lose their icon columns. A pressed filter chip, which was
+filled and ticked, is now filled with a 2 px outline and bold text, so it still differs by more than colour (new test).
+All 70 screenshots re-taken (normal, live, mock); 13 index heights changed. First-screen JS 147.5 kB.
+
+**Note.** `ui-remake-apple` styles some of the removed icons; if the team keeps that branch, merging it needs a small
+clean-up.
 ## 2026-11-21 — Apple-inspired UI remake on branch ui-remake-apple (Sonnet 5.5)
 
 A proposal for the team, **not merged** (branch `ui-remake-apple` from `1e861c9`, in its own worktree). Visual only: tokens and one appended CSS layer in `base.css`, header rules in `shell.css`, grid and ticks in `chartFigure.ts`. Surfaces instead of borders, one blue accent, pill buttons, segmented controls for chips, tabs and the what-if switch, bigger type scale, translucent sticky header, dotted quiet chart grid, coherent dark theme. Contrast table and file list: `docs/ui-remake-apple.md`. No wording, role or behaviour changed; back end untouched. **Open.** Lead review; the team decides whether to merge.

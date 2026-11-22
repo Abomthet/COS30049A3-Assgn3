@@ -80,16 +80,14 @@ function DayNav({ timeline, date, method }: { timeline: TimelineResponse; date: 
   const next = after[0];
   const prevFlag = [...before].reverse().find((d) => d.flaggedCount > 0);
   const nextFlag = after.find((d) => d.flaggedCount > 0);
-  const link = (target: { date: string } | undefined, label: string, icon: 'chevron-left' | 'chevron-right', flag = false) =>
+  const link = (target: { date: string } | undefined, label: string, flag = false) =>
     target ? (
       <a className={`nav-link${flag ? ' nav-link-flag' : ''}`} href={paths.day(timeline.address, target.date, method)}>
-        {icon === 'chevron-left' ? <Icon name={icon} /> : null}
         {flag ? <Icon name="flag" className="flag-icon" /> : null}
         <span>
           {label}
           <span className="nav-date">{formatDay(target.date)}</span>
         </span>
-        {icon === 'chevron-right' ? <Icon name={icon} /> : null}
       </a>
     ) : (
       <span className="nav-link nav-link-disabled" aria-disabled="true">
@@ -101,12 +99,12 @@ function DayNav({ timeline, date, method }: { timeline: TimelineResponse; date: 
   return (
     <nav className="day-nav" aria-label="Other days">
       <div className="day-nav-group">
-        {link(prev, 'Previous day', 'chevron-left')}
-        {link(next, 'Next day', 'chevron-right')}
+        {link(prev, 'Previous day')}
+        {link(next, 'Next day')}
       </div>
       <div className="day-nav-group">
-        {link(prevFlag, 'Previous unusual day', 'chevron-left', true)}
-        {link(nextFlag, 'Next unusual day', 'chevron-right', true)}
+        {link(prevFlag, 'Previous unusual day', true)}
+        {link(nextFlag, 'Next unusual day', true)}
       </div>
     </nav>
   );

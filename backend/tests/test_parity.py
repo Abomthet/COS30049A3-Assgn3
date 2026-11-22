@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 
 from app.core.config import Settings
 from app.services.explorer_service import ExplorerService
-from app.services.reasons import reword
+from app.services.reasons import reword, reword_comparison
 from app.services.store import SnapshotStore
 
 from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY
@@ -54,8 +54,8 @@ def expected_ranks(tx: dict[str, Any], transactions: list[dict[str, Any]]) -> di
 
 
 def expected_detail(tx: dict[str, Any], transactions: list[dict[str, Any]]) -> dict[str, Any]:
-    """Assignment 2's detail as E7 serves it: the same, with the source and the ranks added and the explanation worded as Mod-12 words it."""
-    return {**tx, "explanation": reword(tx["explanation"]), "source": "snapshot", "ranks": expected_ranks(tx, transactions)}
+    """Assignment 2's detail as E7 serves it: the same, with the source and the ranks added and the explanation worded as Mod-12 words it and its comparison groups as Mod-18 words them."""
+    return {**tx, "explanation": reword(tx["explanation"]), "comparison": reword_comparison(tx["comparison"]), "source": "snapshot", "ranks": expected_ranks(tx, transactions)}
 
 
 def all_rows(client: TestClient, address: str, **params: Any) -> list[dict[str, Any]]:

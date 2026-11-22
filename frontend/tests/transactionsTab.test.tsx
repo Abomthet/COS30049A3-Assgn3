@@ -122,11 +122,18 @@ describe('the filters', () => {
     expect(rows[0]).toHaveTextContent('Sent');
   });
 
-  test('a chip says whether it is on, by its state and by a tick', async () => {
+  test('a chip says whether it is on, by its state', async () => {
     start(`${base}?status=flagged`);
     const chip = await screen.findByRole('button', { name: 'Unusual' });
     expect(chip).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Not scored' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('a pressed chip carries no icon: it is pressed by aria-pressed and a heavier outline, not a tick', async () => {
+    start(`${base}?status=flagged`);
+    const chip = await screen.findByRole('button', { name: 'Unusual' });
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
+    expect(chip.querySelector('svg')).toBeNull();
   });
 
   test('the date range limits the list to those days, inclusive, and goes in the link', async () => {

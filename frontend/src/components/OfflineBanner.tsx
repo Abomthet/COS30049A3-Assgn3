@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useOnline } from '../hooks/useOnline';
 import { useServiceStatus } from '../hooks/useServiceStatus';
-import { Icon } from './Icon';
 
 /**
  * The catalogue's "Offline" state: the browser reports no connection. Views already loaded stay
@@ -23,7 +22,6 @@ export function OfflineBanner() {
   return (
     <div className="offline-banner" role="alert" data-testid="offline-banner">
       <div className="container offline-banner-inner">
-        <Icon name="offline" />
         <p>
           <strong>You're offline.</strong> Pages you have already opened stay usable. The Explorer loads the rest when your connection returns.
         </p>
