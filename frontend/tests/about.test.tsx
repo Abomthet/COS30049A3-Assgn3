@@ -66,7 +66,7 @@ describe('About and help', () => {
     expect(keys.getByText('Tab and Shift+Tab')).toBeInTheDocument();
     expect(keys.getByText('Left and right arrows on a chart')).toBeInTheDocument();
     const method = await section('The method in one paragraph');
-    await waitFor(() => expect(method.getByText(/Robust z baseline \(A1\) decides which transactions are flagged\. Alongside it, 8 further methods/)).toBeInTheDocument());
+    await waitFor(() => expect(method.getByText(/Baseline decides which transactions are flagged\. Alongside it, 8 further methods/)).toBeInTheDocument());
     expect(method.getByText(`Explorer service version ${HEALTH.version}.`)).toBeInTheDocument();
   });
 

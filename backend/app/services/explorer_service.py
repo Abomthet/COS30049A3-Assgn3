@@ -32,11 +32,11 @@ from ..schemas.common import DataSource, SnapshotInfo
 from ..schemas.errors import FieldError
 from ..schemas.transactions import TransactionDetail
 from .ranks import pools_of, ranks_of
-from .reasons import reword, reword_comparison, reword_limitation
+from .reasons import NOT_SCORED_TEXT, reword, reword_comparison, reword_limitation, web_explanation, web_reasons
 from .store import AddressData, AddressStore, predictor_for
 
 PAGE_SIZE = TypeAdapter(PageSize)
-NOT_SCORED_MESSAGE = "This transaction could not be scored: the address had too little earlier history to compare it with."
+NOT_SCORED_MESSAGE = NOT_SCORED_TEXT
 
 
 @dataclass(frozen=True)
@@ -59,8 +59,16 @@ def _row(tx: dict[str, Any]) -> TransactionRow:
     status = "not-scored" if not scored else "flagged" if tx["flagged"] else "not-flagged"
     return TransactionRow(
         txid=tx["txid"], time=tx["time"], direction=tx["direction"], net_sats=tx["netSats"], status=status,
-        score=tx["score"] if scored else None, main_reason=reword(reasons[0]["headline"]) if reasons else None,
+        score=tx["score"] if scored else None, main_reason=reword(reasons[0]["headline"], tx["direction"]) if reasons else None,
         main_z=reasons[0]["z"] if reasons else None, flagged_by=sum(tx["flags"].values()) if scored else 0)
+
+
+def _web_text(tx: dict[str, Any]) -> dict[str, Any]:
+    """`reasons` and `explanation` of a transaction, in the web's words (Mod-20); a transaction that was not scored has neither."""
+    if not tx.get("scored", False):
+        return {}
+    reasons = web_reasons(tx)
+    return {"reasons": reasons, "explanation": web_explanation(tx, reasons)}
 
 
 class ExplorerService:
@@ -155,12 +163,13 @@ class ExplorerService:
         if not data.features["scorable"].any():
             return self._unscored_view(predictor, data)
         result = predictor.score_address(address)
-        # The explanation is A2's template text; its repeating phrases are reworded here (Mod-12), and so are the comparison groups (Mod-18) and the limitation line (Mod-19).
+        # The web layer's reasons and explanation (Mod-20) replace A2's template text; the comparison groups (Mod-18, Mod-20) and
+        # the limitation line (Mod-19) are reworded here too. The A2 fields the Assistant reads (`features`, `method`) stay as they are.
         scored = [tx for tx in result["transactions"] if tx.get("scored", False)]
         pools = pools_of([tx["scores"] for tx in scored], list(scored[0]["scores"]))
-        transactions = {tx["txid"]: {**tx, "explanation": reword(tx["explanation"]),
+        transactions = {tx["txid"]: {**tx, **_web_text(tx),
                                      **({"limitation": reword_limitation(tx["limitation"])} if "limitation" in tx else {}),
-                                     **({"comparison": reword_comparison(tx["comparison"])} if "comparison" in tx else {}),
+                                     **({"comparison": reword_comparison(tx["comparison"], tx["direction"])} if "comparison" in tx else {}),
                                      **({"ranks": ranks_of(tx["scores"], pools)} if tx.get("scored", False) else {})}
                         for tx in result["transactions"]}
         timeline = TimelineResponse.model_validate({

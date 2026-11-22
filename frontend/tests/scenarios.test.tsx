@@ -37,7 +37,7 @@ describe('the scenario helpers', () => {
   });
 
   test('every CSV row carries the limitation line', () => {
-    const { header, rows } = scenarioCsvRows([scenario(), scenario({ id: 'x', flagged: false })], () => 'Robust z baseline (A1)', LIMITATION_LINE);
+    const { header, rows } = scenarioCsvRows([scenario(), scenario({ id: 'x', flagged: false })], () => 'Baseline', LIMITATION_LINE);
     expect(header.at(-1)).toBe('Limitation');
     expect(rows).toHaveLength(2);
     expect(rows.every((r) => r.at(-1) === LIMITATION_LINE && r.length === header.length)).toBe(true);
@@ -98,7 +98,7 @@ describe('keeping scenarios', () => {
     const first = within(rows[0]).getAllByRole('cell').map((c) => c.textContent);
     expect(first.slice(0, 2)).toEqual(['0.05 BTC', 'Sent']);
     expect(first[2]).toBe('2026-10-20 12:00');
-    expect(first[3]).toMatch(/Unusual.*Robust z baseline/);
+    expect(first[3]).toMatch(/Unusual.*Baseline/);
     expect(first[4]).toBe('5.98');
     expect(first[5]).toMatch(/^\d of \d methods$/);
     expect(within(rows[2]).getAllByRole('cell')[3]).toHaveTextContent(/Not unusual/);

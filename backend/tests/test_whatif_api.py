@@ -13,7 +13,7 @@ from explorer.predict import PRECOMPUTED_ONLY, Predictor
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings
-from app.services.reasons import reword, reword_comparison
+from app.services.reasons import reword_comparison, web_explanation, web_reasons
 
 from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY, VALID_OUTSIDE_SNAPSHOT, wait_until_ready
 from .test_whatif_parity import agree
@@ -54,8 +54,8 @@ def test_e8_the_plans_running_example_is_flagged_with_score_5_98(shared_client: 
     # It is Assignment 2's own answer, unchanged.
     single = predictor.score_what_if(RUNNING_EXAMPLE, 0.05, "out", PLAN_TIME)
     assert body["scores"] == pytest.approx(single["scores"], rel=1e-12) and body["flags"] == single["flags"]
-    assert body["explanation"] == reword(single["explanation"])  # A2's text, with Mod-12's wording
-    assert body["comparison"] == reword_comparison(single["comparison"])  # and Mod-18's for the comparison groups
+    assert body["reasons"] == web_reasons(single) and body["explanation"] == web_explanation(single)  # A2's reasons, in the web's words (Mod-20)
+    assert body["comparison"] == reword_comparison(single["comparison"], "out")  # and the web's comparison lines
 
 
 def test_e8_a_usual_sized_transaction_is_not_flagged_and_its_explanation_has_no_limitation_line(shared_client: TestClient) -> None:
@@ -223,7 +223,7 @@ def test_e9_the_plans_example_amounts(shared_client: TestClient) -> None:
     assert body["notAvailable"] == ["txgpt_method"] and [m["id"] for m in body["methods"]] == USABLE
     baseline = body["methods"][0]
     assert set(baseline) == {"id", "name", "threshold", "scores", "flags"}
-    assert baseline["name"] == "Robust z baseline (A1)" and baseline["threshold"] == 5.0
+    assert baseline["name"] == "Baseline" and baseline["threshold"] == 5.0
     assert [round(s, 4) for s in baseline["scores"]] == [2.1398, 0.9493, 3.9077, 5.9755, 6.8661, 9.8245, 12.7829]
     assert baseline["flags"] == [False, False, False, True, True, True, True]
     assert all(len(m["scores"]) == len(m["flags"]) == 7 for m in body["methods"])

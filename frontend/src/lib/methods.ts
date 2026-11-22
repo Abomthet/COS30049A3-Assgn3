@@ -1,20 +1,21 @@
-// The nine methods in the order the verdict tables (V3 and V4) list them. The names and families here are
-// the short ones the screens show until E11 answers, or when the service cannot be reached; once E11 has
-// answered, its names and families replace them everywhere (useMethodLabels), so a method is never
-// named two ways.
+// The nine methods in the order the verdict tables (V3 and V4) list them. The names here are the short ones
+// (Mod-21: "Baseline", "Local outlier", "Fusion") the screens show until E11 answers, or when the service cannot
+// be reached; the service sends the same short names (its `longName`, for the Models page, is not repeated here),
+// and once E11 has answered, its names and families replace these everywhere (useMethodLabels), so a method is
+// never named two ways.
 
 import type { MethodId } from '../api/types';
 
 export const METHODS: Array<{ id: MethodId; name: string; family: string }> = [
-  { id: 'baseline', name: 'Robust z baseline', family: 'Statistics' },
+  { id: 'baseline', name: 'Baseline', family: 'Statistics' },
   { id: 'isolation_forest', name: 'Isolation Forest', family: 'Outlier detection' },
-  { id: 'lof', name: 'Local Outlier Factor', family: 'Outlier detection' },
-  { id: 'kmeans', name: 'K-Means distance', family: 'Clustering' },
-  { id: 'dbscan', name: 'DBSCAN noise', family: 'Clustering' },
-  { id: 'regression', name: 'Regression residual', family: 'Regression' },
-  { id: 'regression_interval', name: 'Regression expected range', family: 'Regression' },
-  { id: 'fusion', name: 'Score fusion', family: 'Combination' },
-  { id: 'txgpt_method', name: 'TxGPT surprisal', family: 'Language model' },
+  { id: 'lof', name: 'Local outlier', family: 'Outlier detection' },
+  { id: 'kmeans', name: 'K-Means', family: 'Clustering' },
+  { id: 'dbscan', name: 'DBSCAN', family: 'Clustering' },
+  { id: 'regression', name: 'Regression', family: 'Regression' },
+  { id: 'regression_interval', name: 'Regression range', family: 'Regression' },
+  { id: 'fusion', name: 'Fusion', family: 'Combination' },
+  { id: 'txgpt_method', name: 'TxGPT', family: 'Language model' },
 ];
 
 /** The method that decides when a link names none; E2 and E11 say the same (`defaultMethod`). It is left out of links. */

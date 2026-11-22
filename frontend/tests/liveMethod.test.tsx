@@ -39,17 +39,17 @@ describe('a fetched address and an unavailable method', () => {
     expect(await screen.findByTestId('live-banner')).toBeInTheDocument();
     expect(await menu()).toHaveValue('baseline');
     expect(window.location.hash).toBe(`#/address/${LIVE}`);
-    expect(screen.getByText(/has no scores for this address, so it opens with Robust z baseline/)).toBeInTheDocument();
+    expect(screen.getByText(/has no scores for this address, so it opens with Baseline/)).toBeInTheDocument();
     expect(screen.queryByText("That isn't a valid Bitcoin address")).not.toBeInTheDocument();
   });
 
   test('TxGPT cannot be chosen for it, and says why', async () => {
     await fetchLive();
     start(`#/address/${LIVE}`);
-    const option = within(await menu()).getByRole('option', { name: /TxGPT surprisal/ });
+    const option = within(await menu()).getByRole('option', { name: /TxGPT/ });
     expect(option).toBeDisabled();
     expect(option).toHaveTextContent('snapshot addresses only');
-    expect(within(await menu()).getByRole('option', { name: /Regression residual/ })).toBeEnabled();
+    expect(within(await menu()).getByRole('option', { name: /^Regression(?! range)/ })).toBeEnabled();
   });
 
   test('a link that names TxGPT explains it, and the button switches to the default method keeping the address', async () => {
@@ -60,7 +60,7 @@ describe('a fetched address and an unavailable method', () => {
     expect(panel).toHaveTextContent('This method has no scores for a fetched address.');
     expect(panel).toHaveTextContent('choose another method');
     expect(screen.queryByRole('link', { name: 'Choose an address' })).not.toBeInTheDocument();
-    await user.click(within(panel).getByRole('button', { name: /Use Robust z baseline/ }));
+    await user.click(within(panel).getByRole('button', { name: /Use Baseline/ }));
     expect(await screen.findByTestId('live-banner')).toBeInTheDocument();
     expect(window.location.hash).toBe(`#/address/${LIVE}`);
   });
@@ -68,12 +68,12 @@ describe('a fetched address and an unavailable method', () => {
   test('the transactions tab and a day page behave the same way', async () => {
     await fetchLive();
     const user = start(`#/address/${LIVE}/transactions?method=txgpt_method`);
-    await user.click(within(await screen.findByTestId('state-method')).getByRole('button', { name: /Use Robust z baseline/ }));
+    await user.click(within(await screen.findByTestId('state-method')).getByRole('button', { name: /Use Baseline/ }));
     await screen.findByTestId('live-banner');
     expect(window.location.hash).toBe(`#/address/${LIVE}/transactions`);
 
     window.location.hash = `#/address/${LIVE}/day/2024-01-01?method=txgpt_method`;
-    await user.click(await screen.findByRole('button', { name: /Use Robust z baseline/ }));
+    await user.click(await screen.findByRole('button', { name: /Use Baseline/ }));
     await waitFor(() => expect(window.location.hash).toBe(`#/address/${LIVE}/day/2024-01-01`));
     expect(screen.queryByTestId('state-method')).not.toBeInTheDocument();
   });

@@ -24,7 +24,7 @@ describe('E11 names the methods everywhere', () => {
     open(txHash);
     const table = await screen.findByRole('table', { name: /nine methods for this transaction/ });
     await waitFor(() => expect(verdictRow(table, 'baseline')).toBeInTheDocument());
-    expect(verdictRow(table, 'fusion')).toHaveTextContent('Score fusion (two methods, one flag budget)');
+    expect(verdictRow(table, 'fusion')).toHaveTextContent('Fusion');
     expect(screen.getByText(new RegExp(`deciding method \\(${E11_NAME('baseline').replace(/[()]/g, '\\$&')}\\)`, 'i'))).toBeInTheDocument();
     expect(screen.getByText(/^Method:/).closest('p')).toHaveTextContent(`Method: ${E11_NAME('baseline')}.`);
   });
@@ -60,8 +60,8 @@ describe('before E11 answers, or with it down', () => {
     open(txHash);
     const table = await screen.findByRole('table', { name: /nine methods for this transaction/ });
     expect(within(table).getAllByRole('row')).toHaveLength(10);
-    expect(within(table).getByRole('rowheader', { name: /^Robust z baseline/ })).toHaveTextContent(/^Robust z baseline(?! \(A1\))/);
-    expect(within(table).getByRole('rowheader', { name: /^Score fusion/ })).toHaveTextContent(/^Score fusion(?! \()/);
+    expect(within(table).getByRole('rowheader', { name: /^Baseline/ })).toHaveTextContent(/^Baseline(?! \(A1\))/);
+    expect(within(table).getByRole('rowheader', { name: /^Fusion/ })).toHaveTextContent(/^Fusion(?! \()/);
     expect(within(table).getAllByText('Statistics')).toHaveLength(1);
   });
 
@@ -69,9 +69,9 @@ describe('before E11 answers, or with it down', () => {
     vi.spyOn(mockApi, 'methods').mockRejectedValue(new ApiError(500, { status: 'server_error', message: 'x' }));
     open(txHash);
     const table = await screen.findByRole('table', { name: /nine methods for this transaction/ });
-    expect(within(table).getByRole('rowheader', { name: /^Local Outlier Factor/ })).toBeInTheDocument();
+    expect(within(table).getByRole('rowheader', { name: /^Local outlier/ })).toBeInTheDocument();
     // E11 has not named a flag line either, so the column shows a dash.
-    expect(within(within(table).getByRole('rowheader', { name: /^Local Outlier Factor/ }).closest('tr')!).getAllByRole('cell')[2]).toHaveTextContent('—');
+    expect(within(within(table).getByRole('rowheader', { name: /^Local outlier/ }).closest('tr')!).getAllByRole('cell')[2]).toHaveTextContent('—');
   });
 
   test('the About page counts the methods without E11', async () => {

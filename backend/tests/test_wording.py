@@ -63,7 +63,7 @@ def test_the_three_short_history_addresses_use_the_plans_422_wording(shared_clie
         txid = shared_client.get(f"/api/addresses/{address}/transactions").json()["transactions"][0]["txid"]
         body = shared_client.get(f"/api/transactions/{txid}", params={"address": address}).json()
         assert body["status"] == "insufficient_history"
-        assert body["message"] == "This transaction could not be scored: the address had too little earlier history to compare it with."
+        assert body["message"] == "Too little earlier history to score this transaction."
         assert BANNED.search(json.dumps(body)) is None
 
 

@@ -49,7 +49,7 @@ def test_a_missing_or_unworded_shared_file_stops_the_start_with_one_sentence(tmp
 
 def test_reword_replaces_a2s_line_and_leaves_other_text_alone() -> None:
     assert reword_limitation(f"Flagged by X.\n{OLD}") == f"Flagged by X.\n{NEW}"
-    assert reword(f"Flagged by X.\n{OLD}") == f"Flagged by X.\n{NEW}"
+    assert reword(f"Flagged by X.\n{OLD}", "in") == f"Flagged by X.\n{NEW}"
     assert reword_limitation("Not flagged by X.") == "Not flagged by X."
 
 

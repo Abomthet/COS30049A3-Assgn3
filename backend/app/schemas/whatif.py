@@ -11,7 +11,7 @@ from typing import Annotated, Any, Literal, Self
 
 from pydantic import AwareDatetime, BeforeValidator, Field, model_validator
 
-from .common import CamelModel, MethodId, RequestModel
+from .common import CamelModel, MethodId, RequestModel, ShortNamed
 from .transactions import TransactionFacts, Verdict
 
 WhatIfDirection = Literal["in", "out"]
@@ -79,11 +79,10 @@ class CurveRequest(RequestModel):
         return self
 
 
-class CurveMethod(CamelModel):
+class CurveMethod(ShortNamed):
     """One method's scores and flags, one per amount."""
 
     id: MethodId
-    name: str
     threshold: float
     scores: list[float | None]
     flags: list[bool]

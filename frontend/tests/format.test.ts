@@ -53,18 +53,17 @@ describe('formatSpanDays', () => {
 });
 
 describe('explanationBlocks', () => {
-  const text = `Flagged by Robust z baseline (A1).\nWhat stands out compared with this address's own history:\n- Longer gap than usual: 5 days.\n- Larger amount than usual: 0.002 BTC.\n${LIMITATION_LINE}`;
+  const text = `The model's reason: the tokens were surprising.\n- Longer gap than usual: 5 days (usual 1 hour)\n- Larger amount than usual: 0.00200000 BTC (usual 0.00052495 BTC)\n${LIMITATION_LINE}`;
 
-  test('headings become paragraphs, "- " lines one list, and the limitation line is left to its own place', () => {
+  test('a line of words becomes a paragraph, "- " lines one list, and the limitation line is left to its own place', () => {
     expect(explanationBlocks(text, LIMITATION_LINE)).toEqual([
-      { kind: 'text', text: 'Flagged by Robust z baseline (A1).' },
-      { kind: 'text', text: "What stands out compared with this address's own history:" },
-      { kind: 'list', items: ['Longer gap than usual: 5 days.', 'Larger amount than usual: 0.002 BTC.'] },
+      { kind: 'text', text: "The model's reason: the tokens were surprising." },
+      { kind: 'list', items: ['Longer gap than usual: 5 days (usual 1 hour)', 'Larger amount than usual: 0.00200000 BTC (usual 0.00052495 BTC)'] },
     ]);
   });
 
   test('an explanation without the limitation line (not flagged) is kept whole', () => {
-    expect(explanationBlocks('Not flagged by X.\n- One thing.', LIMITATION_LINE)).toHaveLength(2);
+    expect(explanationBlocks('- One thing.\n- Another.', LIMITATION_LINE)).toHaveLength(1);
   });
 });
 

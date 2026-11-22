@@ -22,7 +22,7 @@ from fastapi.testclient import TestClient
 from app.core.config import Settings
 from app.services import assistant_service
 from app.services.assistant_service import AssistantService, Outcome, facts_key, prepared_entry
-from app.services.reasons import reword
+from app.services.reasons import reword, web_explanation
 
 from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY, VALID_OUTSIDE_SNAPSHOT, wait_until_ready
 
@@ -130,7 +130,7 @@ def test_a_passing_answer_is_returned_with_its_source_and_the_shape_of_e12(explo
     assert body["txid"] == txid and body["flagged"] is True and body["source"] == "text150m" and body["cached"] is False
     assert body["attempts"] == [{"source": "text150m", "failedChecks": []}] and body["skippedWriters"] == {}
     assert body["limitation"] == LIMITATION and isinstance(body["seconds"], float)
-    assert body["explanation"] == reword(f"{template_explanation(tx)}\n{TAG}")  # the writer's words, in the screen's wording (Mod-12)
+    assert body["explanation"] == reword(f"{template_explanation(tx)}\n{TAG}", tx["direction"])  # the writer's words, in the screen's wording (Mod-12)
     assert LIMITATION in body["explanation"] and "no-store" not in response.headers.get("cache-control", "")
 
 
@@ -183,7 +183,7 @@ def test_a_rejected_answer_is_replaced_by_the_template_naming_the_failed_checks(
     model.expect(tx, rejected)
     response = ask(explorer_client, txid=txid)
     body = response.json()
-    assert response.status_code == 200 and body["source"] == "template" and body["explanation"] == reword(template_explanation(tx))
+    assert response.status_code == 200 and body["source"] == "template" and body["explanation"] == web_explanation(tx)
     [attempt] = body["attempts"]
     assert attempt["source"] == "text150m"
     assert set(attempt["failedChecks"]) == {"numbers_ok", "limitation_ok", "wording_ok", "verdict_ok"}
@@ -203,7 +203,7 @@ def test_each_check_can_reject(explorer_client: TestClient, model: FakeModel, re
     model.expect(tx, reply.format(template=template_explanation(tx), banned=BANNED_WORDS[0]))
     body = ask(explorer_client, txid=txid).json()
     assert body["source"] == "template" and set(body["attempts"][0]["failedChecks"]) == failed
-    assert body["explanation"] == reword(template_explanation(tx))
+    assert body["explanation"] == web_explanation(tx)
 
 
 def test_a_prepared_answer_that_no_longer_passes_is_not_served(settings: Settings, weights: Path, tmp_path: Path, model: FakeModel,
@@ -240,7 +240,7 @@ def test_a_prepared_answer_is_served_first_even_without_the_weights(make_client:
     client = make_client(app_settings=app_settings)
     assert client.get("/api/health").json()["assistant"] == "not_installed"
     body = ask(client, txid=txid).json()
-    assert body["source"] == "text150m" and body["cached"] is True and body["explanation"] == reword(text)
+    assert body["source"] == "text150m" and body["cached"] is True and body["explanation"] == reword(text, tx["direction"])
     assert body["attempts"] == [{"source": "text150m", "failedChecks": []}] and body["skippedWriters"] == {}
     other = flagged_ids(client, RUNNING_EXAMPLE)[1]  # no prepared answer for it, and no model: the template, with the reason
     fallback = ask(client, txid=other).json()
@@ -256,7 +256,7 @@ def test_a_prepared_failure_is_served_as_the_template_with_the_checks_named(sett
     response = AssistantService(replace(settings, assistant_weights=weights, assistant_answers=path), model.load).explain(tx)
     assert (response.source, response.cached, model.loads) == ("template", True, 0)
     assert [(a.source, a.failed_checks) for a in response.attempts] == [("text150m", ["direction_ok"])]
-    assert response.explanation == reword(template_explanation(tx))
+    assert response.explanation == web_explanation(tx)
 
 
 def test_an_unreadable_prepared_file_is_ignored(settings: Settings, weights: Path, tmp_path: Path, model: FakeModel, caplog: pytest.LogCaptureFixture) -> None:
@@ -281,7 +281,7 @@ def test_off_answers_with_the_template_and_says_why(make_client: Callable[..., T
     client = make_client(app_settings=replace(settings, assistant_mode="off", assistant_weights=weights, assistant_answers=answers))
     client.app.state.runtime.assistant = AssistantService(client.app.state.runtime.settings, model.load)  # type: ignore[attr-defined]
     body = ask(client, txid=txid).json()
-    assert body["source"] == "template" and body["attempts"] == [] and body["explanation"] == reword(template_explanation(tx))
+    assert body["source"] == "template" and body["attempts"] == [] and body["explanation"] == web_explanation(tx)
     assert body["skippedWriters"] == {"text150m": assistant_service.OFF} and body["cached"] is False
     assert client.get("/api/health").json()["assistant"] == "off" and model.loads == 0
 

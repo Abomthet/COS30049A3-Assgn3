@@ -58,6 +58,20 @@ class ComparisonBasis(CamelModel):
     end: str
 
 
+ReasonLevel = Literal["flag", "contributing", "largest"]
+
+
+class Reason(CamelModel):
+    """One reason a transaction stands out, as the screen writes it (Mod-20): Assignment 2's choice and order, the web's words."""
+
+    feature: FeatureId
+    label: str = Field(description="What stands out, such as 'Larger amount than usual' or 'Small for a received amount'.")
+    level: ReasonLevel = Field(description="'flag' or 'contributing' for a feature at or above a z line; 'largest' when none "
+                                           "reaches one and these are the two biggest differences.")
+    value_text: str = Field(description="This transaction's figure with its unit, such as '0.05000000 BTC' or '0.4×'.")
+    usual_text: str = Field(description="The address's usual figure, written the same way.")
+
+
 class Verdict(CamelModel):
     """What the methods say about one scored transaction."""
 
@@ -68,7 +82,8 @@ class Verdict(CamelModel):
     features: list[FeatureDetail]
     comparison: list[ComparisonBasis]
     limitation: str
-    explanation: str = Field(description="The template's text; it ends with the limitation line on a flagged item.")
+    reasons: list[Reason] = Field(description="The reasons, strongest first (Assignment 2's `reasons_for`); the flag box is built from this.")
+    explanation: str = Field(description="One line per reason, then the limitation line on a flagged item; the text API clients and exports use.")
     scores: dict[MethodId, float | None] = Field(description="Every method's score.")
     flags: dict[MethodId, bool] = Field(description="Every method's flag.")
     ranks: dict[MethodId, float | None] = Field(

@@ -15,7 +15,7 @@ from explorer.predict import Predictor
 from app.core.config import Settings
 from app.services import assistant_service
 from app.services.assistant_service import AssistantService, facts_key, load_prepared, prepared_entry, write_guarded
-from app.services.reasons import reword
+from app.services.reasons import reword, web_explanation
 
 from .conftest import RUNNING_EXAMPLE
 
@@ -59,5 +59,5 @@ def test_the_written_file_is_read_back_and_served_without_a_model(tool: ModuleTy
     service = AssistantService(replace(settings, assistant_weights=tmp_path / "missing.pt", assistant_answers=path))
     served = [service.explain(tx) for _, tx in flagged]
     assert [r.source for r in served] == ["text150m", "text150m", "template"] and all(r.cached for r in served)
-    assert served[0].explanation == reword(replies[assistant.prompt_messages(flagged[0][1])[1]["content"]])
-    assert served[2].attempts[0].failed_checks and served[2].explanation == reword(template_explanation(flagged[2][1]))
+    assert served[0].explanation == reword(replies[assistant.prompt_messages(flagged[0][1])[1]["content"]], flagged[0][1]["direction"])
+    assert served[2].attempts[0].failed_checks and served[2].explanation == web_explanation(flagged[2][1])

@@ -16,8 +16,8 @@ Assignment 2's Assistant is `explorer.assistant` (the prompt and the guardrail's
 * **A rejected answer is never returned.** `write_guarded` keeps only the names of the checks an answer failed; the
   response then carries the template.
 
-The text served has Assignment 2's repeating phrases reworded and its BTC amounts written with eight decimals, as the
-template is (Mod-12). That runs after the guardrail, which judged the writer's own words.
+The writer's own words are reworded after the guardrail has judged them (F4's label by direction, short method names, BTC
+with eight decimals, the web's limitation line); the template fallback is the web's text (`reasons.web_explanation`, Mod-20).
 """
 from __future__ import annotations
 
@@ -35,14 +35,13 @@ from pathlib import Path
 from typing import Any
 
 from explorer import assistant as guardrail
-from explorer.explain import template_explanation
 from explorer.predict import load_writers
 
 from ..core.config import Settings
 from ..core.errors import RateLimited
 from ..schemas.explanations import ExplanationResponse, WriterAttempt
 from ..schemas.system import AssistantStatus
-from .reasons import reword
+from .reasons import reword, web_explanation
 
 log = logging.getLogger("app.assistant")
 
@@ -282,8 +281,9 @@ class AssistantService:
 
     def _respond(self, tx: dict[str, Any], outcome: Outcome, cached: bool, started: float,
                  skipped: dict[str, str] | None = None) -> ExplanationResponse:
-        text = template_explanation(tx) if outcome.text is None else outcome.text
+        # The writer's own words get only the phrase rewording, after the guardrail judged them; the template is the web's text.
+        text = web_explanation(tx) if outcome.text is None else reword(outcome.text, tx["direction"])
         return ExplanationResponse(
-            txid=tx["txid"], flagged=bool(tx["flagged"]), explanation=reword(text), source="template" if outcome.text is None else WRITER,
+            txid=tx["txid"], flagged=bool(tx["flagged"]), explanation=text, source="template" if outcome.text is None else WRITER,
             cached=cached, attempts=[WriterAttempt(source=a.source, failed_checks=list(a.failed_checks)) for a in outcome.attempts],
             skipped_writers=skipped or {}, limitation=self._settings.limitation_line, seconds=round(time.perf_counter() - started, 3))

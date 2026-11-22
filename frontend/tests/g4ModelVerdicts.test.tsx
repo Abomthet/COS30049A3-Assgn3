@@ -70,7 +70,7 @@ describe('a real transaction (V3)', () => {
     await draw(real(flaggedTx));
     expect(screen.getByRole('heading', { level: 3, name: 'Where each model ranks it' })).toBeInTheDocument();
     expect(screen.getByText(/Each model is compared on its own scale/)).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /Dot plot of where this transaction ranks .* under each of 9 methods\. 1 of 9 flag it: Robust z baseline/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Dot plot of where this transaction ranks .* under each of 9 methods\. 1 of 9 flag it: Baseline/ })).toBeInTheDocument();
   });
 
   test('the table view says each verdict in words, with the rank, and PNG and CSV can be downloaded', async () => {
@@ -80,7 +80,7 @@ describe('a real transaction (V3)', () => {
     const table = screen.getByRole('table', { name: 'Where each model ranks it' });
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(9);
-    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent(/Robust z baseline.*Deciding method/);
+    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent(/Baseline.*Deciding method/);
     expect(within(rows[0]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['Statistics', flaggedTx.scores.baseline!.toFixed(2), '100%', 'Flagged']);
     expect(within(rows[1]).getAllByRole('cell')[3]).toHaveTextContent('Not flagged');
     expect(screen.getByRole('button', { name: 'Download CSV' })).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe('a hypothetical transaction (V4)', () => {
     <G4ModelVerdicts ranks={whatIf.ranks} scores={whatIf.scores} flags={whatIf.flags} deciding={whatIf.method.id} subject="what-if" address={RECORDED[0].address} />
   );
 
-  test('TxGPT surprisal has no rank and says "Not available" in the chart and the table, with no dot', async () => {
+  test('TxGPT has no rank and says "Not available" in the chart and the table, with no dot', async () => {
     const user = userEvent.setup();
     const { trace } = await draw(lab);
     const note = trace(/^$/);
@@ -103,7 +103,7 @@ describe('a hypothetical transaction (V4)', () => {
     for (const dots of [trace(/Not flagged/), trace(/Flagged/)]) expect(dots?.y ?? []).not.toContain(8);
     expect(screen.getByRole('img', { name: /this hypothetical transaction ranks .* under each of 8 methods/ })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'View as table' }));
-    const row = screen.getByRole('rowheader', { name: /TxGPT surprisal/ }).closest('tr')!;
+    const row = screen.getByRole('rowheader', { name: /TxGPT/ }).closest('tr')!;
     expect(row).toHaveTextContent('Not available');
   });
 });

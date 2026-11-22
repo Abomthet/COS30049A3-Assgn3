@@ -95,7 +95,7 @@ def test_every_csv_row_carries_the_limitation_line_and_the_flagged_rows_are_comp
     assert {r["limitation"] for r in rows} == {LIMITATION}  # every row, flagged or not (wording rule)
     first = flagged[0]
     assert first["txid"] == "c91d9fbbd396070099f3147822cd6e1eb97b1de376ad353f42007149ddb73140" and first["flagged_by"] == "baseline"
-    assert first["main_reason"] == "Smaller amount relative to the usual for this direction" and round(float(first["score"]), 4) == 5.6071
+    assert first["main_reason"] == "Small for a received amount" and round(float(first["score"]), 4) == 5.6071
     assert first["source_url"] == "https://blockstream.info/tx/" + first["txid"]
     assert (first["relative_size_ratio"], first["relative_size_usual_ratio"]) == ("0.38102", "1.38565")
 

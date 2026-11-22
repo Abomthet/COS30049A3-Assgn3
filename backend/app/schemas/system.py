@@ -65,7 +65,7 @@ class Capabilities(CamelModel):
 CONFIG_EXAMPLE = {
     "snapshot": {"snapshotDate": "2026-10-22", "source": "Blockstream Esplora", "sourceUrl": "https://blockstream.info/api",
                  "illustrative": False, "dayTimeZone": "UTC", "addressCount": 28,
-                 "method": {"id": "baseline", "name": "Robust z baseline (A1)", "flagAbsZ": 5.0, "contributingAbsZ": 2.0,
+                 "method": {"id": "baseline", "name": "Baseline", "flagAbsZ": 5.0, "contributingAbsZ": 2.0,
                             "note": "Flags mean unusual for this address's own history, nothing more."}},
     "limitationLine": "Worth investigating, not proof of wrongdoing.",
     "features": [{"id": "F1", "name": "Size", "unit": "BTC",

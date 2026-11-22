@@ -151,7 +151,7 @@ describe('interaction', () => {
     await draw({ onMethodChange });
     const menu = screen.getByLabelText('Method drawn');
     expect(within(menu).getAllByRole('option')).toHaveLength(curve.methods.length);
-    expect(screen.getByRole('option', { name: /Robust z baseline.*\(deciding\)/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Baseline.*\(deciding\)/ })).toBeInTheDocument();
     await user.selectOptions(menu, 'kmeans');
     expect(onMethodChange).toHaveBeenCalledWith('kmeans');
   });
@@ -176,7 +176,7 @@ describe('interaction', () => {
     const onPickAmount = vi.fn();
     const user = userEvent.setup();
     await draw({ onPickAmount });
-    const group = screen.getByRole('group', { name: /Line chart of the Robust z baseline.* score/ });
+    const group = screen.getByRole('group', { name: /Line chart of the Baseline.* score/ });
     group.focus();
     await user.keyboard('{Home}{ArrowRight}{ArrowRight}{Enter}');
     expect(onPickAmount).toHaveBeenCalledWith(curve.amountsBtc[2]);

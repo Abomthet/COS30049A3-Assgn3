@@ -51,7 +51,7 @@ class ExplanationResponse(CamelModel):
 
     model_config = ConfigDict(json_schema_extra={"example": {
         "txid": "61aced15690314e5ca7056fb742fb004f233a6c006e5fe0622d092b492396a8c", "flagged": True,
-        "explanation": "Robust z baseline (A1) marks this transaction as unusual for its address.\n"
+        "explanation": "- Larger amount than usual: 0.05000000 BTC (usual 0.00063694 BTC)\n"
                        "Worth investigating, not proof of wrongdoing.",
         "source": "text150m", "cached": False, "attempts": [{"source": "text150m", "failedChecks": []}],
         "skippedWriters": {}, "limitation": "Worth investigating, not proof of wrongdoing.",

@@ -522,7 +522,7 @@ export interface components {
          *           "contributingAbsZ": 2,
          *           "flagAbsZ": 5,
          *           "id": "baseline",
-         *           "name": "Robust z baseline (A1)",
+         *           "name": "Baseline",
          *           "note": "Flags mean unusual for this address's own history, nothing more."
          *         },
          *         "snapshotDate": "2026-10-22",
@@ -732,7 +732,7 @@ export interface components {
          *         }
          *       ],
          *       "cached": false,
-         *       "explanation": "Robust z baseline (A1) marks this transaction as unusual for its address.\nWorth investigating, not proof of wrongdoing.",
+         *       "explanation": "- Larger amount than usual: 0.05000000 BTC (usual 0.00063694 BTC)\nWorth investigating, not proof of wrongdoing.",
          *       "flagged": true,
          *       "limitation": "Worth investigating, not proof of wrongdoing.",
          *       "seconds": 2.6,
@@ -1200,7 +1200,7 @@ export interface components {
         };
         /**
          * MethodEntry
-         * @description One method.
+         * @description One method: `name` is the short name the screens use, `longName` the one the Models page adds (Mod-21).
          */
         MethodEntry: {
             /**
@@ -1210,6 +1210,8 @@ export interface components {
             id: "baseline" | "isolation_forest" | "lof" | "kmeans" | "dbscan" | "regression" | "regression_interval" | "fusion" | "txgpt_method";
             /** Name */
             name: string;
+            /** Longname */
+            longName: string;
             /**
              * Family
              * @enum {string}
@@ -1251,6 +1253,38 @@ export interface components {
             defaultMethod: "baseline" | "isolation_forest" | "lof" | "kmeans" | "dbscan" | "regression" | "regression_interval" | "fusion" | "txgpt_method";
             /** Methods */
             methods: components["schemas"]["MethodEntry"][];
+        };
+        /**
+         * Reason
+         * @description One reason a transaction stands out, as the screen writes it (Mod-20): Assignment 2's choice and order, the web's words.
+         */
+        Reason: {
+            /**
+             * Feature
+             * @enum {string}
+             */
+            feature: "F1" | "F2" | "F3" | "F4";
+            /**
+             * Label
+             * @description What stands out, such as 'Larger amount than usual' or 'Small for a received amount'.
+             */
+            label: string;
+            /**
+             * Level
+             * @description 'flag' or 'contributing' for a feature at or above a z line; 'largest' when none reaches one and these are the two biggest differences.
+             * @enum {string}
+             */
+            level: "flag" | "contributing" | "largest";
+            /**
+             * Valuetext
+             * @description This transaction's figure with its unit, such as '0.05000000 BTC' or '0.4×'.
+             */
+            valueText: string;
+            /**
+             * Usualtext
+             * @description The address's usual figure, written the same way.
+             */
+            usualText: string;
         };
         /**
          * RecallByPattern
@@ -1451,8 +1485,13 @@ export interface components {
             /** Limitation */
             limitation: string;
             /**
+             * Reasons
+             * @description The reasons, strongest first (Assignment 2's `reasons_for`); the flag box is built from this.
+             */
+            reasons: components["schemas"]["Reason"][];
+            /**
              * Explanation
-             * @description The template's text; it ends with the limitation line on a flagged item.
+             * @description One line per reason, then the limitation line on a flagged item; the text API clients and exports use.
              */
             explanation: string;
             /**
@@ -1714,8 +1753,13 @@ export interface components {
             /** Limitation */
             limitation: string;
             /**
+             * Reasons
+             * @description The reasons, strongest first (Assignment 2's `reasons_for`); the flag box is built from this.
+             */
+            reasons: components["schemas"]["Reason"][];
+            /**
              * Explanation
-             * @description The template's text; it ends with the limitation line on a flagged item.
+             * @description One line per reason, then the limitation line on a flagged item; the text API clients and exports use.
              */
             explanation: string;
             /**

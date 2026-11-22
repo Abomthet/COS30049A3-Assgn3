@@ -53,7 +53,7 @@ describe('J4: the running example', () => {
     await typeAmount(user, '0.05');
     setTime('2026-10-20');
     const card = await verdict();
-    expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent(/^Flagged by Robust z baseline/);
+    expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent(/^Flagged by Baseline/);
     expect(card).toHaveTextContent('Score 5.98 against a flag line of 5.00');
     const why = within(card).getByTestId('flag-explanation');
     expect(within(why).getAllByRole('listitem').length).toBeGreaterThan(1);
@@ -69,7 +69,7 @@ describe('J4: the running example', () => {
     const table = await screen.findByRole('table', { name: /each method for this hypothetical transaction/ });
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(9);
-    const txgpt = within(table).getByRole('rowheader', { name: /TxGPT surprisal/ }).closest('tr')!;
+    const txgpt = within(table).getByRole('rowheader', { name: /TxGPT/ }).closest('tr')!;
     expect(txgpt).toHaveTextContent('Not available for a hypothetical transaction');
     expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent('Deciding method');
     await waitFor(() => expect(within(rows[0]).getAllByRole('cell')[2]).toHaveTextContent('5.00'));

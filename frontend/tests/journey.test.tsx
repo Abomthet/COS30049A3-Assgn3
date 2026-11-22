@@ -172,7 +172,7 @@ describe('the transaction detail (V3)', () => {
     vi.spyOn(mockApi, 'transaction').mockResolvedValue({ ...tx, scores: { ...tx.scores, txgpt_method: null }, flags: { ...tx.flags, txgpt_method: false } });
     start(detailHash(ex.flagged));
     const verdicts = await screen.findByRole('table', { name: /nine methods/ });
-    const row = within(verdicts).getByRole('rowheader', { name: /TxGPT surprisal/ }).closest('tr')!;
+    const row = within(verdicts).getByRole('rowheader', { name: /TxGPT/ }).closest('tr')!;
     expect(row).toHaveTextContent('Not available');
     expect(row).not.toHaveTextContent('Flag');
   });

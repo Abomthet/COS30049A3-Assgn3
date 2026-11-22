@@ -1,6 +1,6 @@
 // S-01, the method menu: the nine methods by E11's names, the choice in the link and remembered, and
-// every screen following it. The mock replays what the real service said under Regression residual
-// and TxGPT surprisal (E5, E6 and some E7), so the numbers below are the service's.
+// every screen following it. The mock replays what the real service said under Regression
+// and TxGPT (E5, E6 and some E7), so the numbers below are the service's.
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';

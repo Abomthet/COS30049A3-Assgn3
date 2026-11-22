@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from .common import CamelModel, MethodId
+from .common import CamelModel, MethodId, ShortNamed
 
 MethodFamily = Literal["statistics", "outlier detection", "clustering", "regression", "combination", "language model"]
 
@@ -38,11 +38,11 @@ class Evaluation(CamelModel):
     flag_rate: float
 
 
-class MethodEntry(CamelModel):
-    """One method."""
+class MethodEntry(ShortNamed):
+    """One method: `name` is the short name the screens use, `longName` the one the Models page adds (Mod-21)."""
 
     id: MethodId
-    name: str
+    long_name: str
     family: MethodFamily
     description: str
     threshold: float

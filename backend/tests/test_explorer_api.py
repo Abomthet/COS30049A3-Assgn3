@@ -206,7 +206,7 @@ def test_e6_defaults_are_the_first_page_oldest_first(client: TestClient, setting
 def test_e6_the_plans_flagged_row_has_its_reason(client: TestClient) -> None:
     row = rows(client, status="flagged", sort="time")["transactions"][0]
     assert row["txid"] == FLAGGED_TX and row["status"] == "flagged" and row["score"] == pytest.approx(5.6071, abs=1e-4)
-    assert row["mainReason"] == "Smaller amount relative to the usual for this direction" and row["flaggedBy"] == 1
+    assert row["mainReason"] == "Small for a received amount" and row["flaggedBy"] == 1
     assert row["mainZ"] == pytest.approx(-5.6071, abs=1e-4)
 
 
@@ -383,7 +383,8 @@ def test_e7_the_plans_example_transaction(client: TestClient) -> None:
     assert body["limitation"] == "Worth investigating, not proof of wrongdoing."
     assert body["flags"]["baseline"] is True and not any(v for k, v in body["flags"].items() if k != "baseline")
     assert set(body["scores"]) == set(body["flags"]) and len(body["scores"]) == 9
-    assert body["explanation"].startswith("Flagged by Robust z baseline (A1).\nWhat stands out") and body["source"] == "snapshot"
+    assert body["explanation"].startswith("- Small for a received amount: 0.4\u00d7 its usual size\n") and body["source"] == "snapshot"
+    assert [(r["feature"], r["level"]) for r in body["reasons"]] == [("F4", "flag"), ("F1", "contributing")]
     assert body["method"]["id"] == "baseline"
 
 
@@ -399,7 +400,8 @@ def test_e7_the_transaction_id_may_be_upper_case(client: TestClient) -> None:
 def test_e7_method_decides_the_flag_and_the_wording(client: TestClient) -> None:
     body = client.get(f"/api/transactions/{FLAGGED_TX}", params={"address": RUNNING_EXAMPLE, "method": "fusion"}).json()
     assert body["method"]["id"] == "fusion" and body["flagged"] is False
-    assert body["explanation"].startswith("Not flagged by Score fusion")
+    assert body["method"]["name"] == "Fusion" and "Not flagged by" not in body["explanation"] and not body["explanation"].startswith("What stands out")
+    assert body["reasons"] and body["explanation"].count("\n") == len(body["reasons"]) - 1  # one line per reason, no limitation line
 
 
 @pytest.mark.parametrize("txid", ["abc", "g" * 64, "0" * 63, "0" * 65, " ", "0x" + "0" * 62], ids=["short", "not-hex", "63", "65", "blank", "0x"])

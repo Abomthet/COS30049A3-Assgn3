@@ -177,7 +177,7 @@ describe('the contract', () => {
     current.snapshot = { snapshotDate: '2026-10-05', source: 'Test source', sourceUrl: '', illustrative: false } as SnapshotInfo;
     const { config } = await draw();
     expect(screen.getByRole('heading', { level: 2, name: 'Transactions over time' })).toBeInTheDocument();
-    expect(await screen.findByText('Data: Test source, snapshot of 5 Oct 2026 · times in UTC · flagged by Robust z baseline (A1)')).toBeInTheDocument();
+    expect(await screen.findByText('Data: Test source, snapshot of 5 Oct 2026 · times in UTC · flagged by Baseline')).toBeInTheDocument();
     expect(screen.getByRole('group', { name: /from 16 May 2024 to 19 Oct 2026, by amount on a log scale: 3 unusual, 364 not unusual, 10 not scored\./ })).toBeInTheDocument();
     expect(config.displayModeBar).toBe(true);
   });
@@ -196,7 +196,7 @@ describe('the contract', () => {
     expect(rows).toHaveLength(377);
     expect(within(rows[0]).getByRole('link')).toHaveAttribute('href', expect.stringMatching(/#\/address\/.+\/day\/2024-05-16\/tx\/[0-9a-f]{64}$/));
     const unusual = rows.find((r) => within(r).queryByText('Unusual'))!;
-    expect(unusual).toHaveTextContent('Smaller amount relative to the usual for this direction');
+    expect(unusual).toHaveTextContent('Small for a received amount');
     expect(screen.getByRole('button', { name: 'Download CSV' })).toBeInTheDocument();
   });
 

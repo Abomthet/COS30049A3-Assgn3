@@ -17,7 +17,8 @@ from fastapi.testclient import TestClient
 
 from app.core.config import Settings
 from app.services.explorer_service import ExplorerService
-from app.services.reasons import reword, reword_comparison, reword_limitation
+from app.core.method_names import SHORT_NAMES
+from app.services.reasons import reword, reword_comparison, reword_limitation, web_explanation, web_reasons
 from app.services.store import SnapshotStore
 
 from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY
@@ -40,7 +41,7 @@ def expected_row(tx: dict[str, Any]) -> dict[str, Any]:
     reasons = reasons_for(tx["features"])[0] if scored else []
     return {"txid": tx["txid"], "time": tx["time"], "direction": tx["direction"], "netSats": tx["netSats"],
             "status": "not-scored" if not scored else "flagged" if tx["flagged"] else "not-flagged",
-            "score": tx["score"] if scored else None, "mainReason": reword(reasons[0]["headline"]) if reasons else None,
+            "score": tx["score"] if scored else None, "mainReason": reword(reasons[0]["headline"], tx["direction"]) if reasons else None,
             "mainZ": reasons[0]["z"] if reasons else None, "flaggedBy": sum(tx["flags"].values()) if scored else 0}
 
 
@@ -54,9 +55,12 @@ def expected_ranks(tx: dict[str, Any], transactions: list[dict[str, Any]]) -> di
 
 
 def expected_detail(tx: dict[str, Any], transactions: list[dict[str, Any]]) -> dict[str, Any]:
-    """Assignment 2's detail as E7 serves it: the same, with the source and the ranks added and the explanation worded as Mod-12 words it its comparison groups as Mod-18 words them and its limitation line as Mod-19 words it."""
-    return {**tx, "explanation": reword(tx["explanation"]), "limitation": reword_limitation(tx["limitation"]),
-            "comparison": reword_comparison(tx["comparison"]), "source": "snapshot", "ranks": expected_ranks(tx, transactions)}
+    """Assignment 2's detail as E7 serves it: the same, with the source and the ranks added, the method named shortly (Mod-21),
+    `reasons` and the shorter `explanation` built from A2's reasons (Mod-20), the comparison groups worded as Mod-18 and Mod-20 word
+    them and the limitation line as Mod-19 words it."""
+    return {**tx, "method": {**tx["method"], "name": SHORT_NAMES[tx["method"]["id"]]}, "reasons": web_reasons(tx),
+            "explanation": web_explanation(tx), "limitation": reword_limitation(tx["limitation"]),
+            "comparison": reword_comparison(tx["comparison"], tx["direction"]), "source": "snapshot", "ranks": expected_ranks(tx, transactions)}
 
 
 def all_rows(client: TestClient, address: str, **params: Any) -> list[dict[str, Any]]:
@@ -78,7 +82,10 @@ def test_the_timeline_is_the_scored_result_without_its_transactions(shared_clien
     response = shared_client.get(f"/api/addresses/{address}/timeline")
     assert response.status_code == 200
     # A snapshot address has no `live` block (null); everything else is A2's result.
-    assert response.json() == {**{key: value for key, value in whole.items() if key != "transactions"}, "live": None}
+    expected = {**{key: value for key, value in whole.items() if key != "transactions"}, "live": None}
+    method = expected["snapshot"]["method"]
+    expected["snapshot"] = {**expected["snapshot"], "method": {**method, "name": SHORT_NAMES[method["id"]]}}  # Mod-21
+    assert response.json() == expected
 
 
 @per_scored_address
@@ -189,7 +196,8 @@ def test_each_methods_flags_equal_scores_csv(shared_client: TestClient, predicto
             assert detail["flagged"] is True and detail["method"]["id"] == method
             assert detail["flags"] == {m: bool(table.at[row["txid"], f"flag_{m}"]) for m in METHODS}
             assert detail["scores"][method] == pytest.approx(table.at[row["txid"], f"score_{method}"])
-            assert detail["explanation"].startswith(f"Flagged by {detail['method']['name']}.")
+            assert detail["method"]["name"] == SHORT_NAMES[method]
+            assert detail["reasons"] and detail["explanation"].endswith(detail["limitation"]) and "Flagged by" not in detail["explanation"]
 
 
 @pytest.mark.slow

@@ -214,6 +214,21 @@ export interface ComparisonBasis {
   end: string;
 }
 
+/** Which of F1 to F4 a reason is about is `feature`; `level` says how far it went: "flag" and "contributing" reach a z line, "largest" is one of the two biggest differences when none does. */
+export type ReasonLevel = 'flag' | 'contributing' | 'largest';
+
+/** One reason a transaction stands out, as the service words it (Mod-20); the figures are texts the front end shows as they are. */
+export interface Reason {
+  feature: FeatureId;
+  /** Such as "Larger amount than usual" or "Small for a received amount". */
+  label: string;
+  level: ReasonLevel;
+  /** This transaction's figure with its unit: "0.05000000 BTC", "3 transactions", "6 days", "0.4×". */
+  valueText: string;
+  /** The address's usual figure, written the same way. */
+  usualText: string;
+}
+
 export interface TransactionDetail extends TransactionCore {
   scored: true;
   flagged: boolean;
@@ -222,7 +237,9 @@ export interface TransactionDetail extends TransactionCore {
   features: FeatureDetail[];
   comparison: ComparisonBasis[];
   limitation: string;
-  /** The template's text, line by line; on a flagged item it ends with the limitation line. */
+  /** The reasons, strongest first (the service's `reasons_for`); the flag box is built from this. */
+  reasons: Reason[];
+  /** One line per reason, then on a flagged item the limitation line: the text API clients and exports use. */
   explanation: string;
   /** Every method's score; null where a method cannot score this transaction. */
   scores: Record<MethodId, number | null>;
@@ -350,7 +367,10 @@ export type PlantedPattern = 'spike' | 'burst' | 'dormant';
 
 export interface MethodDescription {
   id: MethodId;
+  /** The short name every screen uses, such as "Baseline". */
   name: string;
+  /** The longer name the Models page adds, such as "Robust z baseline". */
+  longName: string;
   /** Lower case, such as "outlier detection". */
   family: string;
   description: string;

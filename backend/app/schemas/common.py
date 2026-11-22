@@ -5,10 +5,12 @@ on the wire and snake_case in Python: `CamelModel` converts between them, and Fa
 """
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from pydantic.alias_generators import to_camel
+
+from ..core.method_names import short_name
 
 Direction = Literal["in", "out", "none"]
 HistoryStatus = Literal["sufficient", "insufficient"]
@@ -31,11 +33,27 @@ class RequestModel(CamelModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class MethodInfo(CamelModel):
-    """The deciding method and the two z lines the explanation uses (A1)."""
+class ShortNamed(CamelModel):
+    """A model with a method `id` and `name`: whatever name it is given, it holds the short one (Mod-21).
+
+    Assignment 2 writes the long names. The one place the schemas turn them short is here, so every response that carries
+    a method's name (E2, E3, E5 to E9, E11 through their `method` or `methods`) is covered by the same rule.
+    """
 
     id: str
     name: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def _short_name(cls, data: Any) -> Any:
+        if isinstance(data, dict) and isinstance(data.get("id"), str):
+            return {**data, "name": short_name(data["id"], data.get("name"))}
+        return data
+
+
+class MethodInfo(ShortNamed):
+    """The deciding method and the two z lines the explanation uses (A1)."""
+
     flag_abs_z: float
     contributing_abs_z: float
     note: str

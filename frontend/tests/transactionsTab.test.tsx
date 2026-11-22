@@ -67,7 +67,7 @@ describe('the table', () => {
     const rows = await bodyRows();
     expect(rows).toHaveLength(3);
     const cells = within(rows[0]).getAllByRole('cell').map((c) => c.textContent);
-    expect(cells).toEqual(['Received', '+0.00111260 BTC', '5.61', 'Unusual', 'Smaller amount relative to the usual for this direction', '1 of 9 methods']);
+    expect(cells).toEqual(['Received', '+0.00111260 BTC', '5.61', 'Unusual', 'Small for a received amount', '1 of 9 methods']);
   });
 
   test('a row is a link that opens the transaction', async () => {
