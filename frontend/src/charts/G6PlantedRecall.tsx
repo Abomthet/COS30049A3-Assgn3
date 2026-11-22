@@ -73,7 +73,7 @@ function buildFigure(methods: MethodDescription[], names: string[], { palette, c
       hovermode: 'closest',
       margin: { t: compact ? 72 : 44, r: 16 },
       legend: compact ? { y: 1.02 } : { x: 1, xanchor: 'right', y: 1.02, orientation: 'h' },
-      xaxis: { title: { text: 'Method' }, tickangle: compact ? -60 : 0, fixedrange: true },
+      xaxis: { title: { text: 'Model' }, tickangle: compact ? -60 : 0, fixedrange: true },
       yaxis: { title: { text: 'Planted transactions flagged' }, range: [0, 1.04], tickformat: '.0%', fixedrange: true },
     },
   };
@@ -86,7 +86,7 @@ export function G6PlantedRecall({ methods }: { methods: MethodDescription[] }) {
 
   const table = useMemo<ChartTable>(
     () => ({
-      columns: [{ label: 'Method' }, { label: 'All three patterns' }, ...PATTERNS.map((p) => ({ label: p.label }))],
+      columns: [{ label: 'Model' }, { label: 'All three patterns' }, ...PATTERNS.map((p) => ({ label: p.label }))],
       rows: methods.map((m) => [{ text: m.name }, { text: formatInterval(m.evaluation.meanRecall) }, ...PATTERNS.map((p) => ({ text: formatInterval(m.evaluation.recallByPattern[p.id]) }))]),
     }),
     [methods],
@@ -96,10 +96,10 @@ export function G6PlantedRecall({ methods }: { methods: MethodDescription[] }) {
   return (
     <PlotlyChart
       fileName={['planted-recall']}
-      title="How often each method catches each planted pattern"
+      title="How often each model catches each planted pattern"
       headingLevel={2}
       caption="Measured on planted test transactions (Assignment 2's evaluation), not on real activity, which has no labels. Each bar is the share flagged, with its 95% interval."
-      summary={`Grouped bar chart of the share of planted test transactions flagged by each of ${methods.length} methods, for a spike, a burst and a dormant address waking up. The highest mean over the three patterns is ${best.name}, at ${formatInterval(best.evaluation.meanRecall)}.`}
+      summary={`Grouped bar chart of the share of planted test transactions flagged by each of ${methods.length} models, for a spike, a burst and a dormant address waking up. The highest mean over the three patterns is ${best.name}, at ${formatInterval(best.evaluation.meanRecall)}.`}
       hint="Select a legend entry to hide or show a pattern. Hover a bar for its interval."
       figure={figure}
       table={table}

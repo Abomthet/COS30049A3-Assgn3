@@ -32,8 +32,8 @@ const scenario = (over: Partial<Scenario> = {}): Scenario => ({
 describe('the scenario helpers', () => {
   test('a comparison says how the amount, the score and the number of methods differ', () => {
     const text = compareScenarios(scenario({ amountBtc: '0.05', score: 5, flaggedBy: 3 }), scenario({ amountBtc: '0.5', score: 7.5, flaggedBy: 2 }));
-    expect(text).toBe('10 times larger, a score 2.50 higher, 1 method fewer flagging it');
-    expect(compareScenarios(scenario(), scenario())).toBe('the same amount, the same score, the same number of methods flagging it');
+    expect(text).toBe('10 times larger, a score 2.50 higher, 1 model fewer flagging it');
+    expect(compareScenarios(scenario(), scenario())).toBe('the same amount, the same score, the same number of models flagging it');
   });
 
   test('every CSV row carries the limitation line', () => {
@@ -100,7 +100,7 @@ describe('keeping scenarios', () => {
     expect(first[2]).toBe('2026-10-20 12:00');
     expect(first[3]).toMatch(/Unusual.*Baseline/);
     expect(first[4]).toBe('5.98');
-    expect(first[5]).toMatch(/^\d of \d methods$/);
+    expect(first[5]).toMatch(/^\d of \d models$/);
     expect(within(rows[2]).getAllByRole('cell')[3]).toHaveTextContent(/Not unusual/);
   });
 
@@ -156,7 +156,7 @@ describe('keeping scenarios', () => {
     expect(files[0].name).toMatch(new RegExp(`^what-if-scenarios_${ex.mainAddress}.*\\.csv$`));
     const lines = (await files[0].text).trimEnd().split('\r\n');
     expect(lines).toHaveLength(4);
-    expect(lines[0]).toBe('Amount (BTC),Direction,Time (UTC),Deciding method,Verdict,Score,Methods that flag it,Methods that can score it,Limitation');
+    expect(lines[0]).toBe('Amount (BTC),Direction,Time (UTC),Deciding model,Verdict,Score,Models that flag it,Models that can score it,Limitation');
     expect(lines.slice(1).every((l) => l.endsWith(`"${LIMITATION_LINE}"`))).toBe(true); // quoted: the line has a comma
     expect(lines[1]).toMatch(/^0\.05,Sent,2026-10-20T12:00:00Z,/);
   });

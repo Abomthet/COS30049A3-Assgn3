@@ -59,21 +59,21 @@ describe('the bars', () => {
 describe('the contract', () => {
   test('both axes are labelled, the scale is a share from 0 and the caption says it is not about real activity', async () => {
     const { layout } = await draw();
-    expect(layout.xaxis.title.text).toBe('Method');
+    expect(layout.xaxis.title.text).toBe('Model');
     expect(layout.yaxis.title.text).toBe('Planted transactions flagged');
     expect(layout.yaxis.range[0]).toBe(0);
     expect(layout.yaxis.tickformat).toBe('.0%');
-    expect(screen.getByRole('heading', { level: 2, name: 'How often each method catches each planted pattern' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'How often each model catches each planted pattern' })).toBeInTheDocument();
     expect(screen.getByText(/Measured on planted test transactions .* not on real activity, which has no labels/)).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /Grouped bar chart of the share of planted test transactions flagged by each of 9 methods/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Grouped bar chart of the share of planted test transactions flagged by each of 9 models/ })).toBeInTheDocument();
   });
 
   test('the table view repeats every interval, and PNG and CSV can be downloaded', async () => {
     const user = userEvent.setup();
     await draw();
     await user.click(screen.getByRole('button', { name: 'View as table' }));
-    const table = screen.getByRole('table', { name: 'How often each method catches each planted pattern' });
-    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Method', 'All three patterns', 'Spike', 'Burst', 'Dormant']);
+    const table = screen.getByRole('table', { name: 'How often each model catches each planted pattern' });
+    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Model', 'All three patterns', 'Spike', 'Burst', 'Dormant']);
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(methods.length);
     methods.forEach((m, i) => {

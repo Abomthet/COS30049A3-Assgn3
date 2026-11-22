@@ -149,7 +149,7 @@ describe('interaction', () => {
     const onMethodChange = vi.fn();
     const user = userEvent.setup();
     await draw({ onMethodChange });
-    const menu = screen.getByLabelText('Method drawn');
+    const menu = screen.getByLabelText('Model drawn');
     expect(within(menu).getAllByRole('option')).toHaveLength(curve.methods.length);
     expect(screen.getByRole('option', { name: /Baseline.*\(deciding\)/ })).toBeInTheDocument();
     await user.selectOptions(menu, 'kmeans');

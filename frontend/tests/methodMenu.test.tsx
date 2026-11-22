@@ -23,7 +23,7 @@ function start(hash: string) {
   return user;
 }
 
-const menu = () => screen.findByRole('combobox', { name: 'Deciding method' });
+const menu = () => screen.findByRole('combobox', { name: 'Deciding model' });
 const stored = () => JSON.parse(localStorage.getItem('explorer.preferences.v1') ?? '{}');
 const unusualTile = () => screen.getByText('Unusual', { selector: 'dt' });
 /** The first transaction a method flags in a recorded run, with its detail. */
@@ -118,7 +118,7 @@ describe('the overview follows the method', () => {
   test('the lab says it decides with the default method, and the tabs keep the method', async () => {
     start(`#/address/${ex.mainAddress}/what-if?method=regression`);
     expect(await menu()).toHaveValue('regression');
-    expect(await screen.findByText(/The lab always decides with the default method/)).toBeInTheDocument();
+    expect(await screen.findByText(/The lab always decides with the default model/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Overview' }).getAttribute('href')).toBe(`#/address/${ex.mainAddress}?method=regression`);
   });
 });
@@ -148,8 +148,8 @@ describe('a transaction follows the method', () => {
     start(`#/address/${ex.mainAddress}/day/${tx.time.slice(0, 10)}/tx/${txid}?method=regression`);
     const why = await screen.findByTestId('flag-explanation');
     expect(within(why).getByTestId('limitation-line')).toHaveTextContent(LIMITATION_LINE);
-    expect(screen.getByText(/The deciding method \(/)).toHaveTextContent(regressionName);
-    expect(screen.getByText('Method:', { selector: 'strong' }).parentElement).toHaveTextContent(regressionName);
+    const table = await screen.findByRole('table', { name: /nine models for this transaction/ });
+    expect(within(table).getAllByRole('rowheader').find((h) => /Deciding/.test(h.textContent ?? ''))).toHaveTextContent(regressionName);
   });
 
   test('a transaction the baseline flags can be unremarkable to another method, and the page says by how much', async () => {
@@ -157,8 +157,8 @@ describe('a transaction follows the method', () => {
     const run = regression.details[ex.flagged.txid];
     if (run.status !== 200) throw new Error('The fixture has no detail for it.');
     expect(run.body.flagged).toBe(false);
-    const note = (await screen.findByText(/Not unusual\./)).closest('p');
-    expect(note).toHaveTextContent(`${regressionName} scores it ${run.body.score.toFixed(2)}, below its flag line of ${described('regression').threshold.toFixed(2)}`);
+    const note = (await screen.findByText(/^Score \d/)).closest('p');
+    expect(note).toHaveTextContent(`Score ${run.body.score.toFixed(2)}, below the flag line of ${described('regression').threshold.toFixed(2)}.`);
     expect(screen.queryByTestId('flag-explanation')).not.toBeInTheDocument();
   });
 
@@ -166,7 +166,8 @@ describe('a transaction follows the method', () => {
     const { txid, tx } = flaggedIn(METHOD_RUNS.runs.txgpt_method!);
     start(`#/address/${ex.mainAddress}/day/${tx.time.slice(0, 10)}/tx/${txid}?method=txgpt_method`);
     expect(await screen.findByTestId('flag-explanation')).toBeInTheDocument();
-    expect(screen.getByText('Method:', { selector: 'strong' }).parentElement).toHaveTextContent(described('txgpt_method').name);
+    const table = await screen.findByRole('table', { name: /nine models for this transaction/ });
+    expect(within(table).getAllByRole('rowheader').find((h) => /Deciding/.test(h.textContent ?? ''))).toHaveTextContent(described('txgpt_method').name);
   });
 
   test('the day\'s list and the links out of the screen keep the method', async () => {

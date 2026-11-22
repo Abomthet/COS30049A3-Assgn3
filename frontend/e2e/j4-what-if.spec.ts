@@ -15,7 +15,7 @@ test('J4: the verdict and the curve follow the values, and a scenario is kept', 
   const verdict = page.getByTestId('verdict-card');
   await expect(verdict.getByRole('heading', { name: /^Flagged by / })).toBeVisible();
   await expect(verdict).toContainText(/Score \d+\.\d+ against a flag line of \d+\.\d+/);
-  await expect(page.getByRole('region', { name: 'Why this amount stands out' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Why it stands out' })).toBeVisible();
   const curve = await drawnChart(page, 'How the score changes with the amount');
   await expect(curve.locator('.pchart-plot .scatterlayer .trace').first()).toBeAttached();
   await expect(page.getByRole('group', { name: /Line chart of the .* sent amounts/ })).toBeVisible();
@@ -34,7 +34,7 @@ test('J4: the verdict and the curve follow the values, and a scenario is kept', 
   // A tiny amount: the verdict changes to not flagged.
   await page.getByLabel('Amount (BTC)').fill('0.0005');
   await expect(verdict.getByRole('heading', { name: 'Not flagged' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Why this amount stands out' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Why it stands out' })).toHaveCount(0);
   await expect(keep).toBeEnabled();
   await keep.click();
   await expect(kept.getByRole('row')).toHaveCount(3);

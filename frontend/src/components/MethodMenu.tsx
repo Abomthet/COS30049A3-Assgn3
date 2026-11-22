@@ -23,13 +23,13 @@ export function MethodMenu({ method, updating, live = false }: { method: MethodI
 
   return (
     <div className="method-menu">
-      <label htmlFor={id}>Deciding method</label>
+      <label htmlFor={id}>Deciding model</label>
       <select id={id} className="text-input" value={method} onChange={(e) => choose(e.target.value as MethodId)}>
         {METHODS.map((m) => (
           <option key={m.id} value={m.id} disabled={live && SNAPSHOT_ONLY.includes(m.id) && m.id !== method}>
             {labels[m.id].name}
             {m.id === DEFAULT_METHOD ? ' (default)' : ''}
-            {live && SNAPSHOT_ONLY.includes(m.id) ? ': snapshot addresses only' : ''}
+            {live && SNAPSHOT_ONLY.includes(m.id) ? ' (snapshot addresses only)' : ''}
           </option>
         ))}
       </select>

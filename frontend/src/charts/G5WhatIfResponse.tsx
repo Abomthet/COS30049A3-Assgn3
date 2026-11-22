@@ -185,7 +185,7 @@ export function G5WhatIfResponse({ curve, address, methodId, onMethodChange, mar
   return (
     <div className="g5">
       <div className="g5-method">
-        <label htmlFor={menuId}>Method drawn</label>
+        <label htmlFor={menuId}>Model drawn</label>
         <select id={menuId} className="text-input" value={method.id} onChange={(e) => onMethodChange(e.target.value as MethodId)}>
           {curve.methods.map((m) => (
             <option key={m.id} value={m.id}>

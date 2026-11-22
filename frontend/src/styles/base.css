@@ -1257,6 +1257,38 @@ main.container {
 .flag-callout h4 {
   color: var(--text-2);
 }
+/* The box's parts, top to bottom: title, big figure, other reasons, comparison, limitation line, the Assistant's control. */
+.flag-callout > * + * {
+  margin-top: 12px;
+}
+/* The other reasons (or the Assistant's answer) sit a clear gap below the big figure, as "Compared with" does below them. */
+.flag-callout > .reason-lines,
+.flag-callout > .explanation,
+.flag-callout > h4 {
+  margin-top: 16px;
+}
+.flag-callout h4 {
+  margin-bottom: 0;
+}
+.flag-callout h4 + .bases {
+  margin-top: 6px;
+}
+.flag-figure {
+  margin-top: 4px;
+}
+.reason-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.flag-callout .explanation:empty,
+.flag-callout .explanation:not(:has(*)),
+.flag-callout .explanation:has(> .assistant-control:empty:only-child) {
+  display: none;
+}
 .reasons,
 .bases {
   margin: 0;
@@ -1311,16 +1343,6 @@ main.container {
 .explanation p {
   margin: 0;
 }
-.explanation-card {
-  margin-top: 16px;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-.explanation-card h3 {
-  margin: 0 0 8px;
-  font-size: 1rem;
-}
 .explanation-label,
 .assistant-note {
   color: var(--text-2);
@@ -1348,6 +1370,30 @@ main.container {
   padding: 12px 14px;
   background: var(--surface-2);
   border-radius: var(--radius-sm);
+}
+/* "Details": the closed disclosure under a not-flagged line (components/Explanation.tsx), after the chart tools menu. */
+.not-flagged-details {
+  margin-top: 8px;
+}
+.not-flagged-details summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--link);
+  font-weight: 600;
+}
+.not-flagged-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.not-flagged-body h4 {
+  margin: 0;
+  color: var(--text-2);
 }
 
 .verdicts h3 {
@@ -1412,13 +1458,6 @@ main.container {
   }
 }
 
-.method-note {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  border-top: 1px solid var(--border);
-  padding-top: 12px;
-}
 
 @media print {
   .skip-link {
@@ -2943,4 +2982,43 @@ select.text-input {
   .stat-row {
     grid-template-columns: 0.8fr 1.7fr 1.3fr 1.2fr;
   }
+}
+
+/* ================================================================== Big-number block (components/StatBlock.tsx) */
+/* After .hero-stat: bold, tight, tabular figures. "large" is the hero's size; "medium" fits inside a card. */
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+}
+.stat-label {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  letter-spacing: -0.005em;
+}
+.stat-figure {
+  display: block;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.stat-large .stat-value {
+  font-size: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
+}
+.stat-medium .stat-value {
+  font-size: clamp(1.5rem, 1.1rem + 1.1vw, 1.9rem);
+}
+.stat-unit {
+  color: var(--text-2);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.stat-note {
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }

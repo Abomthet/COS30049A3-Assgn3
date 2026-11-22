@@ -20,13 +20,13 @@ function open(hash: string) {
 const verdictRow = (table: HTMLElement, id: string) => within(table).getByRole('rowheader', { name: new RegExp(`^${E11_NAME(id).replace(/[()]/g, '\\$&')}`) });
 
 describe('E11 names the methods everywhere', () => {
-  test('V3: the verdict table, the sentence above it and the method note use the same name', async () => {
+  test('V3: the verdict table names the models and marks the deciding one', async () => {
     open(txHash);
-    const table = await screen.findByRole('table', { name: /nine methods for this transaction/ });
+    const table = await screen.findByRole('table', { name: /nine models for this transaction/ });
     await waitFor(() => expect(verdictRow(table, 'baseline')).toBeInTheDocument());
     expect(verdictRow(table, 'fusion')).toHaveTextContent('Fusion');
-    expect(screen.getByText(new RegExp(`deciding method \\(${E11_NAME('baseline').replace(/[()]/g, '\\$&')}\\)`, 'i'))).toBeInTheDocument();
-    expect(screen.getByText(/^Method:/).closest('p')).toHaveTextContent(`Method: ${E11_NAME('baseline')}.`);
+    expect(verdictRow(table, 'baseline')).toHaveTextContent('Deciding');
+    expect(screen.getByText('The row marked Deciding sets the status; the others are for comparison.')).toBeInTheDocument();
   });
 
   test('V4: the verdict heading and the table row say the same', async () => {
@@ -34,13 +34,13 @@ describe('E11 names the methods everywhere', () => {
     await userEvent.setup().type(await screen.findByLabelText('Amount (BTC)'), '0.05');
     const card = await screen.findByTestId('verdict-card', undefined, { timeout: 3000 });
     expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent(`Flagged by ${E11_NAME('baseline')}`);
-    const table = await screen.findByRole('table', { name: /each method for this hypothetical transaction/ });
+    const table = await screen.findByRole('table', { name: /each model for this hypothetical transaction/ });
     expect(verdictRow(table, 'baseline')).toBeInTheDocument();
   });
 
   test('V4: the curve chart names its method the same way, in its menu too', async () => {
     open(`#/address/${ex.mainAddress}/what-if?direction=out`);
-    const menu = await screen.findByLabelText('Method drawn', undefined, { timeout: 3000 });
+    const menu = await screen.findByLabelText('Model drawn', undefined, { timeout: 3000 });
     await waitFor(() => expect(within(menu).getByRole('option', { name: `${E11_NAME('baseline')} (deciding)` })).toBeInTheDocument());
   });
 
@@ -48,9 +48,9 @@ describe('E11 names the methods everywhere', () => {
     const renamed: MethodsResponse = { ...METHODS_ANSWER, methods: METHODS_ANSWER.methods.map((m) => (m.id === 'baseline' ? { ...m, name: 'Median-distance baseline' } : m)) };
     vi.spyOn(mockApi, 'methods').mockResolvedValue(renamed);
     open(txHash);
-    const table = await screen.findByRole('table', { name: /nine methods for this transaction/ });
+    const table = await screen.findByRole('table', { name: /nine models for this transaction/ });
     await waitFor(() => expect(within(table).getByRole('rowheader', { name: /^Median-distance baseline/ })).toBeInTheDocument());
-    expect(screen.getByText(/^Method:/).closest('p')).toHaveTextContent('Method: Median-distance baseline.');
+    expect(within(table).getByRole('rowheader', { name: /^Median-distance baseline/ })).toHaveTextContent('Deciding');
   });
 });
 
@@ -58,7 +58,7 @@ describe('before E11 answers, or with it down', () => {
   test('the table lists every method by its short label, with its family', async () => {
     vi.spyOn(mockApi, 'methods').mockReturnValue(new Promise(() => {}));
     open(txHash);
-    const table = await screen.findByRole('table', { name: /nine methods for this transaction/ });
+    const table = await screen.findByRole('table', { name: /nine models for this transaction/ });
     expect(within(table).getAllByRole('row')).toHaveLength(10);
     expect(within(table).getByRole('rowheader', { name: /^Baseline/ })).toHaveTextContent(/^Baseline(?! \(A1\))/);
     expect(within(table).getByRole('rowheader', { name: /^Fusion/ })).toHaveTextContent(/^Fusion(?! \()/);
@@ -68,7 +68,7 @@ describe('before E11 answers, or with it down', () => {
   test('when E11 fails the table still names every method', async () => {
     vi.spyOn(mockApi, 'methods').mockRejectedValue(new ApiError(500, { status: 'server_error', message: 'x' }));
     open(txHash);
-    const table = await screen.findByRole('table', { name: /nine methods for this transaction/ });
+    const table = await screen.findByRole('table', { name: /nine models for this transaction/ });
     expect(within(table).getByRole('rowheader', { name: /^Local outlier/ })).toBeInTheDocument();
     // E11 has not named a flag line either, so the column shows a dash.
     expect(within(within(table).getByRole('rowheader', { name: /^Local outlier/ }).closest('tr')!).getAllByRole('cell')[2]).toHaveTextContent('—');
@@ -78,6 +78,6 @@ describe('before E11 answers, or with it down', () => {
     mockControls.offline = true;
     open('#/about');
     expect(await screen.findByRole('heading', { level: 1, name: 'About and help' })).toBeInTheDocument();
-    expect(screen.getByText(/Alongside it, 8 further methods/)).toBeInTheDocument();
+    expect(screen.getByText(/Alongside it, 8 further models/)).toBeInTheDocument();
   });
 });

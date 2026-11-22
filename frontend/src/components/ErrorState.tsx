@@ -71,13 +71,13 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
         return (
           <StatePanel
             tone="info"
-            title="This method can't score this address"
+            title="This model can't score this address"
             headingLevel={headingLevel}
             live="alert"
             testId="state-method"
             actions={
               <button type="button" className="btn btn-secondary" onClick={() => navigate(withMethod(window.location.hash, DEFAULT_METHOD), { replace: true })}>
-                Use {labels[DEFAULT_METHOD].name} (the default method)
+                Use {labels[DEFAULT_METHOD].name} (the default model)
               </button>
             }
           >

@@ -9,7 +9,6 @@ import ex from '../src/api/mock/fixtures/examples.json';
 import { METHODS_ANSWER, RECORDED } from '../src/api/mock/fixtures';
 import { mockApi, mockControls } from '../src/api/mock/mockApi';
 import { ApiError, type TimelineResponse } from '../src/api/types';
-import { TEMPLATE_LABEL } from '../src/components/Explanation';
 import { METHODS } from '../src/lib/methods';
 import { LIMITATION_LINE, settings } from '../src/lib/settings';
 
@@ -54,7 +53,7 @@ describe('usability walkthrough tasks', () => {
     expect(await screen.findByTestId('state-empty-detail')).toBeInTheDocument();
     await user.click((await screen.findAllByRole('link', { name: /Unusual/ }))[0]);
     const why = await screen.findByTestId('flag-explanation');
-    expect(within(why).getByRole('heading', { name: /Why this transaction stands out/ })).toBeInTheDocument();
+    expect(within(why).getByRole('heading', { name: 'Why it stands out' })).toBeInTheDocument();
     expect(within(why).getAllByRole('listitem').length).toBeGreaterThan(1);
     expect(within(why).getByText('Compared with')).toBeInTheDocument();
     expect(within(why).getByTestId('limitation-line')).toHaveTextContent(LIMITATION_LINE);
@@ -127,23 +126,40 @@ describe('the overview (V2)', () => {
 describe('the transaction detail (V3)', () => {
   const flaggedIds = RECORDED.flatMap((r) => Object.values(r.details).flatMap((d) => (d.status === 200 && d.body.flagged ? [d.body] : [])));
 
-  test.each(flaggedIds.map((tx) => [tx.txid, tx] as const))('FR-04: flagged %s shows its explanation and the limitation line', async (_id, tx) => {
+  // Nothing is asked of E12 on mount, so the reason lines are what a flagged transaction shows until the button is pressed; the
+  // second test presses it and gets the recorded prepared answer.
+  const never = () => vi.spyOn(mockApi, 'explain').mockReturnValue(new Promise(() => {}));
+
+  test.each(flaggedIds.map((tx) => [tx.txid, tx] as const))('FR-04: flagged %s shows its reasons, what they were compared with and the limitation line', async (_id, tx) => {
+    never();
     start(detailHash({ address: tx.address, date: tx.time.slice(0, 10), txid: tx.txid }));
     const why = await screen.findByTestId('flag-explanation');
-    // The explanation's own lines are shown; its last line, the limitation, is shown once in its own place.
-    // A flagged snapshot transaction also fetches its prepared Assistant answer (a different wording of the same facts), which
-    // can replace the template at any moment, so the template's lines are checked while the template is what is shown.
-    const lines = tx.explanation.split('\n');
-    if (why.querySelector('.explanation-label')?.textContent === TEMPLATE_LABEL) {
-      for (const line of lines.slice(0, -1)) expect(why).toHaveTextContent(line.replace(/^- /, ''));
-    }
+    const [first, ...others] = tx.reasons;
+    const unit = (r: typeof first) => (r.feature === 'F4' ? 'its usual size' : `(usual ${r.usualText})`);
+    expect(within(why).getByTestId('flag-figure')).toHaveTextContent(first.label);
+    expect(within(why).getByTestId('flag-figure')).toHaveTextContent(first.valueText);
+    const items = within(why).queryAllByTestId('reason-lines').flatMap((ul) => within(ul).getAllByRole('listitem').map((li) => li.textContent));
+    expect(items).toEqual(others.map((r) => `${r.label}: ${r.valueText} ${unit(r)}`));
+    for (const b of tx.comparison) expect(why).toHaveTextContent(b.description);
+    expect(why).not.toHaveTextContent(/Template/);
     expect(within(why).getAllByText(LIMITATION_LINE)).toHaveLength(1);
     expect(within(why).getByTestId('limitation-line')).toHaveTextContent(LIMITATION_LINE);
   });
 
+  test('FR-04: the Assistant\'s prepared answer replaces the reason lines and keeps the figure, the comparison and the limitation line', async () => {
+    const user = start(detailHash(ex.flagged));
+    const why = await screen.findByTestId('flag-explanation');
+    await user.click(await within(why).findByRole('button', { name: 'Ask the Assistant to explain' }, { timeout: 3000 }));
+    expect(await within(why).findByText('Written by the Assistant. Checked by code before it is shown.', undefined, { timeout: 3000 })).toBeInTheDocument();
+    expect(within(why).queryByTestId('reason-lines')).not.toBeInTheDocument();
+    expect(within(why).getByTestId('flag-figure')).toHaveTextContent('0.4×');
+    expect(within(why).getByText('Compared with')).toBeInTheDocument();
+    expect(within(why).getAllByText(LIMITATION_LINE)).toHaveLength(1);
+  });
+
   test('every model is named: nine rows, the deciding one marked, and a flag where a method flags', async () => {
     start(detailHash(ex.flagged));
-    const table = await screen.findByRole('table', { name: /Score, flag line and verdict of each of the nine methods/ });
+    const table = await screen.findByRole('table', { name: /Score, flag line and verdict of each of the nine models/ });
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(9);
     const tx = await mockApi.transaction(ex.flagged.txid, ex.flagged.address);
@@ -156,22 +172,24 @@ describe('the transaction detail (V3)', () => {
       expect(cells[2]).toHaveTextContent(METHODS_ANSWER.methods.find((e) => e.id === m.id)!.threshold.toFixed(2));
       expect(cells[3]).toHaveTextContent(tx.flags[m.id] ? 'Flag' : 'Not flagged');
     });
-    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent('Deciding method');
+    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent('Deciding');
+    expect(within(rows[0]).getByRole('rowheader')).not.toHaveTextContent('Deciding method');
     expect(within(rows[0]).getByText('Flag')).toBeInTheDocument();
   });
 
   test('a transaction that is not flagged says so, with the flag line from the service, and still lists the models', async () => {
     start(detailHash(ex.scored));
-    expect(await screen.findByText(/No feature was 5 or more/)).toBeInTheDocument();
+    const tx = await mockApi.transaction(ex.scored.txid, ex.scored.address);
+    expect(await screen.findByText(`Score ${tx.score.toFixed(2)}, below the flag line of ${METHODS_ANSWER.methods.find((m) => m.id === 'baseline')!.threshold.toFixed(2)}.`)).toBeInTheDocument();
     expect(screen.queryByTestId('flag-explanation')).not.toBeInTheDocument();
-    expect(screen.getByRole('table', { name: /nine methods/ })).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: /nine models/ })).toBeInTheDocument();
   });
 
   test('a method that cannot score shows "Not available" and no verdict', async () => {
     const tx = await mockApi.transaction(ex.flagged.txid, ex.flagged.address);
     vi.spyOn(mockApi, 'transaction').mockResolvedValue({ ...tx, scores: { ...tx.scores, txgpt_method: null }, flags: { ...tx.flags, txgpt_method: false } });
     start(detailHash(ex.flagged));
-    const verdicts = await screen.findByRole('table', { name: /nine methods/ });
+    const verdicts = await screen.findByRole('table', { name: /nine models/ });
     const row = within(verdicts).getByRole('rowheader', { name: /TxGPT/ }).closest('tr')!;
     expect(row).toHaveTextContent('Not available');
     expect(row).not.toHaveTextContent('Flag');
@@ -182,7 +200,7 @@ describe('the transaction detail (V3)', () => {
     vi.spyOn(mockApi, 'transactions').mockResolvedValue({ ...day, total: 260 });
     start(`#/address/${ex.flagged.address}/day/${ex.flagged.date}`);
     expect(await screen.findByRole('heading', { name: '260 transactions' })).toBeInTheDocument();
-    expect(screen.getByText('Showing the first 1, in time order.')).toBeInTheDocument();
+    expect(screen.getByText('First 1 shown, oldest first.')).toBeInTheDocument();
   });
 });
 
@@ -228,12 +246,12 @@ describe('FR-05 states', () => {
 
   test('empty: nothing selected yet on the day screen', async () => {
     start(`#/address/${ex.flagged.address}/day/${ex.flagged.date}`);
-    expect(await screen.findByTestId('state-empty-detail')).toHaveTextContent('Select a transaction');
+    expect(await screen.findByTestId('state-empty-detail')).toHaveTextContent('Pick a transaction to see its details.');
   });
 
   test('empty: a day without transactions', async () => {
     start(`#/address/${ex.mainAddress}/day/2020-01-01`);
-    expect(await screen.findByText('No transactions on this day')).toBeInTheDocument();
+    expect(await screen.findByText('No transactions on 1 Jan 2020')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Back to the timeline' })).toBeInTheDocument();
   });
 
@@ -249,16 +267,16 @@ describe('FR-05 states', () => {
   test('insufficient history: a transaction of a short address keeps its facts and explains why it is not scored (422)', async () => {
     start(detailHash(ex.notScored));
     const panel = await screen.findByTestId('state-insufficient');
-    expect(panel).toHaveTextContent('Not enough history to score this transaction');
-    expect(panel).toHaveTextContent(/at least 10 earlier transactions over at least 14 days/);
+    expect(panel).toHaveTextContent('Too little history to score');
+    expect(panel).toHaveTextContent('Scoring needs 10 transactions over 14 days.');
     expect(screen.getByText(ex.notScored.txid)).toBeInTheDocument();
   });
 
   test('insufficient history: an early transaction of a normal address is handled the same way, per transaction (422)', async () => {
     start(detailHash(ex.earlyUnscored));
     const panel = await screen.findByTestId('state-insufficient');
-    expect(panel).toHaveTextContent('Not enough history to score this transaction');
-    expect(panel).toHaveTextContent('0 confirmed transactions, with a history spanning under a day');
+    expect(panel).toHaveTextContent('Too little history to score');
+    expect(panel).toHaveTextContent('No earlier transactions');
     expect(screen.getByText(ex.earlyUnscored.txid)).toBeInTheDocument();
     // The address itself is fine, so the next step is its first scored day.
     expect(within(panel).getByRole('link', { name: /Go to the first scored day \(11 Jul 2024\)/ })).toHaveAttribute('href', `#/address/${ex.mainAddress}/day/2024-07-11`);
@@ -316,7 +334,7 @@ describe('keyboard and labelling', () => {
     const chart = await screen.findByRole('group', { name: /Bar chart of transactions per day/ });
     act(() => chart.focus());
     await user.keyboard('{Home}{ArrowRight}{Enter}');
-    expect(await screen.findByText(/Transactions confirmed on this day/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /\d{4}$/ })).toBeInTheDocument();
   });
 
   test('every flagged-day link is reachable without the chart', async () => {

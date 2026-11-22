@@ -57,7 +57,7 @@ describe('a real transaction (V3)', () => {
 
   test('the deciding method wears a ring, and the axis runs from 0 to 100%', async () => {
     const { trace, layout } = await draw(real(flaggedTx));
-    const ring = trace(/Deciding method/);
+    const ring = trace(/Deciding model/);
     expect(ring.marker.symbol).toBe('circle-open');
     expect(ring.x).toEqual([flaggedTx.ranks[flaggedTx.method.id]]);
     expect(layout.xaxis.tickformat).toBe('.0%');
@@ -70,7 +70,7 @@ describe('a real transaction (V3)', () => {
     await draw(real(flaggedTx));
     expect(screen.getByRole('heading', { level: 3, name: 'Where each model ranks it' })).toBeInTheDocument();
     expect(screen.getByText(/Each model is compared on its own scale/)).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /Dot plot of where this transaction ranks .* under each of 9 methods\. 1 of 9 flag it: Baseline/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Dot plot of where this transaction ranks .* under each of 9 models\. 1 of 9 flag it: Baseline/ })).toBeInTheDocument();
   });
 
   test('the table view says each verdict in words, with the rank, and PNG and CSV can be downloaded', async () => {
@@ -80,7 +80,7 @@ describe('a real transaction (V3)', () => {
     const table = screen.getByRole('table', { name: 'Where each model ranks it' });
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(9);
-    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent(/Baseline.*Deciding method/);
+    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent(/Baseline.*Deciding model/);
     expect(within(rows[0]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['Statistics', flaggedTx.scores.baseline!.toFixed(2), '100%', 'Flagged']);
     expect(within(rows[1]).getAllByRole('cell')[3]).toHaveTextContent('Not flagged');
     expect(screen.getByRole('button', { name: 'Download CSV' })).toBeInTheDocument();
@@ -101,7 +101,7 @@ describe('a hypothetical transaction (V4)', () => {
     expect(note.text).toEqual(['Not available']);
     expect(note.y).toEqual([8]);
     for (const dots of [trace(/Not flagged/), trace(/Flagged/)]) expect(dots?.y ?? []).not.toContain(8);
-    expect(screen.getByRole('img', { name: /this hypothetical transaction ranks .* under each of 8 methods/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /this hypothetical transaction ranks .* under each of 8 models/ })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'View as table' }));
     const row = screen.getByRole('rowheader', { name: /TxGPT/ }).closest('tr')!;
     expect(row).toHaveTextContent('Not available');
@@ -128,6 +128,6 @@ describe('where it is used', () => {
     await user.clear(amount);
     await user.type(amount, '0.05');
     expect(await screen.findByRole('heading', { level: 3, name: 'Where each model ranks it' }, { timeout: 3000 })).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /this hypothetical transaction ranks .* under each of 8 methods/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /this hypothetical transaction ranks .* under each of 8 models/ })).toBeInTheDocument();
   });
 });

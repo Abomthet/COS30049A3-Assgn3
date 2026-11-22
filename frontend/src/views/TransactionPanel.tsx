@@ -9,12 +9,13 @@ import { NotFlaggedExplanation } from '../components/Explanation';
 import { ErrorState } from '../components/ErrorState';
 import { FlagCallout } from '../components/FlagCallout';
 import { Loading, StatePanel } from '../components/StatePanel';
+import { StatBlock } from '../components/StatBlock';
 import { VerdictTable } from '../components/VerdictTable';
 import { formatDateTime, formatDay } from '../lib/dates';
-import { formatBtc, formatSpanDays, plural } from '../lib/format';
+import { formatBtc, formatSpanDays } from '../lib/format';
 import { DEFAULT_METHOD } from '../lib/methods';
 import { paths } from '../lib/router';
-import { useMethodLabels, useThresholds } from '../hooks/useMethods';
+import { useThresholds } from '../hooks/useMethods';
 import { useRequest } from '../hooks/useRequest';
 
 // The detail panel of Screen 3 (FR-03, FR-04, AC-03, M-13). For a flagged transaction it shows the
@@ -36,12 +37,7 @@ export function TransactionPanel({ address, date, txid, method }: { address: str
 
   if (detail.status === 'idle') {
     return (
-      <StatePanel tone="empty" title="Select a transaction" testId="state-empty-detail">
-        <p>
-          Choose a transaction from the list to see its amount, direction and source. Unusual ones are marked{' '}
-          <StatusBadge status="flagged" />, and their details explain why.
-        </p>
-      </StatePanel>
+      <StatePanel tone="empty" title="Pick a transaction to see its details." testId="state-empty-detail" />
     );
   }
   if (detail.status === 'loading') {
@@ -122,8 +118,7 @@ function Facts({ tx }: { tx: TransactionCore }) {
 }
 
 function Detail({ tx, headingRef, method, updating }: { tx: TransactionDetail; headingRef: HeadingRef; method: MethodId; updating: boolean }) {
-  const methodName = useMethodLabels()[tx.method.id].name;
-  const flagLine = useThresholds()[tx.method.id];
+  const flagLine = useThresholds()[tx.method.id] ?? (tx.method.id === DEFAULT_METHOD ? tx.method.flagAbsZ : undefined);
   // The Assistant explains the default method's flag, which is what the prepared answers and E12 are about.
   const request: ExplanationRequest | undefined = tx.method.id === DEFAULT_METHOD ? { address: tx.address, txid: tx.txid } : undefined;
   return (
@@ -137,22 +132,17 @@ function Detail({ tx, headingRef, method, updating }: { tx: TransactionDetail; h
       <Facts tx={tx} />
 
       {tx.flagged ? (
-        <FlagCallout tx={tx} title="Why this transaction stands out" request={request} />
+        <FlagCallout tx={tx} title="Why it stands out" request={request} />
       ) : (
         <p className="not-flagged-note">
-          <strong>Not unusual.</strong>{' '}
-          {tx.method.id === DEFAULT_METHOD
-            ? `No feature was ${tx.method.flagAbsZ} or more from this address's usual pattern.`
-            : `${methodName} scores it ${tx.score.toFixed(2)}${flagLine === undefined ? '' : `, below its flag line of ${flagLine.toFixed(2)}`}.`}
+          Score {tx.score.toFixed(2)}
+          {flagLine === undefined ? '.' : `, below the flag line of ${flagLine.toFixed(2)}.`}
         </p>
       )}
 
       {!tx.flagged && request ? <NotFlaggedExplanation request={request} tx={tx} /> : null}
       <G3FeatureDeviation features={tx.features} address={tx.address} />
       <Verdicts tx={tx} />
-      <p className="method-note">
-        <strong>Method:</strong> {methodName}. {tx.method.note}
-      </p>
       {tx.direction === 'none' ? null : (
         <p>
           <a className="btn btn-secondary" href={paths.whatIf(tx.address, tx.direction, method)}>
@@ -164,17 +154,13 @@ function Detail({ tx, headingRef, method, updating }: { tx: TransactionDetail; h
   );
 }
 
-/** What each of the nine methods says about this transaction (M-13). The deciding one sets the status above. */
+/** What each of the nine models says about this transaction (M-13). The deciding one sets the status above. */
 function Verdicts({ tx }: { tx: TransactionDetail }) {
-  const methodName = useMethodLabels()[tx.method.id].name;
   return (
     <section className="verdicts" aria-labelledby="verdicts-title">
       <h3 id="verdicts-title">What each model says</h3>
-      <p className="card-sub">
-        Nine methods score every transaction on its own scale. The deciding method ({methodName}) sets the status above;
-        the others are shown for comparison.
-      </p>
-      <VerdictTable scores={tx.scores} flags={tx.flags} deciding={tx.method.id} caption="Score, flag line and verdict of each of the nine methods for this transaction" />
+      <p className="card-sub">The row marked Deciding sets the status; the others are for comparison.</p>
+      <VerdictTable scores={tx.scores} flags={tx.flags} deciding={tx.method.id} caption="Score, flag line and verdict of each of the nine models for this transaction" />
       <div className="card chart-card">
         <LazyG4 ranks={tx.ranks} scores={tx.scores} flags={tx.flags} deciding={tx.method.id} subject="transaction" address={tx.address} txid={tx.txid} />
       </div>
@@ -184,6 +170,7 @@ function Verdicts({ tx }: { tx: TransactionDetail }) {
 
 function NotScored({ body, transaction, address, method, headingRef }: { body: InsufficientHistoryBody; transaction: TransactionCore; address: string; method: MethodId; headingRef: HeadingRef }) {
   const h = body.history;
+  const earlier = earlierText(h.earlierTx, h.spanDays);
   return (
     <article className="detail" aria-labelledby="detail-title">
       <header className="detail-head">
@@ -195,7 +182,7 @@ function NotScored({ body, transaction, address, method, headingRef }: { body: I
       <Facts tx={transaction} />
       <StatePanel
         tone="warning"
-        title="Not enough history to score this transaction"
+        title="Too little history to score"
         headingLevel={3}
         testId="state-insufficient"
         actions={
@@ -215,12 +202,18 @@ function NotScored({ body, transaction, address, method, headingRef }: { body: I
           </>
         }
       >
+        <StatBlock testId="not-scored-lead" value={earlier.value} unit={earlier.unit} />
         <p>
-          Before this transaction, the address had {plural(h.earlierTx, 'confirmed transaction')}, with a history spanning{' '}
-          {formatSpanDays(h.spanDays)}. Scoring needs at least {h.required.minTx} earlier transactions over at least{' '}
-          {h.required.minSpanDays} days, so there is nothing reliable to compare it with.
+          Scoring needs {h.required.minTx} transactions over {h.required.minSpanDays} days.
         </p>
       </StatePanel>
     </article>
   );
+}
+
+/** The lead of the not-scored panel as a number and its words: "9" "earlier transactions, 53 days", "1" "earlier transaction", "No" "earlier transactions". */
+export function earlierText(earlierTx: number, spanDays: number): { value: string; unit: string } {
+  if (earlierTx === 0) return { value: 'No', unit: 'earlier transactions' };
+  if (earlierTx === 1) return { value: '1', unit: 'earlier transaction' };
+  return { value: String(earlierTx), unit: `earlier transactions, ${formatSpanDays(spanDays)}` };
 }

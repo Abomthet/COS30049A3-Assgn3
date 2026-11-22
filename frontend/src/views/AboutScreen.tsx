@@ -163,7 +163,7 @@ export function AboutScreen() {
           {thresholds
             ? ` A transaction is flagged when a score reaches ${thresholds.flagAbsZ} in either direction, and a feature counts as contributing from ${thresholds.contributingAbsZ}.`
             : ''}
-          {deciding ? ` ${labels[deciding.id].name} decides which transactions are flagged.` : ''} Alongside it, {METHODS.length - 1} further methods score every transaction on their
+          {deciding ? ` ${labels[deciding.id].name} decides which transactions are flagged.` : ''} Alongside it, {METHODS.length - 1} further models score every transaction on their
           own scales and are shown beside it for comparison.
         </p>
         {health ? <p className="muted">Explorer service version {health.version}.</p> : null}

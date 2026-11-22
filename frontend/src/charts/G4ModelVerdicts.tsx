@@ -51,7 +51,7 @@ function buildFigure(rows: Row[], deciding: MethodId, { palette, compact }: Figu
   const of = (verdict: Verdict) => rows.filter((r) => r.verdict === verdict);
   const hover = (row: Row) =>
     `${row.name}<br>${formatShare(row.rank!)} of this address's scored transactions score at or below this one<br>` +
-    `Score ${row.score?.toFixed(2) ?? '—'} · ${VERDICT_TEXT[row.verdict]}${row.id === deciding ? ' · deciding method' : ''}`;
+    `Score ${row.score?.toFixed(2) ?? '—'} · ${VERDICT_TEXT[row.verdict]}${row.id === deciding ? ' · deciding model' : ''}`;
 
   const data: Data[] = [];
   const notFlagged = of('not-flagged');
@@ -89,7 +89,7 @@ function buildFigure(rows: Row[], deciding: MethodId, { palette, compact }: Figu
     data.push({
       type: 'scatter',
       mode: 'markers',
-      name: '◯ Deciding method',
+      name: '◯ Deciding model',
       x: [ringed.rank],
       y: [position(ringed)],
       marker: { symbol: 'circle-open', size: 24, color: palette.text, line: { width: 2.5, color: palette.text } },
@@ -158,9 +158,9 @@ export function G4ModelVerdicts({ ranks, scores, flags, deciding, subject, addre
 
   const table = useMemo<ChartTable>(
     () => ({
-      columns: [{ label: 'Method' }, { label: 'Family' }, { label: 'Score', numeric: true }, { label: 'Rank among its own transactions', numeric: true }, { label: 'Verdict' }],
+      columns: [{ label: 'Model' }, { label: 'Family' }, { label: 'Score', numeric: true }, { label: 'Rank among its own transactions', numeric: true }, { label: 'Verdict' }],
       rows: rows.map((r) => [
-        { text: r.name, sub: r.id === deciding ? 'Deciding method' : undefined },
+        { text: r.name, sub: r.id === deciding ? 'Deciding model' : undefined },
         { text: r.family },
         { text: r.score === null ? '—' : r.score.toFixed(2) },
         { text: r.rank === null ? '—' : formatShare(r.rank) },
@@ -173,7 +173,7 @@ export function G4ModelVerdicts({ ranks, scores, flags, deciding, subject, addre
   const flaggedBy = rows.filter((r) => r.verdict === 'flagged');
   const scored = rows.filter((r) => r.verdict !== 'unavailable').length;
   const what = subject === 'what-if' ? 'this hypothetical transaction' : 'this transaction';
-  const summary = `Dot plot of where ${what} ranks among the address's own scored transactions under each of ${scored} methods. ${flaggedBy.length === 0 ? 'No method flags it' : `${flaggedBy.length} of ${scored} flag it: ${flaggedBy.map((r) => r.name).join(', ')}`}.`;
+  const summary = `Dot plot of where ${what} ranks among the address's own scored transactions under each of ${scored} models. ${flaggedBy.length === 0 ? 'No model flags it' : `${flaggedBy.length} of ${scored} flag it: ${flaggedBy.map((r) => r.name).join(', ')}`}.`;
 
   return (
     <PlotlyChart
@@ -182,7 +182,7 @@ export function G4ModelVerdicts({ ranks, scores, flags, deciding, subject, addre
       headingLevel={3}
       caption={`${snapshotCaption(settings.snapshot, address)} · Each model is compared on its own scale: a dot is ${what}'s rank among the address's own scored transactions for that model, not its score, so the nine can share one axis.`}
       summary={summary}
-      hint="Hover a dot for its score and rank. The table view lists every method in words."
+      hint="Hover a dot for its score and rank. The table view lists every model in words."
       figure={figure}
       table={table}
       zoomable={false}

@@ -66,12 +66,12 @@ describe('J4: the running example', () => {
     const user = openLab();
     await typeAmount(user, '0.05');
     await verdict();
-    const table = await screen.findByRole('table', { name: /each method for this hypothetical transaction/ });
+    const table = await screen.findByRole('table', { name: /each model for this hypothetical transaction/ });
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(9);
     const txgpt = within(table).getByRole('rowheader', { name: /TxGPT/ }).closest('tr')!;
     expect(txgpt).toHaveTextContent('Not available for a hypothetical transaction');
-    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent('Deciding method');
+    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent('Deciding');
     await waitFor(() => expect(within(rows[0]).getAllByRole('cell')[2]).toHaveTextContent('5.00'));
   });
 

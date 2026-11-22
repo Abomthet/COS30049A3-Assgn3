@@ -176,7 +176,7 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
     <div className="whatif">
       <p className="whatif-note">
         A what-if is hypothetical. Nothing is sent to the Bitcoin network and nothing is stored.
-        {parseMethod(search) === DEFAULT_METHOD ? '' : ' The lab always decides with the default method; its table shows all nine.'}
+        {parseMethod(search) === DEFAULT_METHOD ? '' : ' The lab always decides with the default model; its table shows all nine.'}
       </p>
 
       <div className="whatif-layout">
@@ -309,7 +309,7 @@ export function WhatIfLab({ timeline, search }: { timeline: TimelineResponse; se
               flags={details.flags}
               deciding={details.method.id}
               unavailableText="Not available for a hypothetical transaction"
-              caption="Score, flag line and verdict of each method for this hypothetical transaction"
+              caption="Score, flag line and verdict of each model for this hypothetical transaction"
             />
             <div className="card chart-card">
               <LazyG4 ranks={details.ranks} scores={details.scores} flags={details.flags} deciding={details.method.id} subject="what-if" address={address} />
@@ -372,7 +372,7 @@ function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView
   if (view === null) {
     return (
       <StatePanel tone="empty" title="Enter an amount to score it" testId="state-whatif-empty">
-        <p>The verdict of every method that can score a new amount appears here, and updates as you type.</p>
+        <p>The verdict of every model that can score a new amount appears here, and updates as you type.</p>
       </StatePanel>
     );
   }
@@ -408,11 +408,11 @@ function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView
         </span>
       </p>
       {tx.flagged ? (
-        <FlagCallout tx={tx} title="Why this amount stands out" request={request} />
+        <FlagCallout tx={tx} title="Why it stands out" request={request} />
       ) : (
         <>
           <p className="not-flagged-note">
-            <strong>Not flagged.</strong> No feature was {tx.method.flagAbsZ} or more from this address's usual pattern.
+            Score {tx.score.toFixed(2)}, below the flag line of {tx.method.flagAbsZ.toFixed(2)}.
           </p>
           <NotFlaggedExplanation request={request} tx={tx} />
         </>

@@ -74,7 +74,7 @@ export function TransactionTable({ page, method, pageHref }: Props) {
                 {t.status === 'flagged' && t.mainReason ? t.mainReason : '—'}
               </td>
               <td data-label="Flagged by" className="num col-by">
-                {t.status === 'not-scored' ? '—' : `${t.flaggedBy} of ${METHODS.length} methods`}
+                {t.status === 'not-scored' ? '—' : `${t.flaggedBy} of ${METHODS.length} models`}
               </td>
             </tr>
           ))}

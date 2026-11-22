@@ -43,7 +43,6 @@ export function DayScreen({ address, date, txid, method }: { address: string; da
       <header className="page-head">
         <p className="eyebrow mono">{shortAddress(address, 12, 8)}</p>
         <PageHeading>{validDate ? formatDay(date) : 'Unknown day'}</PageHeading>
-        <p className="source-line">Transactions confirmed on this day (UTC)</p>
         <MethodMenu method={method} updating={updating} live={timeline.status === 'success' && !!timeline.data.live} />
       </header>
 
@@ -52,7 +51,7 @@ export function DayScreen({ address, date, txid, method }: { address: string; da
       {!validDate ? (
         <StatePanel
           tone="error"
-          title="That day isn't valid"
+          title="That link has an invalid day"
           live="alert"
           actions={
             <a className="btn btn-secondary" href={paths.timeline(address, method)}>
@@ -60,7 +59,7 @@ export function DayScreen({ address, date, txid, method }: { address: string; da
             </a>
           }
         >
-          <p>Days in links use the form YYYY-MM-DD. Pick a day from the timeline instead.</p>
+          <p>Pick a day on the timeline.</p>
         </StatePanel>
       ) : (
         <>
@@ -115,15 +114,13 @@ function DayBody({ day, date, txid, method, updating }: { day: TransactionsRespo
     return (
       <StatePanel
         tone="empty"
-        title="No transactions on this day"
+        title={`No transactions on ${formatDay(date)}`}
         actions={
           <a className="btn btn-secondary" href={paths.timeline(day.address, method)}>
             Back to the timeline
           </a>
         }
-      >
-        <p>The address has no confirmed transactions on {formatDay(date)}. Pick a day with activity from the timeline.</p>
-      </StatePanel>
+      />
     );
   }
   const flagged = day.transactions.filter((t) => t.status === 'flagged').length;
@@ -132,8 +129,8 @@ function DayBody({ day, date, txid, method, updating }: { day: TransactionsRespo
     <div className="day-layout">
       <section className={`card tx-list-card${updating ? ' is-updating' : ''}`} aria-labelledby="tx-list-title" aria-busy={updating}>
         <h2 id="tx-list-title">{plural(day.total, 'transaction')}</h2>
-        <p className="card-sub">{flagged ? `${flagged} unusual, marked below` : 'None unusual on this day'}</p>
-        {day.total > day.transactions.length ? <p className="card-sub">Showing the first {day.transactions.length}, in time order.</p> : null}
+        <p className="card-sub">{flagged ? `${flagged} unusual` : 'None unusual on this day'}</p>
+        {day.total > day.transactions.length ? <p className="card-sub">First {day.transactions.length} shown, oldest first.</p> : null}
         <ul className="tx-list">
           {day.transactions.map((t) => {
             const selected = t.txid === txid;

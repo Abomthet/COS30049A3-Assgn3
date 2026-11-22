@@ -22,7 +22,7 @@ async function fetchLive() {
   await waitFor(async () => expect((await mockApi.liveLookup(job.id)).status).toBe('done'), { timeout: 4000 });
 }
 const remember = (method: string) => localStorage.setItem('explorer.preferences.v1', JSON.stringify({ theme: null, method }));
-const menu = () => screen.findByRole('combobox', { name: 'Deciding method' });
+const menu = () => screen.findByRole('combobox', { name: 'Deciding model' });
 
 function start(hash: string) {
   window.location.hash = hash;
@@ -56,7 +56,7 @@ describe('a fetched address and an unavailable method', () => {
     await fetchLive();
     const user = start(`#/address/${LIVE}?method=txgpt_method`);
     const panel = await screen.findByTestId('state-method');
-    expect(panel).toHaveTextContent("This method can't score this address");
+    expect(panel).toHaveTextContent("This model can't score this address");
     expect(panel).toHaveTextContent('This method has no scores for a fetched address.');
     expect(panel).toHaveTextContent('choose another method');
     expect(screen.queryByRole('link', { name: 'Choose an address' })).not.toBeInTheDocument();

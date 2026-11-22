@@ -80,7 +80,7 @@ describe('states', () => {
   test('while E11 loads the page says so, and the limits are already there', async () => {
     mockControls.latencyMs = 50;
     start();
-    expect(screen.getByText('Loading the methods…')).toBeInTheDocument();
+    expect(screen.getByText('Loading the models…')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'What a flag means, and what it does not' })).toBeInTheDocument();
     expect(await screen.findAllByTestId(/^method-/)).toHaveLength(9);
   });

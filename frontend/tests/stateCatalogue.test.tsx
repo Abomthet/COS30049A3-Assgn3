@@ -173,7 +173,7 @@ describe('busy: a 429 counts down and tries again by itself', () => {
     await screen.findByTestId('state-rate-limited');
     mockControls.busyForSeconds = 0;
     await user.click(screen.getByRole('button', { name: 'Try again now' }));
-    expect(await screen.findByRole('list', { name: 'The methods' })).toBeInTheDocument();
+    expect(await screen.findByRole('list', { name: 'The models' })).toBeInTheDocument();
   });
 
   test('a wait of several minutes is said in minutes', async () => {
@@ -242,11 +242,11 @@ describe('the time limit', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     mockControls.latencyMs = settings.web.requests.timeoutMs + 1;
     start('#/models');
-    expect(await screen.findByText(/Loading the methods/)).toBeInTheDocument();
+    expect(await screen.findByText(/Loading the models/)).toBeInTheDocument();
     await act(async () => vi.advanceTimersByTime(settings.web.requests.timeoutMs + 100));
     expect(await screen.findByRole('heading', { name: 'This is taking longer than it should' })).toBeInTheDocument();
     mockControls.latencyMs = 0;
     await userEvent.setup({ advanceTimers: vi.advanceTimersByTime }).click(screen.getByRole('button', { name: 'Try again' }));
-    await waitFor(() => expect(screen.getByRole('list', { name: 'The methods' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('list', { name: 'The models' })).toBeInTheDocument());
   });
 });

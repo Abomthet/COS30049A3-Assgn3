@@ -1,54 +1,48 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { api } from '../api/client';
-import type { ApiError, ExplanationRequest, ExplanationResponse } from '../api/types';
+import type { ApiError, ExplanationRequest, ExplanationResponse, Reason } from '../api/types';
 import { useSettings } from '../hooks/useSettings';
 import { runRequest } from '../hooks/useRequest';
 import { ErrorState } from './ErrorState';
-import { ExplanationBlocks, TEMPLATE_LABEL } from './Explanation';
+import { ExplanationBlocks, ReasonLines, type AssistantParts } from './Explanation';
 
-// The Explorer Assistant's control (S-05; plan section 7, "The Explorer Assistant"; R7). The explanation starts as the
-// template. A flagged snapshot transaction is asked of E12 at once on a computer that cannot run the Assistant, because the
-// service answers it from the answers prepared in advance; where the Assistant can run, the user asks for it with a button.
-// While it writes there is a progress line and "Keep the template"; the answer is shown only if the service says it passed
-// the guardrail, and otherwise the template stays with a line that names why.
+// The Explorer Assistant's control (S-05; plan section 7, "The Explorer Assistant"; R7). The reason lines are what the
+// Assistant's answer replaces; the big figure, "Compared with" and the limitation line always stay. E12 is never asked on
+// mount: the reason lines are what a reader sees first, and the button "Ask the Assistant to explain" is there wherever the
+// Assistant can answer, that is where it can write (E2 `assistant`) or where the service has an answer prepared in advance
+// (a flagged snapshot transaction; that answer comes back at once). While it writes there is a progress line and "Cancel";
+// the answer is shown only if the service says it passed the guardrail, and otherwise the reason lines stay with a line
+// that says so. The panel gives its caller two parts (the lines and the control) to place.
 
-const ASSISTANT_LABEL = 'Written by the Explorer Assistant, a language model the team trained; checked by code before being shown';
-const NOT_INSTALLED = "The Assistant's model file (610 MB) is not installed; the README says how to add it. Explanations use the template.";
+const ASSISTANT_LABEL = 'Written by the Assistant. Checked by code before it is shown.';
+const NOT_INSTALLED = "The Assistant isn't installed on this computer.";
+const FAILED_CHECKS = "The Assistant's answer did not pass our checks, so this explanation stays.";
 
-/** The guardrail's six checks (A2's names), in the words of a person who does not know the code. */
-const CHECK_WORDS: Record<string, string> = {
-  numbers_ok: 'a number that was not in the facts',
-  limitation_ok: 'the limitation line missing from a flag',
-  wording_ok: 'a word the project does not allow',
-  direction_ok: 'a comparison pointing the wrong way',
-  verdict_ok: 'a verdict that did not match',
-  nonempty: 'an empty answer',
-};
-
-/** Why the template is shown although the Assistant was asked: the checks its answer failed, or why it could not write. */
-function templateNote({ attempts, skippedWriters }: ExplanationResponse): string {
-  const failed = [...new Set(attempts.flatMap((a) => a.failedChecks))].map((name) => CHECK_WORDS[name] ?? name);
-  if (failed.length > 0) return `The Assistant wrote an answer, but the checks found ${failed.join(', ')}, so it was not shown. The template stays.`;
+/** Why the reason lines are shown although the Assistant was asked: it failed a check (the check names stay in the response), or why it could not write. */
+function lineNote({ attempts, skippedWriters }: ExplanationResponse): string {
+  if (attempts.some((a) => a.failedChecks.length > 0)) return FAILED_CHECKS;
   const reasons = Object.values(skippedWriters);
-  return reasons.length > 0 ? `${reasons.join(' ')} Explanations use the template.` : 'The Assistant did not write this one. The template stays.';
+  return reasons.length > 0 ? reasons.join(' ') : 'The Assistant did not write this one.';
 }
 
-type Phase = { name: 'template' } | { name: 'writing' } | { name: 'answered'; answer: ExplanationResponse } | { name: 'failed'; error: ApiError };
+type Phase = { name: 'lines' } | { name: 'writing' } | { name: 'answered'; answer: ExplanationResponse } | { name: 'failed'; error: ApiError };
 
 interface Props {
   request: ExplanationRequest;
-  template: string;
+  /** The reason lines; the Assistant's answer replaces them. */
+  reasons: Reason[];
   flagged: boolean;
   limitation: string;
+  children: (parts: AssistantParts) => ReactNode;
 }
 
-/** The Explorer Assistant's control for one explanation: it starts with the template, can ask for a written one, and keeps the template if the answer fails a check. */
-export default function AssistantPanel({ request, template, flagged, limitation }: Props) {
+/** The Explorer Assistant's control for one explanation: the reason lines first, a written answer in their place when asked for, the lines kept if the answer fails a check. */
+export default function AssistantPanel({ request, reasons, flagged, limitation, children }: Props) {
   const { settings, origin } = useSettings();
   const capable = settings.capabilities.assistant;
-  const [phase, setPhase] = useState<Phase>({ name: 'template' });
+  const [phase, setPhase] = useState<Phase>({ name: 'lines' });
   const running = useRef<AbortController | null>(null);
-  // A flagged snapshot transaction may have a prepared answer, which needs no weights.
+  // A flagged snapshot transaction has a prepared answer, which needs no weights.
   const prepared = request.txid !== undefined && flagged;
 
   const ask = () => {
@@ -60,53 +54,58 @@ export default function AssistantPanel({ request, template, flagged, limitation 
       if (!controller.signal.aborted) setPhase(result.ok ? { name: 'answered', answer: result.data } : { name: 'failed', error: result.error });
     });
   };
-  const keepTemplate = () => {
+  const cancel = () => {
     running.current?.abort();
-    setPhase({ name: 'template' });
+    setPhase({ name: 'lines' });
   };
 
-  // Once E2 has said what this computer can do. Where the Assistant can write, an answer is never asked for unprompted.
-  useEffect(() => {
-    if (prepared && !capable && origin !== 'loading') ask();
-    return () => running.current?.abort();
-  }, [capable, origin]);
+  // Nothing is asked of E12 on mount; a request still running when the box goes away is cancelled.
+  useEffect(() => () => running.current?.abort(), []);
 
   const answer = phase.name === 'answered' ? phase.answer : null;
   const written = answer?.source === 'text150m';
 
-  return (
-    <div className="explanation" aria-busy={phase.name === 'writing'}>
-      <p className="explanation-label">{written ? ASSISTANT_LABEL : TEMPLATE_LABEL}</p>
-      <ExplanationBlocks text={written ? answer.explanation : template} limitation={limitation} />
+  const lines = written ? (
+    <div className="explanation">
+      <p className="explanation-label">{ASSISTANT_LABEL}</p>
+      <ExplanationBlocks text={answer.explanation} limitation={limitation} />
+    </div>
+  ) : (
+    <ReasonLines reasons={reasons} />
+  );
 
+  const control = (
+    <div className="explanation" aria-busy={phase.name === 'writing'}>
       <div className="assistant-control" aria-live="polite">
-        {phase.name === 'template' && capable ? (
+        {phase.name === 'lines' && (capable || prepared) ? (
           <button type="button" className="btn btn-secondary" onClick={ask}>
-            Ask the Assistant to write this
+            Ask the Assistant to explain
           </button>
         ) : null}
-        {phase.name === 'template' && !capable && !prepared && origin !== 'loading' ? <p className="assistant-note">{NOT_INSTALLED}</p> : null}
+        {phase.name === 'lines' && !capable && !prepared && origin !== 'loading' ? <p className="assistant-note">{NOT_INSTALLED}</p> : null}
         {phase.name === 'writing' ? (
           <>
             <p className="assistant-progress">
-              <span className="spinner" aria-hidden="true" /> Writing; this takes about 10 seconds on this computer
+              <span className="spinner" aria-hidden="true" /> Writing… about 10 seconds
             </p>
-            <button type="button" className="btn btn-ghost" onClick={keepTemplate}>
-              Keep the template
+            <button type="button" className="btn btn-ghost" onClick={cancel}>
+              Cancel
             </button>
           </>
         ) : null}
-        {answer && !written ? <p className="assistant-note">{templateNote(answer)}</p> : null}
+        {answer && !written ? <p className="assistant-note">{lineNote(answer)}</p> : null}
       </div>
 
       {phase.name === 'failed' ? (
         <>
           <ErrorState error={phase.error} onRetry={ask} headingLevel={3} />
-          <button type="button" className="btn btn-ghost" onClick={keepTemplate}>
-            Keep the template
+          <button type="button" className="btn btn-ghost" onClick={cancel}>
+            Cancel
           </button>
         </>
       ) : null}
     </div>
   );
+
+  return <>{children({ lines, control })}</>;
 }

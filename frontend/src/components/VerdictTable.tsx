@@ -27,7 +27,7 @@ export function VerdictTable({ scores, flags, deciding, unavailableText = 'Not a
       <caption className="sr-only">{caption}</caption>
       <thead>
         <tr>
-          <th scope="col">Method</th>
+          <th scope="col">Model</th>
           <th scope="col">Family</th>
           <th scope="col" className="num">
             Score
@@ -44,9 +44,9 @@ export function VerdictTable({ scores, flags, deciding, unavailableText = 'Not a
           const threshold = thresholds[m.id];
           return (
             <tr key={m.id} className={m.id === deciding ? 'is-deciding' : undefined}>
-              <th scope="row" data-label="Method">
+              <th scope="row" data-label="Model">
                 {labels[m.id].name}
-                {m.id === deciding ? <span className="cell-sub">Deciding method</span> : null}
+                {m.id === deciding ? <span className="cell-sub">Deciding</span> : null}
               </th>
               <td data-label="Family">{labels[m.id].family}</td>
               <td data-label="Score" className="num mono">

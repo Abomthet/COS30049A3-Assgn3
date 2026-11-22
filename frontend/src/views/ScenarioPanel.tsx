@@ -82,7 +82,7 @@ export default function ScenarioPanel({ address, current }: Props) {
       {kept.length === 0 ? null : (
         <TableScroll label="Kept what-if scenarios">
           <table className="data-table scenario-table">
-            <caption className="sr-only">Kept what-if scenarios of this address, with the verdict of the deciding method</caption>
+            <caption className="sr-only">Kept what-if scenarios of this address, with the verdict of the deciding model</caption>
             <thead>
               <tr>
                 <th scope="col">Compare</th>
@@ -122,7 +122,7 @@ export default function ScenarioPanel({ address, current }: Props) {
                     {s.score.toFixed(2)}
                   </td>
                   <td data-label="Flagged by" className="num">
-                    {s.flaggedBy} of {s.of} methods
+                    {s.flaggedBy} of {s.of} models
                   </td>
                   <td>
                     <button type="button" className="btn btn-ghost" onClick={() => remove(s.id)}>
