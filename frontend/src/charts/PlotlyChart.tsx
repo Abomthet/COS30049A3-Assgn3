@@ -81,6 +81,11 @@ interface Props {
   revision?: string;
   /** False for charts with nothing to zoom: no drag, no tool bar. */
   zoomable?: boolean;
+  /**
+   * False where the data changes many times a second (the replay): Plotly's transitions would overlap, and a
+   * transition that adds a trace leaves stale black bars and no legend behind.
+   */
+  animated?: boolean;
   height?: number;
   onPointClick?: (click: PointClick) => void;
   /**
@@ -123,6 +128,7 @@ export function PlotlyChart({
   tableView = 'toggle',
   revision = fileName.join('/'),
   zoomable = true,
+  animated = true,
   height = 340,
   onPointClick,
   onZoom,
@@ -156,14 +162,14 @@ export function PlotlyChart({
   // What Plotly is given, rebuilt only when the figure, the theme or the size changes.
   const drawing = useMemo(() => {
     const built = figure({ palette, compact, width });
-    const animate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const animate = animated && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const touch = compact || window.matchMedia('(pointer: coarse)').matches;
     return {
       data: chooseTraceTypes(built.data, webglMinPoints, webglAvailable),
       layout: everyCategoryLabelled(mergeLayout(baseLayout(palette, { compact, touch, zoomable, revision, animate }), built.layout)),
       config: plotlyConfig({ touch, zoomable, selectable: onSelect !== undefined }),
     };
-  }, [figure, palette, compact, width, zoomable, revision, webglMinPoints, onSelect !== undefined]);
+  }, [figure, palette, compact, width, zoomable, animated, revision, webglMinPoints, onSelect !== undefined]);
 
   // Fetch Plotly when the first chart mounts. A chart with nothing to draw never needs it.
   const hasChart = !empty;

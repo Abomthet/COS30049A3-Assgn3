@@ -224,6 +224,8 @@ export function G2TransactionsOverTime({ address, method, rows, frame, loading, 
   return (
     <PlotlyChart
       fileName={['transactions-over-time', address, settings.snapshot?.snapshotDate ?? '']}
+      // The replay (the one caller with a frame) redraws up to 20 times a second: no transitions there.
+      animated={frame === undefined}
       title="Transactions over time"
       headingLevel={2}
       subtitle="Amount over time. Unusual transactions are orange triangles."

@@ -104,6 +104,18 @@ describe('the axes and range controls', () => {
     expect(layout.yaxis.dtick).toBe(20);
   });
 
+  test('the replay draws without transitions (they overlap at 20 a second); the overview keeps them', async () => {
+    const base = withDays(await timeline(), [['2026-08-01', 1, 0]]);
+    const { unmount } = render(<G1DailyActivity timeline={base} onOpenDay={vi.fn()} countMax={5} />);
+    await waitFor(() => expect(fakePlotly.chartDraws().length).toBeGreaterThan(0));
+    expect(fakePlotly.lastChartDraw().layout.transition.duration).toBe(0);
+    unmount();
+    const before = fakePlotly.chartDraws().length;
+    render(<G1DailyActivity timeline={base} onOpenDay={vi.fn()} />);
+    await waitFor(() => expect(fakePlotly.chartDraws().length).toBeGreaterThan(before));
+    expect(fakePlotly.lastChartDraw().layout.transition.duration).toBeGreaterThan(0);
+  });
+
   test('countStep gives 1, 2, 5, 10 … with at most five steps', () => {
     expect([1, 5, 6, 10, 11, 25, 26, 50, 78, 120, 1000].map(countStep)).toEqual([1, 1, 2, 2, 5, 5, 10, 10, 20, 50, 200]);
   });

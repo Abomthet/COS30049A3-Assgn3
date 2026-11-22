@@ -206,6 +206,8 @@ export function G1DailyActivity({ timeline, onOpenDay, countMax }: Props) {
   return (
     <PlotlyChart
       fileName={['daily-activity', address, snapshot.snapshotDate]}
+      // The replay (the one caller with countMax) redraws up to 20 times a second: no transitions there.
+      animated={countMax === undefined}
       title="Transactions per day"
       headingLevel={2}
       subtitle={`Orange bars (${TRIANGLE}) are days with an unusual transaction.`}
