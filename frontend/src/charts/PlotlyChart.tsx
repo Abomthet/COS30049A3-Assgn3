@@ -331,16 +331,11 @@ export function PlotlyChart({
       <button type="button" className="btn btn-secondary" onClick={downloadPng} disabled={phase !== 'ready'}>
         Download PNG
       </button>
-      {tableView === 'toggle' ? (
-        <button
-          type="button"
-          className="btn btn-secondary"
-          aria-pressed={tableVisible}
-          aria-controls={`${id}-table`}
-          disabled={failed}
-          onClick={() => setTableOpen((open) => !open)}
-        >
-          View as table
+      {/* The label says what a press does, so it is not also a pressed toggle. A failed chart has no switch:
+          there is no chart to go back to. */}
+      {tableView === 'toggle' && !failed ? (
+        <button type="button" className="btn btn-secondary" aria-controls={`${id}-table`} onClick={() => setTableOpen((open) => !open)}>
+          {tableOpen ? 'View as chart' : 'View as table'}
         </button>
       ) : null}
       {tableVisible ? (

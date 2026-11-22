@@ -267,11 +267,9 @@ describe('the table view', () => {
     render(chart());
     await drawn();
     const toggle = screen.getByRole('button', { name: 'View as table' });
-    expect(toggle).toHaveAttribute('aria-pressed', 'false');
     expect(screen.queryByRole('button', { name: 'Download CSV' })).toBeNull();
 
     await user.click(toggle);
-    expect(toggle).toHaveAttribute('aria-pressed', 'true');
     const table = screen.getByRole('table');
     expect(table.closest('.sr-only')).toBeNull();
     expect(screen.getByText('Bar chart of two days.', { selector: '.pchart-summary' })).toBeInTheDocument();
@@ -280,6 +278,29 @@ describe('the table view', () => {
 
     await user.click(toggle);
     expect(document.querySelector('.pchart-stage')).not.toHaveAttribute('hidden');
+  });
+
+  test('the switch says what a press does: View as table, then View as chart, and is not a pressed toggle', async () => {
+    const user = userEvent.setup();
+    render(chart());
+    await drawn();
+    const stage = () => document.querySelector('.pchart-stage')!;
+    const toggle = screen.getByRole('button', { name: 'View as table' });
+    expect(toggle).not.toHaveAttribute('aria-pressed');
+    expect(stage()).not.toHaveAttribute('hidden');
+
+    await user.click(toggle);
+    expect(toggle).toHaveAccessibleName('View as chart');
+    expect(toggle).not.toHaveAttribute('aria-pressed');
+    expect(toggle).toHaveFocus();
+    expect(screen.getByRole('table').closest('.sr-only')).toBeNull();
+    expect(stage()).toHaveAttribute('hidden');
+
+    await user.click(toggle);
+    expect(toggle).toHaveAccessibleName('View as table');
+    expect(toggle).toHaveFocus();
+    expect(stage()).not.toHaveAttribute('hidden');
+    expect(screen.getByRole('table').closest('.sr-only')).not.toBeNull();
   });
 
   test('"always" keeps the table under the chart with no switch', async () => {
@@ -377,9 +398,9 @@ describe('loading and failing', () => {
     render(chart());
     const panel = await screen.findByTestId('state-chart-failed');
     expect(panel).toHaveTextContent('The chart could not be drawn');
-    // The table is visible, with its links, and cannot be switched off.
+    // The table is visible, with its links, and there is no switch: no chart to go back to.
     expect(screen.getByRole('table').closest('.sr-only')).toBeNull();
-    expect(screen.getByRole('button', { name: 'View as table' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /View as/ })).toBeNull();
 
     fakePlotly.failLoad = false;
     await user.click(within(panel).getByRole('button', { name: 'Try again' }));
