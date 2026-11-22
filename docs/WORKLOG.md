@@ -1280,3 +1280,24 @@ disclaimers and "learn more" patterns are kept outside the repository.
 
 **Left:** chart headers, the first screen and messages, the overview, the what-if lab, Models and Watchlist, About,
 screenshots, the change request (CR-09) and the final gate.
+
+## 2026-11-22 — Owner feedback on the remake: wording pass, part 2 (Sonnet 5.5; lead Opus 5.5)
+
+Continues part 1 on `ui-remake-apple`, one subagent task at a time, each reviewed with real data in a browser before its
+commit:
+- **Charts:** title, one-line subtitle, the source footnote last (the chart contract's caption), a closed "How to read
+  this chart" holding the mark-by-mark help that About used to carry, plain axis words ("Distance from usual (z-score)",
+  "Share caught (%)"), every category labelled (the remake's tick thinning hid G6's model names), and G5 led by
+  "Flagged from 0.023 BTC". The visible table line has no "Bar chart of".
+- **First screen and messages:** one format hint, three hero tiles, "28 addresses are covered."; the footer split into help
+  and course credit; every error and Assistant message in plain words with no environment variable, file name or "this
+  service" (both tiers and the shared vectors); the README keeps the operator steps.
+- **Overview and transactions:** "3 days" with the active period as the days list's headline, short day rows, tiles with one
+  short line, a one-line live banner, the replay's look-ahead note folded; plain date and selection texts.
+- **What-if lab:** "95× usual" and the gap as figures, "Would be flagged" with the score against its flag line, errors that
+  say what to do, saved scenarios compared in a small table, no "above"/"below".
+- **Models, Watchlist, About:** one plain line per model with its long name beneath; three short points on what a flag
+  means; small watchlist stats; About starts with what the Explorer shows and gives "What unusual means" a large definition
+  beside the flag level, three status tiles and the four measures.
+- **CR-09** (in `docs/ui-remake-apple.md`): the new limitation line, once per screen, and chart CSVs; decided with the
+  remake vote.

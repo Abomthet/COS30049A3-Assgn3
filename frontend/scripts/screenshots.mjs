@@ -152,14 +152,14 @@ const selectSpan = drive(`
   (await button('Select these days')).click();
   await until(() => document.querySelector('.selection-summary')?.textContent.includes(' selected'));
 `);
-// Keeps three what-ifs of the running example in the lab's scenario table.
+// Saves three what-ifs of the running example in the lab's scenario table.
 const keepThree = drive(`
   const amount = document.querySelector('input[inputmode="decimal"]');
   for (const value of ['0.0005', '0.05', '0.5']) {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(amount, value);
     amount.dispatchEvent(new Event('input', { bubbles: true }));
     await wait(300);
-    const keep = await until(() => { const b = [...document.querySelectorAll('button')].find((x) => x.textContent === 'Keep this scenario'); return b && !b.disabled ? b : null; });
+    const keep = await until(() => { const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Save this scenario'); return b && !b.disabled ? b : null; });
     keep.click();
   }
   await until(() => document.querySelectorAll('.scenario-table tbody tr').length === 3);
@@ -181,7 +181,12 @@ async function waitFetched() {
   }
   throw new Error('the live lookup did not finish');
 }
-const fetchPublicHistory = drive(`(await button("Fetch this address's public history")).click();`);
+const fetchPublicHistory = drive(`(await button('Fetch its public history')).click();`);
+// Presses "Ask the Assistant to explain" on V3, so the shot shows the prepared answer (it is no longer shown until asked for).
+const askAssistant = drive(`(await button('Ask the Assistant to explain')).click();
+  await until(() => !document.querySelector('.assistant-progress') && !([...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Ask the Assistant to explain')));
+  (document.querySelector('.explanation-label') ?? document.body).scrollIntoView({ block: 'start' });
+  window.scrollBy(0, -240);`);
 const DESKTOP = 1280;
 const TABLET = 820;
 const MOBILE = 390;
@@ -248,8 +253,8 @@ const shots = [
   ['55-replay', '', tl(t.mainAddress), DESKTOP, true, false, replay20, 3],
   ['56-replay-mobile', '', tl(t.mainAddress), MOBILE, true, false, replay20, 3],
   ['57-watchlist-undo', '', '#/', DESKTOP, false, false, watchRemoved],
-  ['58-assistant-prepared', '', tx(t.flagged), DESKTOP, false, false, null, 0.5],
-  ['59-assistant-prepared-mobile', '', tx(t.flagged), MOBILE, false, false, null, 0.5],
+  ['58-assistant-prepared', '', tx(t.flagged), DESKTOP, false, false, askAssistant, 0.5],
+  ['59-assistant-prepared-mobile', '', tx(t.flagged), MOBILE, false, false, askAssistant, 0.5],
   ['60-selection', '', txs(t.mainAddress), DESKTOP, true, false, boxSelect],
   ['61-selection-mobile', '', txs(t.mainAddress), MOBILE, true, false, selectSpan],
   ['62-scenarios', '', lab(t.mainAddress, t.whatIf.direction), DESKTOP, true, false, keepThree],

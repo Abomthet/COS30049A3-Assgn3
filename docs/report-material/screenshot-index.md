@@ -9,12 +9,12 @@ Width is the viewport in CSS pixels (the script uses device scale 1, so pixels e
 
 | File | Screen | Width (px) | Device | Theme | Height (px) | Mock only | Description |
 |---|---|---|---|---|---|---|---|
-| `01-select.png` | V1 selection | 1280 | desktop | light | 2790 | no | V1 address selection, full page. |
+| `01-select.png` | V1 selection | 1280 | desktop | light | 3229 | no | V1 address selection, full page: hero with three tiles (28 addresses, 7,966 transactions, 9 models) and the snapshot table. |
 | `02-invalid.png` | V1 selection | 1280 | desktop | light | 900 | no | V1 with a mistyped address in the box: the checker's message under the field. |
 | `03-unsupported.png` | V1 selection | 1280 | desktop | light | 900 | no | V1 with an address outside the snapshot: the unsupported answer with examples. |
-| `14-select-mobile.png` | V1 selection | 390 | phone | light | 6426 | no | V1 address selection at 390 px. |
-| `18-select-tablet.png` | V1 selection | 820 | tablet | light | 3707 | no | V1 address selection at 820 px. |
-| `19-select-desktop-dark.png` | V1 selection | 1280 | desktop | dark | 2878 | no | V1 address selection in the dark theme. |
+| `14-select-mobile.png` | V1 selection | 390 | phone | light | 10919 | no | V1 address selection at 390 px. |
+| `18-select-tablet.png` | V1 selection | 820 | tablet | light | 6234 | no | V1 address selection at 820 px. |
+| `19-select-desktop-dark.png` | V1 selection | 1280 | desktop | dark | 3321 | no | V1 address selection in the dark theme. |
 | `51-watch-dialog.png` | V1 selection | 1280 | desktop | light | 900 | no | V1 with the watch dialog open: label and note typed in. |
 | `52-watch-dialog-mobile.png` | V1 selection | 390 | phone | light | 844 | no | Watch dialog at 390 px. |
 
@@ -22,95 +22,95 @@ Width is the viewport in CSS pixels (the script uses device scale 1, so pixels e
 
 | File | Screen | Width (px) | Device | Theme | Height (px) | Mock only | Description |
 |---|---|---|---|---|---|---|---|
-| `05-timeline.png` | V2 overview | 1280 | desktop | light | 1536 | no | V2 overview of the example address, full page. |
-| `06-insufficient-address.png` | V2 overview | 1280 | desktop | light | 1716 | no | V2 overview of the short-history address: the history status, no scores. |
-| `12-timeline-tablet.png` | V2 overview | 820 | tablet | light | 1979 | no | V2 overview at 820 px. |
-| `15-timeline-mobile.png` | V2 overview | 390 | phone | light | 2586 | no | V2 overview at 390 px. |
-| `46-timeline-mobile-dark.png` | V2 overview | 390 | phone | dark | 2586 | no | V2 overview at 390 px, dark theme. |
-| `48-timeline-other-method.png` | V2 overview | 1280 | desktop | light | 1883 | no | V2 overview with the regression method deciding (?method=regression). |
-| `55-replay.png` | V2 overview | 1280 | desktop | light | 2960 | no | V2 overview with the replay running at 20 a second, part way through (S-06). |
-| `56-replay-mobile.png` | V2 overview | 390 | phone | light | 4687 | no | The replay at 390 px. |
+| `05-timeline.png` | V2 overview | 1280 | desktop | light | 1723 | no | V2 overview of the example address, full page: four tiles, 'Transactions per day' chart, '3 days' list and the replay card. |
+| `06-insufficient-address.png` | V2 overview | 1280 | desktop | light | 1933 | no | V2 overview of the short-history address: the history status, no scores. |
+| `12-timeline-tablet.png` | V2 overview | 820 | tablet | light | 2143 | no | V2 overview at 820 px. |
+| `15-timeline-mobile.png` | V2 overview | 390 | phone | light | 2491 | no | V2 overview at 390 px. |
+| `46-timeline-mobile-dark.png` | V2 overview | 390 | phone | dark | 2491 | no | V2 overview at 390 px, dark theme. |
+| `48-timeline-other-method.png` | V2 overview | 1280 | desktop | light | 1846 | no | V2 overview with the regression method deciding (?method=regression). |
+| `55-replay.png` | V2 overview | 1280 | desktop | light | 3315 | no | V2 overview with the replay running at 20 a second, part way through (S-06). |
+| `56-replay-mobile.png` | V2 overview | 390 | phone | light | 4583 | no | The replay at 390 px. |
 
 ## V2 transactions tab
 
 | File | Screen | Width (px) | Device | Theme | Height (px) | Mock only | Description |
 |---|---|---|---|---|---|---|---|
-| `20-transactions.png` | V2 transactions tab | 1280 | desktop | light | 4457 | no | V2 transactions tab, unfiltered: filter bar, G2, table. |
-| `21-transactions-sent-unusual.png` | V2 transactions tab | 1280 | desktop | light | 2050 | no | Transactions tab filtered to unusual, sent transactions. |
+| `20-transactions.png` | V2 transactions tab | 1280 | desktop | light | 4715 | no | V2 transactions tab, unfiltered: filter bar, G2, table. |
+| `21-transactions-sent-unusual.png` | V2 transactions tab | 1280 | desktop | light | 2327 | no | Transactions tab filtered to unusual, sent transactions. |
 | `22-transactions-invalid-dates.png` | V2 transactions tab | 1280 | desktop | light | 900 | no | Transactions tab with a range whose end is before its start: the refusal. |
-| `23-transactions-tablet.png` | V2 transactions tab | 820 | tablet | light | 5617 | no | Transactions tab at 820 px. |
+| `23-transactions-tablet.png` | V2 transactions tab | 820 | tablet | light | 5723 | no | Transactions tab at 820 px. |
 | `24-transactions-mobile.png` | V2 transactions tab | 390 | phone | light | 844 | no | Transactions tab at 390 px, viewport only (first screen). |
-| `24b-transactions-mobile-full-page.png` | V2 transactions tab | 390 | phone | light | 3504 | no | Transactions tab at 390 px, full page, filtered to unusual transactions. |
-| `25-transactions-short-history.png` | V2 transactions tab | 1280 | desktop | light | 2392 | no | Transactions tab of the short-history address: rows unscored. |
-| `26-transactions-dark.png` | V2 transactions tab | 1280 | desktop | dark | 2147 | no | Transactions tab filtered to unusual transactions, dark theme. |
-| `60-selection.png` | V2 transactions tab | 1280 | desktop | light | 8019 | no | V2 transactions tab at 1280 px, full page, with 124 transactions selected by a box drawn on the chart (60 received, 64 sent, 1 unusual). |
-| `61-selection-mobile.png` | V2 transactions tab | 390 | phone | light | 12937 | no | V2 transactions tab at 390 px, full page, with 81 transactions selected from 1 Jul to 22 Oct 2026 (42 received, 39 sent, 1 unusual). |
+| `24b-transactions-mobile-full-page.png` | V2 transactions tab | 390 | phone | light | 3370 | no | Transactions tab at 390 px, full page, filtered to unusual transactions. |
+| `25-transactions-short-history.png` | V2 transactions tab | 1280 | desktop | light | 2666 | no | Transactions tab of the short-history address: rows unscored. |
+| `26-transactions-dark.png` | V2 transactions tab | 1280 | desktop | dark | 2422 | no | Transactions tab filtered to unusual transactions, dark theme. |
+| `60-selection.png` | V2 transactions tab | 1280 | desktop | light | 8315 | no | V2 transactions tab at 1280 px, full page, with 124 transactions selected by a box drawn on the chart (60 received, 64 sent, 1 unusual). |
+| `61-selection-mobile.png` | V2 transactions tab | 390 | phone | light | 10040 | no | V2 transactions tab at 390 px, full page, with 81 transactions selected from 1 Jul to 22 Oct 2026 (42 received, 39 sent, 1 unusual). |
 
 ## V3 day and transaction
 
 | File | Screen | Width (px) | Device | Theme | Height (px) | Mock only | Description |
 |---|---|---|---|---|---|---|---|
 | `07-day-nothing-selected.png` | V3 day | 1280 | desktop | light | 900 | no | V3 day view on a flagged day, with no transaction chosen yet. |
-| `08-flagged-detail.png` | V3 transaction | 1280 | desktop | light | 3393 | no | V3 flagged transaction, full page (the reason, comparison basis, limitation line, G3 and the nine verdicts, as the TEST_LOG J2 record describes). |
-| `09-not-scored-detail.png` | V3 transaction | 1280 | desktop | light | 1098 | no | V3 transaction of the short-history address: facts shown, not scored, reason given. |
-| `10-early-transaction-not-scored.png` | V3 transaction | 1280 | desktop | light | 1098 | no | V3 early transaction of the example address: too little earlier history. |
-| `13-flagged-detail-tablet.png` | V3 transaction | 820 | tablet | light | 3685 | no | V3 flagged transaction at 820 px. |
-| `16-flagged-detail-mobile.png` | V3 transaction | 390 | phone | light | 5574 | no | V3 flagged transaction at 390 px (cards, no sideways scroll). |
-| `17-flagged-detail-dark.png` | V3 transaction | 1280 | desktop | dark | 3393 | no | V3 flagged transaction in the dark theme. |
-| `53-model-verdicts.png` | V3 transaction | 1280 | desktop | light | 3393 | no | V3 flagged transaction, nine verdicts. Byte-identical to 08. |
-| `54-model-verdicts-mobile.png` | V3 transaction | 390 | phone | light | 5574 | no | V3 flagged transaction at 390 px. Byte-identical to 16. |
-| `58-assistant-prepared.png` | V3 transaction | 1280 | desktop | light | 900 | no | V3 flagged transaction at 1280 px, first screen only: the Explorer Assistant's 'Why this transaction stands out' panel under the transaction details. Light theme. |
-| `59-assistant-prepared-mobile.png` | V3 transaction | 390 | phone | light | 844 | no | V3 flagged transaction at 390 px, first screen only: the day's one transaction and its details; the Assistant's panel is below the first screen. |
+| `08-flagged-detail.png` | V3 transaction | 1280 | desktop | light | 3329 | no | V3 flagged transaction, full page (the reason, comparison basis, limitation line, G3 and the nine verdicts, as the TEST_LOG J2 record describes). |
+| `09-not-scored-detail.png` | V3 transaction | 1280 | desktop | light | 1167 | no | V3 transaction of the short-history address: facts shown, not scored, reason given. |
+| `10-early-transaction-not-scored.png` | V3 transaction | 1280 | desktop | light | 1167 | no | V3 early transaction of the example address: too little earlier history. |
+| `13-flagged-detail-tablet.png` | V3 transaction | 820 | tablet | light | 3549 | no | V3 flagged transaction at 820 px. |
+| `16-flagged-detail-mobile.png` | V3 transaction | 390 | phone | light | 5010 | no | V3 flagged transaction at 390 px (cards, no sideways scroll). |
+| `17-flagged-detail-dark.png` | V3 transaction | 1280 | desktop | dark | 3329 | no | V3 flagged transaction in the dark theme. |
+| `53-model-verdicts.png` | V3 transaction | 1280 | desktop | light | 3329 | no | V3 flagged transaction, nine verdicts. Byte-identical to 08. |
+| `54-model-verdicts-mobile.png` | V3 transaction | 390 | phone | light | 5010 | no | V3 flagged transaction at 390 px. Byte-identical to 16. |
+| `58-assistant-prepared.png` | V3 transaction | 1280 | desktop | light | 900 | no | V3 flagged transaction at 1280 px, first screen only: after pressing 'Ask the Assistant to explain', scrolled to the 'Why it stands out' box, which now holds the prepared answer ('Written by the Assistant. Checked by code before it is shown.'). Light theme. |
+| `59-assistant-prepared-mobile.png` | V3 transaction | 390 | phone | light | 844 | no | V3 flagged transaction at 390 px, first screen only: after pressing 'Ask the Assistant to explain', scrolled so the prepared answer in the 'Why it stands out' box fills the screen. |
 
 ## V4 what-if lab
 
 | File | Screen | Width (px) | Device | Theme | Height (px) | Mock only | Description |
 |---|---|---|---|---|---|---|---|
 | `29-what-if-empty.png` | V4 what-if lab | 1280 | desktop | light | 900 | no | V4 what-if lab with nothing typed. |
-| `30-what-if-flagged.png` | V4 what-if lab | 1280 | desktop | light | 4125 | no | V4 what-if lab, 0.05 BTC out at the example time: flagged, the curve and its crossings. |
-| `31-what-if-not-flagged.png` | V4 what-if lab | 1280 | desktop | light | 3976 | no | V4 what-if lab, 0.0005 BTC: not flagged. |
-| `32-what-if-tablet.png` | V4 what-if lab | 820 | tablet | light | 5078 | no | V4 what-if lab at 820 px, the example amount. |
-| `33-what-if-mobile.png` | V4 what-if lab | 390 | phone | light | 7244 | no | V4 what-if lab at 390 px, the example amount. |
+| `30-what-if-flagged.png` | V4 what-if lab | 1280 | desktop | light | 4224 | no | V4 what-if lab, 0.05 BTC out at the example time: flagged, the curve and its crossings. |
+| `31-what-if-not-flagged.png` | V4 what-if lab | 1280 | desktop | light | 3964 | no | V4 what-if lab, 0.0005 BTC: not flagged. |
+| `32-what-if-tablet.png` | V4 what-if lab | 820 | tablet | light | 5112 | no | V4 what-if lab at 820 px, the example amount. |
+| `33-what-if-mobile.png` | V4 what-if lab | 390 | phone | light | 6698 | no | V4 what-if lab at 390 px, the example amount. |
 | `34-what-if-invalid-amount.png` | V4 what-if lab | 1280 | desktop | light | 900 | no | V4 with 0.123456789 typed: refused in the browser, no request sent. |
-| `35-what-if-dark.png` | V4 what-if lab | 1280 | desktop | dark | 4125 | no | V4 what-if lab in the dark theme, the example amount. |
-| `47-what-if-tablet-dark.png` | V4 what-if lab | 820 | tablet | dark | 5078 | no | V4 what-if lab at 820 px, dark theme. |
-| `62-scenarios.png` | V4 what-if lab | 1280 | desktop | light | 4405 | no | V4 what-if lab at 1280 px, full page: three kept scenarios of the example address (0.0005, 0.05 and 0.5 BTC), scenarios 1 and 3 checked for comparison. |
-| `63-scenarios-mobile.png` | V4 what-if lab | 390 | phone | light | 7245 | no | V4 what-if lab at 390 px, full page: the same three kept scenarios, with scenarios 1 and 3 checked. |
+| `35-what-if-dark.png` | V4 what-if lab | 1280 | desktop | dark | 4224 | no | V4 what-if lab in the dark theme, the example amount. |
+| `47-what-if-tablet-dark.png` | V4 what-if lab | 820 | tablet | dark | 5112 | no | V4 what-if lab at 820 px, dark theme. |
+| `62-scenarios.png` | V4 what-if lab | 1280 | desktop | light | 4609 | no | V4 what-if lab at 1280 px, full page: three saved scenarios ('Save this scenario') of the example address (0.0005, 0.05 and 0.5 BTC), scenarios 1 and 3 checked for comparison. |
+| `63-scenarios-mobile.png` | V4 what-if lab | 390 | phone | light | 6649 | no | V4 what-if lab at 390 px, full page: the same three saved scenarios, with scenarios 1 and 3 checked. |
 
 ## V5 models and limits
 
 | File | Screen | Width (px) | Device | Theme | Height (px) | Mock only | Description |
 |---|---|---|---|---|---|---|---|
-| `36-models.png` | V5 models | 1280 | desktop | light | 2839 | no | V5 models and limits, desktop: a card per method. |
-| `37-models-tablet.png` | V5 models | 820 | tablet | light | 3844 | no | V5 models and limits at 820 px. |
-| `38-models-mobile.png` | V5 models | 390 | phone | light | 6123 | no | V5 models and limits at 390 px. |
+| `36-models.png` | V5 models | 1280 | desktop | light | 2812 | no | V5 models and limits, desktop: a card per method. |
+| `37-models-tablet.png` | V5 models | 820 | tablet | light | 3768 | no | V5 models and limits at 820 px. |
+| `38-models-mobile.png` | V5 models | 390 | phone | light | 5641 | no | V5 models and limits at 390 px. |
 
 ## V6 watchlist
 
 | File | Screen | Width (px) | Device | Theme | Height (px) | Mock only | Description |
 |---|---|---|---|---|---|---|---|
-| `49-watchlist.png` | V1 selection | 1280 | desktop | light | 986 | no | V6 watchlist with two addresses, labels and notes. |
-| `50-watchlist-mobile.png` | V1 selection | 390 | phone | light | 1309 | no | V6 watchlist at 390 px. |
+| `49-watchlist.png` | V1 selection | 1280 | desktop | light | 1038 | no | V6 watchlist with two addresses, labels and notes. |
+| `50-watchlist-mobile.png` | V1 selection | 390 | phone | light | 1237 | no | V6 watchlist at 390 px. |
 | `57-watchlist-undo.png` | V1 selection | 1280 | desktop | light | 900 | no | V6 after removing an entry: the toast with Undo. |
 
 ## V7 about and help
 
 | File | Screen | Width (px) | Device | Theme | Height (px) | Mock only | Description |
 |---|---|---|---|---|---|---|---|
-| `27-about.png` | V7 about | 1280 | desktop | light | 2407 | no | V7 about and help, desktop. |
-| `28-about-mobile.png` | V7 about | 390 | phone | light | 4215 | no | V7 about and help at 390 px. |
-| `45-about-tablet.png` | V7 about | 820 | tablet | light | 2630 | no | V7 about and help at 820 px. |
+| `27-about.png` | V7 about | 1280 | desktop | light | 2614 | no | V7 about and help, desktop: 'What it shows', 'What unusual means' with the flag level, 'How a flag is decided' in three steps, limits, data facts, keyboard. |
+| `28-about-mobile.png` | V7 about | 390 | phone | light | 4024 | no | V7 about and help at 390 px. |
+| `45-about-tablet.png` | V7 about | 820 | tablet | light | 2719 | no | V7 about and help at 820 px. |
 
 ## Live lookup (S-09, shots taken with LIVE=1)
 
 | File | Screen | Width (px) | Device | Theme | Height (px) | Mock only | Description |
 |---|---|---|---|---|---|---|---|
-| `live-01-offer-1280.png` | V1 selection | 1280 | desktop | light | 900 | no | V1 address selection at 1280 px for an address outside the snapshot: the notice offers a fetch of its public history and three snapshot addresses instead; no fetch started. Live lookup. |
+| `live-01-offer-1280.png` | V1 selection | 1280 | desktop | light | 900 | no | V1 address selection at 1280 px for an address outside the snapshot: the notice 'This address isn't in the snapshot' offers 'Fetch its public history' and three snapshot addresses instead; no fetch started. Live lookup. |
 | `live-01-offer-390.png` | V1 selection | 390 | phone | light | 844 | no | V1 address selection at 390 px, the same notice for an address outside the snapshot; the fetch button is below the first screen. Live lookup. |
-| `live-02-dialog-1280.png` | V1 selection | 1280 | desktop | light | 900 | no | V1 at 1280 px while a live fetch runs: the dialog reads 'Fetched 50 of 500 transactions (2 pages)', with the progress bar and Cancel. Live lookup. |
-| `live-02-dialog-390.png` | V1 selection | 390 | phone | light | 844 | no | V1 at 390 px while a live fetch runs: the same dialog (50 of 500 transactions fetched, 2 pages), with Cancel. Live lookup. |
-| `live-03-overview-1280.png` | V2 overview | 1280 | desktop | light | 1959 | no | V2 overview at 1280 px, full page, of the live-fetched address: the live-data banner (the most recent 500 of 1,164 transactions), the day chart, the days list and the replay. Live lookup. |
-| `live-03-overview-390.png` | V2 overview | 390 | phone | light | 3260 | no | V2 overview at 390 px, full page, of the same live-fetched address: the live-data banner, the day chart, the days list and the replay. Live lookup. |
+| `live-02-dialog-1280.png` | V1 selection | 1280 | desktop | light | 900 | no | V1 at 1280 px while a live fetch runs: the 'Fetching public history' dialog reads '50 of 500 transactions', with the progress bar and Cancel. Live lookup. |
+| `live-02-dialog-390.png` | V1 selection | 390 | phone | light | 844 | no | V1 at 390 px while a live fetch runs: the same dialog (50 of 500 transactions), with Cancel. Live lookup. |
+| `live-03-overview-1280.png` | V2 overview | 1280 | desktop | light | 1934 | no | V2 overview at 1280 px, full page, of the live-fetched address: the 'Live data' banner (latest 500 of 1,164 transactions, with 'Forget this address'), the four tiles, the day chart, the unusual-days list and the replay card. Live lookup. |
+| `live-03-overview-390.png` | V2 overview | 390 | phone | light | 3110 | no | V2 overview at 390 px, full page, of the same live-fetched address: the 'Live data' banner, the tiles, the day chart, the unusual-days list and the replay card. Live lookup. |
 
 ## Service and network states (any view)
 
