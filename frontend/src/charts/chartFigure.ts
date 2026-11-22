@@ -93,7 +93,9 @@ export function baseLayout(palette: ChartPalette, { compact, touch, zoomable, re
   return {
     autosize: true,
     uirevision: revision,
-    transition: { duration: animate ? 250 : 0, easing: 'cubic-in-out' },
+    // Only when animating: with any `transition` in the layout (even a duration of 0) Plotly.react takes its
+    // animation path, which mis-draws bar charts whose number of bars changes (the replay's black bars).
+    ...(animate ? { transition: { duration: 250, easing: 'cubic-in-out' as const } } : {}),
     font: { family: palette.fontFamily, color: palette.text, size },
     // Transparent, so the card behind the chart shows through in both themes.
     paper_bgcolor: 'rgba(0,0,0,0)',

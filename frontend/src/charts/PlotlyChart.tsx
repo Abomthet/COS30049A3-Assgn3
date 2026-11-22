@@ -156,8 +156,6 @@ export function PlotlyChart({
   const selectHandler = useRef<(event: PlotSelectionEvent | undefined) => void>(() => {});
   /** True while the page itself is redrawing: Plotly reports the new axis range of such a redraw as if the user had zoomed. */
   const redrawing = useRef(false);
-  /** The draw in progress, and the newest one waiting for it (see the draw effect). */
-  const drawQueue = useRef<{ busy: boolean; next: (() => Promise<void>) | null }>({ busy: false, next: null });
   const compact = width < COMPACT_BELOW_PX;
   const webglMinPoints = settings.web.charts.webglMinPoints;
 
@@ -190,14 +188,11 @@ export function PlotlyChart({
 
   // Draw, and redraw in place when the data, theme or size changes. Plotly keeps the zoom (uirevision).
   // A chart that is off screen or hidden is left alone and catches up when it is shown again.
-  // One draw at a time: a redraw that starts before the last one has finished leaves Plotly half-updated (in the
-  // replay, at up to 20 steps a second, black bars and no legend). A draw asked for meanwhile waits, and only the
-  // newest waiting one runs.
   useEffect(() => {
     const el = plotRef.current;
     if (!plotly || !el || !inView) return;
     let current = true;
-    const draw = async () => {
+    (async () => {
       try {
         redrawing.current = true;
         const root = await plotly.react(el, drawing.data, drawing.layout, drawing.config).finally(() => {
@@ -215,22 +210,7 @@ export function PlotlyChart({
       } catch {
         if (current) setPhase('failed');
       }
-    };
-    const queue = drawQueue.current;
-    const run = (job: () => Promise<void>): void => {
-      if (queue.busy) {
-        queue.next = job;
-        return;
-      }
-      queue.busy = true;
-      void job().finally(() => {
-        queue.busy = false;
-        const next = queue.next;
-        queue.next = null;
-        if (next) run(next);
-      });
-    };
-    run(draw);
+    })();
     return () => {
       current = false;
     };

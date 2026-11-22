@@ -108,12 +108,12 @@ describe('the axes and range controls', () => {
     const base = withDays(await timeline(), [['2026-08-01', 1, 0]]);
     const { unmount } = render(<G1DailyActivity timeline={base} onOpenDay={vi.fn()} countMax={5} />);
     await waitFor(() => expect(fakePlotly.chartDraws().length).toBeGreaterThan(0));
-    expect(fakePlotly.lastChartDraw().layout.transition.duration).toBe(0);
+    expect(fakePlotly.lastChartDraw().layout.transition).toBeUndefined();
     unmount();
     const before = fakePlotly.chartDraws().length;
     render(<G1DailyActivity timeline={base} onOpenDay={vi.fn()} />);
     await waitFor(() => expect(fakePlotly.chartDraws().length).toBeGreaterThan(before));
-    expect(fakePlotly.lastChartDraw().layout.transition.duration).toBeGreaterThan(0);
+    expect(fakePlotly.lastChartDraw().layout.transition?.duration).toBeGreaterThan(0);
   });
 
   test('countStep gives 1, 2, 5, 10 … with at most five steps', () => {

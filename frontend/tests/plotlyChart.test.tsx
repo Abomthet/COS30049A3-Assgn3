@@ -136,7 +136,7 @@ describe('what the wrapper hands to Plotly', () => {
       (query) => ({ matches: matches(query), media: query, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList,
     );
     render(chart());
-    expect((await drawn()).layout.transition.duration).toBe(0);
+    expect((await drawn()).layout.transition).toBeUndefined();
   });
 
   test('a container resize redraws once it settles', async () => {
