@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import type { Data } from 'plotly.js';
 import type { TimelineDay, TimelineResponse } from '../api/types';
-import { useMethodLabels } from '../hooks/useMethods';
 import { addDays, dayCount, dayKey, formatDay } from '../lib/dates';
 import { plural } from '../lib/format';
 import { paths } from '../lib/router';
@@ -88,8 +87,8 @@ type Model = ReturnType<typeof buildModel>;
 
 function buildFigure(model: Model, { palette, compact }: FigureContext): Figure {
   const styles: Record<Group, { name: string; color: string }> = {
-    ordinary: { name: 'No unusual transactions', color: palette.ordinary },
-    unusual: { name: `At least one unusual transaction ${TRIANGLE}`, color: palette.unusual },
+    ordinary: { name: 'No unusual transaction', color: palette.ordinary },
+    unusual: { name: `Has an unusual transaction ${TRIANGLE}`, color: palette.unusual },
   };
   const data = model.kinds.map((kind): Data => {
     const days = model.byKind.get(kind)!;
@@ -158,7 +157,6 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
 /** Chart G1: one bar per active day on a continuous date axis, with unusual days marked; shown on the address overview and in the replay. */
 export function G1DailyActivity({ timeline, onOpenDay }: Props) {
   const { address, days, range, snapshot } = timeline;
-  const methodName = useMethodLabels()[snapshot.method.id].name;
   const model = useMemo(() => buildModel({ days, range }), [days, range]);
   const figure = useCallback((context: FigureContext) => buildFigure(model, context), [model]);
 
@@ -184,6 +182,7 @@ export function G1DailyActivity({ timeline, onOpenDay }: Props) {
   );
 
   const flaggedDays = days.filter((d) => d.flaggedCount > 0).length;
+  const tableLine = `${plural(days.length, 'day')} with activity, ${flaggedDays} with unusual transactions, ${formatDay(dayKey(range.start))} – ${formatDay(dayKey(range.end))}.`;
   const summary = `Bar chart of transactions per day from ${formatDay(dayKey(range.start))} to ${formatDay(dayKey(range.end))}: ${plural(days.length, 'day')} with activity, ${plural(flaggedDays, 'day')} with unusual transactions.`;
 
   return (
@@ -191,9 +190,18 @@ export function G1DailyActivity({ timeline, onOpenDay }: Props) {
       fileName={['daily-activity', address, snapshot.snapshotDate]}
       title="Transactions per day"
       headingLevel={2}
-      caption={`${snapshotCaption(snapshot, address)} · days in UTC · flagged by ${methodName}`}
+      subtitle={`Orange bars (${TRIANGLE}) are days with an unusual transaction.`}
+      footnote={snapshotCaption(snapshot, address)}
       summary={summary}
-      hint="Select a bar to open that day. Drag to zoom, double-click to reset. With a keyboard, focus the chart and use the arrow keys."
+      tableLine={tableLine}
+      hint="Select a bar to open that day."
+      guide={
+        <>
+          <p>Each bar is one day with activity, so a gap is a quiet stretch. A day with an unusual transaction is orange with a triangle above it.</p>
+          <p>Drag across the chart, or use the period buttons, to zoom; double-click to reset.</p>
+          <p>With a keyboard, focus the chart, use the left and right arrow keys to move between days and Enter to open one.</p>
+        </>
+      }
       figure={figure}
       table={table}
       revision={address}

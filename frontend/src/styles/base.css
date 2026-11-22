@@ -869,12 +869,50 @@ main.container {
 .pchart-title {
   margin: 0;
 }
-.pchart-caption {
+.pchart-subtitle {
   flex-basis: 100%;
   order: 2;
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: 0.95rem;
+}
+/* The footnote: the source and the snapshot date, one small grey line under the chart (the plan's chart contract). */
+.pchart-footnote {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+/* "How to read this chart": a closed disclosure under the header, in the style of the "Details" disclosure. */
+.pchart-guide {
+  margin: 0 0 8px;
+}
+.pchart-guide summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--link);
+  font-weight: 600;
+}
+.pchart-guide-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--text-2);
+}
+.pchart-guide-body p {
+  margin: 0;
+}
+/* A headline that belongs to the chart (G5's "Flagged from"), right under the subtitle. */
+.pchart-lead {
+  margin: 4px 0 8px;
+}
+.pchart-lead .stat-block {
+  margin: 0;
 }
 .pchart-tools {
   display: flex;
@@ -1983,10 +2021,6 @@ main.container {
 }
 .g5-method .text-input {
   flex: 0 1 22rem;
-}
-.g5-reading {
-  margin: 8px 0 0;
-  font-weight: 560;
 }
 
 .method-menu {

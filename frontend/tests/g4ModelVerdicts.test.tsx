@@ -66,11 +66,19 @@ describe('a real transaction (V3)', () => {
     expect(layout.yaxis.ticktext[0]).toContain('<b>');
   });
 
-  test('the caption says each model is compared on its own scale, and the chart has a name for a screen reader', async () => {
+  test('the subtitle says it is a rank for each model, the footnote is the source and date, and the chart has a name for a screen reader', async () => {
+    const user = userEvent.setup();
     await draw(real(flaggedTx));
     expect(screen.getByRole('heading', { level: 3, name: 'Where each model ranks it' })).toBeInTheDocument();
-    expect(screen.getByText(/Each model is compared on its own scale/)).toBeInTheDocument();
+    expect(screen.getByText("Its rank among this address's own transactions, for each model.")).toBeInTheDocument();
+    expect(screen.queryByText(/Each model is compared on its own scale/)).toBeNull();
+    expect(document.querySelector('.pchart-footnote')!.textContent).not.toMatch(/Data:|own scale/);
+    expect(document.querySelector('.chart-hint')).toBeNull();
+
     expect(screen.getByRole('img', { name: /Dot plot of where this transaction ranks .* under each of 9 models\. 1 of 9 flag it: Baseline/ })).toBeInTheDocument();
+    // The line above the table view has no chart type.
+    await user.click(screen.getByRole('button', { name: 'View as table' }));
+    expect(document.querySelector('.pchart-summary')!.textContent).toBe('1 of 9 models flag it: Baseline.');
   });
 
   test('the table view says each verdict in words, with the rank, and PNG and CSV can be downloaded', async () => {

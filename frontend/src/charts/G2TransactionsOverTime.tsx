@@ -6,7 +6,6 @@ import { dayKey, formatDateTime, formatDay } from '../lib/dates';
 import { DIRECTION_LABEL, formatBtc, formatCount, plural } from '../lib/format';
 import { paths } from '../lib/router';
 import { DIRECTIONS, STATUSES } from '../lib/transactionFilters';
-import { useMethodLabels } from '../hooks/useMethods';
 import { useSettings } from '../hooks/useSettings';
 import { snapshotCaption } from './caption';
 import type { Figure, FigureContext } from './chartFigure';
@@ -188,7 +187,6 @@ function buildFigure(model: Model, selection: Props['selection'], { palette, com
 /** Chart G2: one point per transaction, its time against its amount, coloured and shaped by status; shown on the transactions tab and in the replay. */
 export function G2TransactionsOverTime({ address, method, rows, frame, loading, revision, onOpenTransaction, onZoomDays, selection, onSelect }: Props) {
   const { settings } = useSettings();
-  const methodName = useMethodLabels()[method].name;
   const model = useMemo(() => buildModel(rows, frame), [rows, frame]);
   const figure = useCallback((context: FigureContext) => buildFigure(model, selection, context), [model, selection]);
 
@@ -218,6 +216,7 @@ export function G2TransactionsOverTime({ address, method, rows, frame, loading, 
 
   const counts = STATUSES.map((s) => model.ordered.filter((r) => r.status === s).length);
   const span = model.ordered.length > 0 ? ` from ${formatDay(dayKey(model.ordered[0].time))} to ${formatDay(dayKey(model.ordered[model.ordered.length - 1].time))}` : '';
+  const tableLine = `${plural(rows.length, 'transaction')}: ${counts[0]} unusual, ${counts[1]} not unusual, ${counts[2]} not scored.`;
   const summary =
     `Scatter chart of ${plural(rows.length, 'transaction')}${span}, by amount on a log scale: ` +
     `${counts[0]} unusual, ${counts[1]} not unusual, ${counts[2]} not scored.`;
@@ -227,9 +226,23 @@ export function G2TransactionsOverTime({ address, method, rows, frame, loading, 
       fileName={['transactions-over-time', address, settings.snapshot?.snapshotDate ?? '']}
       title="Transactions over time"
       headingLevel={2}
-      caption={`${snapshotCaption(settings.snapshot, address)} · times in UTC · flagged by ${methodName}${loading ? ` · loading, ${formatCount(loading.loaded)} of ${formatCount(loading.total)} drawn` : ''}`}
+      subtitle="Amount over time. Unusual transactions are orange triangles."
+      footnote={snapshotCaption(settings.snapshot, address)}
       summary={summary}
-      hint={`Select a point to open that transaction. Drag to zoom on the time axis, which also sets the dates above; double-click to reset.${onSelect ? ' The box and lasso tools in the tool bar select points instead, and the table then shows only those.' : ''} Filled marks were received and outlined marks were sent; the orange triangles are unusual.`}
+      tableLine={tableLine}
+      hint="Select a point to open that transaction."
+      status={loading ? `Drawing ${formatCount(loading.loaded)} of ${formatCount(loading.total)}…` : undefined}
+      guide={
+        <>
+          <p>Each point is one transaction: time across, amount up on a log scale, where each step up is ten times larger.</p>
+          <p>A filled mark was received and an outlined mark was sent. Unusual transactions are orange triangles and ones that could not be scored are grey diamonds. A bigger mark has a higher score.</p>
+          <p>
+            Drag across the time axis to zoom, which also sets the dates above; double-click to reset.
+            {onSelect ? ' The box and lasso tools in the tool bar select points instead, and the table then shows only those.' : ''}
+          </p>
+          <p>With a keyboard, focus the chart, use the left and right arrow keys to move between transactions and Enter to open one.</p>
+        </>
+      }
       figure={figure}
       table={table}
       revision={revision}

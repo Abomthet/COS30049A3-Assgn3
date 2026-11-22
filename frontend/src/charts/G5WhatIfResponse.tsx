@@ -3,8 +3,9 @@ import type { Annotations, Data, LayoutAxis, Shape } from 'plotly.js';
 import type { CurveMethod, MethodId, WhatIfCurve, WhatIfResult } from '../api/types';
 import { useMethodLabels } from '../hooks/useMethods';
 import { useSettings } from '../hooks/useSettings';
-import { amountTicks, crossings, describeCurve, flagNear, flaggedRuns, runBounds, scoreAt, type CurveLine } from '../lib/curve';
+import { amountTicks, crossings, describeCurve, flagNear, flaggedRuns, readCurve, runBounds, scoreAt, type CurveLine } from '../lib/curve';
 import { formatBtc, formatBtcRounded } from '../lib/format';
+import { StatBlock } from '../components/StatBlock';
 import { snapshotCaption } from './caption';
 import type { Figure, FigureContext } from './chartFigure';
 import type { ChartTable } from './chartTable';
@@ -180,7 +181,10 @@ export function G5WhatIfResponse({ curve, address, methodId, onMethodChange, mar
   );
 
   const reading = describeCurve(line, curve.direction);
+  const stat = readCurve(line);
   const [first, last] = [curve.amountsBtc[0], curve.amountsBtc[curve.amountsBtc.length - 1]];
+  const bare = (btc: number) => formatBtcRounded(btc).replace(/ BTC$/, '');
+  const kind = curve.direction === 'out' ? 'sent' : 'received';
 
   return (
     <div className="g5">
@@ -198,9 +202,19 @@ export function G5WhatIfResponse({ curve, address, methodId, onMethodChange, mar
       <PlotlyChart
         fileName={['what-if-response', address, curve.direction, settings.snapshot?.snapshotDate ?? '']}
         title="How the score changes with the amount"
-        caption={`${snapshotCaption(settings.snapshot, address)} · hypothetical amounts, compared with this address's history before ${curve.time.slice(0, 16).replace('T', ' ')} UTC`}
-        summary={`Line chart of the ${methodName} score for ${curve.direction === 'out' ? 'sent' : 'received'} amounts from ${formatBtcRounded(first)} to ${formatBtcRounded(last)} on a log scale. ${reading}`}
-        hint="Select a point of the curve to use that amount in the form. Drag to zoom, double-click to reset. Orange triangles are flagged amounts."
+        subtitle="Flagged amounts are shaded."
+        lead={<StatBlock className="g5-reading" testId="curve-reading" label={stat.label} value={stat.value} note={stat.note} size={stat.label ? 'large' : 'medium'} />}
+        footnote={snapshotCaption(settings.snapshot, address)}
+        summary={`Line chart of the ${methodName} score for ${kind} amounts from ${formatBtcRounded(first)} to ${formatBtcRounded(last)} on a log scale. ${reading}`}
+        tableLine={`Scores for ${kind} amounts from ${bare(first)} to ${bare(last)} BTC (log scale).`}
+        hint="Select a point to use that amount."
+        guide={
+          <>
+            <p>The curve is the score this model gives as the amount grows. Each step to the right is ten times larger. Flagged amounts are orange triangles on the curve.</p>
+            <p>The dashed line is the flag line and the shaded stretches are flagged. The dotted line is the usual amount, a cross is where the curve meets the flag line and the diamond is the amount in the form.</p>
+            <p>Drag to zoom, double-click to reset. With a keyboard, focus the chart, use the left and right arrow keys to move along the amounts and Enter to use one.</p>
+          </>
+        }
         figure={figure}
         table={table}
         revision={`${address}|${curve.direction}|${method.id}`}
@@ -208,9 +222,6 @@ export function G5WhatIfResponse({ curve, address, methodId, onMethodChange, mar
         onPointClick={({ curve: trace, point }) => trace === 0 && onPickAmount(curve.amountsBtc[point])}
         keyboard={keyboard}
       />
-      <p className="g5-reading" data-testid="curve-reading">
-        {reading}
-      </p>
     </div>
   );
 }

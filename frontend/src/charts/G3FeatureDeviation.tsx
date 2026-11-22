@@ -18,8 +18,8 @@ import { PlotlyChart } from './PlotlyChart';
 const CLIP_Z = 20;
 /** Each feature's role in words; the bar's colour is never the only signal. */
 const ROLE_TEXT: Record<FeatureRole, string> = {
-  flag: 'flag level',
-  contributing: 'contributing',
+  flag: 'past the flag line',
+  contributing: 'stands out',
   'within-usual': 'within usual',
   'no-comparison': 'no comparison',
 };
@@ -81,8 +81,8 @@ function buildFigure(features: FeatureDetail[], units: Units, thresholds: AppSet
   if (thresholds) {
     const { flagAbsZ, contributingAbsZ } = thresholds;
     legendKeys.push(
-      key(`Within ±${contributingAbsZ}: does not stand out`, { mode: 'markers', marker: { symbol: 'square', size: 12, color: palette.reference, opacity: 0.35 } }),
-      key(`Flag line, ±${flagAbsZ}`, { mode: 'lines', line: { color: palette.unusual, width: 2, dash: 'dash' } }),
+      key(`Within usual (±${contributingAbsZ})`, { mode: 'markers', marker: { symbol: 'square', size: 12, color: palette.reference, opacity: 0.35 } }),
+      key(`Flag line (±${flagAbsZ})`, { mode: 'lines', line: { color: palette.unusual, width: 2, dash: 'dash' } }),
     );
     shapes.push(
       { type: 'rect', xref: 'x', yref: 'paper', x0: -contributingAbsZ, x1: contributingAbsZ, y0: 0, y1: 1, fillcolor: palette.reference, opacity: 0.18, line: { width: 0 }, layer: 'below' },
@@ -104,8 +104,8 @@ function buildFigure(features: FeatureDetail[], units: Units, thresholds: AppSet
       shapes,
       annotations: noComparison,
       margin: { t: compact ? 72 : 44, r: 24 },
-      xaxis: { range: [-reach, reach], title: { text: 'Robust z-score (right of 0: above usual, left of 0: below usual)' }, zeroline: true, zerolinewidth: 2, zerolinecolor: palette.axis },
-      yaxis: { autorange: 'reversed', title: { text: 'Feature' } },
+      xaxis: { range: [-reach, reach], title: { text: 'Distance from usual (z-score)' }, zeroline: true, zerolinewidth: 2, zerolinecolor: palette.axis },
+      yaxis: { type: 'category', autorange: 'reversed', title: { text: 'Measure' } },
       bargap: 0.3,
     },
   };
@@ -120,7 +120,7 @@ export function G3FeatureDeviation({ features, address }: Props) {
 
   const table = useMemo<ChartTable>(
     () => ({
-      columns: [{ label: 'Feature' }, { label: 'This transaction' }, { label: 'Usual' }, { label: 'z', numeric: true }, { label: 'Role' }],
+      columns: [{ label: 'Measure' }, { label: 'This transaction' }, { label: 'Usual' }, { label: 'Distance from usual', numeric: true }, { label: 'Role' }],
       rows: features.map((f) => [
         { text: f.name, sub: f.description },
         { text: formatFeatureValue(f.value, units.get(f.id)) },
@@ -138,9 +138,15 @@ export function G3FeatureDeviation({ features, address }: Props) {
     <PlotlyChart
       fileName={['feature-deviation', address, settings.snapshot?.snapshotDate ?? '']}
       title="How this transaction compares with usual"
-      caption={`${snapshotCaption(settings.snapshot, address)} · compared with this address's own earlier transactions`}
+      footnote={snapshotCaption(settings.snapshot, address)}
       summary={`Distance from usual for each feature (robust z-score): ${described}.`}
-      hint="Bars to the right are above this address's usual value and bars to the left are below it."
+      guide={
+        <>
+          <p>Bars to the right are above this address's usual, to the left below.</p>
+          <p>Dashed lines mark the flag line; the shaded band is within usual.</p>
+          <p>A z-score counts how many of this address's typical swings away a value is.</p>
+        </>
+      }
       figure={figure}
       table={table}
       tableView="always"

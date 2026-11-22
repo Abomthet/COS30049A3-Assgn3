@@ -184,11 +184,49 @@ describe('interaction', () => {
 });
 
 describe('the words around it', () => {
-  test('the sentence under the curve and the chart summary read the curve', async () => {
+  test('the reading under the curve is a big number: Flagged from the amount, and below the low amount', async () => {
     await draw();
-    const reading = screen.getByTestId('curve-reading').textContent!;
-    expect(reading).toMatch(/^On this address, a sent amount would be flagged from about /);
-    expect(screen.getByRole('group', { name: new RegExp(reading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) })).toBeInTheDocument();
+    const stat = screen.getByTestId('curve-reading');
+    expect(stat).toHaveClass('stat-block');
+    expect(stat.querySelector('.stat-label')).toHaveTextContent('Flagged from');
+    expect(stat.querySelector('.stat-value')).toHaveTextContent(/^0\.\d+ BTC$/);
+    expect(stat.querySelector('.stat-note')).toHaveTextContent(/^and below 0\.0000\d+ BTC$/);
+    // The chart's own accessible name still carries the full sentence.
+    expect(screen.getByRole('group', { name: /On this address, a sent amount would be flagged from about .* upwards, and below about / })).toBeInTheDocument();
+  });
+
+  test('the four readings of the curve: nothing, everything, only the top, only the middle', async () => {
+    const withFlags = (flags: boolean[]) => ({ ...curve, methods: curve.methods.map((m) => ({ ...m, flags })) });
+    const n = curve.amountsBtc.length;
+    const run = (from: number, to: number) => Array.from({ length: n }, (_, i) => i >= from && i <= to);
+    const cases: Array<[boolean[], RegExp | string]> = [
+      [run(0, -1), 'No amount in this range is flagged.'],
+      [run(0, n - 1), 'Every amount in this range is flagged.'],
+      [run(20, n - 1), /^Flagged from 0\.\d+ BTC$/],
+      [run(10, 20), /^Flagged between \d[\d.]* BTC and \d[\d.]* BTC$/],
+    ];
+    for (const [flags, expected] of cases) {
+      const { unmount } = render(
+        <G5WhatIfResponse curve={withFlags(flags)} address={ADDRESS} methodId="baseline" onMethodChange={() => {}} marker={null} onPickAmount={() => {}} />,
+      );
+      const stat = screen.getByTestId('curve-reading');
+      const text = (stat.querySelector('.stat-label')?.textContent ?? '') + ' ' + stat.querySelector('.stat-value')!.textContent;
+      if (typeof expected === 'string') expect(text.trim()).toBe(expected);
+      else expect(text.trim()).toMatch(expected);
+      expect(stat.querySelector('.stat-note')).toBeNull();
+      unmount();
+    }
+  });
+
+  test('the subtitle, footnote and hint are short; the help is in the closed disclosure; the table line has no chart type', async () => {
+    const user = userEvent.setup();
+    await draw();
+    expect(screen.getByText('Flagged amounts are shaded.')).toBeInTheDocument();
+    expect(screen.getByText('Select a point to use that amount.')).toBeInTheDocument();
+    expect(document.querySelector('.pchart-footnote')!.textContent).not.toMatch(/Data:|hypothetical|history before/);
+    expect((document.querySelector('details.pchart-guide') as HTMLDetailsElement).open).toBe(false);
+    await user.click(screen.getByRole('button', { name: 'View as table' }));
+    expect(document.querySelector('.pchart-summary')!.textContent).toMatch(/^Scores for sent amounts from [\d.]+ to [\d.]+ BTC \(log scale\)\.$/);
   });
 
   test('the table view lists every amount with its score and verdict, and downloads as CSV', async () => {
@@ -215,6 +253,6 @@ describe('the words around it', () => {
   test('says in words when no amount in the range is flagged', async () => {
     const quiet = { ...curve, methods: curve.methods.map((m) => ({ ...m, flags: m.flags.map(() => false) })) };
     await draw({ curve: quiet });
-    expect(screen.getByTestId('curve-reading')).toHaveTextContent(/no sent amount from .* to .* would be flagged/);
+    expect(screen.getByTestId('curve-reading')).toHaveTextContent('No amount in this range is flagged.');
   });
 });

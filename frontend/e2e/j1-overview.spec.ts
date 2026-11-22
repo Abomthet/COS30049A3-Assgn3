@@ -28,10 +28,11 @@ test('J1: pick an address from the list and read its overview', async ({ page, g
   await expect(values.nth(2)).toHaveText(/^[1-9]\d*on \d+ days? by /);
   await expect(values.nth(3)).toHaveText(/^\d[\d,]* of \d[\d,]*enough earlier history$/);
 
-  // The daily chart is drawn: bars, and a caption that repeats the source.
+  // The daily chart is drawn: bars, and a footnote with the source and the date (no "Data:", no "days in UTC").
   const chart = await drawnChart(page, 'Transactions per day');
   await expect(chart.locator('.pchart-plot .barlayer .point').first()).toBeAttached();
-  await expect(chart.locator('.pchart-caption')).toContainText('days in UTC');
+  await expect(chart.locator('.pchart-footnote')).toHaveText(/^.+ · snapshot of \d+ \w+ \d{4}$/);
+  await expect(chart.locator('.pchart-footnote')).not.toContainText(/Data:|days in UTC|flagged by/);
 
   // The days with unusual transactions: the running example's flagged day is among them, newest first.
   const days = page.getByRole('region', { name: 'Days with unusual transactions' });

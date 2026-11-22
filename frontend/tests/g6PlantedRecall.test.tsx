@@ -57,22 +57,28 @@ describe('the bars', () => {
 });
 
 describe('the contract', () => {
-  test('both axes are labelled, the scale is a share from 0 and the caption says it is not about real activity', async () => {
+  test('both axes are labelled, the scale is a share from 0 and the subtitle says it is not about real activity', async () => {
     const { layout } = await draw();
     expect(layout.xaxis.title.text).toBe('Model');
-    expect(layout.yaxis.title.text).toBe('Planted transactions flagged');
+    expect(layout.yaxis.title.text).toBe('Share caught (%)');
+    // Every model name is labelled: a category axis is not thinned to a few ticks.
+    expect(layout.xaxis).toMatchObject({ type: 'category', nticks: 0, dtick: 1 });
     expect(layout.yaxis.range[0]).toBe(0);
     expect(layout.yaxis.tickformat).toBe('.0%');
-    expect(screen.getByRole('heading', { level: 2, name: 'How often each model catches each planted pattern' })).toBeInTheDocument();
-    expect(screen.getByText(/Measured on planted test transactions .* not on real activity, which has no labels/)).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /Grouped bar chart of the share of planted test transactions flagged by each of 9 models/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'How often each model catches a test pattern' })).toBeInTheDocument();
+    expect(screen.getByText('Tested on simulated unusual transactions, not real activity.')).toBeInTheDocument();
+    expect(screen.getByText('Bars show the 95% range.')).toBeInTheDocument();
+    expect(screen.getByText('Select a legend entry to hide a pattern.')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Grouped bar chart of the share of simulated unusual test transactions caught by each of 9 models/ })).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/planted|Assignment 2|recall/i);
   });
 
   test('the table view repeats every interval, and PNG and CSV can be downloaded', async () => {
     const user = userEvent.setup();
     await draw();
     await user.click(screen.getByRole('button', { name: 'View as table' }));
-    const table = screen.getByRole('table', { name: 'How often each model catches each planted pattern' });
+    const table = screen.getByRole('table', { name: 'How often each model catches a test pattern' });
+    expect(document.querySelector('.pchart-summary')!.textContent).toBe('Share caught in tests, per model and pattern.');
     expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Model', 'All three patterns', 'Spike', 'Burst', 'Dormant']);
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(methods.length);

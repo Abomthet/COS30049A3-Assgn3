@@ -20,7 +20,7 @@ export const PATTERNS: Array<{ id: PlantedPattern; label: string }> = [
 ];
 
 /** A method's name over two lines where it is long, so nine groups fit side by side. */
-const wrapped = (name: string) => name.replace(/(.{10,}?) /g, '$1<br>');
+const wrapped = (name: string) => name.replace(/ /g, '<br>');
 
 /** Each pattern has a hatch as well as a colour, so the bars differ without colour. */
 function style(pattern: PlantedPattern, palette: ChartPalette): Partial<Data> {
@@ -73,8 +73,8 @@ function buildFigure(methods: MethodDescription[], names: string[], { palette, c
       hovermode: 'closest',
       margin: { t: compact ? 72 : 44, r: 16 },
       legend: compact ? { y: 1.02 } : { x: 1, xanchor: 'right', y: 1.02, orientation: 'h' },
-      xaxis: { title: { text: 'Model' }, tickangle: compact ? -60 : 0, fixedrange: true },
-      yaxis: { title: { text: 'Planted transactions flagged' }, range: [0, 1.04], tickformat: '.0%', fixedrange: true },
+      xaxis: { type: 'category', title: { text: 'Model' }, tickangle: compact ? -60 : 0, fixedrange: true },
+      yaxis: { title: { text: 'Share caught (%)' }, range: [0, 1.04], tickformat: '.0%', fixedrange: true },
     },
   };
 }
@@ -96,11 +96,13 @@ export function G6PlantedRecall({ methods }: { methods: MethodDescription[] }) {
   return (
     <PlotlyChart
       fileName={['planted-recall']}
-      title="How often each model catches each planted pattern"
+      title="How often each model catches a test pattern"
       headingLevel={2}
-      caption="Measured on planted test transactions (Assignment 2's evaluation), not on real activity, which has no labels. Each bar is the share flagged, with its 95% interval."
-      summary={`Grouped bar chart of the share of planted test transactions flagged by each of ${methods.length} models, for a spike, a burst and a dormant address waking up. The highest mean over the three patterns is ${best.name}, at ${formatInterval(best.evaluation.meanRecall)}.`}
-      hint="Select a legend entry to hide or show a pattern. Hover a bar for its interval."
+      subtitle="Tested on simulated unusual transactions, not real activity."
+      footnote="Bars show the 95% range."
+      summary={`Grouped bar chart of the share of simulated unusual test transactions caught by each of ${methods.length} models, for a spike, a burst and a dormant address waking up. The highest mean over the three patterns is ${best.name}, at ${formatInterval(best.evaluation.meanRecall)}.`}
+      tableLine="Share caught in tests, per model and pattern."
+      hint="Select a legend entry to hide a pattern."
       figure={figure}
       table={table}
       zoomable={false}

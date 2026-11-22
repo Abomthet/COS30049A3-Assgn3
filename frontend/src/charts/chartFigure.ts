@@ -1,4 +1,4 @@
-import type { Config, Data, Layout } from 'plotly.js';
+import type { Annotations, Config, Data, Layout } from 'plotly.js';
 import type { ChartPalette } from './chartTheme';
 
 // What every chart shares in how Plotly is told to draw it: the layout and config defaults
@@ -40,6 +40,20 @@ function mergePlain(base: Plain, extra: Plain): Plain {
 /** A chart's own layout laid over the shared one. */
 export function mergeLayout(base: Partial<Layout>, extra: Partial<Layout> = {}): Partial<Layout> {
   return mergePlain(base as Plain, extra as Plain) as Partial<Layout>;
+}
+
+/**
+ * The shared axis settings thin every axis to a few ticks (`nticks`), which is right for numbers and dates but hides
+ * names on a category axis (G6's nine models showed five). A category axis, which a chart marks with `type: 'category'`,
+ * labels every category instead.
+ */
+export function everyCategoryLabelled(layout: Partial<Layout>): Partial<Layout> {
+  const out = { ...layout } as Record<string, any>;
+  for (const key of ['xaxis', 'yaxis'] as const) {
+    const axis = out[key];
+    if (axis?.type === 'category') out[key] = { ...axis, nticks: 0, tickmode: axis.tickmode ?? 'linear', ...(axis.tickmode === 'array' ? {} : { dtick: 1 }) };
+  }
+  return out as Partial<Layout>;
 }
 
 interface LayoutOptions {
@@ -154,21 +168,41 @@ export function webglAvailable(): boolean {
   return webglSupported;
 }
 
+/** The export's left margin and the bottom margin that holds the footnote, in pixels. */
+const EXPORT_LEFT_PX = 80;
+const EXPORT_MARGIN_B = 90;
+
 /** Size of the PNG a chart exports. A fixed size, so the image does not depend on the window it came from. */
 export const EXPORT_SIZE = { width: 1200, height: 675 };
 
 /**
- * The figure drawn for a PNG: the chart as it is on screen now (zoom included), with its title
- * and caption added (they are HTML on screen) and without the range slider and buttons, which
- * mean nothing in a picture. The background is opaque so the image reads in either theme.
+ * The figure drawn for a PNG: the chart as it is on screen now (zoom included), with its title, subtitle and footnote
+ * added (they are HTML on screen) and without the range slider and buttons, which mean nothing in a picture. The
+ * footnote (the source and the snapshot date) is the same line the page shows under the chart. The background is
+ * opaque so the image reads in either theme.
  */
-export function exportLayout(current: Partial<Layout>, palette: ChartPalette, title: string, caption: string): Partial<Layout> {
+export function exportLayout(current: Partial<Layout>, palette: ChartPalette, title: string, footnote: string, subtitle?: string): Partial<Layout> {
+  const footnoteNote: Partial<Annotations> = {
+    // Against the plot area, then pushed down into the bottom margin (the export's margin is EXPORT_MARGIN_B tall).
+    xref: 'paper',
+    yref: 'paper',
+    x: 0,
+    y: 0,
+    xshift: -EXPORT_LEFT_PX + 8,
+    yshift: -EXPORT_MARGIN_B + 6,
+    xanchor: 'left',
+    yanchor: 'bottom',
+    showarrow: false,
+    text: footnote,
+    font: { size: 13, color: palette.axisInk },
+  };
   return mergeLayout(current, {
+    annotations: [...(current.annotations ?? []), footnoteNote],
     ...EXPORT_SIZE,
     autosize: false,
     paper_bgcolor: palette.surface,
     plot_bgcolor: palette.surface,
-    margin: { l: 80, r: 40, t: 130, b: 70 },
+    margin: { l: EXPORT_LEFT_PX, r: 40, t: subtitle ? 130 : 100, b: EXPORT_MARGIN_B },
     title: {
       text: `<b>${title}</b>`,
       x: 0.01,
@@ -176,7 +210,7 @@ export function exportLayout(current: Partial<Layout>, palette: ChartPalette, ti
       y: 0.97,
       yanchor: 'top',
       font: { size: 22, color: palette.text },
-      subtitle: { text: caption, font: { size: 13, color: palette.axisInk } },
+      ...(subtitle ? { subtitle: { text: subtitle, font: { size: 13, color: palette.axisInk } } } : {}),
     },
     xaxis: { rangeslider: { visible: false }, rangeselector: { visible: false } },
   });

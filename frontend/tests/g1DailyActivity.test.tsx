@@ -161,14 +161,32 @@ describe('the axes and range controls', () => {
 });
 
 describe('the words around the chart', () => {
-  test('title, caption with source and snapshot date, hint, summary', async () => {
+  test('title, subtitle, footnote with source and snapshot date, hint, summary and the visible table line', async () => {
     const data = await timeline(ex.flagged.address);
     await draw(data);
     expect(screen.getByRole('heading', { level: 2, name: 'Transactions per day' })).toBeInTheDocument();
-    expect(screen.getByText(/Data: .*snapshot of 22 Oct 2026.*days in UTC/)).toBeInTheDocument();
+    expect(screen.getByText('Orange bars (▲) are days with an unusual transaction.')).toBeInTheDocument();
+    // The footnote is the source and the date, with no "Data:", no "days in UTC" and no model name.
+    expect(screen.getByText('Blockstream Esplora · snapshot of 22 Oct 2026')).toBeInTheDocument();
+    expect(document.querySelector('.pchart-footnote')!.textContent).not.toMatch(/Data:|days in UTC|flagged by/);
     const flaggedDays = data.days.filter((d) => d.flaggedCount > 0).length;
     expect(screen.getByRole('group', { name: new RegExp(`Bar chart of transactions per day from .*: ${data.days.length} days with activity, ${flaggedDays} days with unusual transactions`) })).toBeInTheDocument();
-    expect(screen.getByText(/Select a bar to open that day/)).toBeInTheDocument();
+    expect(screen.getByText('Select a bar to open that day.')).toBeInTheDocument();
+    // The zoom and keyboard help is in the closed disclosure, not under the chart.
+    expect(screen.queryByText(/Drag to zoom, double-click/, { selector: '.chart-hint' })).toBeNull();
+    expect((document.querySelector('details.pchart-guide') as HTMLDetailsElement).open).toBe(false);
+  });
+
+  test('the line above the table says how many days, with no chart type, and the legend is in plain words', async () => {
+    const user = userEvent.setup();
+    const data = await timeline(ex.flagged.address);
+    const { data: traces } = await draw(data);
+    const flaggedDays = data.days.filter((d) => d.flaggedCount > 0).length;
+    await user.click(screen.getByRole('button', { name: 'View as table' }));
+    const line = document.querySelector('.pchart-summary')!.textContent!;
+    expect(line).toMatch(new RegExp(`^${data.days.length} days with activity, ${flaggedDays} with unusual transactions, \\d+ \\w+ \\d{4} – \\d+ \\w+ \\d{4}\\.$`));
+    expect(line).not.toMatch(/chart of/i);
+    expect((traces as any[]).filter((t) => t.name).map((t) => t.name)).toEqual(['No unusual transaction', 'Has an unusual transaction ▲']);
   });
 
   test('the table lists every active day with a link to its day view', async () => {

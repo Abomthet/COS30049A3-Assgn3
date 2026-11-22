@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { chooseTraceTypes, mergeLayout } from '../src/charts/chartFigure';
+import { chooseTraceTypes, everyCategoryLabelled, mergeLayout } from '../src/charts/chartFigure';
 import { fileStem, tableToCsv, type ChartTable } from '../src/charts/chartTable';
 import { PlotlyChart, type PointClick } from '../src/charts/PlotlyChart';
 import { useTheme } from '../src/hooks/useTheme';
@@ -32,8 +32,10 @@ function chart(props: Partial<React.ComponentProps<typeof PlotlyChart>> = {}) {
     <PlotlyChart
       fileName={['daily-activity', 'bc1qexample', '2026-10-05']}
       title="Transactions per day"
-      caption="Data: Test source, snapshot of 5 Oct 2026"
+      subtitle="Taller bars are busier days."
+      footnote="Test source · snapshot of 5 Oct 2026"
       summary="Bar chart of two days."
+      tableLine="Two days with activity."
       figure={figure}
       table={TABLE}
       {...props}
@@ -55,7 +57,12 @@ describe('what the wrapper hands to Plotly', () => {
   test('words on the chart, shared layout and a cut-down tool bar', async () => {
     render(chart());
     expect(screen.getByRole('heading', { name: 'Transactions per day' })).toBeInTheDocument();
-    expect(screen.getByText('Data: Test source, snapshot of 5 Oct 2026')).toBeInTheDocument();
+    expect(screen.getByText('Taller bars are busier days.')).toBeInTheDocument();
+    // The footnote is one small line under the chart, not in the header, and the figure is described by it.
+    const footnote = screen.getByText('Test source · snapshot of 5 Oct 2026');
+    expect(footnote.closest('.pchart-head')).toBeNull();
+    expect(footnote.tagName).toBe('FIGCAPTION');
+    expect(screen.getByRole('img', { name: 'Bar chart of two days.' })).toHaveAttribute('aria-describedby', footnote.id);
     const { layout, config } = await drawn();
     // The chart's own axis title survives the merge with the shared layout.
     expect(layout.xaxis.title.text).toBe('Date (UTC)');
@@ -273,7 +280,10 @@ describe('the table view', () => {
     await user.click(toggle);
     const table = screen.getByRole('table');
     expect(table.closest('.sr-only')).toBeNull();
-    expect(screen.getByText('Bar chart of two days.', { selector: '.pchart-summary' })).toBeInTheDocument();
+    // The line above the table is the table line, which does not name the chart type; the footnote stays under it.
+    expect(screen.getByText('Two days with activity.', { selector: '.pchart-summary' })).toBeInTheDocument();
+    expect(screen.queryByText(/chart of/i, { selector: '.pchart-summary' })).toBeNull();
+    expect(screen.getByText('Test source · snapshot of 5 Oct 2026')).toBeVisible();
     expect(within(table).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['#/day/1', '#/day/2']);
     expect(document.querySelector('.pchart-stage')).toHaveAttribute('hidden');
 
@@ -356,7 +366,9 @@ describe('PNG export', () => {
     expect(options).toEqual({ format: 'png', filename: 'daily-activity_bc1qexample_2026-10-05', width: 1200, height: 675 });
     const copy = fakePlotly.draws.find((d) => d.el === host)!;
     expect(copy.layout.title.text).toBe('<b>Transactions per day</b>');
-    expect(copy.layout.title.subtitle.text).toBe('Data: Test source, snapshot of 5 Oct 2026');
+    expect(copy.layout.title.subtitle.text).toBe('Taller bars are busier days.');
+    // The footnote, the same line as on the page, is printed at the foot of the picture.
+    expect(copy.layout.annotations.map((a: { text: string }) => a.text)).toContain('Test source · snapshot of 5 Oct 2026');
     expect(copy.layout.xaxis.range).toEqual(['2026-09-01', '2026-09-02']);
     expect(copy.layout.xaxis.rangeslider.visible).toBe(false);
     expect(copy.config).toMatchObject({ staticPlot: true });
@@ -509,7 +521,46 @@ describe('click-through, touch and keyboard', () => {
   });
 });
 
+describe('"How to read this chart", the key and the status', () => {
+  test('the disclosure is under the header, closed until it is opened, and a chart without help has none', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(chart({ guide: <p>Drag to zoom.</p>, hint: 'Select a bar to open that day.' }));
+    await drawn();
+    const details = document.querySelector('details.pchart-guide') as HTMLDetailsElement;
+    expect(details.open).toBe(false);
+    const summary = screen.getByText('How to read this chart');
+    expect(summary.tagName).toBe('SUMMARY');
+    expect(details.previousElementSibling).toBe(document.querySelector('.pchart-head'));
+    // The one action hint stays visible; the help is behind the disclosure.
+    expect(screen.getByText('Select a bar to open that day.')).toBeVisible();
+    await user.click(summary);
+    expect(details.open).toBe(true);
+    expect(screen.getByText('Drag to zoom.')).toBeVisible();
+    unmount();
+    render(chart());
+    await drawn();
+    expect(document.querySelector('details.pchart-guide')).toBeNull();
+  });
+
+  test('a lead sits right under the header, before the help and the chart; a status is shown apart from the footnote', async () => {
+    render(chart({ lead: <p data-testid="lead">Flagged from 0.023 BTC</p>, guide: <p>Help.</p>, status: 'Drawing 120 of 377…' }));
+    await drawn();
+    const lead = screen.getByTestId('lead').parentElement!;
+    expect(lead.previousElementSibling).toBe(document.querySelector('.pchart-head'));
+    expect(lead.nextElementSibling).toBe(document.querySelector('details.pchart-guide'));
+    expect(screen.getByText('Drawing 120 of 377…')).toBeInTheDocument();
+    expect(screen.getByText('Test source · snapshot of 5 Oct 2026')).not.toHaveTextContent(/Drawing/);
+    expect(document.querySelector('.pchart-footnote')!.nextElementSibling).toBeNull();
+  });
+});
+
 test('mergeLayout lays a chart layout over the shared one without losing either side', () => {
   const merged = mergeLayout({ xaxis: { automargin: true, title: { font: { size: 12 } } }, margin: { t: 36, b: 40 } }, { xaxis: { title: { text: 'Date' } }, margin: { t: 80 } });
   expect(merged).toEqual({ xaxis: { automargin: true, title: { font: { size: 12 }, text: 'Date' } }, margin: { t: 80, b: 40 } });
+});
+
+test('a category axis labels every category; other axes keep their thinning', () => {
+  const layout = everyCategoryLabelled({ xaxis: { type: 'category', nticks: 6 }, yaxis: { type: 'log', nticks: 6 } }) as any;
+  expect(layout.xaxis).toMatchObject({ type: 'category', nticks: 0, dtick: 1 });
+  expect(layout.yaxis).toEqual({ type: 'log', nticks: 6 });
 });

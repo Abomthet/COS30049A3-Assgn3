@@ -340,7 +340,7 @@ describe('chart G2 beside the table', () => {
     mockControls.latencyMs = 400;
     start(base);
     await waitFor(async () => expect(points(await drawn())).toBe(200), { timeout: 4000 });
-    expect(screen.getByText(/loading, 200 of 377 drawn/)).toBeInTheDocument();
+    expect(screen.getByText('Drawing 200 of 377…')).toBeInTheDocument();
     await waitFor(async () => expect(points(await drawn())).toBe(377), { timeout: 4000 });
   });
 

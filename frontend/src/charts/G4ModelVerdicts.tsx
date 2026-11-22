@@ -125,8 +125,9 @@ function buildFigure(rows: Row[], deciding: MethodId, { palette, compact }: Figu
       margin: { t: compact ? 64 : 48, r: 24 },
       legend: compact ? { y: 1.02 } : { x: 1, xanchor: 'right', y: 1.02 },
       shapes: rules,
-      xaxis: { title: { text: "Share of this address's scored transactions at or below this score" }, range: [-0.03, 1.03], tickvals: [0, 0.25, 0.5, 0.75, 1], tickformat: '.0%', fixedrange: true },
+      xaxis: { title: { text: "Rank among this address's transactions (%)" }, range: [-0.03, 1.03], tickvals: [0, 0.25, 0.5, 0.75, 1], tickformat: '.0%', fixedrange: true },
       yaxis: {
+        title: { text: 'Model' },
         // The first method at the top, as the verdict table lists them.
         autorange: 'reversed',
         range: [rows.length - 0.5, -0.5],
@@ -173,6 +174,7 @@ export function G4ModelVerdicts({ ranks, scores, flags, deciding, subject, addre
   const flaggedBy = rows.filter((r) => r.verdict === 'flagged');
   const scored = rows.filter((r) => r.verdict !== 'unavailable').length;
   const what = subject === 'what-if' ? 'this hypothetical transaction' : 'this transaction';
+  const tableLine = flaggedBy.length === 0 ? 'No model flags it.' : `${flaggedBy.length} of ${scored} models flag it: ${flaggedBy.map((r) => r.name).join(', ')}.`;
   const summary = `Dot plot of where ${what} ranks among the address's own scored transactions under each of ${scored} models. ${flaggedBy.length === 0 ? 'No model flags it' : `${flaggedBy.length} of ${scored} flag it: ${flaggedBy.map((r) => r.name).join(', ')}`}.`;
 
   return (
@@ -180,9 +182,10 @@ export function G4ModelVerdicts({ ranks, scores, flags, deciding, subject, addre
       fileName={['model-verdicts', address, txid ?? 'what-if', settings.snapshot?.snapshotDate ?? '']}
       title="Where each model ranks it"
       headingLevel={3}
-      caption={`${snapshotCaption(settings.snapshot, address)} · Each model is compared on its own scale: a dot is ${what}'s rank among the address's own scored transactions for that model, not its score, so the nine can share one axis.`}
+      subtitle="Its rank among this address's own transactions, for each model."
+      footnote={snapshotCaption(settings.snapshot, address)}
       summary={summary}
-      hint="Hover a dot for its score and rank. The table view lists every model in words."
+      tableLine={tableLine}
       figure={figure}
       table={table}
       zoomable={false}

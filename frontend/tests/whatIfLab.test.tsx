@@ -99,7 +99,7 @@ describe('J4: the running example', () => {
   test('the sentence under the curve is read from it', async () => {
     openLab();
     const reading = await screen.findByTestId('curve-reading', undefined, LATE);
-    expect(reading).toHaveTextContent(/^On this address, a sent amount would be flagged from about 0\.\d+ BTC upwards, and below about 0\.0000\d+ BTC\.$/);
+    expect(reading).toHaveTextContent(/^Flagged from 0\.\d+ BTC and below 0\.0000\d+ BTC$/);
   });
 });
 
@@ -149,9 +149,10 @@ describe('the form', () => {
     expect(screen.getByRole('radio', { name: 'Received' })).toBeChecked();
     await typeAmount(user, '0.0005');
     await verdict();
-    expect(await screen.findByTestId('curve-reading', undefined, LATE)).toHaveTextContent(/a received amount/);
+    // The reading under the curve is a big number now; the direction is in the chart's accessible name and its table line.
+    expect(await screen.findByRole('group', { name: /score for received amounts from/ }, LATE)).toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: 'Sent' }));
-    await waitFor(() => expect(screen.getByTestId('curve-reading')).toHaveTextContent(/a sent amount/), LATE);
+    await waitFor(() => expect(screen.getByRole('group', { name: /score for sent amounts from/ })).toBeInTheDocument(), LATE);
   });
 
   test('the amount chips set the usual amount and its multiples, and the slider moves along the curve', async () => {

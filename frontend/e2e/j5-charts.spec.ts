@@ -19,6 +19,21 @@ test.describe('J5: charts', () => {
     await guard.noSidewaysScroll('after zooming');
   });
 
+  test('"How to read this chart" is closed, opens and closes from the keyboard, and the one action hint stays visible', async ({ page }) => {
+    await page.goto(`/#/address/${examples.mainAddress}`);
+    const chart = await drawnChart(page, 'Transactions per day');
+    const disclosure = chart.locator('details.pchart-guide');
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    await expect(chart.getByText('Select a bar to open that day.', { exact: true })).toBeVisible();
+    await expect(chart.getByText(/Drag across the chart/)).toBeHidden();
+    await disclosure.locator('summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(disclosure).toHaveAttribute('open', '');
+    await expect(chart.getByText(/Drag across the chart/)).toBeVisible();
+    await page.keyboard.press('Space');
+    await expect(disclosure).not.toHaveAttribute('open', '');
+  });
+
   test('filter the scatter to sent, unusual transactions; hover; open one', async ({ page, guard }) => {
     await page.goto(`/#/address/${examples.mainAddress}/transactions`);
     const filters = page.getByRole('region', { name: 'Filter transactions' });

@@ -70,8 +70,8 @@ describe('the bars', () => {
       feature({ id: 'F4', name: 'Relative size', z: null, role: 'no-comparison', value: null, usual: null }),
     ]);
     expect(bars.y).toEqual([
-      'Size<br><i>▲ flag level</i>',
-      'Burst<br><i>contributing</i>',
+      'Size<br><i>▲ past the flag line</i>',
+      'Burst<br><i>stands out</i>',
       'Gap<br><i>within usual</i>',
       'Relative size<br><i>no comparison</i>',
     ]);
@@ -128,7 +128,7 @@ describe('the threshold lines', () => {
 
   test('the legend names both marks with the numbers from the settings', async () => {
     const { keys } = await draw([feature({ id: 'F1', name: 'Size', z: 2 })]);
-    expect(keys.map((k: any) => k.name)).toEqual(['Within ±1.5: does not stand out', 'Flag line, ±4.25']);
+    expect(keys.map((k: any) => k.name)).toEqual(['Within usual (±1.5)', 'Flag line (±4.25)']);
     expect(keys.every((k: any) => k.hoverinfo === 'skip')).toBe(true);
   });
 
@@ -156,18 +156,26 @@ describe('the threshold lines', () => {
 describe('the contract', () => {
   test('both axes are labelled, nothing zooms and there is no tool bar', async () => {
     const { layout, config } = await draw([feature({ id: 'F1', name: 'Size', z: 2 })]);
-    expect(layout.xaxis.title.text).toMatch(/^Robust z-score/);
-    expect(layout.yaxis.title.text).toBe('Feature');
+    expect(layout.xaxis.title.text).toBe('Distance from usual (z-score)');
+    expect(layout.yaxis.title.text).toBe('Measure');
+    expect(layout.yaxis.type).toBe('category');
     expect(layout.xaxis.fixedrange).toBe(true);
     expect(layout.yaxis.fixedrange).toBe(true);
     expect(config.displayModeBar).toBe(false);
   });
 
-  test('title, caption and a text summary that names every feature', async () => {
+  test('title, footnote and a text summary that names every feature', async () => {
     const tx = await mockApi.transaction(ex.flagged.txid, ex.flagged.address);
     await draw(tx.features);
     expect(screen.getByRole('heading', { name: 'How this transaction compares with usual' })).toBeInTheDocument();
-    expect(screen.getByText(/Data: .*compared with this address's own earlier transactions/)).toBeInTheDocument();
+    expect(document.querySelector('.pchart-footnote')).toHaveTextContent(/^\S.*\S$/);
+    expect(document.querySelector('.pchart-footnote')!.textContent).not.toMatch(/Data:|compared with/);
+    // The hint is gone; its meaning is in the closed disclosure.
+    expect(document.querySelector('.chart-hint')).toBeNull();
+    const guide = document.querySelector('details.pchart-guide') as HTMLDetailsElement;
+    expect(guide.open).toBe(false);
+    expect(guide).toHaveTextContent("Bars to the right are above this address's usual, to the left below.");
+    expect(guide).toHaveTextContent('A z-score counts how many of this address\'s typical swings away a value is.');
     const img = screen.getByRole('img', { name: /Distance from usual for each feature \(robust z-score\)/ });
     for (const f of tx.features) expect(img.getAttribute('aria-label')).toContain(`${f.name} ${formatZ(f.z!)}`);
   });
@@ -177,7 +185,7 @@ describe('the contract', () => {
     await draw(tx.features);
     const table = screen.getByRole('table');
     expect(table.closest('.sr-only')).toBeNull();
-    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Feature', 'This transaction', 'Usual', 'z', 'Role']);
+    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Measure', 'This transaction', 'Usual', 'Distance from usual', 'Role']);
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(tx.features.length);
     tx.features.forEach((f, i) => {
@@ -195,7 +203,7 @@ describe('the contract', () => {
     const tx = await mockApi.transaction(ex.flagged.txid, ex.flagged.address);
     await draw(tx.features);
     const cells = within(screen.getAllByRole('row')[1]).getAllByRole('cell');
-    expect(cells.map((c) => c.getAttribute('data-label'))).toEqual(['This transaction', 'Usual', 'z', 'Role']);
+    expect(cells.map((c) => c.getAttribute('data-label'))).toEqual(['This transaction', 'Usual', 'Distance from usual', 'Role']);
   });
 
   test('units come from E2 by feature, and a unit not yet known shows the bare number', async () => {
@@ -217,7 +225,7 @@ describe('the contract', () => {
     await waitFor(() => expect(fakePlotly.api.downloadImage).toHaveBeenCalled());
     const options = (fakePlotly.api.downloadImage as ReturnType<typeof vi.fn>).mock.calls[0][1];
     expect(options.filename).toBe(`feature-deviation_${ex.mainAddress}_2026-10-05`);
-    expect(screen.getByText('Data: Test source, snapshot of 5 Oct 2026 · compared with this address\'s own earlier transactions')).toBeInTheDocument();
+    expect(screen.getByText('Test source · snapshot of 5 Oct 2026')).toBeInTheDocument();
   });
 
   test('no banned word anywhere in the chart or its table', async () => {

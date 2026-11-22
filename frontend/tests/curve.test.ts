@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { amountTicks, crossings, describeCurve, flagNear, flaggedRuns, runBounds, scoreAt, type CurveLine } from '../src/lib/curve';
+import { amountTicks, crossings, describeCurve, flagNear, flaggedRuns, readCurve, runBounds, scoreAt, type CurveLine } from '../src/lib/curve';
 import { formatBtcRounded } from '../src/lib/format';
 
 // Five amounts a decade apart, so every position between two of them is easy to check by hand.
@@ -69,6 +69,24 @@ describe('the sentence under the curve', () => {
   test('says so when nothing, or everything, in the range would be flagged', () => {
     expect(describeCurve(line([1, 1, 1, 1, 1], [false, false, false, false, false]), 'out')).toBe('On this address, no sent amount from 0.001 BTC to 10 BTC would be flagged.');
     expect(describeCurve(line([9, 9, 9, 9, 9], [true, true, true, true, true]), 'in')).toBe('On this address, every received amount from 0.001 BTC to 10 BTC would be flagged.');
+  });
+});
+
+describe('the reading for the big number', () => {
+  test('the upper stretch is the big amount and the lower one the small "and below" line', () => {
+    expect(readCurve(valley)).toEqual({ label: 'Flagged from', value: '1.6 BTC', note: 'and below 0.0032 BTC' });
+  });
+
+  test('a stretch only at the top is "from", only inside is "between", only at the bottom is "below"', () => {
+    expect(readCurve(line([1, 1, 1, 8, 9], [false, false, false, true, true]))).toMatchObject({ label: 'Flagged from', value: expect.stringMatching(/ BTC$/) });
+    expect(readCurve(line([1, 1, 1, 8, 9], [false, false, false, true, true])).note).toBeUndefined();
+    expect(readCurve(line([1, 8, 8, 1, 1], [false, true, true, false, false]))).toMatchObject({ label: 'Flagged between', value: expect.stringMatching(/ BTC and .* BTC$/) });
+    expect(readCurve(line([9, 8, 1, 1, 1], [true, true, false, false, false]))).toMatchObject({ label: 'Flagged below', value: expect.stringMatching(/ BTC$/) });
+  });
+
+  test('says so in a whole sentence when nothing, or everything, in the range is flagged', () => {
+    expect(readCurve(line([1, 1, 1, 1, 1], [false, false, false, false, false]))).toEqual({ value: 'No amount in this range is flagged.' });
+    expect(readCurve(line([9, 9, 9, 9, 9], [true, true, true, true, true]))).toEqual({ value: 'Every amount in this range is flagged.' });
   });
 });
 

@@ -173,18 +173,34 @@ describe('interaction', () => {
 });
 
 describe('the contract', () => {
-  test('title, caption, a summary that counts each status, and the zoom tool bar', async () => {
+  test('title, subtitle, footnote, a summary that counts each status, and the zoom tool bar', async () => {
     current.snapshot = { snapshotDate: '2026-10-05', source: 'Test source', sourceUrl: '', illustrative: false } as SnapshotInfo;
     const { config } = await draw();
     expect(screen.getByRole('heading', { level: 2, name: 'Transactions over time' })).toBeInTheDocument();
-    expect(await screen.findByText('Data: Test source, snapshot of 5 Oct 2026 · times in UTC · flagged by Baseline')).toBeInTheDocument();
+    expect(screen.getByText('Amount over time. Unusual transactions are orange triangles.')).toBeInTheDocument();
+    expect(await screen.findByText('Test source · snapshot of 5 Oct 2026')).toBeInTheDocument();
+    expect(document.querySelector('.pchart-footnote')!.textContent).not.toMatch(/Data:|times in UTC|flagged by|loading/);
+    expect(screen.getByText('Select a point to open that transaction.')).toBeInTheDocument();
     expect(screen.getByRole('group', { name: /from 16 May 2024 to 19 Oct 2026, by amount on a log scale: 3 unusual, 364 not unusual, 10 not scored\./ })).toBeInTheDocument();
     expect(config.displayModeBar).toBe(true);
   });
 
-  test('while later pages are still arriving, the caption says how many are drawn', async () => {
+  test('while later pages are still arriving, a separate status says how many are drawn, and the footnote does not', async () => {
     await draw({ loading: { loaded: 200, total: 377 } });
-    expect(screen.getByText(/loading, 200 of 377 drawn/)).toBeInTheDocument();
+    expect(screen.getByText('Drawing 200 of 377…')).toBeInTheDocument();
+    expect(document.querySelector('.pchart-footnote')!.textContent).not.toMatch(/Drawing|loading/);
+  });
+
+  test('there is no key row (the legend names the marks), the disclosure holds the rest, and the line above the table has no chart type', async () => {
+    const user = userEvent.setup();
+    await draw();
+    expect(screen.queryByRole('list', { name: 'Key' })).toBeNull();
+    const guide = document.querySelector('details.pchart-guide') as HTMLDetailsElement;
+    expect(guide.open).toBe(false);
+    expect(guide).toHaveTextContent(/log scale/);
+    expect(guide).toHaveTextContent('A bigger mark has a higher score.');
+    await user.click(screen.getByRole('button', { name: 'View as table' }));
+    expect(document.querySelector('.pchart-summary')!.textContent).toBe('377 transactions: 3 unusual, 364 not unusual, 10 not scored.');
   });
 
   test('the table view lists every transaction oldest first, with links, the status in words and CSV', async () => {

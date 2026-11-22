@@ -10,6 +10,7 @@ import {
   EXPORT_SIZE,
   baseLayout,
   chooseTraceTypes,
+  everyCategoryLabelled,
   exportLayout,
   mergeLayout,
   plotlyConfig,
@@ -51,11 +52,26 @@ interface Props {
   fileName: string[];
   title: string;
   headingLevel?: 2 | 3 | 4;
-  /** The source and the snapshot date (or fetch time). It is printed on the PNG as well. */
-  caption: string;
-  /** One sentence: the chart's accessible name, and the line above the table view. */
+  /** One short line under the title: what to look at. */
+  subtitle?: string;
+  /**
+   * The footnote, one small grey line under the chart: the source and the snapshot date (or the fetch time for live
+   * data). It is the single source of truth for that fact: the figure's accessible description, the table view and the
+   * PNG all carry this same text.
+   */
+  footnote: string;
+  /** One sentence for a screen reader: the chart's accessible name. May name the chart type ("Bar chart of ..."). */
   summary: string;
+  /** The line above the table view. It is the summary unless given: it must not name the chart type. */
+  tableLine?: string;
+  /** The one action hint that stays visible under the chart ("Select a bar to open that day."). */
   hint?: string;
+  /** The body of the closed "How to read this chart" disclosure under the header: the mark-by-mark, zoom, select and keyboard help. */
+  guide?: ReactNode;
+  /** A headline that belongs to the chart (G5's "Flagged from" number): shown right under the subtitle, before the help and the chart. */
+  lead?: ReactNode;
+  /** A short live status next to the hint ("Drawing 120 of 377…"); not part of the footnote. */
+  status?: string;
   /** Builds the figure for the current theme and size. Keep it stable (useCallback) so the chart is not redrawn needlessly. */
   figure: (context: FigureContext) => Figure;
   table: ChartTable;
@@ -94,9 +110,14 @@ export function PlotlyChart({
   fileName,
   title,
   headingLevel = 3,
-  caption,
+  subtitle,
+  footnote,
   summary,
+  tableLine,
   hint,
+  guide,
+  lead,
+  status,
   figure,
   table,
   tableView = 'toggle',
@@ -139,7 +160,7 @@ export function PlotlyChart({
     const touch = compact || window.matchMedia('(pointer: coarse)').matches;
     return {
       data: chooseTraceTypes(built.data, webglMinPoints, webglAvailable),
-      layout: mergeLayout(baseLayout(palette, { compact, touch, zoomable, revision, animate }), built.layout),
+      layout: everyCategoryLabelled(mergeLayout(baseLayout(palette, { compact, touch, zoomable, revision, animate }), built.layout)),
       config: plotlyConfig({ touch, zoomable, selectable: onSelect !== undefined }),
     };
   }, [figure, palette, compact, width, zoomable, revision, webglMinPoints, onSelect !== undefined]);
@@ -285,7 +306,7 @@ export function PlotlyChart({
     host.style.cssText = `position:fixed;left:-10000px;top:0;width:${EXPORT_SIZE.width}px;height:${EXPORT_SIZE.height}px`;
     document.body.append(host);
     try {
-      await plotly.react(host, live.data, exportLayout(live.layout ?? {}, palette, title, caption), { staticPlot: true, displayModeBar: false });
+      await plotly.react(host, live.data, exportLayout(live.layout ?? {}, palette, title, footnote, subtitle), { staticPlot: true, displayModeBar: false });
       await plotly.downloadImage(host, { format: 'png', filename: stem, ...EXPORT_SIZE });
       notify({ message: 'Chart image downloaded', tone: 'success' });
     } catch {
@@ -319,12 +340,13 @@ export function PlotlyChart({
         role: 'group',
         'aria-roledescription': 'chart',
         'aria-label': `${summary} ${keyboard.instructions}`,
+        'aria-describedby': `${id}-footnote`,
         tabIndex: 0,
         onKeyDown,
         onFocus: () => active === null && keyboard.points.length > 0 && setActive(keyboard.points.length - 1),
         onBlur: () => setActive(null),
       }
-    : { role: 'img', 'aria-label': summary };
+    : { role: 'img', 'aria-label': summary, 'aria-describedby': `${id}-footnote` };
 
   const tools = (
     <>
@@ -352,7 +374,7 @@ export function PlotlyChart({
         <Heading id={`${id}-title`} className="pchart-title">
           {title}
         </Heading>
-        <p className="pchart-caption">{caption}</p>
+        {subtitle ? <p className="pchart-subtitle">{subtitle}</p> : null}
         {compact ? (
           <details className="pchart-menu">
             <summary>Chart tools</summary>
@@ -363,6 +385,13 @@ export function PlotlyChart({
         )}
       </header>
 
+      {lead ? <div className="pchart-lead">{lead}</div> : null}
+      {guide ? (
+        <details className="pchart-guide">
+          <summary>How to read this chart</summary>
+          <div className="pchart-guide-body">{guide}</div>
+        </details>
+      ) : null}
       <div className="pchart-stage" ref={stageRef} hidden={tableOpen && tableView === 'toggle' && !failed} aria-busy={phase === 'loading'}>
         {rangeButtons && !failed ? (
           <div className="pchart-ranges chips" role="group" aria-label="Zoom to a period">
@@ -403,15 +432,23 @@ export function PlotlyChart({
           ) : null}
         </div>
         {hint && !failed ? <p className="chart-hint">{hint}</p> : null}
+        {status ? (
+          <p className="chart-hint pchart-status" aria-live="polite">
+            {status}
+          </p>
+        ) : null}
       </div>
       <p className="sr-only" role="status">
         {phase === 'loading' ? 'Loading the chart…' : active !== null && stops ? stops[active].label : ''}
       </p>
 
       <div id={`${id}-table`} className={tableVisible ? 'pchart-table' : 'sr-only'}>
-        {tableVisible && tableView === 'toggle' ? <p className="pchart-summary">{summary}</p> : null}
+        {tableVisible && tableView === 'toggle' ? <p className="pchart-summary">{tableLine ?? summary}</p> : null}
         <DataTable table={table} title={title} links={tableVisible} />
       </div>
+      <figcaption id={`${id}-footnote`} className="pchart-footnote">
+        {footnote}
+      </figcaption>
     </figure>
   );
 }

@@ -95,6 +95,37 @@ export function describeCurve(line: CurveLine, direction: WhatIfDirection): stri
   return `On this address, a ${kind} amount would be flagged ${[...upper, ...inner, ...lower].join(', and ')}.`;
 }
 
+/** The curve read for a big-number block: a tiny label, the big amount (or a whole sentence), and an optional small "and ..." line. */
+export interface CurveReading {
+  label?: string;
+  value: string;
+  note?: string;
+}
+
+/**
+ * The same reading as `describeCurve`, in the parts of a stat block: "Flagged from" / "0.023 BTC" / "and below 0.000011 BTC".
+ * Nothing flagged and everything flagged are whole sentences; a stretch strictly inside the range reads "Flagged between"
+ * and a stretch at the low end only reads "Flagged below".
+ */
+export function readCurve(line: CurveLine): CurveReading {
+  const { amounts } = line;
+  const last = amounts.length - 1;
+  const runs = flaggedRuns(line.flags);
+  if (runs.length === 0) return { value: 'No amount in this range is flagged.' };
+  if (runs.length === 1 && runs[0].from === 0 && runs[0].to === last) return { value: 'Every amount in this range is flagged.' };
+  const upper = runs.filter((r) => r.to === last).map((r) => ({ lead: 'from', text: formatBtcRounded(runBounds(line, r).start) }));
+  const inner = runs
+    .filter((r) => r.from > 0 && r.to < last)
+    .map((r) => ({ lead: 'between', text: `${formatBtcRounded(runBounds(line, r).start)} and ${formatBtcRounded(runBounds(line, r).end)}` }));
+  const lower = runs.filter((r) => r.from === 0).map((r) => ({ lead: 'below', text: formatBtcRounded(runBounds(line, r).end) }));
+  const [first, ...rest] = [...upper, ...inner, ...lower];
+  return {
+    label: `Flagged ${first.lead}`,
+    value: first.text,
+    ...(rest.length > 0 ? { note: `and ${rest.map((p) => `${p.lead} ${p.text}`).join(', and ')}` } : {}),
+  };
+}
+
 /** The width of one character, as a share of the font size, in the sans-serif the charts use. */
 const CHAR_EM = 0.6;
 /** The gap left between two tick labels, in pixels. */

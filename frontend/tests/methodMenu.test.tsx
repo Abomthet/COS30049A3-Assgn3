@@ -99,8 +99,9 @@ describe('the overview follows the method', () => {
     const section = heading.closest('section')!;
     const flaggedDays = days.filter((d) => d.flaggedCount > 0).length;
     expect(within(section).getByText(`${flaggedDays} days, newest first. Open one to see which transactions stand out and why.`)).toBeInTheDocument();
-    // G1's caption names the method, and the links to a day keep it.
-    expect(await screen.findByText(new RegExp(`days in UTC · flagged by ${regressionName}`))).toBeInTheDocument();
+    // G1's footnote is the source and date only (the model menu is on the screen), and the links to a day keep the method.
+    expect(await screen.findByText(/^Blockstream Esplora · snapshot of /, { selector: '.pchart-footnote' })).toBeInTheDocument();
+    expect(document.querySelector('.pchart-footnote')!.textContent).not.toMatch(/flagged by|days in UTC/);
     expect(within(section).getAllByRole('link')[0].getAttribute('href')).toMatch(/\?method=regression$/);
   });
 
@@ -132,7 +133,8 @@ describe('the transactions tab follows the method', () => {
     await waitFor(() => expect(within(table).getAllByRole('row')).toHaveLength(Math.min(flagged.length, settings.web.lists.pageSize) + 1));
     expect(rows.mock.calls.every((c) => c[1].method === 'regression')).toBe(true);
     expect(within(table).getAllByRole('link')[0].getAttribute('href')).toMatch(/\/tx\/[0-9a-f]{64}\?method=regression$/);
-    expect(screen.getByText(new RegExp(`times in UTC · flagged by ${regressionName}`))).toBeInTheDocument();
+    expect(screen.getByText(/^Blockstream Esplora · snapshot of /, { selector: '.pchart-footnote' })).toBeInTheDocument();
+    expect(document.querySelector('.pchart-footnote')!.textContent).not.toMatch(/flagged by|times in UTC/);
   });
 
   test('changing the method keeps the filters and returns to page 1', async () => {
