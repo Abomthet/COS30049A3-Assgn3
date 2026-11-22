@@ -46,13 +46,14 @@ test.describe('J3: addresses that cannot be shown', () => {
   test('a short-history address lists its transactions, unscored', async ({ page, guard }) => {
     await page.goto(`/#/address/${examples.shortHistory}`);
     const notice = page.getByTestId('state-insufficient');
-    await expect(notice.getByRole('heading', { name: 'Not enough history to score this address' })).toBeVisible();
-    await expect(page.locator('dl.stat-row').getByRole('definition').nth(2)).toHaveText('Not scored');
+    await expect(notice.getByRole('heading', { name: 'Too little history to score' })).toBeVisible();
+    await expect(notice.locator('.stat-block')).toHaveText(/^\d+ transactions? over less than a day$/);
+    await expect(page.locator('.stat-row .stat').nth(2).locator('.stat-value')).toHaveText('—');
     const wider = await page.addStyleTag({ content: WIDER_TEXT_CSS });
     await guard.noSidewaysScroll('on the short-history notice, with wider text');
     await wider.evaluate((el) => (el as Element).remove());
 
-    await notice.getByRole('link', { name: 'Browse its transactions anyway' }).click();
+    await notice.getByRole('link', { name: 'Browse its transactions' }).click();
     const table = page.getByRole('table', { name: /Transactions of this address/ });
     const rows = table.locator('tbody tr'); // on a phone each row is a card and the header row is not exposed, so the body is counted
     await expect(rows.first()).toBeVisible();

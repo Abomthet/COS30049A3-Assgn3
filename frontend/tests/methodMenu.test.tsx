@@ -25,7 +25,7 @@ function start(hash: string) {
 
 const menu = () => screen.findByRole('combobox', { name: 'Deciding model' });
 const stored = () => JSON.parse(localStorage.getItem('explorer.preferences.v1') ?? '{}');
-const unusualTile = () => screen.getByText('Unusual', { selector: 'dt' });
+const unusualTile = () => screen.getByText('Unusual', { selector: '.stat-label' }).closest('.stat')!;
 /** The first transaction a method flags in a recorded run, with its detail. */
 const flaggedIn = (run: NonNullable<typeof regression>) => {
   const [txid, detail] = Object.entries(run.details).find(([, d]) => d.status === 200 && d.body.flagged)!;
@@ -84,21 +84,21 @@ describe('the overview follows the method', () => {
   test('the tiles, the flagged days and the chart are the chosen method\'s; the old answer stays, dimmed, while the new one loads', async () => {
     const user = start(`#/address/${ex.mainAddress}`);
     const heading = await screen.findByRole('heading', { name: 'Days with unusual transactions' });
-    expect(unusualTile().nextElementSibling).toHaveTextContent('3on 3 days');
+    expect(unusualTile()).toHaveTextContent('3 on 3 days');
 
     mockControls.latencyMs = 80;
     await user.selectOptions(await menu(), 'regression');
     // At once: the choice is shown, the status says it is working and the old figures are dimmed, not removed.
     expect(screen.getByText('Updating…')).toBeInTheDocument();
-    expect(unusualTile().nextElementSibling).toHaveTextContent('3on 3 days');
-    expect(unusualTile().closest('dl')).toHaveClass('is-updating');
+    expect(unusualTile()).toHaveTextContent('3 on 3 days');
+    expect(unusualTile().closest('.stat-row')).toHaveClass('is-updating');
 
     const { totals, days } = regression.timeline!;
-    await waitFor(() => expect(unusualTile().nextElementSibling).toHaveTextContent(`${totals.flaggedCount}on ${totals.flaggedDays} days by ${regressionName}`));
+    await waitFor(() => expect(unusualTile()).toHaveTextContent(`${totals.flaggedCount} on ${totals.flaggedDays} days`));
     expect(screen.queryByText('Updating…')).not.toBeInTheDocument();
     const section = heading.closest('section')!;
     const flaggedDays = days.filter((d) => d.flaggedCount > 0).length;
-    expect(within(section).getByText(`${flaggedDays} days, newest first. Open one to see which transactions stand out and why.`)).toBeInTheDocument();
+    expect(within(section).getByTestId('flagged-headline')).toHaveTextContent(new RegExp(`^${flaggedDays} days with unusual transactions`));
     // G1's footnote is the source and date only (the model menu is on the screen), and the links to a day keep the method.
     expect(await screen.findByText(/^Blockstream Esplora · snapshot of /, { selector: '.pchart-footnote' })).toBeInTheDocument();
     expect(document.querySelector('.pchart-footnote')!.textContent).not.toMatch(/flagged by|days in UTC/);

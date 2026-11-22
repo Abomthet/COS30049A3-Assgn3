@@ -123,7 +123,7 @@ export interface TimelineResponse {
   history: {
     status: 'sufficient' | 'insufficient';
     txCount: number;
-    /** Fractional: 0.4 means under a day. */
+    /** Fractional: 0.4 means less than a day. */
     spanDays: number;
     required: HistoryRequirement;
     firstScoredDate: string | null;

@@ -34,11 +34,15 @@ describe('usability walkthrough tasks', () => {
     const user = start();
     await user.click(await screen.findByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) }));
     expect(await screen.findByRole('heading', { level: 1, name: ex.mainAddress })).toBeInTheDocument();
-    expect(screen.getByText(/Source: Blockstream Esplora · snapshot of 22 Oct 2026/)).toBeInTheDocument();
+    expect(screen.queryByText(/Source: Blockstream Esplora/)).not.toBeInTheDocument(); // the header strip and the chart footnote carry it
     expect(screen.getByRole('heading', { name: 'Transactions per day' })).toBeInTheDocument();
-    expect(screen.getByText('Active').nextElementSibling).toHaveTextContent('16 May 2024 – 19 Oct 2026');
-    expect(screen.getByText('Scored').nextElementSibling).toHaveTextContent('367 of 377');
-    expect(screen.getByText('Unusual', { selector: 'dt' }).nextElementSibling).toHaveTextContent('3on 3 days');
+    const tile = (label: string) => screen.getByText(label, { selector: '.stat-label' }).closest('.stat')!;
+    expect(tile('Active')).toHaveTextContent('16 May 2024 – 19 Oct 2026');
+    expect(tile('Active')).toHaveTextContent('887 days');
+    expect(tile('Scored')).toHaveTextContent('367 of 377');
+    expect(tile('Scored')).toHaveTextContent('the first 10 are too early to score');
+    expect(tile('Unusual')).toHaveTextContent('3 on 3 days');
+    expect(tile('Unusual')).not.toHaveTextContent('Robust');
   });
 
   test('2. find a highlighted date and open it', async () => {
@@ -259,10 +263,18 @@ describe('FR-05 states', () => {
   test('insufficient history: an address too short to score lists its transactions unscored', async () => {
     start(`#/address/${ex.shortHistory}`);
     const panel = await screen.findByTestId('state-insufficient');
-    expect(panel).toHaveTextContent('Not enough history to score this address');
-    expect(panel).toHaveTextContent('8 transactions spanning under a day');
-    expect(within(panel).getByRole('link', { name: 'Browse its transactions anyway' })).toBeInTheDocument();
-    expect(screen.getByText('Unusual', { selector: 'dt' }).nextElementSibling).toHaveTextContent('Not scored');
+    expect(within(panel).getByRole('heading', { name: 'Too little history to score' })).toBeInTheDocument();
+    expect(panel.querySelector('.stat-block')).toHaveTextContent('8 transactions over less than a day');
+    expect(panel).toHaveTextContent('Scoring needs 10 transactions over 14 days.');
+    expect(panel).not.toHaveTextContent('nothing reliable to compare against');
+    expect(within(panel).getByRole('link', { name: 'Browse its transactions' })).toBeInTheDocument();
+    expect(within(panel).getByRole('link', { name: 'Pick another address' })).toBeInTheDocument();
+    const tile = (label: string) => screen.getByText(label, { selector: '.stat-label' }).closest('.stat')!;
+    expect(tile('Unusual')).toHaveTextContent(/^Unusual —$/);
+    expect(tile('Scored')).toHaveTextContent('0 of 8 the first 8 are too early to score');
+    // The panel says why, so the day list says nothing.
+    expect(screen.queryByText('No unusual days.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Days with unusual transactions' })).not.toBeInTheDocument();
   });
 
   test('insufficient history: a transaction of a short address keeps its facts and explains why it is not scored (422)', async () => {

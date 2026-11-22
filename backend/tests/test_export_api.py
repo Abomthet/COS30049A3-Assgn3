@@ -172,7 +172,7 @@ def test_a_filter_that_matches_nothing_is_a_file_with_only_the_header(shared_cli
 def test_e10_rejects_bad_queries_with_the_field_named(shared_client: TestClient) -> None:
     assert export(shared_client, format="xml").json()["fields"] == [{"name": "format", "message": 'Must be "csv" or "json".'}]
     assert export(shared_client, status="done").status_code == 400
-    assert export(shared_client, **{"from": "2026-02-30"}).json()["fields"] == [{"name": "from", "message": "Use a day such as 2026-10-20."}]
+    assert export(shared_client, **{"from": "2026-02-30"}).json()["fields"] == [{"name": "from", "message": "Enter a date like 2026-10-20."}]
     both = export(shared_client, date="2026-10-19", **{"from": "2026-10-01"})
     assert both.status_code == 400 and both.json()["message"] == "Use either one date or a range of days, not both."
     assert export(shared_client, sort="size").status_code == 400

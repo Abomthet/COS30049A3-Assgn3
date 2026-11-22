@@ -108,7 +108,7 @@ export function FilterBar({ filters, errors, period, count, updating, onChange, 
       <div className="filter-foot">
         <p className="count-line" role="status">
           {invalid
-            ? 'Nothing is shown until the dates are corrected.'
+            ? null
             : count
               ? `Showing ${formatCount(count.matching)} of ${plural(count.all, 'transaction')}${updating ? (slow ? ' · Still working…' : ' · Updating…') : ''}`
               : 'Loading the transactions…'}

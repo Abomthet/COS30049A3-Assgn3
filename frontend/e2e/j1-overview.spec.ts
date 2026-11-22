@@ -17,18 +17,19 @@ test('J1: pick an address from the list and read its overview', async ({ page, g
   await expect(page).toHaveURL(new RegExp(`#/address/${examples.mainAddress}`));
   await expect(page.getByRole('heading', { level: 1, name: examples.mainAddress })).toBeVisible();
 
-  // The source and the snapshot date.
-  await expect(page.getByText(/^Source: .+ · snapshot of \d+ \w+ \d{4} · days in UTC/)).toBeVisible();
+  // The header strip and the chart footnote carry the source and the date, so the page has no source line of its own.
+  await expect(page.getByText(/^Source: /)).toHaveCount(0);
 
-  // The four summary tiles, each with a value; the date range is in the "Active" tile.
-  const tiles = page.locator('dl.stat-row');
-  await expect(tiles.getByRole('term')).toHaveText(['Transactions', 'Active', 'Unusual', 'Scored']);
-  const values = tiles.getByRole('definition');
-  await expect(values).toHaveCount(4);
-  await expect(values.nth(0)).toHaveText(/^\d[\d,]*$/);
-  await expect(values.nth(1)).toHaveText(/\d+ \w+ \d{4}( – \d+ \w+ \d{4})?\d+ calendar days?/);
-  await expect(values.nth(2)).toHaveText(/^[1-9]\d*on \d+ days? by /);
-  await expect(values.nth(3)).toHaveText(/^\d[\d,]* of \d[\d,]*enough earlier history$/);
+  // The four summary tiles, each a label and a figure; the date range is in the "Active" tile.
+  const tiles = page.locator('.stat-row .stat');
+  await expect(tiles.locator('.stat-label')).toHaveText(['Transactions', 'Active', 'Unusual', 'Scored']);
+  await expect(tiles.nth(0).locator('.stat-value')).toHaveText(/^\d[\d,]*$/);
+  await expect(tiles.nth(1)).toContainText(/\d+ \w+ \d{4}( – \d+ \w+ \d{4})?/);
+  await expect(tiles.nth(1).locator('.stat-note')).toHaveText(/^\d+ days?$/);
+  await expect(tiles.nth(2).locator('.stat-value')).toHaveText(/^[1-9]\d*$/);
+  await expect(tiles.nth(2).locator('.stat-note')).toHaveText(/^on \d+ days?$/);
+  await expect(tiles.nth(3).locator('.stat-value')).toHaveText(/^\d[\d,]* of \d[\d,]*$/);
+  await expect(tiles.nth(3).locator('.stat-note')).toHaveText(/^the first \d+ are too early to score$/);
 
   // The daily chart is drawn: bars, and a footnote with the source and the date (no "Data:", no "days in UTC").
   const chart = await drawnChart(page, 'Transactions per day');
@@ -39,6 +40,7 @@ test('J1: pick an address from the list and read its overview', async ({ page, g
   // The days with unusual transactions: the running example's flagged day is among them, newest first.
   const days = page.getByRole('region', { name: 'Days with unusual transactions' });
   await expect(days.getByRole('link').first()).toBeVisible();
+  await expect(days.getByTestId('flagged-headline')).toHaveText(/^\d+ days? with unusual transactions · \d+ \w+ \d{4} – \d+ \w+ \d{4}$/);
   const [y, m, d] = examples.flagged.date.split('-').map(Number);
   const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1];
   await expect(days.getByRole('link', { name: new RegExp(`${d} ${month} ${y}`) })).toBeVisible();

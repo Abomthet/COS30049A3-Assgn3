@@ -81,12 +81,12 @@ export interface FilterErrors {
  */
 export function validateFilters({ from, to }: Pick<Filters, 'from' | 'to'>, example: string): FilterErrors {
   const errors: FilterErrors = {};
-  const badDay = `Use a day such as ${example}.`;
+  const badDay = `Enter a date like ${example}.`;
   if (from && !isDayKey(from)) errors.from = badDay;
   if (to && !isDayKey(to)) errors.to = badDay;
   if (from && to && !errors.from && !errors.to && from > to) {
-    errors.from = 'Must not be after the last day.';
-    errors.to = 'Must not be before the first day.';
+    errors.from = "From can't be after To.";
+    errors.to = "To can't be before From.";
   }
   return errors;
 }

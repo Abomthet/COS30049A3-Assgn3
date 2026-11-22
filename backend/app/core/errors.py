@@ -180,7 +180,7 @@ def _describe(error: dict[str, Any]) -> str:
     if kind.startswith(("datetime", "timezone")):
         return "Use a date and time such as 2026-10-20T12:00:00Z."
     if kind.startswith("date"):
-        return "Use a day such as 2026-10-20."
+        return "Enter a date like 2026-10-20."
     if kind == "string_type":
         return "Must be text."
     if kind == "list_type":

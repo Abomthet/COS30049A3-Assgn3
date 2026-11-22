@@ -272,7 +272,15 @@ function page(recorded: RecordedAddress, query: TransactionQuery): TransactionsR
   checkDay(from, 'from');
   checkDay(to, 'to');
   if (date !== undefined && (from !== undefined || to !== undefined)) throw invalid('Use either one day or a range of days, not both.', 'Remove date, or remove from and to.', 'date');
-  if (from !== undefined && to !== undefined && from > to) throw invalid('The first day is after the last day.', 'Swap the two dates.', 'from');
+  if (from !== undefined && to !== undefined && from > to) throw new ApiError(400, {
+      status: 'invalid',
+      message: "From can't be after To.",
+      hint: 'Swap the two dates, or change one.',
+      fields: [
+        { name: 'from', message: "From can't be after To." },
+        { name: 'to', message: "To can't be before From." },
+      ],
+    });
   if (pageSize < 1 || pageSize > WEB.lists.maxPageSize) throw invalid(`The page size must be from 1 to ${WEB.lists.maxPageSize}.`, 'Choose a smaller page.', 'pageSize');
 
   const rows = recordedFor(recorded, method)

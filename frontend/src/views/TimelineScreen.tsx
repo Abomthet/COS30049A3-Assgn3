@@ -5,17 +5,16 @@ import { G1DailyActivity } from '../charts/G1DailyActivity';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { CopyButton } from '../components/CopyButton';
 import { ErrorState } from '../components/ErrorState';
-import { Icon } from '../components/Icon';
 import { MethodMenu } from '../components/MethodMenu';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Loading, StatePanel } from '../components/StatePanel';
+import { StatBlock } from '../components/StatBlock';
 import { WatchStar } from '../components/WatchStar';
 import { KIND_LABEL, validateAddress } from '../lib/address';
 import { dayCount, dayKey, formatDay, formatDayRange } from '../lib/dates';
 import { formatCount, formatSpanDays, plural, shortAddress } from '../lib/format';
 import { navigate, paths } from '../lib/router';
 import { methodSearch } from '../lib/methods';
-import { useMethodLabels } from '../hooks/useMethods';
 import { useMethodFallback } from '../hooks/useMethodFallback';
 import { rememberAddress } from '../hooks/usePreferences';
 import { useRequest } from '../hooks/useRequest';
@@ -74,12 +73,18 @@ export function TimelineScreen({ address, tab, method }: { address: string; tab:
 }
 
 function Timeline({ data, tab, method, updating }: { data: TimelineResponse; tab: AddressTab; method: MethodId; updating: boolean }) {
-  const labels = useMethodLabels();
   const kind = validateAddress(data.address);
   const flaggedDays = data.days.filter((d) => d.flaggedCount > 0);
   const insufficient = data.history.status === 'insufficient';
   const [first, last] = [dayKey(data.range.start), dayKey(data.range.end)];
   const spanDays = dayCount(first, last);
+  const unscored = data.totals.txCount - data.totals.scoredCount;
+  // A fetched address that was cut off is missing its oldest history, so it is the oldest ones that cannot be scored.
+  const unscoredNote =
+    unscored <= 0
+      ? undefined
+      : `the ${data.live?.truncated ? 'oldest' : 'first'} ${unscored === 1 ? 'one is' : `${formatCount(unscored)} are`} too early to score`;
+  const showDays = !(insufficient && flaggedDays.length === 0);
   const open = (date: string) => navigate(paths.day(data.address, date, method));
 
   return (
@@ -88,17 +93,10 @@ function Timeline({ data, tab, method, updating }: { data: TimelineResponse; tab
         <p className="eyebrow">Address{kind.ok ? ` · ${KIND_LABEL[kind.kind]}` : ''}</p>
         <div className="address-heading">
           <PageHeading className="address-title mono">{data.address}</PageHeading>
+          {!data.live && data.snapshot.illustrative ? <span className="tag-illustrative">Illustrative data</span> : null}
           <CopyButton value={data.address} label="address" />
           <WatchStar address={data.address} showText />
         </div>
-        {data.live ? (
-          <p className="source-line">Source: {data.snapshot.source} · live data · days in UTC</p>
-        ) : (
-          <p className="source-line">
-            Source: {data.snapshot.source} · snapshot of {formatDay(data.snapshot.snapshotDate)} · days in UTC
-            {data.snapshot.illustrative ? ' · illustrative data' : ''}
-          </p>
-        )}
         {data.live ? (
           <Suspense fallback={null}>
             <LiveBanner address={data.address} live={data.live} />
@@ -107,41 +105,24 @@ function Timeline({ data, tab, method, updating }: { data: TimelineResponse; tab
         <MethodMenu method={method} updating={updating} live={!!data.live} />
       </header>
 
-      <dl className={`stat-row${updating ? ' is-updating' : ''}`} aria-busy={updating}>
+      <div className={`stat-row${updating ? ' is-updating' : ''}`} aria-busy={updating}>
         <div className="stat">
-          <dt>Transactions</dt>
-          <dd>{formatCount(data.totals.txCount)}</dd>
+          <StatBlock label="Transactions" value={formatCount(data.totals.txCount)} />
+        </div>
+        <div className="stat stat-wide">
+          <StatBlock label="Active" value={formatDayRange(first, last)} note={plural(spanDays, 'day')} />
         </div>
         <div className="stat">
-          <dt>Active</dt>
-          <dd>
-            {formatDayRange(first, last)}
-            <span className="stat-sub">{plural(spanDays, 'calendar day')}</span>
-          </dd>
+          <StatBlock
+            label="Unusual"
+            value={insufficient ? '—' : formatCount(data.totals.flaggedCount)}
+            note={insufficient ? undefined : `on ${plural(data.totals.flaggedDays, 'day')}`}
+          />
         </div>
         <div className="stat">
-          <dt>Unusual</dt>
-          <dd>
-            {insufficient ? (
-              'Not scored'
-            ) : (
-              <>
-                {formatCount(data.totals.flaggedCount)}
-                <span className="stat-sub">
-                  on {plural(data.totals.flaggedDays, 'day')} by {labels[data.snapshot.method.id].name}
-                </span>
-              </>
-            )}
-          </dd>
+          <StatBlock label="Scored" value={`${formatCount(data.totals.scoredCount)} of ${formatCount(data.totals.txCount)}`} note={unscoredNote} />
         </div>
-        <div className="stat">
-          <dt>Scored</dt>
-          <dd>
-            {formatCount(data.totals.scoredCount)} of {formatCount(data.totals.txCount)}
-            <span className="stat-sub">enough earlier history</span>
-          </dd>
-        </div>
-      </dl>
+      </div>
 
       <AddressTabs address={data.address} tab={tab.name} method={method} />
 
@@ -152,34 +133,36 @@ function Timeline({ data, tab, method, updating }: { data: TimelineResponse; tab
           {insufficient ? (
             <StatePanel
               tone="warning"
-              title="Not enough history to score this address"
+              title="Too little history to score"
               testId="state-insufficient"
               actions={
                 <>
                   <a className="btn btn-secondary" href={paths.transactions(data.address, methodSearch(method))}>
-                    Browse its transactions anyway
+                    Browse its transactions
                   </a>
                   <a className="btn btn-ghost" href={paths.select()}>
-                    Choose an address with more history
+                    Pick another address
                   </a>
                 </>
               }
             >
+              <StatBlock
+                size="large"
+                value={formatCount(data.history.txCount)}
+                unit={`${data.history.txCount === 1 ? 'transaction' : 'transactions'} over ${formatSpanDays(data.history.spanDays)}`}
+              />
               <p>
-                A transaction is only scored once the address has at least {data.history.required.minTx} earlier transactions
-                over at least {data.history.required.minSpanDays} days. This address has{' '}
-                {plural(data.history.txCount, 'transaction')} spanning {formatSpanDays(data.history.spanDays)}, so there is nothing
-                reliable to compare against yet. Its transactions are listed but none is marked unusual.
+                Scoring needs {data.history.required.minTx} transactions over {data.history.required.minSpanDays} days.
               </p>
             </StatePanel>
           ) : null}
 
-          <div className={`timeline-layout${updating ? ' is-updating' : ''}`} aria-busy={updating}>
+          <div className={`timeline-layout${showDays ? '' : ' timeline-solo'}${updating ? ' is-updating' : ''}`} aria-busy={updating}>
             <div className="card">
               <G1DailyActivity timeline={data} onOpenDay={open} />
             </div>
 
-            <FlaggedDays address={data.address} days={flaggedDays} insufficient={insufficient} method={method} />
+            {showDays ? <FlaggedDays address={data.address} days={flaggedDays} period={{ first, last }} method={method} /> : null}
           </div>
 
           <ReplayPanel timeline={data} method={method} />
@@ -211,7 +194,7 @@ function AddressTabs({ address, tab, method }: { address: string; tab: AddressTa
   );
 }
 
-function FlaggedDays({ address, days, insufficient, method }: { address: string; days: TimelineDay[]; insufficient: boolean; method: MethodId }) {
+function FlaggedDays({ address, days, period, method }: { address: string; days: TimelineDay[]; period: { first: string; last: string }; method: MethodId }) {
   const { settings } = useSettings();
   const [showAll, setShowAll] = useState(false);
   // The strongest flagged transactions first, so the first row met for a day gives its reason.
@@ -229,21 +212,27 @@ function FlaggedDays({ address, days, insufficient, method }: { address: string;
 
   return (
     <section className="card flagged-card" aria-labelledby="flagged-title">
-      <h2 id="flagged-title">Days with unusual transactions</h2>
+      <h2 id="flagged-title" className="sr-only">
+        Days with unusual transactions
+      </h2>
       {days.length > 0 ? (
         <>
-          <p className="card-sub">
-            {plural(days.length, 'day')}, newest first. Open one to see which transactions stand out and why.
-          </p>
+          <StatBlock
+            size="large"
+            testId="flagged-headline"
+            value={plural(days.length, 'day')}
+            note={`with unusual transactions · ${formatDayRange(period.first, period.last)}`}
+          />
+          <p className="sort-label">Newest first</p>
           <ul className="day-list">
             {shown.map((d) => (
               <li key={d.date}>
                 <a className="day-link" href={paths.day(address, d.date, method)}>
-                  <Icon name="flag" className="flag-icon" />
                   <span className="day-link-date">{formatDay(d.date)}</span>
+                  {reasons.has(d.date) ? <span className="day-link-reason">{reasons.get(d.date)}</span> : null}
                   <span className="day-link-count">
-                    {d.flaggedCount} of {plural(d.txCount, 'transaction')}
-                    {reasons.has(d.date) ? ` · ${reasons.get(d.date)}` : ''}
+                    {d.flaggedCount} of {formatCount(d.txCount)}
+                    <span className="sr-only"> {d.txCount === 1 ? 'transaction' : 'transactions'} unusual</span>
                   </span>
                 </a>
               </li>
@@ -257,7 +246,7 @@ function FlaggedDays({ address, days, insufficient, method }: { address: string;
         </>
       ) : (
         <p className="card-sub">
-          {insufficient ? 'None: this address has too little history to score.' : 'None: no transaction on this address reached the flag level.'}
+          No unusual days. <a href={paths.transactions(address, methodSearch(method))}>Browse all transactions</a>
         </p>
       )}
     </section>

@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from 'react';
 import type { TransactionRow } from '../api/types';
+import { StatBlock } from '../components/StatBlock';
 import { formatBtc, formatCount } from '../lib/format';
 import { rowsInSpan, summarise } from '../lib/selection';
 import { dayKey } from '../lib/dates';
@@ -33,9 +34,9 @@ export default function SelectionBar({ rows, selected, onSelect, onClear }: Prop
     event.preventDefault();
     const { from, to } = span;
     const chosen = from !== '' && to !== '' && from <= to ? rowsInSpan(rows, from, to) : [];
-    if (from === '' || to === '') setError('Choose the first and the last day.');
-    else if (from > to) setError('The first day is after the last day.');
-    else if (chosen.length === 0) setError('No transaction falls on those days.');
+    if (from === '' || to === '') setError('Pick both days.');
+    else if (from > to) setError("From can't be after To.");
+    else if (chosen.length === 0) setError('No transactions on those days.');
     else {
       setError(null);
       onSelect(chosen);
@@ -46,27 +47,36 @@ export default function SelectionBar({ rows, selected, onSelect, onClear }: Prop
   return (
     <section className="card selection-bar" aria-labelledby="selection-title">
       <h2 id="selection-title">Selection</h2>
-      <p className="selection-summary" role="status">
-        {summary
-          ? `${formatCount(summary.count)} selected: ${formatCount(summary.received)} received, ${formatCount(summary.sent)} sent, ${formatCount(summary.unusual)} unusual. ` +
-            `Received ${formatBtc(summary.receivedSats)} in all, sent ${formatBtc(summary.sentSats)}.`
-          : 'Nothing is selected. Choose the box or lasso tool on the chart and draw round points, or select a span of days here; the table then shows only those transactions.'}
-      </p>
+      <div className="selection-summary" role="status">
+        {summary ? (
+          <>
+            <StatBlock testId="selection-count" value={formatCount(summary.count)} unit="selected" />
+            <p className="selection-stats">
+              {formatCount(summary.received)} received · {formatCount(summary.sent)} sent · {formatCount(summary.unusual)} unusual
+            </p>
+            <p className="selection-stats">
+              {formatBtc(summary.receivedSats)} in · {formatBtc(summary.sentSats)} out
+            </p>
+          </>
+        ) : (
+          <p>Draw on the chart or pick days to select.</p>
+        )}
+      </div>
       <form className="selection-span" onSubmit={submit} noValidate>
         <div className="filter-group">
           <label htmlFor={ids.from} className="filter-label">
-            First day to select
+            From
           </label>
           <input id={ids.from} type="date" className="text-input" value={span.from} min={first} max={last} aria-describedby={error ? ids.error : undefined} aria-invalid={error ? true : undefined} onChange={(e) => edit({ from: e.target.value })} />
         </div>
         <div className="filter-group">
           <label htmlFor={ids.to} className="filter-label">
-            Last day to select
+            To
           </label>
           <input id={ids.to} type="date" className="text-input" value={span.to} min={first} max={last} aria-describedby={error ? ids.error : undefined} aria-invalid={error ? true : undefined} onChange={(e) => edit({ to: e.target.value })} />
         </div>
         <button type="submit" className="btn btn-secondary">
-          Select these days
+          Select
         </button>
         {selected ? (
           <button type="button" className="btn btn-ghost" onClick={onClear}>

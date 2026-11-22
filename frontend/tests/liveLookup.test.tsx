@@ -54,10 +54,11 @@ describe('the dialog', () => {
 
     const banner = await screen.findByTestId('live-banner', undefined, { timeout: 4000 });
     expect(window.location.hash).toBe(`#/address/${OUTSIDE}`);
-    expect(banner).toHaveTextContent(/Live data, fetched \d+ \w+ \d{4} \d\d:\d\d UTC, the most recent 377 transactions/);
-    expect(banner).toHaveTextContent('1,157 transactions in all');
+    expect(banner).toHaveTextContent(/^Live data · fetched \d+ \w+ \d{4}, \d\d:\d\d UTC · latest 377 of 1,157 transactions/);
+    expect(banner).not.toHaveTextContent('not part of the snapshot');
+    expect(banner).not.toHaveTextContent('shown unscored');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByText(/Source: .* live data/)).toBeInTheDocument();
+    expect(screen.queryByText(/Source: /)).not.toBeInTheDocument();
     expect(screen.queryByText(/snapshot of \d+ \w+ \d{4} · days in UTC/)).not.toBeInTheDocument();
     // The header strip says where this address's data came from, not the snapshot's date.
     expect(screen.getByTestId('header-meta')).toHaveTextContent(/^Live data · .+$/);
@@ -149,7 +150,7 @@ describe('a fetched address', () => {
     const user = await fetched();
     await user.click(screen.getByRole('button', { name: 'Forget this address' }));
     await waitFor(() => expect(window.location.hash).toBe('#/'));
-    expect(await screen.findByText(/Forgot 1A1zP1/)).toBeInTheDocument();
+    expect(await screen.findByText(/^Removed 1A1zP1.* from this computer\.$/)).toBeInTheDocument();
     await expect(mockApi.lookup(OUTSIDE)).rejects.toMatchObject({ status: 404 });
   });
 

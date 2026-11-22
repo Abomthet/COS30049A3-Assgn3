@@ -97,18 +97,18 @@ describe('validation: the rules the server applies to E6, with its words', () =>
   });
 
   test.each(['abc', '2024-13-01', '2024-02-30', '2024-1-1', '20240701'])('%s is not a day', (bad) => {
-    expect(validateFilters({ from: bad, to: '' }, example)).toEqual({ from: 'Use a day such as 2026-10-19.' });
-    expect(validateFilters({ from: '', to: bad }, example)).toEqual({ to: 'Use a day such as 2026-10-19.' });
+    expect(validateFilters({ from: bad, to: '' }, example)).toEqual({ from: 'Enter a date like 2026-10-19.' });
+    expect(validateFilters({ from: '', to: bad }, example)).toEqual({ to: 'Enter a date like 2026-10-19.' });
   });
 
   test('a first day after the last day marks both fields', () => {
     expect(validateFilters({ from: '2025-01-01', to: '2024-01-01' }, example)).toEqual({
-      from: 'Must not be after the last day.',
-      to: 'Must not be before the first day.',
+      from: "From can't be after To.",
+      to: "To can't be before From.",
     });
   });
 
   test('a wrong day is reported on its own, not as an order problem', () => {
-    expect(validateFilters({ from: '2025-13-01', to: '2024-01-01' }, example)).toEqual({ from: 'Use a day such as 2026-10-19.' });
+    expect(validateFilters({ from: '2025-13-01', to: '2024-01-01' }, example)).toEqual({ from: 'Enter a date like 2026-10-19.' });
   });
 });

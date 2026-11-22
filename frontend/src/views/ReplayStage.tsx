@@ -86,13 +86,13 @@ function Player({ timeline, method, rows }: { timeline: TimelineResponse; method
           </div>
         )}
       </div>
-      {reduced ? <p className="card-sub">Your system asks for less motion, so the replay does not run by itself. Use Step to move one transaction at a time.</p> : null}
+      {reduced ? <p className="card-sub">Reduced motion is on. Press Step to move one transaction.</p> : null}
 
       <p className="replay-progress">
         <progress value={position} max={rows.length} aria-label="Replay progress" />
         <span>
-          {formatCount(position)} of {plural(rows.length, 'transaction')}
-          {latest ? ` · up to ${formatDateTime(latest.time)} UTC` : ''}
+          {formatCount(position)} of {formatCount(rows.length)}
+          {latest ? ` · up to ${formatDateTime(latest.time)}` : ''}
         </span>
       </p>
       <p className="sr-only" role="status">
@@ -128,7 +128,7 @@ function Player({ timeline, method, rows }: { timeline: TimelineResponse; method
           {latest.status === 'flagged' && latest.mainReason ? ` ${latest.mainReason}` : ''}
         </p>
       ) : (
-        <p className="card-sub">Press Play, or Step, to begin. The charts fill in as the history is replayed.</p>
+        <p className="card-sub">Press Play or Step to begin.</p>
       )}
       {flaggedNow ? <p className="card-sub">{settings.limitationLine}</p> : null}
 

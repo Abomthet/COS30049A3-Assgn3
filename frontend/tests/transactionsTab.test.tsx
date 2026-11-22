@@ -21,6 +21,8 @@ function start(hash: string) {
   return user;
 }
 
+/** A field of the filter bar (the selection form has its own From and To). */
+const filterField = (label: string) => within(screen.getByRole('region', { name: 'Filter transactions' })).getByLabelText(label);
 const table = () => screen.findByRole('table', { name: /Transactions of this address/ });
 const bodyRows = async () => within(await table()).getAllByRole('row').slice(1);
 
@@ -139,8 +141,8 @@ describe('the filters', () => {
   test('the date range limits the list to those days, inclusive, and goes in the link', async () => {
     start(base);
     await bodyRows();
-    fireEvent.change(screen.getByLabelText('From'), { target: { value: '2024-07-11' } });
-    fireEvent.change(screen.getByLabelText('To'), { target: { value: '2024-07-11' } });
+    fireEvent.change(filterField('From'), { target: { value: '2024-07-11' } });
+    fireEvent.change(filterField('To'), { target: { value: '2024-07-11' } });
     await waitFor(() => expect(screen.getByText('Showing 1 of 377 transactions')).toBeInTheDocument());
     expect(window.location.hash).toBe(`${base}?from=2024-07-11&to=2024-07-11`);
   });
@@ -149,8 +151,8 @@ describe('the filters', () => {
     start(base);
     await bodyRows();
     for (const label of ['From', 'To']) {
-      expect(screen.getByLabelText(label)).toHaveAttribute('min', '2024-05-16');
-      expect(screen.getByLabelText(label)).toHaveAttribute('max', '2026-10-19');
+      expect(filterField(label)).toHaveAttribute('min', '2024-05-16');
+      expect(filterField(label)).toHaveAttribute('max', '2026-10-19');
     }
   });
 
@@ -185,8 +187,8 @@ describe('the filters', () => {
     expect(screen.getByRole('button', { name: 'Unusual' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Received' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Sent' })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByLabelText('From')).toHaveValue('2024-01-01');
-    expect(screen.getByLabelText('To')).toHaveValue('2026-12-31');
+    expect(filterField('From')).toHaveValue('2024-01-01');
+    expect(filterField('To')).toHaveValue('2026-12-31');
     expect(screen.getByLabelText('Sort by')).toHaveValue('-score');
   });
 
@@ -211,14 +213,15 @@ describe('validation', () => {
     const spy = vi.spyOn(mockApi, 'transactions');
     start(`${base}?from=2025-06-01&to=2025-01-01`);
     expect(await screen.findByTestId('state-invalid-filters')).toBeInTheDocument();
-    const from = screen.getByLabelText('From');
-    const to = screen.getByLabelText('To');
+    const from = filterField('From');
+    const to = filterField('To');
     expect(from).toHaveAttribute('aria-invalid', 'true');
     expect(to).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByText('Must not be after the last day.')).toBeInTheDocument();
-    expect(screen.getByText('Must not be before the first day.')).toBeInTheDocument();
-    expect(from).toHaveAccessibleDescription('Must not be after the last day.');
-    expect(screen.getByText('Nothing is shown until the dates are corrected.')).toBeInTheDocument();
+    expect(screen.getByText("From can't be after To.")).toBeInTheDocument();
+    expect(screen.getByText("To can't be before From.")).toBeInTheDocument();
+    expect(from).toHaveAccessibleDescription("From can't be after To.");
+    expect(screen.queryByText(/Nothing is shown until/)).not.toBeInTheDocument();
+    expect(screen.getByTestId('state-invalid-filters')).toHaveTextContent(/^Check the dates$/);
     expect(screen.queryByRole('table', { name: /Transactions of this address/ })).not.toBeInTheDocument();
     expect(spy).not.toHaveBeenCalled();
   });
@@ -226,21 +229,21 @@ describe('validation', () => {
   test('typing the dates in the wrong order shows the messages, and fixing one sends the request', async () => {
     start(base);
     await bodyRows();
-    fireEvent.change(screen.getByLabelText('From'), { target: { value: '2025-06-01' } });
+    fireEvent.change(filterField('From'), { target: { value: '2025-06-01' } });
     await waitFor(() => expect(screen.getByText(/^Showing \d+ of 377 transactions$/)).toBeInTheDocument());
     expect(screen.queryByText('Showing 377 of 377 transactions')).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('To'), { target: { value: '2025-01-01' } });
-    expect(await screen.findByText('Must not be before the first day.')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('To'), { target: { value: '2026-01-01' } });
-    await waitFor(() => expect(screen.queryByText('Must not be before the first day.')).not.toBeInTheDocument());
+    fireEvent.change(filterField('To'), { target: { value: '2025-01-01' } });
+    expect(await screen.findByText("To can't be before From.")).toBeInTheDocument();
+    fireEvent.change(filterField('To'), { target: { value: '2026-01-01' } });
+    await waitFor(() => expect(screen.queryByText("To can't be before From.")).not.toBeInTheDocument());
     expect(await bodyRows()).not.toHaveLength(0);
   });
 
   test('a day that does not exist in the link is named, with an example from this address', async () => {
     const spy = vi.spyOn(mockApi, 'transactions');
     start(`${base}?from=2024-13-01`);
-    expect(await screen.findByText('Use a day such as 2026-10-19.')).toBeInTheDocument();
-    expect(screen.getByLabelText('From')).toHaveValue('');
+    expect(await screen.findByText('Enter a date like 2026-10-19.')).toBeInTheDocument();
+    expect(filterField('From')).toHaveValue('');
     expect(spy).not.toHaveBeenCalled();
   });
 
@@ -256,7 +259,8 @@ describe('states', () => {
   test('filters that match nothing say so and offer to reset them', async () => {
     const user = start(`${base}?status=flagged&from=2026-10-01`);
     const panel = await screen.findByTestId('state-empty-filters');
-    expect(panel).toHaveTextContent('No transaction matches these filters');
+    expect(panel).toHaveTextContent('No transactions match');
+    expect(panel).toHaveTextContent('Widen the dates or clear a filter.');
     expect(screen.getByText('Showing 0 of 377 transactions')).toBeInTheDocument();
     await user.click(within(panel).getByRole('button', { name: 'Reset filters' }));
     expect(await table()).toBeInTheDocument();
@@ -366,7 +370,7 @@ describe('chart G2 beside the table', () => {
     await drawn();
     fakePlotly.emit('plotly_relayout', { 'xaxis.range[0]': '2024-07-01 03:12:11', 'xaxis.range[1]': '2024-12-31 17:00:00' });
     await waitFor(() => expect(window.location.hash).toBe(`${base}?from=2024-07-01&to=2024-12-31`));
-    expect(screen.getByLabelText('From')).toHaveValue('2024-07-01');
+    expect(filterField('From')).toHaveValue('2024-07-01');
     // The reset puts the axis back on the range the figure asked for, which clears the dates.
     const { layout } = fakePlotly.lastChartDraw();
     fakePlotly.emit('plotly_relayout', { 'xaxis.range': layout.xaxis.range });

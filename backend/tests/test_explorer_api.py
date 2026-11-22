@@ -341,7 +341,9 @@ def test_e6_a_date_with_a_range_names_both_fields(client: TestClient) -> None:
 def test_e6_from_after_to_names_both_fields(client: TestClient) -> None:
     body = assert_invalid(client.get(f"/api/addresses/{RUNNING_EXAMPLE}/transactions", params={"from": "2026-02-01", "to": "2026-01-01"}),
                           "from", "to")
-    assert body["message"] == "The first day is after the last day."
+    assert body["message"] == "From can't be after To."
+    assert body["hint"] == "Swap the two dates, or change one."
+    assert body["fields"] == [{"name": "from", "message": "From can't be after To."}, {"name": "to", "message": "To can't be before From."}]
     assert rows(client, **{"from": "2026-01-01", "to": "2026-01-01"})["total"] >= 0  # the same day is a range of one
 
 

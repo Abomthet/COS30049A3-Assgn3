@@ -3060,3 +3060,79 @@ select.text-input {
   color: var(--text-muted);
   font-size: 0.875rem;
 }
+
+/* ================================================================== Overview and transactions (wording pass, R5) */
+/* Tiles: a StatBlock inside each .stat surface. */
+.stat-row .stat .stat-block {
+  gap: 2px;
+}
+.stat-row .stat .stat-value {
+  font-size: clamp(1.4rem, 1.1rem + 1vw, 1.9rem);
+}
+.stat-row .stat-wide .stat-value {
+  font-size: clamp(1.2rem, 0.9rem + 0.75vw, 1.4rem);
+}
+.tag-illustrative {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: var(--tint);
+  color: var(--text-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.timeline-layout.timeline-solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+.state-panel .stat-block {
+  margin: 4px 0 8px;
+}
+/* "Days with unusual transactions": the count is the headline; the list is newest first. */
+.flagged-card .stat-block {
+  margin: 0 0 12px;
+}
+.sort-label {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+.day-link {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'date count' 'reason count';
+  column-gap: 12px;
+  row-gap: 2px;
+}
+.day-link-date {
+  grid-area: date;
+}
+.day-link-reason {
+  grid-area: reason;
+  color: var(--text-2);
+  font-size: 0.82rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.day-link-count {
+  grid-area: count;
+  align-self: center;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.replay-card .pchart-guide {
+  margin: 4px 0 0;
+}
+/* The selection summary above the table. */
+.selection-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.selection-summary .selection-stats {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}

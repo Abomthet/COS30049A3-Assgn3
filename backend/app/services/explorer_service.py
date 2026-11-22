@@ -340,7 +340,7 @@ class ExplorerService:
             InvalidRequest: With every field at fault named.
         """
         days = {"date": date, "from": from_, "to": to}
-        errors = [FieldError(name=name, message="Use a day such as 2026-10-20.")
+        errors = [FieldError(name=name, message="Enter a date like 2026-10-20.")
                   for name, value in days.items() if value is not None and not is_day(value)] + list(others)
         if errors:
             raise InvalidRequest(needs_correcting(len(errors)), "Correct the values named below and send the request again.", errors)
@@ -349,9 +349,9 @@ class ExplorerService:
                                  [FieldError(name=name, message="Not together with a date range." if name == "date" else "Not together with date.")
                                   for name in ("date", "from", "to") if days[name] is not None])
         if from_ is not None and to is not None and from_ > to:
-            raise InvalidRequest("The first day is after the last day.", "Swap the two days, or change one of them.",
-                                 [FieldError(name="from", message="Must not be after the last day."),
-                                  FieldError(name="to", message="Must not be before the first day.")])
+            raise InvalidRequest("From can't be after To.", "Swap the two dates, or change one.",
+                                 [FieldError(name="from", message="From can't be after To."),
+                                  FieldError(name="to", message="To can't be before From.")])
 
     def rejected_query(self, raw: Mapping[str, str], paged: bool) -> list[FieldError]:
         """The fields at fault by this service's rules, for a request whose type check failed on some other field.

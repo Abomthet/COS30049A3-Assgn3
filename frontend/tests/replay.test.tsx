@@ -55,10 +55,15 @@ describe('the controls', () => {
     const asked = vi.spyOn(mockApi, 'transactions');
     window.location.hash = `#/address/${ex.mainAddress}`;
     render(<App />);
-    const card = (await screen.findByRole('heading', { name: 'Replay of recorded history' })).closest('section')!;
+    const card = (await screen.findByRole('heading', { name: 'Replay' })).closest('section')!;
     await screen.findByRole('heading', { name: 'Days with unusual transactions' });
     expect(card.textContent).not.toMatch(/\blive\b/i);
-    expect(card).toHaveTextContent('recorded history played forward');
+    expect(card).toHaveTextContent("Play this address's history forward, one transaction at a time.");
+    // The look-ahead point is a closed disclosure, styled like the charts' "How to read this chart".
+    const guide = within(card).getByText('How the replay avoids look-ahead').closest('details')!;
+    expect(guide).not.toHaveAttribute('open');
+    expect(guide).toHaveClass('pchart-guide');
+    expect(guide).toHaveTextContent('Each flag appears when its transaction does, using only what came before it.');
     expect(asked.mock.calls.every(([, query]) => query.pageSize !== 200 || query.status?.[0] === 'flagged')).toBe(true);
   });
 
@@ -110,6 +115,16 @@ describe('the controls', () => {
     expect(screen.getByRole('button', { name: 'Restart' })).toBeDisabled();
   });
 
+  test('the stage says how to begin, then "{i} of {n} · up to {time}" with the zone printed once', async () => {
+    await openReplay();
+    expect(screen.getByText('Press Play or Step to begin.')).toBeInTheDocument();
+    press('Step');
+    const progress = document.querySelector('.replay-progress span')!;
+    expect(progress.textContent).toMatch(/^1 of 377 · up to \d{1,2} \w{3} \d{4}, \d\d:\d\d UTC$/);
+    expect(document.body.textContent).not.toContain('UTC UTC');
+    expect(screen.queryByText('Press Play or Step to begin.')).not.toBeInTheDocument();
+  });
+
   test('a flag appears when its transaction does, with the limitation line, and not before', async () => {
     await openReplay();
     const to = (n: number) => {
@@ -159,7 +174,7 @@ describe('reduced motion and leaving', () => {
     vi.useFakeTimers();
     expect(screen.queryByRole('button', { name: /Play|Resume|Pause/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('group', { name: /Speed/ })).not.toBeInTheDocument();
-    expect(screen.getByText(/does not run by itself/)).toBeInTheDocument();
+    expect(screen.getByText('Reduced motion is on. Press Step to move one transaction.')).toBeInTheDocument();
     press('Step');
     press('Step');
     await advance(5000);
@@ -176,7 +191,7 @@ describe('reduced motion and leaving', () => {
       window.location.hash = '#/models';
       await vi.advanceTimersByTimeAsync(100);
     });
-    expect(screen.queryByRole('heading', { name: 'Replay of recorded history' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Replay' })).not.toBeInTheDocument();
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -188,7 +203,7 @@ describe('reduced motion and leaving', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Step' }));
     expect(tile('Transactions so far')).toHaveTextContent('1');
     window.location.hash = `#/address/${ex.mainAddress}?method=regression`;
-    await within(await screen.findByRole('heading', { name: 'Replay of recorded history' }).then((h) => h.closest('section')!)).findByRole('button', { name: 'Play' });
+    await within(await screen.findByRole('heading', { name: 'Replay' }).then((h) => h.closest('section')!)).findByRole('button', { name: 'Play' });
     expect(tile('Transactions so far')).toHaveTextContent('0');
   });
 });

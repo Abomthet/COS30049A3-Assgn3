@@ -77,10 +77,12 @@ describe('selecting in the chart', () => {
 
   test('a box round the unusual points shows only them in the table, with the summary, and clearing brings the pages back', async () => {
     const user = await openTab();
-    expect(screen.getByText(/Nothing is selected/)).toBeInTheDocument();
+    expect(screen.getByText('Draw on the chart or pick days to select.')).toBeInTheDocument();
     act(() => fakePlotly.emit('plotly_selected', { points: unusualPoints() }));
 
-    expect(await screen.findByText(/^3 selected: \d+ received, \d+ sent, 3 unusual\./)).toBeInTheDocument();
+    expect(await screen.findByTestId('selection-count')).toHaveTextContent(/^3 selected$/);
+    expect(screen.getByText(/^\d+ received · \d+ sent · 3 unusual$/)).toBeInTheDocument();
+    expect(screen.getByText(/^\d+\.\d{8} BTC in · \d+\.\d{8} BTC out$/)).toBeInTheDocument();
     const table = screen.getByRole('table', { name: /Transactions of this address/ });
     expect(within(table).getAllByRole('row').slice(1)).toHaveLength(3);
     expect(screen.getByText('Rows 1 to 3 · page 1 of 1')).toBeInTheDocument();
@@ -91,7 +93,7 @@ describe('selecting in the chart', () => {
 
     await user.click(screen.getByRole('button', { name: 'Clear selection' }));
     expect(screen.getByText('Rows 1 to 50 · page 1 of 8')).toBeInTheDocument();
-    expect(screen.getByText(/Nothing is selected/)).toBeInTheDocument();
+    expect(screen.getByText('Draw on the chart or pick days to select.')).toBeInTheDocument();
     expect((fakePlotly.lastChartDraw().data as Array<{ selectedpoints?: number[] }>).some((t) => t.selectedpoints)).toBe(false);
   });
 
@@ -106,17 +108,17 @@ describe('selecting in the chart', () => {
       return draw(...args);
     });
     act(() => fakePlotly.emit('plotly_selected', { points: unusualPoints() }));
-    expect(await screen.findByText(/^3 selected/)).toBeInTheDocument();
+    expect(await screen.findByTestId('selection-count')).toHaveTextContent(/^3 selected/);
     await waitFor(() => expect(reported).toBe(true));
-    expect(screen.getByText(/^3 selected/)).toBeInTheDocument();
+    expect(screen.getByTestId('selection-count')).toHaveTextContent(/^3 selected/);
   });
 
   test('a double-click, which Plotly reports as a deselect, clears the selection', async () => {
     await openTab();
     act(() => fakePlotly.emit('plotly_selected', { points: unusualPoints() }));
-    await screen.findByText(/^3 selected/);
+    await screen.findByTestId('selection-count');
     act(() => fakePlotly.emit('plotly_deselect', undefined));
-    expect(await screen.findByText(/Nothing is selected/)).toBeInTheDocument();
+    expect(await screen.findByText('Draw on the chart or pick days to select.')).toBeInTheDocument();
   });
 
   test('a click on a point while a selection tool is chosen selects and does not open the transaction', async () => {
@@ -129,36 +131,36 @@ describe('selecting in the chart', () => {
   test('changing a filter ends the selection', async () => {
     const user = await openTab();
     act(() => fakePlotly.emit('plotly_selected', { points: unusualPoints() }));
-    await screen.findByText(/^3 selected/);
+    await screen.findByTestId('selection-count');
     await user.click(screen.getByRole('button', { name: 'Received' }));
-    expect(await screen.findByText(/Nothing is selected/)).toBeInTheDocument();
+    expect(await screen.findByText('Draw on the chart or pick days to select.')).toBeInTheDocument();
   });
 });
 
 /** The date fields of the selection's own form. */
-const spanField = (name: 'From' | 'To') => screen.getByLabelText(name === 'From' ? 'First day to select' : 'Last day to select');
+const spanField = (name: 'From' | 'To') => within(screen.getByRole('region', { name: 'Selection' })).getByLabelText(name);
 
 describe('selecting a span of days without a pointer', () => {
-  test('two dates and "Select these days" select the transactions of those days', async () => {
+  test('two dates and "Select" select the transactions of those days', async () => {
     const user = await openTab();
     const day = dayKey(rows[0].time);
     const expected = rowsInSpan(rows, day, day).length;
     fireEvent.change(spanField('From'), { target: { value: day } });
     fireEvent.change(spanField('To'), { target: { value: day } });
-    await user.click(screen.getByRole('button', { name: 'Select these days' }));
-    expect(await screen.findByText(new RegExp(`^${expected} selected:`))).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Select' }));
+    expect(await screen.findByTestId('selection-count')).toHaveTextContent(new RegExp(`^${expected} selected$`));
     expect(within(screen.getByRole('table', { name: /Transactions of this address/ })).getAllByRole('row').slice(1)).toHaveLength(expected);
   });
 
   test('a span that is the wrong way round, or has nothing on it, is said and selects nothing', async () => {
     const user = await openTab();
     const [from, to] = [spanField('From'), spanField('To')];
-    await user.click(screen.getByRole('button', { name: 'Select these days' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Choose the first and the last day.');
+    await user.click(screen.getByRole('button', { name: 'Select' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Pick both days.');
     fireEvent.change(from, { target: { value: '2026-02-02' } });
     fireEvent.change(to, { target: { value: '2026-02-01' } });
-    await user.click(screen.getByRole('button', { name: 'Select these days' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('The first day is after the last day.');
-    expect(screen.getByText(/Nothing is selected/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Select' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent("From can't be after To.");
+    expect(screen.getByText('Draw on the chart or pick days to select.')).toBeInTheDocument();
   });
 });

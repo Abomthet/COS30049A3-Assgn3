@@ -421,7 +421,7 @@ test.describe('reduced motion', () => {
     expect(toast).toBe('none');
     // The replay offers no Play button and says why.
     await page.getByRole('button', { name: 'Open the replay' }).click();
-    await expect(page.getByText(/asks for less motion/)).toBeVisible();
+    await expect(page.getByText('Reduced motion is on. Press Step to move one transaction.')).toBeVisible();
     await expect(page.getByRole('button', { name: /^(Play|Resume|Pause)/ })).toHaveCount(0);
   });
 });

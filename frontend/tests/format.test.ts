@@ -44,9 +44,9 @@ describe('formatBtc: the one amount format', () => {
 });
 
 describe('formatSpanDays', () => {
-  test('E5 and E7 give fractional days: under a day, or whole days', () => {
-    expect(formatSpanDays(0)).toBe('under a day');
-    expect(formatSpanDays(0.74)).toBe('under a day');
+  test('E5 and E7 give fractional days: less than a day, or whole days', () => {
+    expect(formatSpanDays(0)).toBe('less than a day');
+    expect(formatSpanDays(0.74)).toBe('less than a day');
     expect(formatSpanDays(1)).toBe('1 day');
     expect(formatSpanDays(886.370902778)).toBe('886 days');
   });

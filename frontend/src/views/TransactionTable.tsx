@@ -27,7 +27,7 @@ export function TransactionTable({ page, method, pageHref }: Props) {
       <div className="tx-table-head">
         <h2 id="tx-table-title">Transactions</h2>
         <p className="card-sub">
-          Select a row to open the transaction. Unusual ones are marked <StatusBadge status="flagged" />.
+          Select a row to open it.
         </p>
       </div>
       <table className="tx-table">

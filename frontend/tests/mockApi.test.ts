@@ -89,6 +89,20 @@ describe.each([[ex.mainAddress], [ex.shortHistory]])('the timeline and rows of %
 describe('transactions (E6)', () => {
   const main = ex.mainAddress;
 
+  test('a range that runs backwards is refused in the same words as the service, naming both fields', async () => {
+    await expect(mockApi.transactions(main, { from: '2025-06-01', to: '2025-01-01' })).rejects.toMatchObject({
+      status: 400,
+      body: {
+        message: "From can't be after To.",
+        hint: 'Swap the two dates, or change one.',
+        fields: [
+          { name: 'from', message: "From can't be after To." },
+          { name: 'to', message: "To can't be before From." },
+        ],
+      },
+    });
+  });
+
   test('a day: the rows of that UTC day, with the date echoed back', async () => {
     const day = await mockApi.transactions(main, { date: ex.flagged.date });
     expect(day).toMatchObject({ address: main, date: ex.flagged.date, page: 1, pageSize: 50 });

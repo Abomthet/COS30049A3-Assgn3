@@ -70,9 +70,9 @@ export function formatFeatureValue(value: number | null, unit: FeatureUnit | und
   }
 }
 
-/** A span of days from E5 or E7, which is fractional: '12 days', or 'under a day'. */
+/** A span of days from E5 or E7, which is fractional: '12 days', or 'less than a day'. */
 export function formatSpanDays(days: number): string {
-  return days < 1 ? 'under a day' : plural(Math.floor(days), 'day');
+  return days < 1 ? 'less than a day' : plural(Math.floor(days), 'day');
 }
 
 /** A robust z-score with its sign: formatZ(5.9) is '+5.9', formatZ(-12.4) is '−12'. */

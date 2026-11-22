@@ -78,9 +78,7 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
   let results;
   if (!valid) {
     results = (
-      <StatePanel tone="warning" title="Check the dates" testId="state-invalid-filters">
-        <p>Correct the two date fields above and the transactions will load. Nothing has been requested with these dates.</p>
-      </StatePanel>
+      <StatePanel tone="warning" title="Check the dates" testId="state-invalid-filters" />
     );
   } else if (table.status === 'error') {
     results = <ErrorState error={table.error} onRetry={table.retry} />;
@@ -90,7 +88,7 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
     results = (
       <StatePanel
         tone="empty"
-        title="No transaction matches these filters"
+        title="No transactions match"
         testId="state-empty-filters"
         actions={
           <button type="button" className="btn btn-secondary" onClick={reset}>
@@ -98,14 +96,14 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
           </button>
         }
       >
-        <p>Widen the dates or switch a status or direction off to see more of this address's {plural(totals.txCount, 'transaction')}.</p>
+        <p>Widen the dates or clear a filter.</p>
       </StatePanel>
     );
   } else if (page.transactions.length === 0) {
     results = (
       <StatePanel
         tone="empty"
-        title="That page does not exist"
+        title={`There is no page ${filters.page}`}
         testId="state-page-past-end"
         actions={
           <a className="btn btn-secondary" href={paths.transactions(address, filtersToSearch({ ...filters, page: 1 }))}>
@@ -113,7 +111,7 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
           </a>
         }
       >
-        <p>The link asks for page {filters.page}, but these filters match only {plural(page.total, 'transaction')}.</p>
+        <p>These filters match {plural(page.total, 'transaction')}.</p>
       </StatePanel>
     );
   } else {
