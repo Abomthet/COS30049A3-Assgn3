@@ -119,11 +119,14 @@ describe('the controls', () => {
     await advance(0);
     expect(tile('Unusual so far')).toHaveTextContent('0');
     expect(screen.queryByText(settings.limitationLine, { selector: '.replay .card-sub' })).not.toBeInTheDocument();
+    expect(within(screen.getByRole('contentinfo')).getByText(settings.limitationLine)).toBeInTheDocument(); // no flag yet: the footer has it
     to(1);
     await advance(0);
     expect(tile('Unusual so far')).toHaveTextContent('1on 1 day');
     expect(screen.getByText(/^Latest:/).parentElement).toHaveTextContent('Unusual');
     expect(screen.getByText(settings.limitationLine, { selector: '.replay .card-sub' })).toBeInTheDocument();
+    expect(screen.getAllByText(settings.limitationLine)).toHaveLength(1); // once per screen: the footer's copy is gone
+    expect(within(screen.getByRole('contentinfo')).queryByText(settings.limitationLine)).not.toBeInTheDocument();
     const unusual = (drawOf('Transactions over time').data as Array<{ name: string; x: unknown[] }>).find((t) => /Unusual/.test(t.name));
     expect(unusual?.x).toHaveLength(1);
   });

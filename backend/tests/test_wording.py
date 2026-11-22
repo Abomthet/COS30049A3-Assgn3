@@ -19,6 +19,7 @@ from app.core.config import Settings
 
 from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY, VALID_OUTSIDE_SNAPSHOT
 
+LIMITATION = "Worth investigating, not proof of wrongdoing."  # Mod-19, shared/wording.json
 SETTINGS = json.loads((Path(__file__).resolve().parents[1] / "config" / "settings.json").read_text(encoding="utf-8"))
 BANNED = re.compile("|".join(map(re.escape, SETTINGS["bannedWords"])), re.IGNORECASE)
 ONE_PAGE = 200
@@ -69,7 +70,7 @@ def test_the_three_short_history_addresses_use_the_plans_422_wording(shared_clie
 @pytest.mark.slow
 def test_every_flagged_transaction_carries_the_limitation_line(shared_client: TestClient, addresses: list[str], settings: Settings,
                                                                predictor: Predictor) -> None:
-    line = SETTINGS["limitationLine"]
+    line = LIMITATION
     assert settings.limitation_line == line
     flagged = 0
     for address in addresses:
@@ -92,7 +93,7 @@ def test_a_flag_of_any_method_carries_the_limitation_line(shared_client: TestCli
     assert rows["transactions"], f"{method} flags something at the largest address"
     for row in rows["transactions"]:
         detail = shared_client.get(f"/api/transactions/{row['txid']}", params={"address": LARGEST, "method": method}).json()
-        assert detail["explanation"].endswith(SETTINGS["limitationLine"])
+        assert detail["explanation"].endswith(LIMITATION)
 
 
 @pytest.mark.slow
@@ -101,7 +102,7 @@ def test_no_response_of_e8_to_e11_has_a_banned_word_and_every_flagged_what_if_ca
     """A grid of what-ifs over all 28 addresses (E8 and E9, both directions, a tiny and a huge amount; the short-history
     addresses answer 422), every export of every address in both formats, E11, and the error bodies of E8 to E10."""
     texts: list[tuple[str, str]] = [("methods", shared_client.get("/api/methods").text)]
-    line, flagged = SETTINGS["limitationLine"], 0
+    line, flagged = LIMITATION, 0
     for address in addresses:
         for direction in ("in", "out"):
             body = {"direction": direction, "time": "2026-10-23T00:00:00Z"}

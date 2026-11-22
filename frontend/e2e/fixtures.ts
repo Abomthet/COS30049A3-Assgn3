@@ -37,8 +37,8 @@ export const examples = JSON.parse(readFileSync(new URL('../src/api/mock/fixture
   whatIf: { address: string; amountBtc: string; direction: 'in' | 'out'; time: string };
 };
 
-/** The fixed limitation line, from the one settings file the back end and the app share. */
-export const limitationLine = (JSON.parse(readFileSync(new URL('../../backend/config/settings.json', import.meta.url), 'utf8')) as { limitationLine: string }).limitationLine;
+/** The fixed limitation line, from shared/wording.json, the one file the back end and the app share. */
+export const limitationLine = (JSON.parse(readFileSync(new URL('../../shared/wording.json', import.meta.url), 'utf8')) as { limitationLine: string }).limitationLine;
 
 /** The widest the page may be: the width the project asked for (a phone may zoom out a page that is too wide, so innerWidth alone is not a fair limit). */
 async function checkWidth(page: Page, step: string): Promise<void> {

@@ -29,7 +29,7 @@ from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY, VALID_OUTSIDE_SNA
 SETTINGS_FILE = Path(__file__).resolve().parents[1] / "config" / "settings.json"
 BANNED_WORDS = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))["bannedWords"]
 BANNED = re.compile("|".join(map(re.escape, BANNED_WORDS)), re.IGNORECASE)
-LIMITATION = "Unusual activity requires investigation; it does not indicate wrongdoing."
+LIMITATION = "Worth investigating, not proof of wrongdoing."
 WHAT_IF = {"amountBtc": 0.05, "direction": "out", "time": "2026-10-20T12:00:00Z"}
 TAG = "Every figure above is the one given."  # the fake writer's one extra sentence; it carries no number
 

@@ -97,7 +97,6 @@ export function ModelsScreen() {
             {snapshot ? ` on one date, ${formatDay(snapshot.snapshotDate)}` : ' on one date'}. What it shows may not hold for other addresses or other dates.
           </li>
         </ul>
-        <p className="limitation">{settings.limitationLine}</p>
       </section>
     </div>
   );

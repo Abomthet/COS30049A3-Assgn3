@@ -71,7 +71,8 @@ describe('the limits', () => {
     expect(section).toHaveTextContent('no accuracy is claimed');
     expect(section).toHaveTextContent('planted test transactions');
     await within(section).findByText(new RegExp(`${CONFIG.snapshot.addressCount} addresses on one date, 22 Oct 2026`));
-    expect(section).toHaveTextContent(LIMITATION_LINE);
+    expect(section).not.toHaveTextContent(LIMITATION_LINE); // once per screen: the footer has it
+    expect(screen.getByRole('contentinfo')).toHaveTextContent(LIMITATION_LINE);
   });
 });
 

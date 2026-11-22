@@ -30,6 +30,21 @@ test.describe('J6: export', () => {
     await guard.noSidewaysScroll('after the CSV export');
   });
 
+  test('a chart\'s table downloads as a CSV with the limitation line in a last column on every row', async ({ page }) => {
+    await page.goto(`/#/address/${examples.mainAddress}`);
+    const chart = await chartTools(await drawnChart(page, 'Transactions per day'));
+    await chart.getByRole('button', { name: 'View as table' }).click();
+    const [download] = await Promise.all([page.waitForEvent('download'), chart.getByRole('button', { name: 'Download CSV' }).click()]);
+    expect(download.suggestedFilename()).toMatch(/^daily-activity_1Bbcsfxj\w+_\d{4}-\d{2}-\d{2}\.csv$/);
+    const rows = parseCsv(await readFile((await download.path())!, 'utf8'));
+    expect(rows[0].at(-1)).toBe('limitation');
+    expect(rows.length).toBeGreaterThan(1);
+    for (const row of rows.slice(1)) {
+      expect(row, 'every row has every column').toHaveLength(rows[0].length);
+      expect(row.at(-1), 'the limitation line is in every row').toBe(limitationLine);
+    }
+  });
+
   test('a chart downloads as a PNG picture', async ({ page, guard }) => {
     await page.goto(`/#/address/${examples.mainAddress}`);
     const chart = await chartTools(await drawnChart(page, 'Transactions per day'));

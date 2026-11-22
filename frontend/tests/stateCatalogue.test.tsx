@@ -72,7 +72,7 @@ describe('every view says what failed and what to do next', () => {
     start('#/about');
     expect(await screen.findByRole('heading', { level: 1, name: 'About and help' })).toBeInTheDocument();
     expect(await screen.findByText(/The limits shown are the built-in ones/)).toBeInTheDocument();
-    expect(screen.getByText(settings.limitationLine, { selector: 'span' })).toBeInTheDocument();
+    expect(within(screen.getByRole('contentinfo')).getByText(settings.limitationLine)).toBeInTheDocument();
   });
 
   test('a server error names its reference, which can be copied', async () => {

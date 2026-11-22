@@ -41,9 +41,6 @@ export function AboutScreen() {
 
       <section className="card prose" aria-labelledby="claims-title">
         <h2 id="claims-title">What it does not claim</h2>
-        <p className="limitation">
-          <span>{settings.limitationLine}</span>
-        </p>
         <ul>
           <li>A flag is a reason to look closer. It is not a finding, and it says nothing about who is behind an address or why a payment was made.</li>
           <li>

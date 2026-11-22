@@ -9,6 +9,7 @@ import ex from '../src/api/mock/fixtures/examples.json';
 import { METHODS_ANSWER, RECORDED } from '../src/api/mock/fixtures';
 import { mockApi, mockControls } from '../src/api/mock/mockApi';
 import { ApiError, type TimelineResponse } from '../src/api/types';
+import { TEMPLATE_LABEL } from '../src/components/Explanation';
 import { METHODS } from '../src/lib/methods';
 import { LIMITATION_LINE, settings } from '../src/lib/settings';
 
@@ -130,8 +131,12 @@ describe('the transaction detail (V3)', () => {
     start(detailHash({ address: tx.address, date: tx.time.slice(0, 10), txid: tx.txid }));
     const why = await screen.findByTestId('flag-explanation');
     // The explanation's own lines are shown; its last line, the limitation, is shown once in its own place.
+    // A flagged snapshot transaction also fetches its prepared Assistant answer (a different wording of the same facts), which
+    // can replace the template at any moment, so the template's lines are checked while the template is what is shown.
     const lines = tx.explanation.split('\n');
-    for (const line of lines.slice(0, -1)) expect(why).toHaveTextContent(line.replace(/^- /, ''));
+    if (why.querySelector('.explanation-label')?.textContent === TEMPLATE_LABEL) {
+      for (const line of lines.slice(0, -1)) expect(why).toHaveTextContent(line.replace(/^- /, ''));
+    }
     expect(within(why).getAllByText(LIMITATION_LINE)).toHaveLength(1);
     expect(within(why).getByTestId('limitation-line')).toHaveTextContent(LIMITATION_LINE);
   });

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { LimitationProvider, useLimitationElsewhere } from '../hooks/useLimitationShown';
 import { useServiceStatus } from '../hooks/useServiceStatus';
 import { useSettings } from '../hooks/useSettings';
 import { useToasts } from '../hooks/useToasts';
@@ -26,8 +27,22 @@ function useStatusToasts(): void {
   }, [state, notify]);
 }
 
+/** The footer's copy of the limitation line, left out (not just hidden) while a flag box or the replay's flagged line shows it. */
+function FooterLimitation() {
+  const { settings } = useSettings();
+  return useLimitationElsewhere() ? null : <p className="footer-limitation">{settings.limitationLine}</p>;
+}
+
 /** The frame around every view: skip link, header, main region, footer (plan section 8). */
 export function Shell({ children }: { children: ReactNode }) {
+  return (
+    <LimitationProvider>
+      <ShellFrame>{children}</ShellFrame>
+    </LimitationProvider>
+  );
+}
+
+function ShellFrame({ children }: { children: ReactNode }) {
   const route = useRoute();
   const { settings } = useSettings();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -95,9 +110,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
       <footer className="app-footer">
         <div className="container footer-inner">
-          <p className="footer-limitation">
-            {settings.limitationLine}
-          </p>
+          <FooterLimitation />
           <p>
             Unusual means different from the same address's own earlier activity. Days and times are in UTC. COS30049
             Computing Technology Innovation Project, group HCMC_COS30049.1_4.

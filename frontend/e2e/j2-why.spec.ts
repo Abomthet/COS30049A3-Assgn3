@@ -33,6 +33,9 @@ test('J2: from a flagged day to one transaction and its reasons', async ({ page,
   await expect(why.getByRole('heading', { name: 'Compared with' })).toBeVisible();
   await expect(why.getByRole('listitem').filter({ hasText: /\(\d+ \w+ \d{4}/ }).first()).toBeVisible();
   await expect(why.getByTestId('limitation-line')).toHaveText(limitationLine);
+  // Once per screen: the box carries the line, so the footer leaves its copy out.
+  await expect(page.getByText(limitationLine, { exact: true })).toHaveCount(1);
+  await expect(page.getByRole('contentinfo')).not.toContainText(limitationLine);
 
   // The feature chart, and every model's verdict.
   await drawnChart(page, 'How this transaction compares with usual');

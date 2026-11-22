@@ -157,7 +157,7 @@ describe('keeping scenarios', () => {
     const lines = (await files[0].text).trimEnd().split('\r\n');
     expect(lines).toHaveLength(4);
     expect(lines[0]).toBe('Amount (BTC),Direction,Time (UTC),Deciding method,Verdict,Score,Methods that flag it,Methods that can score it,Limitation');
-    expect(lines.slice(1).every((l) => l.endsWith(LIMITATION_LINE))).toBe(true);
+    expect(lines.slice(1).every((l) => l.endsWith(`"${LIMITATION_LINE}"`))).toBe(true); // quoted: the line has a comma
     expect(lines[1]).toMatch(/^0\.05,Sent,2026-10-20T12:00:00Z,/);
   });
 });

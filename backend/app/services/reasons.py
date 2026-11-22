@@ -17,6 +17,10 @@ key behind unnoticed: `tests/test_reasons.py` lists every phrase A2 can produce 
 A third rewrite (Mod-18) is for the comparison groups of E7 and E8: when A2 extended a window back to reach
 `comparisonMinTx` earlier transactions but fewer exist, its line "10 earlier transactions: the previous 30 days, extended
 back to reach 20" contradicts itself; `reword_comparison` says that the group holds all there are.
+
+A fourth (Mod-19) is the limitation line: A2's line (`settings.json`) becomes the web line from `shared/wording.json`
+in every text the service sends (`reword_limitation`, which `reword` also applies). It runs after A2's guardrail has
+judged an Assistant answer, because the guardrail looks for A2's exact line.
 """
 from __future__ import annotations
 
@@ -27,6 +31,8 @@ from typing import Any
 
 from explorer.explain import check_wording, headline
 from explorer.settings import SETTINGS
+
+from ..core.config import A2_LIMITATION_LINE, limitation_line
 
 # F4 only. "relative to the usual for this direction" is what F4 measures: the amount divided by the address's usual
 # amount in the same direction (explain.FEATURE_DESCRIPTIONS["F4"]). A positive z is a larger ratio than usual.
@@ -57,7 +63,12 @@ def reword(text: str) -> str:
     """
     for old, new in REWORDED.items():
         text = text.replace(old, new)
-    return _BTC_AMOUNT.sub(_eight_places, text)
+    return _BTC_AMOUNT.sub(_eight_places, reword_limitation(text))
+
+
+def reword_limitation(text: str) -> str:
+    """`text` with A2's limitation line replaced by the web line (Mod-19); text without A2's line is returned as it is."""
+    return text.replace(A2_LIMITATION_LINE, limitation_line())
 
 
 # A2's clause (explorer/predict.py, `comparison`): present only when the window was extended past the period.

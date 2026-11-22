@@ -1,4 +1,5 @@
 import type { ExplanationRequest, TransactionDetail } from '../api/types';
+import { useLimitationShown } from '../hooks/useLimitationShown';
 import { dayKey, formatDayRange } from '../lib/dates';
 import { Explanation, ExplanationBlocks } from './Explanation';
 import { Icon } from './Icon';
@@ -9,6 +10,7 @@ import { Icon } from './Icon';
  * is the Assistant's panel (the template, and the Assistant's answer when asked for); without one it is the template alone.
  */
 export function FlagCallout({ tx, title, request }: { tx: Pick<TransactionDetail, 'explanation' | 'comparison' | 'limitation'>; title: string; request?: ExplanationRequest }) {
+  useLimitationShown(); // this box carries the line, so the footer leaves its copy out
   return (
     <section className="flag-callout" aria-labelledby="why-title" data-testid="flag-explanation">
       <h3 id="why-title">

@@ -380,7 +380,7 @@ def test_e7_the_plans_example_transaction(client: TestClient) -> None:
                                                                ("F3", "within-usual"), ("F4", "flag")]
     assert body["features"][3]["z"] == pytest.approx(-5.6071, abs=1e-4)
     assert [c["features"] for c in body["comparison"]] == [["F1", "F4"], ["F2", "F3"]]
-    assert body["limitation"] == "Unusual activity requires investigation; it does not indicate wrongdoing."
+    assert body["limitation"] == "Worth investigating, not proof of wrongdoing."
     assert body["flags"]["baseline"] is True and not any(v for k, v in body["flags"].items() if k != "baseline")
     assert set(body["scores"]) == set(body["flags"]) and len(body["scores"]) == 9
     assert body["explanation"].startswith("Flagged by Robust z baseline (A1).\nWhat stands out") and body["source"] == "snapshot"

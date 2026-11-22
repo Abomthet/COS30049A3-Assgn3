@@ -29,7 +29,8 @@ BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5173").rstrip("/
 BACKEND = (sys.argv[2] if len(sys.argv) > 2 else "http://localhost:8000").rstrip("/")
 SETTINGS = json.loads((Path(__file__).resolve().parents[1] / "backend" / "config" / "settings.json").read_text("utf-8"))
 BANNED = re.compile(r"\b(" + "|".join(map(re.escape, SETTINGS["bannedWords"])) + r")\b", re.IGNORECASE)
-LIMITATION = SETTINGS["limitationLine"]
+# The line the web application shows (Mod-19): shared/wording.json, not A2's settings.json line it replaces.
+LIMITATION = json.loads((Path(__file__).resolve().parents[1] / "shared" / "wording.json").read_text("utf-8"))["limitationLine"]
 RUNNING_EXAMPLE = "1Bbcsfxj2JRUD5crcdZVHBcViT61vrJ3dz"
 
 failures: list[str] = []

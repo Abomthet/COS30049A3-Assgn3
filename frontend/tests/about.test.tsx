@@ -32,7 +32,7 @@ describe('About and help', () => {
   test('what it does not claim: the limitation line, and no accuracy for real transactions', async () => {
     open();
     const claims = await section('What it does not claim');
-    expect(claims.getByText(LIMITATION_LINE)).toBeInTheDocument();
+    expect(claims.queryByText(LIMITATION_LINE)).not.toBeInTheDocument(); // the footer carries the line on this screen
     expect(claims.getByText(/no accuracy is claimed/)).toBeInTheDocument();
     await waitFor(() => expect(claims.getByText(new RegExp(`covers the ${CONFIG.snapshot.addressCount} addresses`))).toBeInTheDocument());
   });

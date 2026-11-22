@@ -2888,13 +2888,6 @@ select.text-input {
   background: var(--track);
   vertical-align: middle;
 }
-.hero-limitation {
-  max-width: 62ch;
-  margin: 28px 0 0;
-  color: var(--text-muted);
-  font-size: 0.8125rem;
-  line-height: 1.4;
-}
 @media (max-width: 639px) {
   .hero {
     padding-top: 8px;

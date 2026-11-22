@@ -297,7 +297,7 @@ export function PlotlyChart({
   }
 
   function downloadCsv() {
-    downloadText(`${stem}.csv`, tableToCsv(table), 'text/csv;charset=utf-8');
+    downloadText(`${stem}.csv`, tableToCsv(table, settings.limitationLine), 'text/csv;charset=utf-8');
     notify({ message: `Exported ${plural(table.rows.length, 'row')}`, tone: 'success' });
   }
 

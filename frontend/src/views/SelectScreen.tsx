@@ -229,7 +229,6 @@ export function SelectScreen({ query }: { query: string | null }) {
             ))}
           </dl>
         ) : null}
-        <p className="hero-limitation">{settings.limitationLine}</p>
       </div>
 
       {recent.length > 0 ? (

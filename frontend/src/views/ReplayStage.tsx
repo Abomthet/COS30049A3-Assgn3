@@ -6,6 +6,7 @@ import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { ErrorState } from '../components/ErrorState';
 import { Loading } from '../components/StatePanel';
 import { useAllTransactions } from '../hooks/useAllTransactions';
+import { useLimitationShown } from '../hooks/useLimitationShown';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useReplay } from '../hooks/useReplay';
 import { useSettings } from '../hooks/useSettings';
@@ -45,6 +46,8 @@ function Player({ timeline, method, rows }: { timeline: TimelineResponse; method
   const view = useMemo(() => timelineAfter(timeline, rows, position), [timeline, rows, position]);
   const counts = useMemo(() => countsOf(shown, daysOf(shown)), [shown]);
   const latest = shown[position - 1];
+  const flaggedNow = latest?.status === 'flagged';
+  useLimitationShown(flaggedNow); // the line shows here while a flag is the latest transaction, so the footer leaves its copy out
 
   // What a screen reader hears: a change of state, never each step (at 20 a second that would be speech without end).
   const announcement = playing
@@ -127,7 +130,7 @@ function Player({ timeline, method, rows }: { timeline: TimelineResponse; method
       ) : (
         <p className="card-sub">Press Play, or Step, to begin. The charts fill in as the history is replayed.</p>
       )}
-      {latest?.status === 'flagged' ? <p className="card-sub">{settings.limitationLine}</p> : null}
+      {flaggedNow ? <p className="card-sub">{settings.limitationLine}</p> : null}
 
       {position > 0 ? (
         <>

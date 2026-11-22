@@ -2142,7 +2142,7 @@
             "minSpanDays": 14,
             "minTx": 10
           },
-          "limitationLine": "Unusual activity requires investigation; it does not indicate wrongdoing.",
+          "limitationLine": "Worth investigating, not proof of wrongdoing.",
           "snapshot": {
             "addressCount": 28,
             "dayTimeZone": "UTC",
@@ -2701,9 +2701,9 @@
             }
           ],
           "cached": false,
-          "explanation": "Robust z baseline (A1) marks this transaction as unusual for its address.\nUnusual activity requires investigation; it does not indicate wrongdoing.",
+          "explanation": "Robust z baseline (A1) marks this transaction as unusual for its address.\nWorth investigating, not proof of wrongdoing.",
           "flagged": true,
-          "limitation": "Unusual activity requires investigation; it does not indicate wrongdoing.",
+          "limitation": "Worth investigating, not proof of wrongdoing.",
           "seconds": 2.6,
           "skippedWriters": {},
           "source": "text150m",

@@ -7,6 +7,7 @@ import { chooseTraceTypes, mergeLayout } from '../src/charts/chartFigure';
 import { fileStem, tableToCsv, type ChartTable } from '../src/charts/chartTable';
 import { PlotlyChart, type PointClick } from '../src/charts/PlotlyChart';
 import { useTheme } from '../src/hooks/useTheme';
+import { LIMITATION_LINE } from '../src/lib/settings';
 import { fakePlotly } from './plotlyFake';
 
 // The wrapper's contract (plan section 9), tested once for every chart: what it hands to Plotly,
@@ -325,11 +326,16 @@ describe('the table view', () => {
     await user.click(screen.getByRole('button', { name: 'Download CSV' }));
     expect(download).toBe('daily-activity_bc1qexample_2026-10-05.csv');
     const blob = (createObjectURL.mock.calls[0] as unknown as [Blob])[0];
-    expect(await blob.text()).toBe('Date (UTC),Transactions\r\n1 Sep 2026,3\r\n"2 Sep 2026, ""late""",5\r\n');
+    expect(await blob.text()).toBe(
+      `Date (UTC),Transactions,limitation\r\n1 Sep 2026,3,"${LIMITATION_LINE}"\r\n"2 Sep 2026, ""late""",5,"${LIMITATION_LINE}"\r\n`,
+    );
   });
 
   test('CSV quoting and file names', () => {
     expect(tableToCsv({ columns: [{ label: 'a' }], rows: [[{ text: 'x,y', sub: 'ignored' }]] })).toBe('a\r\n"x,y"\r\n');
+    expect(tableToCsv({ columns: [{ label: 'a' }], rows: [[{ text: 'x,y' }], [{ text: 'z' }]] }, 'Line, with a comma.')).toBe(
+      'a,limitation\r\n"x,y","Line, with a comma."\r\nz,"Line, with a comma."\r\n',
+    );
     expect(fileStem(['daily activity', 'bc1QAbC', '2026-10-05', ''])).toBe('daily-activity_bc1QAbC_2026-10-05');
   });
 });

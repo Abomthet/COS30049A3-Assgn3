@@ -25,7 +25,7 @@ Contents: [Folders](#what-is-in-the-repository) · [What you need](#what-you-nee
 |---|---|
 | `backend/` | The FastAPI service (`app/`), Assignment 2's runtime copied unchanged (`explorer/`, `lm/`, `models/`, `data/`, `reports/`), `config/settings.json`, `openapi.json`, the tests, `MODIFICATIONS.md` (every change made for the web) |
 | `frontend/` | The React + TypeScript application (Vite), its unit tests (`tests/`), browser tests (`e2e/`) and the type generator (`tools/typegen/`) |
-| `shared/` | Test vectors read by both tiers (`address_vectors.json`, `whatif_vectors.json`) |
+| `shared/` | Files read by both tiers: test vectors (`address_vectors.json`, `whatif_vectors.json`) and the limitation line (`wording.json`) |
 | `tools/` | `vendor_a2.py` (copies Assignment 2's runtime in, with a SHA-256 for every file), `precompute_assistant.py` (the Assistant's prepared answers), `ms_gate_check.py` and `measure.py` (checks and measurements used while building) |
 | `docs/` | The delivery plan (`plan/`), the brief, screenshots, the work log (`WORKLOG.md`) and the AI use log (`AI_USE_LOG.md`) |
 | `LICENSES.md` | The licence of every library the project uses |

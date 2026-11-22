@@ -11,9 +11,12 @@ import json
 import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Literal, cast
 
+from explorer.explain import check_wording
+from explorer.settings import SETTINGS
 from pydantic import ConfigDict, ValidationError
 
 from ..schemas.common import CamelModel
@@ -22,6 +25,12 @@ BACKEND_ROOT = Path(__file__).resolve().parents[2]
 SETTINGS_PATH = BACKEND_ROOT / "config" / "settings.json"
 # The Assistant's prepared answers for the snapshot's flagged transactions (tools/precompute_assistant.py); they ship in the zip.
 ASSISTANT_ANSWERS_PATH = BACKEND_ROOT / "data" / "assistant_answers.json"
+# The limitation line of the web application (Mod-19): one file that both tiers read, next to the shared test vectors.
+WORDING_PATH = BACKEND_ROOT.parent / "shared" / "wording.json"
+# Assignment 2's line, from settings.json. A2's code writes it into every flagged explanation and `limitation` field, and
+# its Assistant guardrail (`explorer.assistant.has_limitation`) looks for exactly this text, so the web tier keeps it
+# to find it: `services/reasons.py::reword_limitation` replaces it with the web line before any text leaves the service.
+A2_LIMITATION_LINE: str = SETTINGS["limitationLine"]
 
 DEFAULT_CORS_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")
 LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
@@ -29,6 +38,24 @@ LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
 
 class ConfigError(RuntimeError):
     """The configuration cannot be used; the message says which value and what to do."""
+
+
+@lru_cache(maxsize=None)
+def limitation_line(path: Path = WORDING_PATH) -> str:
+    """The limitation line the web application shows, from shared/wording.json (Mod-19).
+
+    Raises:
+        ConfigError: The file cannot be read, has no sentence under "limitationLine", or the sentence breaks the wording rule.
+    """
+    try:
+        line = json.loads(path.read_text(encoding="utf-8"))["limitationLine"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as error:
+        raise ConfigError(f"shared/{path.name} cannot be read ({error.__class__.__name__}); restore it from the repository "
+                          "(the service runs from a full clone, with `shared/` next to `backend/`).") from error
+    if not isinstance(line, str) or not line.strip():
+        raise ConfigError(f'"limitationLine" in shared/{path.name} must be a sentence.')
+    check_wording(line)  # the wording rule (A1 NFR-01) holds for this text as it does for A2's
+    return line
 
 
 class ConfigBlock(CamelModel):
@@ -162,7 +189,7 @@ def load_settings(environ: Mapping[str, str] | None = None, path: Path = SETTING
     origins = environ.get("EXPLORER_CORS_ORIGINS")
     return Settings(
         web=web,
-        limitation_line=raw["limitationLine"],
+        limitation_line=limitation_line(),
         contributing_abs_z=raw["baseline"]["contributingAbsZ"],
         assistant_weights=BACKEND_ROOT / raw["assistant"]["text150mCheckpoint"],
         assistant_answers=ASSISTANT_ANSWERS_PATH,

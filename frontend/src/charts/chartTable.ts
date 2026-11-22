@@ -23,9 +23,17 @@ export interface ChartTable {
 
 const quote = (text: string) => (/[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text);
 
-/** RFC 4180 CSV: the header row, then one line per row, with the text of each cell (never its sub line). */
-export function tableToCsv(table: ChartTable): string {
+/**
+ * RFC 4180 CSV: the header row, then one line per row, with the text of each cell (never its sub line).
+ * With a `limitation` line (a chart's download), a last column `limitation` carries it on every row, so no
+ * copy of the data leaves the page without it.
+ */
+export function tableToCsv(table: ChartTable, limitation?: string): string {
   const lines = [table.columns.map((c) => c.label), ...table.rows.map((row) => row.map((cell) => cell.text))];
+  if (limitation !== undefined) {
+    lines[0].push('limitation');
+    for (const line of lines.slice(1)) line.push(limitation);
+  }
   return lines.map((line) => line.map(quote).join(',')).join('\r\n') + '\r\n';
 }
 
