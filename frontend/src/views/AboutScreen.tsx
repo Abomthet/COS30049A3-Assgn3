@@ -1,14 +1,16 @@
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
-import { useMethodLabels } from '../hooks/useMethods';
+import { StatusBadge } from '../components/Badges';
+import { StatBlock } from '../components/StatBlock';
+import { useMethodLabels, useMethods } from '../hooks/useMethods';
 import { useServiceStatus } from '../hooks/useServiceStatus';
 import { useSettings } from '../hooks/useSettings';
 import { formatDay } from '../lib/dates';
-import { formatCount, formatList, plural } from '../lib/format';
+import { formatCount } from '../lib/format';
 import { METHODS } from '../lib/methods';
 import { settings as bundled } from '../lib/settings';
 
-// V7, about and help (plan section 8): what the Explorer is for and what it does not claim, how to
-// read a flag and the charts, the data source and snapshot, the keyboard, and the method. No figure
+// V7, about and help: what the Explorer shows, what "unusual" means, how a flag is decided, how to read the charts, the limits,
+// the data source and snapshot, and the keyboard. No figure
 // is written here: the source, snapshot, flag levels, history rule and features are read from E2 (or,
 // without the service, from the bundled settings), so this page cannot disagree with the rest.
 
@@ -20,7 +22,7 @@ const KEYS: Array<{ keys: string; does: string }> = [
   { keys: 'Enter or Space on a chart', does: 'Open the day or the transaction the arrow keys have reached.' },
 ];
 
-/** V7, the about and help screen: what the explorer is for, how to read a flag and the charts, the data source and the keyboard. */
+/** V7, the about and help screen: what the explorer shows, what "unusual" means, how a flag is decided, the charts, the limits, the data and the keyboard. */
 export function AboutScreen() {
   useDocumentTitle('About and help');
   const { settings } = useSettings();
@@ -28,31 +30,112 @@ export function AboutScreen() {
   const { snapshot, thresholds, features, history } = settings;
   const deciding = snapshot?.method;
   const labels = useMethodLabels();
+  const methods = useMethods();
+  const modelCount = methods.status === 'success' ? methods.data.methods.length : METHODS.length;
 
   return (
     <div className="page page-about">
       <header className="page-head">
         <PageHeading>About and help</PageHeading>
-        <p className="lede">
-          The Bitcoin Address Activity Explorer shows how a Bitcoin address has been used, day by day, and marks the transactions that
-          are unusual compared with that same address's own earlier activity. For each one it says what stands out, and by how much.
-        </p>
+        <p className="lede">See how a Bitcoin address has been used, day by day, and which transactions are unusual for it.</p>
       </header>
 
-      <section className="card prose" aria-labelledby="claims-title">
-        <h2 id="claims-title">What it does not claim</h2>
+      <section className="card prose" aria-labelledby="shows-title">
+        <h2 id="shows-title">What it shows</h2>
         <ul>
-          <li>A flag is a reason to look closer. It is not a finding, and it says nothing about who is behind an address or why a payment was made.</li>
-          <li>
-            An address is compared only with its own past, never with other addresses.
-            {snapshot ? ` The Explorer covers the ${plural(snapshot.addressCount, 'address', 'addresses')} in its snapshot, and no others.` : ''}
+          <li>Daily activity of an address.</li>
+          <li>Unusual transactions, with the reason and what each was compared with.</li>
+          <li>{modelCount} models side by side, so you can see where they agree.</li>
+        </ul>
+      </section>
+
+      <section className="card about-unusual" aria-labelledby="unusual-title">
+        <h2 id="unusual-title">What "unusual" means</h2>
+        {/* The definition and the one number that decides a flag, side by side on a wide screen. */}
+        <div className="about-hero">
+          <div className="about-intro">
+            <p className="about-lead">Unusual means different from this address's own past.</p>
+            {thresholds ? (
+              <p className="about-qualifier">
+                A transaction is flagged when a measure is {thresholds.flagAbsZ} or more of this address's typical swings away from usual.
+              </p>
+            ) : null}
+          </div>
+          {thresholds ? <StatBlock className="about-level" label="Flag level" value={thresholds.flagAbsZ} note="typical swings from usual" testId="about-flag-level" /> : null}
+        </div>
+        <ul className="about-tiles" aria-label="The three statuses">
+          <li className="about-tile">
+            <StatusBadge status="flagged" />
+            <p>Flagged, with the strongest reason beside it.</p>
           </li>
-          <li>Real transactions carry no labels saying which ones matter, so no accuracy is claimed for the flags on them.</li>
+          <li className="about-tile">
+            <StatusBadge status="not-flagged" />
+            <p>Scored, and within the usual range.</p>
+          </li>
+          <li className="about-tile">
+            <StatusBadge status="not-scored" />
+            <p>
+              Too little earlier history. Scoring needs {history.minTx} transactions over {history.minSpanDays} days.
+            </p>
+          </li>
+        </ul>
+        {features.length > 0 ? (
+          <>
+            <h3>The four measures</h3>
+            <dl className="about-measures">
+              {features.map((f) => (
+                <div key={f.id} className="about-measure">
+                  <dt>{f.name}</dt>
+                  <dd>{f.description}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        ) : null}
+      </section>
+
+      <section className="card prose" aria-labelledby="decided-title">
+        <h2 id="decided-title">How a flag is decided</h2>
+        <ol className="about-steps">
+          <li>
+            <h3>Compare with its own past.</h3>
+            <p>Each transaction is compared only with earlier ones from the same address, so a score never uses the future.</p>
+          </li>
+          <li>
+            <h3>Measure four things.</h3>
+            <p>Size, Burst, Gap and Relative size, each as a distance from usual.</p>
+          </li>
+          <li>
+            <h3>{thresholds ? `Flag at ${thresholds.flagAbsZ}.` : 'Flag at the flag level.'}</h3>
+            <p>
+              {thresholds ? `A measure counts as contributing from ${thresholds.contributingAbsZ}. ` : ''}
+              {deciding ? `${labels[deciding.id].name} decides which transactions are flagged; ` : ''}
+              {modelCount - 1} more models are shown beside {deciding ? 'it' : 'the deciding model'}.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section className="card prose" aria-labelledby="charts-title">
+        <h2 id="charts-title">How to read the charts</h2>
+        <ul>
+          <li>Each chart has a "How to read this chart" note.</li>
+          <li>Every chart can be viewed as a table and downloaded as a picture.</li>
+        </ul>
+      </section>
+
+      <section className="card prose" aria-labelledby="limits-title">
+        <h2 id="limits-title">Limits</h2>
+        <ul>
+          <li>A flag says nothing about who is behind an address or why a payment was made.</li>
+          <li>An address is compared only with its own past.</li>
+          <li>Real transactions have no labels, so no accuracy is claimed for flags.</li>
         </ul>
       </section>
 
       <section className="card prose" aria-labelledby="data-title">
         <h2 id="data-title">Where the data comes from</h2>
+        <p>Everything here is public blockchain data from a fixed snapshot.</p>
         {snapshot ? (
           <dl className="facts about-facts">
             <div className="fact">
@@ -76,6 +159,12 @@ export function AboutScreen() {
               <dt>Days and times</dt>
               <dd>{snapshot.dayTimeZone}</dd>
             </div>
+            {health ? (
+              <div className="fact">
+                <dt>Version</dt>
+                <dd>{health.version}</dd>
+              </div>
+            ) : null}
           </dl>
         ) : (
           <p>
@@ -84,62 +173,6 @@ export function AboutScreen() {
           </p>
         )}
         {snapshot?.illustrative ? <p className="muted">This snapshot is illustrative: the transactions are examples, not a record of real activity.</p> : null}
-        <p>Everything on the Explorer is public blockchain data. A snapshot is fixed, so a page shows the same numbers every time it is opened.</p>
-      </section>
-
-      <section className="card prose" aria-labelledby="unusual-title">
-        <h2 id="unusual-title">What "unusual" means</h2>
-        <p>
-          A transaction is <strong>unusual</strong> when it differs from the same address's own earlier transactions by more than the flag
-          level{thresholds ? ` (${thresholds.flagAbsZ})` : ''}. It is then flagged: worth a look, and nothing more. Each transaction has one of three statuses.
-        </p>
-        <ul>
-          <li>
-            <strong>Unusual</strong>: flagged, with the strongest reason beside it, such as a longer gap than usual.
-          </li>
-          <li>
-            <strong>Not unusual</strong>: scored, and not far enough from the address's usual pattern to be flagged.
-          </li>
-          <li>
-            <strong>Not scored</strong>: the address had too little earlier history to compare with. Scoring needs at least {history.minTx} earlier transactions over at
-            least {history.minSpanDays} days.
-          </li>
-        </ul>
-        {features.length > 0 ? (
-          <>
-            <p>The comparison looks at {plural(features.length, 'feature')}:</p>
-            <dl className="about-features">
-              {features.map((f) => (
-                <div key={f.id}>
-                  <dt>{f.name}</dt>
-                  <dd>{f.description}</dd>
-                </div>
-              ))}
-            </dl>
-          </>
-        ) : null}
-      </section>
-
-      <section className="card prose" aria-labelledby="charts-title">
-        <h2 id="charts-title">How to read the charts</h2>
-        <ul>
-          <li>
-            <strong>Transactions per day.</strong> One bar for each day with activity, so gaps are quiet stretches. A day with an unusual
-            transaction is orange with a triangle above it. Select a bar to open that day.
-          </li>
-          <li>
-            <strong>Transactions over time.</strong> One point for each transaction: time across, amount up on a log scale, where each step up
-            is ten times larger. A filled mark was received and an outlined mark was sent. Unusual transactions are orange triangles and not-scored ones are grey
-            diamonds. A bigger mark has a higher score. Drag across the time axis to zoom, which also sets the dates in the filter bar. Select a point to open that transaction.
-          </li>
-          <li>
-            <strong>How this transaction compares with usual.</strong> One bar for each feature, showing how far this transaction is from the
-            address's usual value. Bars to the right are above usual and bars to the left are below. The dashed lines mark the flag level
-            {thresholds ? `, ${thresholds.flagAbsZ} either way` : ''}, and the shaded band is the range that does not stand out
-            {thresholds ? ` (within ${thresholds.contributingAbsZ})` : ''}.
-          </li>
-          <li>Every chart has a "View as table" switch, or a table under it, with the same numbers, and a "Download PNG" button.</li>
-        </ul>
       </section>
 
       <section className="card prose" aria-labelledby="keys-title">
@@ -152,21 +185,6 @@ export function AboutScreen() {
             </div>
           ))}
         </dl>
-      </section>
-
-      <section className="card prose" aria-labelledby="method-title">
-        <h2 id="method-title">The method in one paragraph</h2>
-        <p>
-          Each transaction is compared only with the transactions the same address confirmed strictly before it, so a score never uses the
-          future. {features.length > 0 ? `${formatList(features.map((f) => f.name))} are measured` : 'Its size, pace and gap are measured'} and each is turned into a
-          robust z-score: how far the value is from the address's median, in units of that address's own usual spread.
-          {thresholds
-            ? ` A transaction is flagged when a score reaches ${thresholds.flagAbsZ} in either direction, and a feature counts as contributing from ${thresholds.contributingAbsZ}.`
-            : ''}
-          {deciding ? ` ${labels[deciding.id].name} decides which transactions are flagged.` : ''} Alongside it, {METHODS.length - 1} further models score every transaction on their
-          own scales and are shown beside it for comparison.
-        </p>
-        {health ? <p className="muted">Explorer service version {health.version}.</p> : null}
       </section>
     </div>
   );

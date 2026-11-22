@@ -3199,3 +3199,153 @@ select.text-input {
   color: var(--text-muted);
   font-size: 0.875rem;
 }
+
+/* ================================================================== About: "What unusual means" (wording pass, R8) */
+/* A lead in large type, three status tiles, the flag level as one highlighted figure, the four measures in a grid. No icons. */
+.about-unusual {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.about-unusual > h2,
+.about-unusual > p,
+.about-unusual > h3 {
+  margin: 0;
+}
+.about-lead {
+  max-width: 28ch;
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.about-hero {
+  display: grid;
+  gap: 16px 40px;
+  align-items: center;
+}
+@media (min-width: 720px) {
+  .about-hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+.about-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.about-intro p {
+  margin: 0;
+}
+.about-qualifier {
+  max-width: 60ch;
+  color: var(--text-2);
+}
+.about-tiles {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.about-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 18px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+.about-tile p {
+  margin: 0;
+  color: var(--text-2);
+}
+.about-level {
+  padding: 18px 20px;
+  background: var(--flag-bg);
+  border: 1px solid var(--flag-border);
+  border-radius: var(--radius);
+  justify-self: start;
+  min-width: min(100%, 14rem);
+}
+.about-level .stat-label {
+  color: var(--flag-ink);
+  font-weight: 600;
+}
+.about-level .stat-value {
+  color: var(--flag-ink);
+  font-size: clamp(2.5rem, 1.8rem + 3vw, 3.75rem);
+}
+.about-level .stat-note {
+  color: var(--flag-ink);
+}
+.about-unusual h3 {
+  font-size: 1.05rem;
+}
+.about-measures {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 0;
+}
+.about-measure {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.about-measure dt {
+  font-weight: 650;
+}
+.about-measure dd {
+  margin: 4px 0 0;
+  color: var(--text-2);
+}
+.about-steps {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.about-steps > li {
+  position: relative;
+  margin: 0;
+  padding-left: 2.6rem;
+  counter-increment: step;
+}
+.about-steps > li + li {
+  margin-top: 0;
+}
+.about-steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.about-steps h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.about-steps p {
+  margin: 2px 0 0;
+  color: var(--text-2);
+}
+@media (min-width: 720px) {
+  .about-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .about-measures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

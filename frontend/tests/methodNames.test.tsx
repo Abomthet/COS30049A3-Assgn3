@@ -79,6 +79,6 @@ describe('before E11 answers, or with it down', () => {
     mockControls.offline = true;
     open('#/about');
     expect(await screen.findByRole('heading', { level: 1, name: 'About and help' })).toBeInTheDocument();
-    expect(screen.getByText(/Alongside it, 8 further models/)).toBeInTheDocument();
+    expect(screen.getByText(/8 more models are shown beside/)).toBeInTheDocument();
   });
 });
