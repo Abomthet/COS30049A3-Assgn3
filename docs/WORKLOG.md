@@ -1256,3 +1256,27 @@ A proposal for the team, **not merged** (branch `ui-remake-apple` from `1e861c9`
 ## 2026-11-21 — Hero on V1 and two polish fixes, branch ui-remake-apple (Sonnet 5.5)
 
 Apple-style hero on the first screen (headline, subhead with the model count from E11, large lookup, stats strip from E3/E11, limitation line), Copy and Watch as grey pills, wider "Active" tile on V2. Vitest `heroSelect.test.tsx` added; the J1 e2e headline updated. Details in `docs/ui-remake-apple.md`. First-screen JS 148.65 kB. **Open.** Lead review.
+
+## 2026-11-22 — Owner feedback on the remake: wording pass, part 1 (Sonnet 5.5; lead Opus 5.5)
+
+**Why.** The owner tested the `ui-remake-apple` preview and found too much explaining text: facts repeated (source,
+snapshot date, UTC, the limitation line), key numbers inside sentences, and internal words on screen ("A1", "flag budget",
+"robust z-score", "Template: fixed sentences…"). A second feedback file listed the same pattern on every screen; the owner
+approved it, then approved a 133-row wording list with five decisions (Q1 the header strip and one footnote per chart
+both stay, as the plan requires; Q2 the footer leaves out the limitation line while a flagged item shows it; Q3 chart CSVs
+carry the line; Q4 "model", not "method"; Q5 a change request for the plan). The list and an Apple study of footnotes,
+disclaimers and "learn more" patterns are kept outside the repository.
+
+**Done so far, on `ui-remake-apple`** (with `main` merged in first, so each commit can be copied onto `main`):
+- The chart table switch says what a press does ("View as table", then "View as chart").
+- Mod-19: the limitation line is "Worth investigating, not proof of wrongdoing.", kept in `shared/wording.json` for both
+  tiers; A2's line is replaced after the Assistant's guardrail; once per screen; every CSV row, including chart downloads.
+- Mod-20 and Mod-21: E7 and E8 carry `reasons` (label, level and figure texts); the explanation is one short line per
+  reason; F4 says "Small for a received amount"; comparisons read "its last 10 received"; short model names, with
+  `longName` on E11.
+- The "Why it stands out" box: the strongest reason as a big figure, one line per other reason, "Compared with", the
+  limitation line; a not-flagged transaction gets one line ("Score 4.27, below the flag line of 5.00.") and a closed
+  Details disclosure; the prepared Assistant answer appears only when asked for.
+
+**Left:** chart headers, the first screen and messages, the overview, the what-if lab, Models and Watchlist, About,
+screenshots, the change request (CR-09) and the final gate.
