@@ -46,6 +46,8 @@ function Player({ timeline, method, rows }: { timeline: TimelineResponse; method
   const view = useMemo(() => timelineAfter(timeline, rows, position), [timeline, rows, position]);
   const counts = useMemo(() => countsOf(shown, daysOf(shown)), [shown]);
   const latest = shown[position - 1];
+  // The busiest day of the whole history: G1 is drawn to it from the first step, so the bars grow against one scale.
+  const busiestDay = useMemo(() => Math.max(1, ...timeline.days.map((d) => d.txCount)), [timeline]);
   const flaggedNow = latest?.status === 'flagged';
   useLimitationShown(flaggedNow); // the line shows here while a flag is the latest transaction, so the footer leaves its copy out
 
@@ -135,7 +137,7 @@ function Player({ timeline, method, rows }: { timeline: TimelineResponse; method
       {position > 0 ? (
         <>
           <div className="card chart-card">
-            <G1DailyActivity timeline={view} onOpenDay={(date) => navigate(paths.day(timeline.address, date, method))} />
+            <G1DailyActivity timeline={view} countMax={busiestDay} onOpenDay={(date) => navigate(paths.day(timeline.address, date, method))} />
           </div>
           <div className="card chart-card">
             <G2TransactionsOverTime

@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { mockApi } from '../src/api/mock/mockApi';
 import ex from '../src/api/mock/fixtures/examples.json';
 import type { TimelineResponse } from '../src/api/types';
-import { G1DailyActivity } from '../src/charts/G1DailyActivity';
+import { G1DailyActivity, countStep } from '../src/charts/G1DailyActivity';
 import { dayKey } from '../src/lib/dates';
 import { paths } from '../src/lib/router';
 import { settings } from '../src/lib/settings';
@@ -85,7 +85,27 @@ describe('the axes and range controls', () => {
   test('both axes carry units, the counts are whole numbers and only dates zoom', async () => {
     const { layout } = await draw(await timeline());
     expect(layout.xaxis).toMatchObject({ type: 'date', title: { text: 'Date (UTC)' } });
-    expect(layout.yaxis).toMatchObject({ title: { text: 'Transactions per day' }, rangemode: 'tozero', fixedrange: true, tickformat: ',d' });
+    expect(layout.yaxis).toMatchObject({ title: { text: 'Transactions per day' }, fixedrange: true, tickformat: ',d', tickmode: 'linear', tick0: 0 });
+  });
+
+  test('the count scale is set from the data, in whole-number steps, so no label repeats and no bar is cut', async () => {
+    const { layout } = await draw(withDays(await timeline(), [['2026-08-01', 3, 0], ['2026-08-02', 17, 1]]));
+    expect(layout.yaxis).toMatchObject({ autorange: false, dtick: 5 });
+    expect(layout.yaxis.range[0]).toBe(0);
+    expect(layout.yaxis.range[1]).toBeGreaterThan(17);
+    expect(Number.isInteger(layout.yaxis.dtick)).toBe(true);
+  });
+
+  test('with countMax (the replay) the scale is drawn to the busiest day of the whole history from the first step', async () => {
+    render(<G1DailyActivity timeline={withDays(await timeline(), [['2026-08-01', 1, 0]])} onOpenDay={vi.fn()} countMax={78} />);
+    await waitFor(() => expect(fakePlotly.chartDraws().length).toBeGreaterThan(0));
+    const { layout } = fakePlotly.lastChartDraw();
+    expect(layout.yaxis.range[1]).toBeGreaterThan(78);
+    expect(layout.yaxis.dtick).toBe(20);
+  });
+
+  test('countStep gives 1, 2, 5, 10 … with at most five steps', () => {
+    expect([1, 5, 6, 10, 11, 25, 26, 50, 78, 120, 1000].map(countStep)).toEqual([1, 1, 2, 2, 5, 5, 10, 10, 20, 50, 200]);
   });
 
   test('a range slider shows the whole history, and Plotly draws no range buttons of its own', async () => {

@@ -32,6 +32,18 @@ const PERIODS = [
 interface Props {
   timeline: TimelineResponse;
   onOpenDay: (date: string) => void;
+  /**
+   * The count the y axis is drawn to. The replay passes the busiest day of the whole history, so the bars grow
+   * against one scale as days arrive (as G2 draws a part of the rows against the axis of all of them).
+   */
+  countMax?: number;
+}
+
+/** A whole-number tick step for counts up to `max`: 1, 2, 5, 10, 20, 50 … with at most about five steps. */
+export function countStep(max: number): number {
+  for (let scale = 1; ; scale *= 10) {
+    for (const step of [1, 2, 5]) if (max / (step * scale) <= 5) return step * scale;
+  }
 }
 
 /** A position on the date axis, as the text Plotly reads: 'YYYY-MM-DD HH:MM:SS' in UTC. */
@@ -53,7 +65,7 @@ function monthsBefore(time: string, months: number): string {
 }
 
 /** Everything about the data that does not depend on the theme or the size. */
-function buildModel({ days, range }: Pick<TimelineResponse, 'days' | 'range'>) {
+function buildModel({ days, range }: Pick<TimelineResponse, 'days' | 'range'>, countMax?: number) {
   // The padded span of the axis. E5 gives the range as the first and last transaction time.
   const [first, last] = [dayKey(range.start), dayKey(range.end)];
   const pad = Math.max(0, Math.ceil((MIN_AXIS_DAYS - dayCount(first, last)) / 2));
@@ -80,7 +92,8 @@ function buildModel({ days, range }: Pick<TimelineResponse, 'days' | 'range'>) {
     ...PERIODS.map(({ label, months }) => ({ label, range: [monthsBefore(fullRange[1], months) < fullRange[0] ? fullRange[0] : monthsBefore(fullRange[1], months), fullRange[1]] as [string, string] })),
     { label: 'All', range: fullRange },
   ];
-  return { start, end, kinds, byKind, stops, fullRange, rangeButtons, maxCount: Math.max(1, ...days.map((d) => d.txCount)) };
+  const maxCount = Math.max(1, countMax ?? 0, ...days.map((d) => d.txCount));
+  return { start, end, kinds, byKind, stops, fullRange, rangeButtons, maxCount };
 }
 
 type Model = ReturnType<typeof buildModel>;
@@ -143,10 +156,15 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
       },
       yaxis: {
         title: { text: 'Transactions per day' },
-        rangemode: 'tozero',
+        // The scale is set here, not left to Plotly: under one uirevision Plotly keeps the range it first fitted, so
+        // in the replay every later bar was cut at the first day's height. Room above the top for the triangles.
+        range: [0, model.maxCount * 1.15],
+        autorange: false,
+        // Whole counts only, in steps of 1, 2, 5, 10 …: a step of 0.5 would label 0.5 as "1" twice.
+        tickmode: 'linear',
+        tick0: 0,
+        dtick: countStep(model.maxCount),
         tickformat: ',d',
-        // Whole counts only: with few transactions Plotly would otherwise label 0.5 as "1".
-        ...(model.maxCount <= 6 ? { dtick: 1 } : {}),
         // Only the date axis zooms; a count scale that moved would mislead.
         fixedrange: true,
       },
@@ -155,9 +173,9 @@ function buildFigure(model: Model, { palette, compact }: FigureContext): Figure 
 }
 
 /** Chart G1: one bar per active day on a continuous date axis, with unusual days marked; shown on the address overview and in the replay. */
-export function G1DailyActivity({ timeline, onOpenDay }: Props) {
+export function G1DailyActivity({ timeline, onOpenDay, countMax }: Props) {
   const { address, days, range, snapshot } = timeline;
-  const model = useMemo(() => buildModel({ days, range }), [days, range]);
+  const model = useMemo(() => buildModel({ days, range }, countMax), [days, range, countMax]);
   const figure = useCallback((context: FigureContext) => buildFigure(model, context), [model]);
 
   const table = useMemo<ChartTable>(
