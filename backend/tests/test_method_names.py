@@ -54,6 +54,27 @@ def test_the_fusion_card_line_no_longer_speaks_of_a_flag_budget(shared_client: T
     assert fusion["description"] == "Regression and Isolation Forest combined."
 
 
+NOTE_4 = {
+    "baseline": "How far it strays from this address's usual size, pace and gap. Nothing is trained.",
+    "isolation_forest": "How easy it is to set apart from the others.",
+    "lof": "How isolated it is compared with its closest neighbours.",
+    "kmeans": "How far it sits from the nearest group of similar transactions.",
+    "dbscan": "How far it sits from the nearest dense group.",
+    "regression": "How far off a prediction of its size and gap was.",
+    "regression_interval": "How far it falls outside the range predicted for it.",
+    "fusion": "Regression and Isolation Forest combined.",
+    "txgpt_method": "How surprising it is to a language model trained on Bitcoin transactions.",
+}
+
+
+def test_the_nine_card_lines_are_notes_4_plain_lines_with_no_internal_words(shared_client: TestClient) -> None:
+    """W90: one plain line for each method, and none of A2's working words."""
+    methods = shared_client.get("/api/methods").json()["methods"]
+    assert {m["id"]: m["description"] for m in methods} == NOTE_4
+    internal = re.compile(r"F1|F4|robust|z-score|flag budget|planted|recall|Assignment 2|\(A1\)", re.IGNORECASE)
+    assert not [m["id"] for m in methods if internal.search(m["description"])]
+
+
 def test_e11_has_the_short_name_and_the_long_name_of_each_method(shared_client: TestClient) -> None:
     methods = shared_client.get("/api/methods").json()["methods"]
     assert {m["id"]: (m["name"], m["longName"]) for m in methods} == {i: (SHORT[i], LONG[i]) for i in SHORT}

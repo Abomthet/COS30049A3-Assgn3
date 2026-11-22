@@ -86,7 +86,7 @@ export function G6PlantedRecall({ methods }: { methods: MethodDescription[] }) {
 
   const table = useMemo<ChartTable>(
     () => ({
-      columns: [{ label: 'Model' }, { label: 'All three patterns' }, ...PATTERNS.map((p) => ({ label: p.label }))],
+      columns: [{ label: 'Model' }, { label: 'All patterns' }, ...PATTERNS.map((p) => ({ label: p.label }))],
       rows: methods.map((m) => [{ text: m.name }, { text: formatInterval(m.evaluation.meanRecall) }, ...PATTERNS.map((p) => ({ text: formatInterval(m.evaluation.recallByPattern[p.id]) }))]),
     }),
     [methods],

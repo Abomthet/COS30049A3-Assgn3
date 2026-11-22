@@ -32,7 +32,7 @@ describe('the methods', () => {
       expect(cards[i]).toHaveTextContent(m.family.charAt(0).toUpperCase() + m.family.slice(1));
       expect(cards[i]).toHaveTextContent(m.description);
       expect(card.getByText('Flag line').nextElementSibling).toHaveTextContent(m.threshold.toFixed(2));
-      expect(card.getByText('Scores a new amount').nextElementSibling).toHaveTextContent(m.scoresNewInput ? 'Yes' : 'No');
+      expect(card.getByText('Works in the what-if lab').nextElementSibling).toHaveTextContent(m.scoresNewInput ? 'Yes' : 'No');
     });
   });
 
@@ -43,12 +43,13 @@ describe('the methods', () => {
     const range = (i: { value: number; ciLow: number; ciHigh: number }) => `${formatShare(i.value)} (${formatShare(i.ciLow)} to ${formatShare(i.ciHigh)})`;
     const rows = within(baseline).getAllByRole('row');
     expect(rows.map((r) => r.textContent)).toEqual([
-      `All three patterns${range(evaluation.meanRecall)}`,
+      `All patterns${range(evaluation.meanRecall)}`,
       `Spike${range(evaluation.recallByPattern.spike)}`,
       `Burst${range(evaluation.recallByPattern.burst)}`,
       `Dormant${range(evaluation.recallByPattern.dormant)}`,
     ]);
-    expect(within(baseline).getByText('Flags real transactions').nextElementSibling).toHaveTextContent(`${formatShare(evaluation.flagRate)} of them`);
+    expect(within(baseline).getByRole('table')).toHaveAccessibleName('Caught in tests with simulated unusual transactions');
+    expect(within(baseline).getByText('Flags').nextElementSibling).toHaveTextContent(`${formatShare(evaluation.flagRate)} of real transactions`);
   });
 
   test('a change in E11 is a change on the page: nothing is typed in', async () => {
@@ -59,20 +60,72 @@ describe('the methods', () => {
     const lof = (await screen.findAllByTestId(/^method-/))[2];
     expect(lof).toHaveTextContent('Another name');
     expect(lof).toHaveTextContent('7.77');
-    expect(lof).toHaveTextContent('50% of them');
+    expect(lof).toHaveTextContent('50% of real transactions');
+  });
+});
+
+describe('the page head and the long names', () => {
+  test('the lede counts the models and says what a flag means', async () => {
+    start();
+    expect(await screen.findAllByTestId(/^method-/)).toHaveLength(9);
+    expect(document.querySelector('.lede')!.textContent).toBe(
+      `${METHODS_ANSWER.methods.length} models score every transaction, each on its own scale. A flag means a model's score reached its flag line.`,
+    );
+  });
+
+  test('a card whose long name differs from its short name shows it under the title; one that does not shows nothing', async () => {
+    start();
+    const cards = await screen.findAllByTestId(/^method-/);
+    METHODS_ANSWER.methods.forEach((m, i) => {
+      const sub = within(cards[i]).queryByTestId('long-name');
+      if (m.longName === m.name) expect(sub).not.toBeInTheDocument();
+      else expect(sub).toHaveTextContent(m.longName);
+    });
+    expect(within(cards[0]).getByTestId('long-name')).toHaveTextContent('Robust z baseline');
+    expect(within(cards[1]).queryByTestId('long-name')).not.toBeInTheDocument(); // Isolation Forest is its own long name
+    expect(within(cards[7]).getByTestId('long-name')).toHaveTextContent('Score fusion (Regression + Isolation Forest)');
+  });
+
+  test('the nine card lines are plain: none carries an internal word', async () => {
+    start();
+    const cards = await screen.findAllByTestId(/^method-/);
+    const internal = /F1|F4|robust z|z-score|flag budget|planted|recall|Assignment 2|\(A1\)/i;
+    METHODS_ANSWER.methods.forEach((m, i) => {
+      expect(cards[i]).toHaveTextContent(m.description);
+      expect(m.description).not.toMatch(internal);
+    });
+    expect(cards[3]).toHaveTextContent('How far it sits from the nearest group of similar transactions.');
   });
 });
 
 describe('the limits', () => {
-  test('say what a flag means and what it does not, with the snapshot\'s size and date from E2 and the limitation line', async () => {
+  test('"What a flag means" has three short points, the snapshot\'s size and date from E2, and the limitation line only in the footer', async () => {
     start();
-    const section = (await screen.findByRole('heading', { name: 'What a flag means, and what it does not' })).closest('section')!;
-    expect(section).toHaveTextContent('compares an address with its own past');
-    expect(section).toHaveTextContent('no accuracy is claimed');
-    expect(section).toHaveTextContent('planted test transactions');
-    await within(section).findByText(new RegExp(`${CONFIG.snapshot.addressCount} addresses on one date, 22 Oct 2026`));
+    const section = (await screen.findByRole('heading', { name: 'What a flag means' })).closest('section')!;
+    await within(section).findByText(new RegExp(`${CONFIG.snapshot.addressCount} addresses on one date`));
+    const points = within(section).getAllByRole('listitem').map((li) => li.textContent);
+    expect(points).toEqual([
+      "A flag means different from this address's own past.",
+      'Real transactions have no labels, so we cannot say how often a flag is right.',
+      `The snapshot covers ${CONFIG.snapshot.addressCount} addresses on one date, 22 Oct 2026.`,
+    ]);
+    expect(section.textContent ?? '').not.toMatch(/planted|recall|accuracy is claimed/i);
     expect(section).not.toHaveTextContent(LIMITATION_LINE); // once per screen: the footer has it
     expect(screen.getByRole('contentinfo')).toHaveTextContent(LIMITATION_LINE);
+  });
+
+  test('"Why the test numbers are not accuracy" is a closed disclosure that holds the detail', async () => {
+    start();
+    const user = userEvent.setup();
+    const details = (await screen.findByTestId('test-numbers-disclosure')) as HTMLDetailsElement;
+    expect(details.open).toBe(false);
+    expect(within(details).getByText('Why the test numbers are not accuracy').tagName).toBe('SUMMARY');
+    expect(details).toHaveClass('pchart-guide');
+    await user.click(within(details).getByText('Why the test numbers are not accuracy'));
+    expect(details.open).toBe(true);
+    expect(details).toHaveTextContent(
+      'The test counts how many simulated unusual transactions a model flags. It shows a model notices spikes, bursts and a dormant address waking up. It does not show how often a flag on a real address is right.',
+    );
   });
 });
 
@@ -81,7 +134,7 @@ describe('states', () => {
     mockControls.latencyMs = 50;
     start();
     expect(screen.getByText('Loading the models…')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'What a flag means, and what it does not' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'What a flag means' })).toBeInTheDocument();
     expect(await screen.findAllByTestId(/^method-/)).toHaveLength(9);
   });
 

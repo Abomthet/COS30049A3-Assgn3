@@ -79,7 +79,7 @@ describe('the contract', () => {
     await user.click(screen.getByRole('button', { name: 'View as table' }));
     const table = screen.getByRole('table', { name: 'How often each model catches a test pattern' });
     expect(document.querySelector('.pchart-summary')!.textContent).toBe('Share caught in tests, per model and pattern.');
-    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Model', 'All three patterns', 'Spike', 'Burst', 'Dormant']);
+    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Model', 'All patterns', 'Spike', 'Burst', 'Dormant']);
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(methods.length);
     methods.forEach((m, i) => {

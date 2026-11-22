@@ -16,17 +16,17 @@ from explorer.predict import PRECOMPUTED_ONLY, Predictor
 from ..core.method_names import long_name, short_name
 from ..schemas.methods import MethodsResponse
 
-# (family, what the score measures) for each method id, in the words of plan section 7.1.
+# (family, what the score measures) for each method id, in plain words (the wording list, Note 4).
 METHOD_TEXT = {
-    "baseline": ("statistics", "The largest distance of F1 to F4 from the address's own median, in robust z-scores. Nothing is trained."),
-    "isolation_forest": ("outlier detection", "How easily random trees isolate the transaction from the others."),
-    "lof": ("outlier detection", "How much sparser the transaction's surroundings are than its nearest neighbours'."),
-    "kmeans": ("clustering", "The distance to the nearest cluster centre."),
-    "dbscan": ("clustering", "The distance to the nearest dense core."),
-    "regression": ("regression", "The miss between the predicted and the actual size and gap."),
-    "regression_interval": ("regression", "How far the transaction falls outside its expected range."),
+    "baseline": ("statistics", "How far it strays from this address's usual size, pace and gap. Nothing is trained."),
+    "isolation_forest": ("outlier detection", "How easy it is to set apart from the others."),
+    "lof": ("outlier detection", "How isolated it is compared with its closest neighbours."),
+    "kmeans": ("clustering", "How far it sits from the nearest group of similar transactions."),
+    "dbscan": ("clustering", "How far it sits from the nearest dense group."),
+    "regression": ("regression", "How far off a prediction of its size and gap was."),
+    "regression_interval": ("regression", "How far it falls outside the range predicted for it."),
     "fusion": ("combination", "Regression and Isolation Forest combined."),
-    "txgpt_method": ("language model", "How surprising the transaction's tokens are to TxGPT, trained from scratch on the crawl."),
+    "txgpt_method": ("language model", "How surprising it is to a language model trained on Bitcoin transactions."),
 }
 
 

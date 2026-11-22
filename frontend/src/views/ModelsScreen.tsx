@@ -18,6 +18,11 @@ function MethodCard({ method }: { method: MethodDescription }) {
     <li className="card method-card" data-testid={`method-${method.id}`}>
       <header>
         <h3>{method.name}</h3>
+        {method.longName !== method.name ? (
+          <p className="method-long-name" data-testid="long-name">
+            {method.longName}
+          </p>
+        ) : null}
         <p className="muted">{capitalised(method.family)}</p>
       </header>
       <p>{method.description}</p>
@@ -27,19 +32,19 @@ function MethodCard({ method }: { method: MethodDescription }) {
           <dd className="mono">{method.threshold.toFixed(2)}</dd>
         </div>
         <div>
-          <dt>Scores a new amount</dt>
-          <dd>{method.scoresNewInput ? 'Yes' : 'No: it needs a real transaction'}</dd>
+          <dt>Works in the what-if lab</dt>
+          <dd>{method.scoresNewInput ? 'Yes' : 'No'}</dd>
         </div>
         <div>
-          <dt>Flags real transactions</dt>
-          <dd>{formatShare(evaluation.flagRate)} of them</dd>
+          <dt>Flags</dt>
+          <dd>{formatShare(evaluation.flagRate)} of real transactions</dd>
         </div>
       </dl>
       <table className="method-recall">
-        <caption>Share of planted test transactions flagged, with its 95% interval</caption>
+        <caption>Caught in tests with simulated unusual transactions</caption>
         <tbody>
           <tr>
-            <th scope="row">All three patterns</th>
+            <th scope="row">All patterns</th>
             <td>{formatInterval(evaluation.meanRecall)}</td>
           </tr>
           {PATTERNS.map(({ id, label }) => (
@@ -65,8 +70,8 @@ export function ModelsScreen() {
     <div className="page page-models">
       <PageHeading>Models and limits</PageHeading>
       <p className="lede">
-        The Explorer scores every transaction with {methods.status === 'success' ? plural(methods.data.methods.length, 'model') : 'several models'}, each on its own scale. A
-        transaction is flagged when a model's score reaches that model's flag line.
+        {methods.status === 'success' ? plural(methods.data.methods.length, 'model') : 'Several models'} score every transaction, each on its own scale. A flag means a
+        model's score reached its flag line.
       </p>
       {methods.status === 'loading' ? <Loading label="Loading the models…" block /> : null}
       {methods.status === 'error' ? <ErrorState error={methods.error} onRetry={methods.retry} /> : null}
@@ -84,19 +89,24 @@ export function ModelsScreen() {
       ) : null}
 
       <section className="card prose" aria-labelledby="limits-title">
-        <h2 id="limits-title">What a flag means, and what it does not</h2>
+        <h2 id="limits-title">What a flag means</h2>
         <ul>
-          <li>A flag compares an address with its own past: this transaction is unusual for this address. It is worth a look, and nothing more.</li>
-          <li>Real transactions have no labels saying which are unusual, so no accuracy is claimed for them. "Flags real transactions" only says how often a model flags.</li>
-          <li>
-            Recall is measured on planted test transactions (a spike, a burst, a dormant address waking up), not on real activity. A high recall there says the model notices
-            those patterns; it does not say how often a flag on a real address is right.
-          </li>
+          <li>A flag means different from this address's own past.</li>
+          <li>Real transactions have no labels, so we cannot say how often a flag is right.</li>
           <li>
             The snapshot covers {snapshot ? plural(snapshot.addressCount, 'address', 'addresses') : 'a small set of addresses'}
-            {snapshot ? ` on one date, ${formatDay(snapshot.snapshotDate)}` : ' on one date'}. What it shows may not hold for other addresses or other dates.
+            {snapshot ? ` on one date, ${formatDay(snapshot.snapshotDate)}` : ' on one date'}.
           </li>
         </ul>
+        <details className="pchart-guide" data-testid="test-numbers-disclosure">
+          <summary>Why the test numbers are not accuracy</summary>
+          <div className="pchart-guide-body">
+            <p>
+              The test counts how many simulated unusual transactions a model flags. It shows a model notices spikes, bursts and a dormant address waking up. It does not show how
+              often a flag on a real address is right.
+            </p>
+          </div>
+        </details>
       </section>
     </div>
   );

@@ -52,7 +52,7 @@ describe('the star and its dialog', () => {
     const list = (await screen.findByRole('heading', { name: 'Exchange <hot>' })).closest('ul')!;
     expect(within(list).getByRole('heading', { name: 'Exchange <hot>' })).toBeInTheDocument();
     expect(list.querySelector('.watch-note')!.textContent).toBe('Seen on  7 Nov');
-    expect(within(list).getByText(/377 transactions · 367 scored/)).toBeInTheDocument();
+    expect(within(list).getByTestId('watch-counts').textContent).toMatch(/^377 transactions367 scored · \d+ unusual$/);
     expect(within(list).getAllByRole('link', { name: /Open/ })[0]).toHaveAttribute('href', `#/address/${MAIN}`);
   });
 
@@ -62,7 +62,7 @@ describe('the star and its dialog', () => {
     await user.click(within(dialog).getByLabelText('Label'));
     await user.paste('x'.repeat(maxLabelChars + 3));
     expect(within(dialog).getByText(`${maxLabelChars + 3} of ${maxLabelChars} characters`)).toBeInTheDocument();
-    expect(within(dialog).getByRole('alert')).toHaveTextContent(`3 too many: label may have at most ${maxLabelChars} characters.`);
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(`3 over the ${maxLabelChars}-character limit.`);
     expect(within(dialog).getByLabelText('Label')).toHaveAttribute('aria-invalid', 'true');
     expect(within(dialog).getByRole('button', { name: 'Add to the watchlist' })).toBeDisabled();
   });
@@ -167,8 +167,45 @@ describe('V6', () => {
   test('an empty list says so and points to the star', async () => {
     start('#/watchlist');
     const panel = await screen.findByTestId('state-empty-watchlist');
-    expect(panel).toHaveTextContent('Nothing on the watchlist yet');
+    expect(panel).toHaveTextContent('No saved addresses yet');
+    expect(panel).toHaveTextContent('Select the star on an address to save it.');
+    expect(within(panel).getByRole('link', { name: 'Choose an address' })).toBeInTheDocument();
+    expect(document.querySelector('.lede')!.textContent).toBe('Saved addresses with your notes.');
     expect(screen.getByRole('heading', { level: 1, name: 'Watchlist' })).toBeInTheDocument();
+  });
+
+  test('each entry shows its counts as small stats: scored and unusual when scored, only the badge for a short history', async () => {
+    await add(MAIN, 'Scored');
+    await add(ex.shortHistory, 'Short');
+    start('#/watchlist');
+    const [short, scored] = (await screen.findAllByTestId('watch-counts')) as HTMLElement[];
+    expect(scored.textContent).toMatch(/^377 transactions367 scored · \d+ unusual$/);
+    expect(within(scored).queryByText('Short history')).not.toBeInTheDocument();
+    expect(within(short).getByText('Short history')).toBeInTheDocument();
+    expect(short.textContent).toMatch(/^\d+ transactions?Short history$/);
+    expect(short.textContent).not.toMatch(/scored|unusual/);
+    expect(screen.getAllByText('Short history')).toHaveLength(1); // said once
+  });
+
+  test('the list shows "{n} saved" and the sort label; the limit appears only when the list is full', async () => {
+    await add(MAIN, 'First');
+    await add(ex.shortHistory, 'Second');
+    const first = start('#/watchlist');
+    const meta = (await screen.findByText('2 saved')).closest('p')!;
+    expect(meta).toHaveTextContent('2 saved');
+    expect(meta).toHaveTextContent('Newest first');
+    expect(screen.queryByTestId('watch-full')).not.toBeInTheDocument();
+    expect(meta.textContent).not.toContain(String(settings.web.watchlist.maxEntries));
+    expect(first).toBeDefined();
+  });
+
+  test('a full list says "Full: {n} of {max}"', async () => {
+    await add(MAIN, 'First');
+    await add(ex.shortHistory, 'Second');
+    const real = await mockApi.config();
+    vi.spyOn(mockApi, 'config').mockResolvedValue({ ...real, web: { ...real.web, watchlist: { ...real.web.watchlist, maxEntries: 2 } } });
+    start('#/watchlist');
+    expect(await screen.findByTestId('watch-full')).toHaveTextContent('Full: 2 of 2');
   });
 
   test('the newest entry is first; Remove takes effect at once and Undo puts it back with the same label and note', async () => {

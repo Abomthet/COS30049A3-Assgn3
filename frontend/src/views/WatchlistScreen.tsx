@@ -2,13 +2,12 @@ import { useState } from 'react';
 import type { WatchlistEntry } from '../api/types';
 import { AddressLink } from '../components/AddressLink';
 import { ErrorState } from '../components/ErrorState';
-import { Icon } from '../components/Icon';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Loading, StatePanel } from '../components/StatePanel';
 import WatchDialog from '../components/WatchDialog';
 import { KIND_LABEL } from '../lib/address';
 import { dayKey, formatDay } from '../lib/dates';
-import { formatCount, plural } from '../lib/format';
+import { formatCount } from '../lib/format';
 import { paths } from '../lib/router';
 import { useRemoveWithUndo, useWatchlist } from '../hooks/useWatchlist';
 import { useSettings } from '../hooks/useSettings';
@@ -27,18 +26,19 @@ function Entry({ entry, onEdit, onRemove }: { entry: WatchlistEntry; onEdit: () 
         <span className="cell-sub">{KIND_LABEL[summary.kind]}</span>
       </div>
       {entry.note ? <p className="watch-note">{entry.note}</p> : null}
-      <p className="watch-counts">
-        {plural(summary.txCount, 'transaction')} · {formatCount(summary.scoredCount)} scored ·{' '}
+      <div className="watch-counts" data-testid="watch-counts">
+        {/* Small stats, said once: the counts, and for a short history only its badge. */}
+        <span className="watch-stat">
+          {formatCount(summary.txCount)} {summary.txCount === 1 ? 'transaction' : 'transactions'}
+        </span>
         {summary.history === 'insufficient' ? (
           <span className="badge badge-not-scored">Short history</span>
-        ) : summary.flaggedCount > 0 ? (
-          <span className="unusual-count">
-            <Icon name="flag" className="flag-icon" /> {formatCount(summary.flaggedCount)} unusual
-          </span>
         ) : (
-          'none unusual'
+          <span className="watch-stat">
+            {formatCount(summary.scoredCount)} scored · {formatCount(summary.flaggedCount)} unusual
+          </span>
         )}
-      </p>
+      </div>
       <p className="card-sub">Added {formatDay(dayKey(entry.addedAt))}</p>
       <div className="watch-actions">
         <a className="btn btn-secondary" href={paths.timeline(entry.address)}>
@@ -69,14 +69,14 @@ export default function WatchlistScreen() {
     <div className="page page-watchlist">
       <PageHeading>Watchlist</PageHeading>
       <p className="lede">
-        The addresses you chose to keep an eye on, with your own labels and notes. They are kept by the service, so they are here the next time you open the Explorer.
+        Saved addresses with your notes.
       </p>
       {state.status === 'loading' || state.status === 'idle' ? <Loading label="Loading the watchlist…" block /> : null}
       {state.status === 'error' ? <ErrorState error={state.error} onRetry={reload} /> : null}
       {state.status === 'ready' && state.entries.length === 0 ? (
         <StatePanel
           tone="empty"
-          title="Nothing on the watchlist yet"
+          title="No saved addresses yet"
           testId="state-empty-watchlist"
           actions={
             <a className="btn btn-secondary" href={paths.select()}>
@@ -84,13 +84,19 @@ export default function WatchlistScreen() {
             </a>
           }
         >
-          <p>Select the star beside an address, in the list or at the top of its page, to keep it here with a label and a note.</p>
+          <p>Select the star on an address to save it.</p>
         </StatePanel>
       ) : null}
       {state.status === 'ready' && state.entries.length > 0 ? (
         <>
-          <p className="section-meta" role="status">
-            {formatCount(state.entries.length)} of {plural(settings.web.watchlist.maxEntries, 'address', 'addresses')}, the newest first.
+          <p className="section-meta watch-meta" role="status">
+            <span>{formatCount(state.entries.length)} saved</span>
+            <span className="watch-sort">Newest first</span>
+            {state.entries.length >= settings.web.watchlist.maxEntries ? (
+              <span data-testid="watch-full">
+                Full: {formatCount(state.entries.length)} of {formatCount(settings.web.watchlist.maxEntries)}
+              </span>
+            ) : null}
           </p>
           <ul className="watch-list">
             {state.entries.map((entry) => (

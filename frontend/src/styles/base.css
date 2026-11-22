@@ -2097,6 +2097,11 @@ main.container {
 .method-card p {
   margin: 0;
 }
+.method-card .method-long-name {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
 .method-facts {
   display: grid;
   gap: 6px;
@@ -2347,7 +2352,19 @@ main.container {
   overflow-wrap: anywhere;
 }
 .watch-counts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
   margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.watch-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
 }
 .watch-entry .card-sub {
   margin: 4px 0 0;

@@ -28,7 +28,7 @@ interface Counted {
 function CountedField({ id, label, help, value, max, serviceError, multiline, onChange }: Counted) {
   const used = length(value);
   const over = used > max;
-  const error = over ? `${formatCount(used - max)} too many: ${label.toLowerCase()} may have at most ${formatCount(max)} characters.` : serviceError;
+  const error = over ? `${formatCount(used - max)} over the ${formatCount(max)}-character limit.` : serviceError;
   const common = {
     id,
     className: multiline ? 'text-input text-area' : 'text-input',
