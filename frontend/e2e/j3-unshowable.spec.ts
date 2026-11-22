@@ -29,7 +29,7 @@ test.describe('J3: addresses that cannot be shown', () => {
 
     const panel = page.getByTestId('state-unsupported');
     await expect(panel.getByRole('heading', { name: "This address isn't in the snapshot" })).toBeVisible();
-    await expect(panel.getByText(/fixed set of addresses/)).toBeVisible();
+    await expect(panel.getByText(/^Only \d+ addresses are covered\. Try one of these:$/)).toBeVisible();
     const examplesList = panel.getByRole('list').getByRole('link');
     await expect(examplesList).toHaveCount(3);
     await guard.noSidewaysScroll('after the unsupported address');

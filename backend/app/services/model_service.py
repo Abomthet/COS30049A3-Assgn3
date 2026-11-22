@@ -35,7 +35,6 @@ def snapshot_facts(predictor: Predictor) -> SnapshotFacts:
 def require_ready(runtime: Runtime) -> None:
     """Raise `Unavailable` while the models are loading, or after a failed load."""
     if runtime.load_error:
-        raise Unavailable("The explorer service could not load its models.",
-                          "The server log says why; the README's troubleshooting section lists the usual causes.")
+        raise Unavailable("The Explorer could not start.", "Try again in a minute.")
     if not runtime.ready:
-        raise Unavailable("The explorer service is still starting.", "Try again in a few seconds.")
+        raise Unavailable("The Explorer is still starting.", "Try again in a few seconds.")

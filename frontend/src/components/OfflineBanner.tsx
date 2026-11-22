@@ -23,7 +23,7 @@ export function OfflineBanner() {
     <div className="offline-banner" role="alert" data-testid="offline-banner">
       <div className="container offline-banner-inner">
         <p>
-          <strong>You're offline.</strong> Pages you have already opened stay usable. The Explorer loads the rest when your connection returns.
+          <strong>You're offline.</strong> Pages you opened still work; the rest load when you reconnect.
         </p>
       </div>
     </div>

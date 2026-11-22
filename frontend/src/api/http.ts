@@ -48,7 +48,7 @@ function toApiError(error: unknown): unknown {
   // the back end stopped, Vite itself answers 502 with an empty body. That is "no answer".
   const body = parseBody(response?.data);
   if (response && isErrorBody(body)) return new ApiError(response.status, withRetryAfter(body, response.headers['retry-after']));
-  return new ApiError(response?.status ?? 0, { status: 'network', message: 'The explorer service did not respond.' });
+  return new ApiError(response?.status ?? 0, { status: 'network', message: "Can't reach the Explorer." });
 }
 
 /** Makes the Axios client with the base address and time limit, turning every failure into an ApiError the views can read. */

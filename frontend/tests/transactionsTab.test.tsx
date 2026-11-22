@@ -266,7 +266,7 @@ describe('states', () => {
   test('a failed request shows the error with Try again, and the filters stay', async () => {
     const spy = vi.spyOn(mockApi, 'transactions').mockRejectedValue(new ApiError(500, { status: 'server_error', message: 'Something broke.' }));
     const user = start(`${base}?direction=in`);
-    expect(await screen.findByText('Something went wrong on our side')).toBeInTheDocument();
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Received' })).toHaveAttribute('aria-pressed', 'true');
     spy.mockRestore();
     await user.click(screen.getByRole('button', { name: 'Try again' }));
@@ -492,11 +492,11 @@ describe('the export menu (E10)', () => {
 
   test('a failure is said in a toast, and nothing is downloaded', async () => {
     const files = captureDownloads();
-    vi.spyOn(mockApi, 'exportFile').mockRejectedValue(new ApiError(0, { status: 'network', message: 'The explorer service did not respond.' }));
+    vi.spyOn(mockApi, 'exportFile').mockRejectedValue(new ApiError(0, { status: 'network', message: "Can't reach the Explorer." }));
     const user = start(`${base}?status=flagged`);
     await open(user);
     await user.click(screen.getByRole('button', { name: 'Download JSON' }));
-    expect(await screen.findByText('The export could not be made. The explorer service did not respond. Try again.')).toBeInTheDocument();
+    expect(await screen.findByText("The export could not be made. Can't reach the Explorer. Try again.")).toBeInTheDocument();
     expect(files).toHaveLength(0);
   });
 

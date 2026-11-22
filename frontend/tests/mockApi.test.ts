@@ -32,7 +32,7 @@ describe('lookup (POST /api/lookup)', () => {
   test('400 for an invalid address', async () => {
     const r = await failure(mockApi.lookup(ex.typo));
     expect(r.status).toBe(400);
-    expect(r.body).toMatchObject({ status: 'invalid', message: expect.stringMatching(/checksum/) });
+    expect(r.body).toMatchObject({ status: 'invalid', message: 'Check the address for a typo.' });
   });
 
   test('404 with three examples that are in the list for a valid address outside the snapshot (AC-02)', async () => {

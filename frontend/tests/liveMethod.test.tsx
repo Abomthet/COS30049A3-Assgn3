@@ -1,6 +1,6 @@
 // A fetched (live) address has no TxGPT scores: the menu says so, a remembered TxGPT falls back to the default with a note,
 // a link that names it gets an explanation with a way out, and V1 words and orders its live-lookup offer truthfully.
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test } from 'vitest';
 import { App } from '../src/App';
@@ -57,8 +57,8 @@ describe('a fetched address and an unavailable method', () => {
     const user = start(`#/address/${LIVE}?method=txgpt_method`);
     const panel = await screen.findByTestId('state-method');
     expect(panel).toHaveTextContent("This model can't score this address");
-    expect(panel).toHaveTextContent('This method has no scores for a fetched address.');
-    expect(panel).toHaveTextContent('choose another method');
+    expect(panel).toHaveTextContent('TxGPT has no scores for a fetched address.');
+    expect(panel).toHaveTextContent('Choose another model.');
     expect(screen.queryByRole('link', { name: 'Choose an address' })).not.toBeInTheDocument();
     await user.click(within(panel).getByRole('button', { name: /Use Baseline/ }));
     expect(await screen.findByTestId('live-banner')).toBeInTheDocument();
@@ -94,29 +94,34 @@ describe("V1's live-lookup wording", () => {
     return screen.findByTestId('state-unsupported');
   };
 
-  test('the help line differs with live lookup on and off', async () => {
+  test('the help line is one fact, the same with live lookup on and off', async () => {
     start('#/');
-    expect(await screen.findByText(/Only addresses in the snapshot have results\./)).toBeInTheDocument();
+    expect(await screen.findByText('Starts with 1, 3 or bc1.')).toBeInTheDocument();
+    expect(document.getElementById('address-help')).toHaveTextContent(/^Starts with 1, 3 or bc1\.$/);
+    cleanup();
     mockControls.liveLookup = true;
     start('#/');
-    expect(await screen.findByText(/any other address can be fetched from the public blockchain/)).toBeInTheDocument();
+    expect(await screen.findByText('Starts with 1, 3 or bc1.')).toBeInTheDocument();
+    expect(document.getElementById('address-help')).toHaveTextContent(/^Starts with 1, 3 or bc1\.$/);
   });
 
   test('the unsupported panel reads: what happened, the fetch offer with its button, then the snapshot examples', async () => {
     mockControls.liveLookup = true;
     const panel = await ask();
     const text = panel.textContent ?? '';
-    const [offer, button, examples, clear] = ['You can fetch its most recent', "Fetch this address's public history", 'Or open one of these snapshot addresses:', 'Clear and try another address'].map((s) => text.indexOf(s));
+    const [offer, button, examples, clear] = ['28 addresses are covered.', 'Fetch its public history', 'Or open one of these:', 'Try another address'].map((s) => text.indexOf(s));
     expect(offer).toBeGreaterThan(0);
     expect(button).toBeGreaterThan(offer);
     expect(examples).toBeGreaterThan(button);
     expect(clear).toBeGreaterThan(examples);
-    expect(text).toContain('Only the address is sent to it');
+    expect(text).not.toContain('Only the address is sent'); // the privacy sentence lives in the dialog now
+    expect(text).not.toMatch(/snapshot addresses|chosen before/);
   });
 
   test('with live lookup off the panel has no fetch offer', async () => {
     const panel = await ask();
     expect(panel).not.toHaveTextContent('fetch');
-    expect(panel).toHaveTextContent('Try one of these instead:');
+    expect(panel).toHaveTextContent('Only 28 addresses are covered. Try one of these:');
+    expect(panel).not.toHaveTextContent('28 addresses are covered. Fetch');
   });
 });

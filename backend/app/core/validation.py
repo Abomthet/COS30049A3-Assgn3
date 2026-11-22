@@ -26,9 +26,13 @@ from ..schemas.errors import FieldError
 from .config import WhatIfLimits
 from .errors import InvalidRequest
 
-FORMAT_HINT = ("Bitcoin addresses start with 1, 3 or bc1. Check for a missing or extra character, "
-               "or pick an address from the list.")
-NETWORK_HINT = "The explorer only covers the main Bitcoin network, whose addresses start with 1, 3 or bc1."
+# No address message carries a hint: the lookup box's helper line already gives the format. The `hint` field stays in the
+# verdict (empty) because shared/address_vectors.json and the browser's verdict have it.
+NO_HINT = ""
+NOT_BITCOIN = "That isn't a Bitcoin address."
+TESTNET = "That is a test-network address. Enter a main-network address."
+TYPO = "Check the address for a typo."
+BAD_BC1 = "That isn't a valid bc1 address. Check it for a typo."
 TXID_HINT = "Copy the transaction ID from its link, or pick a transaction from the list."
 
 BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -68,16 +72,16 @@ def _ok(address: str, kind: AddressKind) -> AddressCheck:
     return AddressCheck(ok=True, address=address, kind=kind)
 
 
-def _fail(reason: str, message: str, field_message: str, hint: str = FORMAT_HINT) -> AddressCheck:
+def _fail(reason: str, message: str, field_message: str, hint: str = NO_HINT) -> AddressCheck:
     return AddressCheck(ok=False, reason=reason, message=message, hint=hint, field_message=field_message)
 
 
 def _checksum_failure() -> AddressCheck:
-    return _fail("checksum", "This address fails its checksum, so it probably contains a typo.", "Checksum does not match.")
+    return _fail("checksum", TYPO, "Checksum does not match.")
 
 
 def _testnet_failure() -> AddressCheck:
-    return _fail("testnet", "This is a Bitcoin test-network address.", "Not a main-network address.", NETWORK_HINT)
+    return _fail("testnet", TESTNET, "Not a main-network address.")
 
 
 def validate_address(raw: str, max_chars: int | None = None) -> AddressCheck:
@@ -93,22 +97,21 @@ def validate_address(raw: str, max_chars: int | None = None) -> AddressCheck:
     """
     value = raw.strip()
     if value == "":
-        return _fail("empty", "Enter a Bitcoin address.", "Required.", "Paste an address, or pick one from the list below.")
+        return _fail("empty", "Paste a Bitcoin address or pick one from the list.", "Required.")
     if max_chars is not None and len(value) > max_chars:
         return _fail("too_long", f"An address has at most {max_chars} characters; this one has {len(value)}.", "Too long.")
     if re.search(r"\s", value):
-        return _fail("spaces", "Bitcoin addresses never contain spaces.", "Remove the spaces.")
+        return _fail("spaces", "Remove the spaces.", "Remove the spaces.")
     lower = value.lower()
     if re.fullmatch(r"0x[0-9a-f]{40}", lower):
-        return _fail("ethereum", "This looks like an Ethereum address.", "Not a Bitcoin address.",
-                     "The explorer only covers Bitcoin. Bitcoin addresses start with 1, 3 or bc1.")
+        return _fail("ethereum", "That looks like an Ethereum address. Enter a Bitcoin address.", "Not a Bitcoin address.")
     if lower.startswith(("tb1", "bcrt1")):
         return _testnet_failure()
     if lower.startswith("bc1"):
         return _check_segwit(value)
     if value[0] in "13mn2":
         return _check_legacy(value)
-    return _fail("not_bitcoin", "This is not a Bitcoin address.", "Not a Bitcoin address.")
+    return _fail("not_bitcoin", NOT_BITCOIN, "Not a Bitcoin address.")
 
 
 def require_address(raw: str, max_chars: int | None = None, field: str = "address") -> str:
@@ -145,13 +148,10 @@ def _double_sha256(data: bytes) -> bytes:
 def _check_legacy(value: str) -> AddressCheck:
     low, high = LEGACY_LENGTH
     if not low <= len(value) <= high:
-        return _fail("legacy_length", f"This address has {len(value)} characters; legacy Bitcoin addresses have {low} to {high}.",
-                     "Wrong length.")
+        return _fail("legacy_length", f"{len(value)} characters; this kind has {low} to {high}.", "Wrong length.")
     bad = next((char for char in value if char not in BASE58), None)
     if bad:
-        why = " (0, O, I and l are never used, to avoid confusion)" if bad in "0OIl" else ""
-        return _fail("legacy_character", f'The character "{bad}" can\'t appear in this kind of address{why}.',
-                     "Contains a character that is not allowed.")
+        return _fail("legacy_character", f'"{bad}" isn\'t allowed. Remove it.', "Contains a character that is not allowed.")
     decoded = base58_decode(value)
     # A wrong decoded length is also what a single mistyped character usually produces.
     if decoded is None or len(decoded) != LEGACY_BYTES:
@@ -166,7 +166,7 @@ def _check_legacy(value: str) -> AddressCheck:
         return _ok(value, "p2sh")
     if version in VERSIONS_TESTNET:
         return _testnet_failure()
-    return _fail("not_bitcoin", "This is not a Bitcoin address.", "Not a Bitcoin address.")
+    return _fail("not_bitcoin", NOT_BITCOIN, "Not a Bitcoin address.")
 
 
 # ---------------------------------------------------------------- Bech32 and Bech32m
@@ -209,18 +209,15 @@ def _convert_bits(data: list[int], from_bits: int, to_bits: int, pad: bool) -> l
 
 def _check_segwit(value: str) -> AddressCheck:
     if value != value.lower() and value != value.upper():
-        return _fail("segwit_case", "This address mixes upper- and lower-case letters, which bc1 addresses never do.",
-                     "Mixed upper- and lower-case letters.")
+        return _fail("segwit_case", "bc1 addresses are all lower case.", "Mixed upper- and lower-case letters.")
     address = value.lower()
     low, high = SEGWIT_LENGTH
     if not low <= len(address) <= high:
-        return _fail("segwit_length", f"This address has {len(address)} characters; bc1 addresses have 42 or 62.", "Wrong length.")
+        return _fail("segwit_length", f"{len(address)} characters; bc1 addresses have 42 or 62.", "Wrong length.")
     body = address[3:]
     bad = next((char for char in body if char not in BECH32_CHARSET), None)
     if bad:
-        why = ' (after "bc1", the characters 1, b, i and o are never used)' if bad in "1bio" else ""
-        return _fail("segwit_character", f'The character "{bad}" can\'t appear in a bc1 address{why}.',
-                     "Contains a character that is not allowed.")
+        return _fail("segwit_character", f'"{bad}" isn\'t allowed. Remove it.', "Contains a character that is not allowed.")
     data = [BECH32_CHARSET.index(char) for char in body]
     version = data[0]
     expected = BECH32_CONST if version == 0 else BECH32M_CONST
@@ -229,13 +226,13 @@ def _check_segwit(value: str) -> AddressCheck:
     program = _convert_bits(data[1:-6], 5, 8, pad=False)
     if (program is None or version > SEGWIT_MAX_VERSION
             or not SEGWIT_PROGRAM_LENGTH[0] <= len(program) <= SEGWIT_PROGRAM_LENGTH[1]):
-        return _fail("segwit_invalid", "This bc1 address is not a valid SegWit address.", "Not a valid SegWit address.")
+        return _fail("segwit_invalid", BAD_BC1, "Not a valid SegWit address.")
     if version == 0:
         if len(program) == 20:
             return _ok(address, "p2wpkh")
         if len(program) == 32:
             return _ok(address, "p2wsh")
-        return _fail("segwit_v0_length", "This bc1q address has the wrong length.", "Wrong length.")
+        return _fail("segwit_v0_length", BAD_BC1, "Wrong length.")
     if version == 1 and len(program) == 32:
         return _ok(address, "p2tr")
     return _ok(address, "segwit")

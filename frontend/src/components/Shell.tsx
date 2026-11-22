@@ -4,6 +4,7 @@ import { useServiceStatus } from '../hooks/useServiceStatus';
 import { useSettings } from '../hooks/useSettings';
 import { useToasts } from '../hooks/useToasts';
 import { formatDay } from '../lib/dates';
+import { useIsLive } from '../lib/liveOrigin';
 import { paths, useRoute } from '../lib/router';
 import { MainNav } from './MainNav';
 import { OfflineBanner } from './OfflineBanner';
@@ -20,9 +21,9 @@ function useStatusToasts(): void {
     const was = previous.current;
     previous.current = state;
     if (state === 'ready' && (was === 'unreachable' || was === 'starting')) {
-      notify({ tone: 'success', message: 'The explorer service is back.' });
+      notify({ tone: 'success', message: 'Connection restored.' });
     } else if (state === 'unreachable' && was === 'ready') {
-      notify({ tone: 'error', message: 'The explorer service stopped responding.' });
+      notify({ tone: 'error', message: 'Lost the connection. Retrying.' });
     }
   }, [state, notify]);
 }
@@ -56,6 +57,8 @@ function ShellFrame({ children }: { children: ReactNode }) {
   }, []);
 
   const { snapshot } = settings;
+  // On a fetched address's pages the strip says where that data came from instead of the snapshot's date.
+  const live = useIsLive('address' in route ? route.address : null);
 
   return (
     <>
@@ -95,8 +98,8 @@ function ShellFrame({ children }: { children: ReactNode }) {
         <div className="header-bar">
           <div className="container header-bar-inner">
             {snapshot ? (
-              <p className="header-meta">
-                Snapshot of {formatDay(snapshot.snapshotDate)} · {snapshot.source} · days in UTC
+              <p className="header-meta" data-testid="header-meta">
+                {live ? 'Live data' : `Snapshot of ${formatDay(snapshot.snapshotDate)}`} · {snapshot.source}
               </p>
             ) : null}
             <ServiceStatus />
@@ -111,10 +114,8 @@ function ShellFrame({ children }: { children: ReactNode }) {
       <footer className="app-footer">
         <div className="container footer-inner">
           <FooterLimitation />
-          <p>
-            Unusual means different from the same address's own earlier activity. Days and times are in UTC. COS30049
-            Computing Technology Innovation Project, group HCMC_COS30049.1_4.
-          </p>
+          <p className="footer-help">Unusual means different from this address's own earlier activity.</p>
+          <p className="footer-credit">COS30049 Computing Technology Innovation Project · group HCMC_COS30049.1_4</p>
         </div>
       </footer>
     </>

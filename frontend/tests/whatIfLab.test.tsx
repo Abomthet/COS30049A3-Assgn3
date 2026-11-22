@@ -237,9 +237,9 @@ describe('real time (R1)', () => {
     const user = openLab();
     await typeAmount(user, '0.05');
     await verdict();
-    vi.spyOn(mockApi, 'whatIf').mockRejectedValue(new (await import('../src/api/types')).ApiError(0, { status: 'network', message: 'The explorer service did not respond.' }));
+    vi.spyOn(mockApi, 'whatIf').mockRejectedValue(new (await import('../src/api/types')).ApiError(0, { status: 'network', message: "Can't reach the Explorer." }));
     await typeAmount(user, '0.5');
-    expect(await screen.findByText("Couldn't reach the explorer service", undefined, LATE)).toBeInTheDocument();
+    expect(await screen.findByText("Can't reach the Explorer", undefined, LATE)).toBeInTheDocument();
     expect(await amountField()).toHaveValue('0.5');
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
     // The old answer is gone: it would no longer describe the form.

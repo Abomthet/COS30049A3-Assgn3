@@ -60,7 +60,7 @@ def test_unsupported_is_404_with_the_coverage_sentence_and_three_examples(rigged
     response = rigged.get("/unsupported")
     body = response.json()
     assert response.status_code == 404 and body["status"] == "unsupported"
-    assert body["message"] == "This address is not among the 28 addresses of the 22 October 2026 snapshot."
+    assert body["message"] == "This address is not one of the 28 in the snapshot."
     assert body["examples"] == ["36V7afbhZnvpMpBJmZf7XJKDeL2vtHDB6L", "3HTmUj5wFDQZ2TF8SAcngV7EQ88rptx35D",
                                 "35ZCxf5uyfc2VN194t8WRzz6RCEN6tQfmY"]
     assert body["canLookupLive"] is False
@@ -84,6 +84,7 @@ def test_missing_file_is_503_without_the_path(rigged: TestClient) -> None:
     response = rigged.get("/file")
     assert response.status_code == 503 and response.json()["status"] == "unavailable"
     assert SECRET not in response.text
+    assert (response.json()["message"], response.json()["hint"]) == ("A data file is missing.", "Try again, or tell the team.")
 
 
 def test_anything_else_is_500_with_a_fixed_message_and_the_identifier(rigged: TestClient, caplog: pytest.LogCaptureFixture) -> None:

@@ -103,9 +103,8 @@ def test_e4_spaces_around_the_address_are_ignored(client: TestClient) -> None:
 def test_e4_one_changed_character_answers_the_plans_400(client: TestClient) -> None:
     response = client.post("/api/lookup", json={"address": "1Bbcsfxj2JRUD5crcdZVHBcViT61vrJ3dy"})
     body = assert_invalid(response, "address")
-    assert body["message"] == "This address fails its checksum, so it probably contains a typo."
-    assert body["hint"] == ("Bitcoin addresses start with 1, 3 or bc1. Check for a missing or extra character, "
-                            "or pick an address from the list.")
+    assert body["message"] == "Check the address for a typo."
+    assert body["hint"] == "Check the value and try again."  # the API's general line; no "start with 1, 3 or bc1" under it any more
     assert body["fields"] == [{"name": "address", "message": "Checksum does not match."}]
 
 
@@ -114,7 +113,7 @@ def test_e4_a_valid_address_outside_the_snapshot_answers_the_plans_404_with_thre
     body = response.json()
     assert response.status_code == 404
     assert {k: v for k, v in body.items() if k != "requestId"} == {
-        "status": "unsupported", "message": "This address is not among the 28 addresses of the 22 October 2026 snapshot.",
+        "status": "unsupported", "message": "This address is not one of the 28 in the snapshot.",
         "examples": EXAMPLES, "canLookupLive": False}
 
 
@@ -429,6 +428,7 @@ def test_e7_a_transaction_that_is_not_that_addresses_is_404_not_found(client: Te
     for txid, address in (("0" * 64, RUNNING_EXAMPLE), (FLAGGED_TX, LARGEST)):
         response = client.get(f"/api/transactions/{txid}", params={"address": address})
         assert response.status_code == 404 and response.json()["status"] == "not_found"
+        assert (response.json()["message"], response.json()["hint"]) == ("This transaction isn't in the snapshot for this address.", "Pick one from the list.")
         assert "examples" not in response.json()
 
 

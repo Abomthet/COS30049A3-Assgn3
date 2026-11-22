@@ -69,7 +69,7 @@ describe('usability walkthrough tasks', () => {
     const examples = within(panel).getAllByRole('link');
     expect(examples).toHaveLength(3);
     for (const link of examples) expect(link.getAttribute('href')).toMatch(/^#\/address\//);
-    await user.click(within(panel).getByRole('button', { name: 'Clear and try another address' }));
+    await user.click(within(panel).getByRole('button', { name: 'Try another address' }));
     expect(screen.queryByTestId('state-unsupported')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Bitcoin address')).toHaveValue('');
   });
@@ -86,7 +86,7 @@ describe('the address list (V1)', () => {
     expect(within(main).getByText('377')).toBeInTheDocument();
     expect(within(main).getByText('367')).toBeInTheDocument();
     expect(main).toHaveTextContent('3 (1% of scored)');
-    expect(within(table).getAllByText('Short history, not scored')).toHaveLength(3);
+    expect(within(table).getAllByText('Short history')).toHaveLength(3);
   });
 });
 
@@ -210,7 +210,8 @@ describe('FR-05 states', () => {
     const user = start();
     const input = await screen.findByLabelText('Bitcoin address');
     await user.type(input, `${ex.typo}{Enter}`);
-    expect(await screen.findByRole('alert')).toHaveTextContent(/fails its checksum/);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Check the address for a typo.');
+    expect(screen.getByRole('alert')).not.toHaveTextContent(/start with 1, 3 or bc1/);
     expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(input).toHaveFocus();
     expect(lookup).not.toHaveBeenCalled();
@@ -219,7 +220,7 @@ describe('FR-05 states', () => {
   test('invalid: an empty submit asks for an address', async () => {
     const user = start();
     await user.click(await screen.findByRole('button', { name: /Look up/ }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Enter a Bitcoin address.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Paste a Bitcoin address or pick one from the list.');
   });
 
   test('invalid: a 400 from the service shows its message, and a missing hint is not printed as "null"', async () => {
@@ -296,7 +297,7 @@ describe('FR-05 states', () => {
   test('network failure: a clear message and a working retry', async () => {
     mockControls.offline = true;
     const user = start(`#/address/${ex.mainAddress}`);
-    expect(await screen.findByText("Couldn't reach the explorer service")).toBeInTheDocument();
+    expect(await screen.findByText("Can't reach the Explorer")).toBeInTheDocument();
     mockControls.offline = false;
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByRole('heading', { name: 'Transactions per day' })).toBeInTheDocument();
@@ -304,8 +305,8 @@ describe('FR-05 states', () => {
 
   test.each([
     ['too_large', 413, 'That request was too large'],
-    ['server_error', 500, 'Something went wrong on our side'],
-    ['unavailable', 503, 'The service is starting'],
+    ['server_error', 500, 'Something went wrong'],
+    ['unavailable', 503, 'The Explorer is starting'],
   ] as const)('a %s answer from the service has its own wording', async (status, code, title) => {
     vi.spyOn(mockApi, 'timeline').mockRejectedValue(new ApiError(code, { status, message: 'From the service.', hint: 'Hint.' }));
     start(`#/address/${ex.mainAddress}`);

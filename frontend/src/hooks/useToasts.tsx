@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState, type
 import { ToastRegion } from '../components/ToastRegion';
 
 // Short messages that confirm something happened or report a change the user did not cause
-// ("Copied", "The explorer service is back"). A toast may carry one action, such as Undo.
+// ("Copied", "Connection restored"). A toast may carry one action, such as Undo.
 
 export type ToastTone = 'info' | 'success' | 'error';
 

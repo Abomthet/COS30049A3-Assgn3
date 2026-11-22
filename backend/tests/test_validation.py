@@ -62,7 +62,7 @@ def test_require_address_raises_a_400_that_names_the_field() -> None:
     with pytest.raises(InvalidRequest) as caught:
         require_address("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNx", field="address")
     error = caught.value
-    assert error.status_code == 400 and error.message.endswith("probably contains a typo.")
+    assert error.status_code == 400 and error.message == "Check the address for a typo."
     assert [(f.name, f.message) for f in error.fields] == [("address", "Checksum does not match.")]
 
 

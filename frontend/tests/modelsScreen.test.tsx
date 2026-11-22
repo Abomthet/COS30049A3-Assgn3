@@ -89,7 +89,7 @@ describe('states', () => {
     mockControls.offline = true;
     start();
     const user = userEvent.setup();
-    expect(await screen.findByText("Couldn't reach the explorer service")).toBeInTheDocument();
+    expect(await screen.findByText("Can't reach the Explorer")).toBeInTheDocument();
     mockControls.offline = false;
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findAllByTestId(/^method-/)).toHaveLength(9);

@@ -72,7 +72,7 @@ def forget_address(address: Annotated[str, Depends(path_address)], live: Annotat
     except Unsupported:  # never fetched, or fetching now: the live service tells which
         source = None
     if source == "snapshot":
-        raise Conflict("This address is part of the snapshot, which cannot be changed.", "Only addresses fetched with a live lookup can be forgotten.")
+        raise Conflict("Snapshot addresses cannot be removed.")
     live.forget(address)
     if runtime.watchlist is not None:
         runtime.watchlist.discard(address)

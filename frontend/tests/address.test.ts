@@ -65,7 +65,7 @@ describe('validateAddress', () => {
       const typo = good.slice(0, pos) + (good[pos] === 'x' ? 'y' : 'x') + good.slice(pos + 1);
       const r = validateAddress(typo);
       expect(r.ok).toBe(false);
-      if (!r.ok) expect(r.message).toMatch(/checksum/);
+      if (!r.ok) expect(r.message).toBe('Check the address for a typo.');
     }
   });
 
@@ -73,7 +73,7 @@ describe('validateAddress', () => {
     const good = segwitEncode(0, Uint8Array.from({ length: 20 }, (_, i) => i));
     expect(validateAddress(good.toUpperCase())).toMatchObject({ ok: true, address: good });
     const mixed = good.slice(0, 10) + good.slice(10).toUpperCase();
-    expect(validateAddress(mixed)).toMatchObject({ ok: false, message: expect.stringMatching(/mixes upper- and lower-case/) });
+    expect(validateAddress(mixed)).toMatchObject({ ok: false, message: 'bc1 addresses are all lower case.' });
   });
 
   test('explains common mistakes with a specific message', () => {
@@ -81,14 +81,26 @@ describe('validateAddress', () => {
       const r = validateAddress(s);
       return r.ok ? 'ok' : r.message;
     };
-    expect(msg('')).toBe('Enter a Bitcoin address.');
-    expect(msg('   ')).toBe('Enter a Bitcoin address.');
-    expect(msg('bc1q abc')).toMatch(/spaces/);
-    expect(msg('0x52908400098527886E0F7030069857D2E4169EE7')).toMatch(/Ethereum/);
-    expect(msg('tb1qw508d6qejxtdg4c5r56hfjn3gye7jn8xyr0kud')).toMatch(/test-network/);
-    expect(msg('hello')).toBe('This is not a Bitcoin address.');
-    expect(msg('1A1zP1eP5QGefi2DMPTfTL5SLmv7Div0Na')).toMatch(/"0" can't appear/);
-    expect(msg('bc1qbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')).toMatch(/"b" can't appear/);
+    expect(msg('')).toBe('Paste a Bitcoin address or pick one from the list.');
+    expect(msg('   ')).toBe('Paste a Bitcoin address or pick one from the list.');
+    expect(msg('bc1q abc')).toBe('Remove the spaces.');
+    expect(msg('0x52908400098527886E0F7030069857D2E4169EE7')).toBe('That looks like an Ethereum address. Enter a Bitcoin address.');
+    expect(msg('tb1qw508d6qejxtdg4c5r56hfjn3gye7jn8xyr0kud')).toBe('That is a test-network address. Enter a main-network address.');
+    expect(msg('hello')).toBe("That isn't a Bitcoin address.");
+    expect(msg('1A1zP1eP5QGefi2DMPTfTL5SLmv7Div0Na')).toBe('"0" isn\'t allowed. Remove it.');
+    expect(msg('bc1qbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')).toBe('"b" isn\'t allowed. Remove it.');
+    // The placeholders are filled from the same values as before: the length found, and the range of that kind.
+    expect(msg('1'.repeat(12))).toBe('12 characters; this kind has 26 to 35.');
+    expect(msg('bc1q')).toBe('4 characters; bc1 addresses have 42 or 62.');
+    expect(msg('bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5')).toBe("Check the address for a typo.");
+  });
+
+  test('no message carries a hint, so nothing under the field repeats the helper line', () => {
+    for (const v of vectors.filter((x) => !x.ok && !x.serverOnly)) {
+      const r = validateAddress(v.input);
+      expect(r).toMatchObject({ ok: false, hint: '' });
+      expect(!r.ok && r.message).not.toMatch(/start with 1, 3 or bc1/);
+    }
   });
 
   test('surrounding spaces from a paste are ignored', () => {

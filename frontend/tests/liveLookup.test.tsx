@@ -27,15 +27,15 @@ describe('the offer', () => {
   test('is absent while live lookup is off, and the panel is as before', async () => {
     await askFor();
     const panel = await screen.findByTestId('state-unsupported');
-    expect(within(panel).queryByRole('button', { name: /Fetch this address/ })).not.toBeInTheDocument();
+    expect(within(panel).queryByRole('button', { name: /Fetch its public history/ })).not.toBeInTheDocument();
   });
 
-  test('is a button on the unsupported panel when it is on, with the privacy sentence', async () => {
+  test('is a button on the unsupported panel when it is on; the privacy sentence waits for the dialog', async () => {
     mockControls.liveLookup = true;
     await askFor();
     const panel = await screen.findByTestId('state-unsupported');
-    expect(within(panel).getByRole('button', { name: "Fetch this address's public history" })).toBeInTheDocument();
-    expect(panel).toHaveTextContent('Only the address is sent to it');
+    expect(within(panel).getByRole('button', { name: 'Fetch its public history' })).toBeInTheDocument();
+    expect(panel).not.toHaveTextContent('Only the address is sent');
   });
 });
 
@@ -44,11 +44,12 @@ describe('the dialog', () => {
     mockControls.liveLookup = true;
     mockControls.liveStepMs = 5;
     const user = await askFor();
-    await user.click(await screen.findByRole('button', { name: "Fetch this address's public history" }));
+    await user.click(await screen.findByRole('button', { name: 'Fetch its public history' }));
     const dialog = await screen.findByRole('dialog');
-    expect(dialog).toHaveAccessibleName("Fetching this address's public history");
+    expect(dialog).toHaveAccessibleName('Fetching public history');
+    expect(dialog).toHaveTextContent('Only the address is sent. The result stays on this computer.');
     expect(within(dialog).getByText(OUTSIDE)).toBeInTheDocument();
-    await waitFor(() => expect(within(dialog).getByTestId('live-progress')).toHaveTextContent(/Fetched \d+ of 377 transactions/));
+    await waitFor(() => expect(within(dialog).getByTestId('live-progress')).toHaveTextContent(/^\d+ of 377 transactions$/));
     expect(within(dialog).getByTestId('live-progress')).toHaveAttribute('data-updates', 'stream');
 
     const banner = await screen.findByTestId('live-banner', undefined, { timeout: 4000 });
@@ -58,6 +59,10 @@ describe('the dialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByText(/Source: .* live data/)).toBeInTheDocument();
     expect(screen.queryByText(/snapshot of \d+ \w+ \d{4} · days in UTC/)).not.toBeInTheDocument();
+    // The header strip says where this address's data came from, not the snapshot's date.
+    expect(screen.getByTestId('header-meta')).toHaveTextContent(/^Live data · .+$/);
+    expect(screen.getByTestId('header-meta')).not.toHaveTextContent('Snapshot of');
+    expect(screen.getByText('Fetched 377 transactions.')).toBeInTheDocument();
   });
 
   test('falls back to polling every two seconds when the stream fails, and still finishes', async () => {
@@ -65,7 +70,7 @@ describe('the dialog', () => {
     mockControls.liveStepMs = 5;
     mockControls.liveStreamBroken = true;
     const user = await askFor();
-    await user.click(await screen.findByRole('button', { name: "Fetch this address's public history" }));
+    await user.click(await screen.findByRole('button', { name: 'Fetch its public history' }));
     const dialog = await screen.findByRole('dialog');
     await waitFor(() => expect(within(dialog).getByTestId('live-progress')).toHaveAttribute('data-updates', 'polling'));
     await screen.findByTestId('live-banner', undefined, { timeout: 8000 });
@@ -75,9 +80,9 @@ describe('the dialog', () => {
     mockControls.liveLookup = true;
     mockControls.liveStepMs = 200;
     const user = await askFor();
-    await user.click(await screen.findByRole('button', { name: "Fetch this address's public history" }));
+    await user.click(await screen.findByRole('button', { name: 'Fetch its public history' }));
     const dialog = await screen.findByRole('dialog');
-    await waitFor(() => expect(within(dialog).getByTestId('live-progress')).toHaveTextContent(/Fetched/));
+    await waitFor(() => expect(within(dialog).getByTestId('live-progress')).toHaveTextContent(/\d+ of \d+ transactions|Scoring/));
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -89,7 +94,7 @@ describe('the dialog', () => {
     mockControls.liveLookup = true;
     mockControls.liveStepMs = 200;
     const user = await askFor();
-    await user.click(await screen.findByRole('button', { name: "Fetch this address's public history" }));
+    await user.click(await screen.findByRole('button', { name: 'Fetch its public history' }));
     await screen.findByRole('dialog');
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -100,9 +105,9 @@ describe('the dialog', () => {
     mockControls.liveStepMs = 5;
     mockControls.liveFailAfterPages = 2;
     const user = await askFor();
-    await user.click(await screen.findByRole('button', { name: "Fetch this address's public history" }));
+    await user.click(await screen.findByRole('button', { name: 'Fetch its public history' }));
     const dialog = await screen.findByRole('dialog');
-    expect(await within(dialog).findByText('The public blockchain service did not answer')).toBeInTheDocument();
+    expect(await within(dialog).findByText("The blockchain service didn't answer")).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: 'Try again' })).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -112,8 +117,8 @@ describe('the dialog', () => {
     mockControls.liveLookup = true;
     mockControls.liveFailAfterPages = -1;
     const user = await askFor();
-    await user.click(await screen.findByRole('button', { name: "Fetch this address's public history" }));
-    expect(await screen.findByText('The public blockchain service did not answer')).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'Fetch its public history' }));
+    expect(await screen.findByText("The blockchain service didn't answer")).toBeInTheDocument();
   });
 });
 
@@ -122,7 +127,7 @@ describe('a fetched address', () => {
     mockControls.liveLookup = true;
     mockControls.liveStepMs = 1;
     const user = await askFor();
-    await user.click(await screen.findByRole('button', { name: "Fetch this address's public history" }));
+    await user.click(await screen.findByRole('button', { name: 'Fetch its public history' }));
     await screen.findByTestId('live-banner', undefined, { timeout: 6000 });
     return user;
   }

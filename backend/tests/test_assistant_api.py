@@ -283,6 +283,7 @@ def test_off_answers_with_the_template_and_says_why(make_client: Callable[..., T
     body = ask(client, txid=txid).json()
     assert body["source"] == "template" and body["attempts"] == [] and body["explanation"] == web_explanation(tx)
     assert body["skippedWriters"] == {"text150m": assistant_service.OFF} and body["cached"] is False
+    assert body["skippedWriters"]["text150m"] == "The Assistant is turned off on this computer."
     assert client.get("/api/health").json()["assistant"] == "off" and model.loads == 0
 
 
@@ -301,6 +302,7 @@ def test_not_installed_answers_with_the_template_and_says_why(make_client: Calla
     reason = assistant_service.LIBRARIES_MISSING if missing == "libraries" else assistant_service.WEIGHTS_MISSING
     assert response.status_code == 200 and body["source"] == "template" and body["skippedWriters"] == {"text150m": reason}
     assert body["attempts"] == [] and LIMITATION in body["explanation"]
+    assert reason == "The Assistant isn't installed on this computer."  # one line for the file and the libraries; no file, size or variable name
     assert client.get("/api/health").json()["assistant"] == "not_installed" and model.loads == 0
 
 
@@ -320,6 +322,7 @@ def test_a_model_that_cannot_be_loaded_gives_the_template_and_is_not_tried_again
     assert first.status_code == second.status_code == 200 and first.json()["source"] == "template"
     assert first.json()["skippedWriters"] == {"text150m": assistant_service.LOAD_FAILED} == second.json()["skippedWriters"]
     assert "/secret/place" not in first.text and "corrupt checkpoint" in caplog.text and calls == [1]
+    assert first.json()["skippedWriters"]["text150m"] == "The Assistant isn't installed on this computer."
     assert explorer_client.get("/api/health").json()["assistant"] == "not_installed"
 
 
@@ -354,7 +357,7 @@ def test_a_second_answer_waits_through_a_429_while_one_is_being_written(explorer
     busy = ask(explorer_client, txid=second_id)
     assert busy.status_code == 429 and busy.json()["status"] == "rate_limited"
     assert re.fullmatch(r"[1-9]\d*", busy.headers["Retry-After"]) and busy.json()["requestId"] == busy.headers["X-Request-ID"]
-    assert busy.json()["message"] == "The Assistant is writing another answer." and BANNED.search(busy.text) is None
+    assert busy.json()["message"] == "The Assistant is busy." and busy.json()["hint"] == "Try again in a moment." and BANNED.search(busy.text) is None
     if where == "write":
         assert ask(explorer_client, txid=third_id).json()["cached"] is True  # memory is never kept waiting
 

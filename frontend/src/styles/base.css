@@ -321,6 +321,10 @@ main.container {
   font-size: 0.85rem;
   padding: 20px 0 88px;
 }
+.footer-credit {
+  margin-top: 12px;
+  font-size: 0.75rem;
+}
 .footer-limitation {
   color: var(--text-2);
   font-weight: 560;

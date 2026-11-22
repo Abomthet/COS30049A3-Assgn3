@@ -283,7 +283,7 @@ EXPLORER_LIVE_LOOKUP=on python -m uvicorn app.main:app --port 8000        # macO
 ```
 
 `GET /api/health` and `GET /api/config` then say `liveLookup: true`. Type a valid address that is not in the snapshot: the
-page offers "Fetch this address's public history". A dialog follows the fetch (pages and transactions fetched, with Cancel);
+page offers "Fetch its public history". A dialog follows the fetch ("{n} of {cap} transactions", with Cancel);
 when it ends the overview opens, marked "Live data, fetched 12 Nov 2026 14:02 UTC", with "Forget this address" beside it.
 With the variable off (the default) every live endpoint (E16 to E20) answers `403 disabled`.
 
@@ -401,11 +401,20 @@ with Python 3.11 and the pip route (`vendor_a2.py --check`, then `pytest -q`), t
   end.
 - **A firewall prompt on first start.** Windows or macOS may ask whether Python or Node may accept connections. The
   application listens on `127.0.0.1` only, so "Allow" for private networks, or "Cancel", both work.
-- **The page says the service is starting (or the status indicator shows "starting").** The models take about a
+- **The status indicator shows "Starting up", or a page says "The Explorer is still starting."** The models take about a
   second to load; until then `GET /api/health` answers 503 and the front end retries by itself. If it stays,
   read Uvicorn's log: a line beginning "The explorer models could not be loaded" says what is missing.
-- **A blank page, or "no answer" messages.** The back end is not running, or not on port 8000. Check
-  `curl http://localhost:8000/api/health`, then start the back end (step 1).
+- **A page says "The Explorer could not start." or "A data file is missing."** The models or a data file failed to
+  load. Uvicorn's log names the file or the library version; check the installation as described above (the saved models
+  need Assignment 2's exact library versions, see "A library-version message at start").
+- **The status indicator shows "Not connected", or a page says "Can't reach the Explorer".** The back end is not
+  running, or not on port 8000. Check `curl http://localhost:8000/api/health`, then start the back end (step 1).
+- **"Fetching new addresses is turned off."** Live lookup is off, which is the default. Start the back end with
+  `EXPLORER_LIVE_LOOKUP=on` (see "Live lookup of any address" above).
+- **"The Assistant isn't installed on this computer."** The weights or PyTorch are missing, or the model could not be
+  loaded (the server log says which). See "The optional Assistant" above: copy the weights, then
+  `pip install -r requirements-assistant.txt`. **"The Assistant is turned off on this computer."** means
+  `EXPLORER_ASSISTANT=off` is set.
 - **Windows warns about counting physical cores.** Without the old `wmic` tool, joblib warns, and `pytest.ini` turns
   warnings into failures. Setting the count up front skips that lookup (`set LOKY_MAX_CPU_COUNT=4`).
 

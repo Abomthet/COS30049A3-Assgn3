@@ -212,7 +212,7 @@ describe('V6', () => {
     await add(MAIN, 'Later');
     mockControls.offline = true;
     const user = start('#/watchlist');
-    expect(await screen.findByText("Couldn't reach the explorer service")).toBeInTheDocument();
+    expect(await screen.findByText("Can't reach the Explorer")).toBeInTheDocument();
     mockControls.offline = false;
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByRole('heading', { name: 'Later' })).toBeInTheDocument();
@@ -251,7 +251,7 @@ describe('recently opened addresses', () => {
   test('an address whose page failed to load is not remembered', async () => {
     mockControls.offline = true;
     start(`#/address/${MAIN}`);
-    await screen.findByText("Couldn't reach the explorer service");
+    await screen.findByText("Can't reach the Explorer");
     expect(localStorage.getItem('explorer.preferences.v1')).toBeNull();
   });
 });

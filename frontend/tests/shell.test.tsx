@@ -63,7 +63,7 @@ describe('navigation', () => {
 describe('service status', () => {
   test('ready: the dot says so in words', async () => {
     start();
-    expect(await screen.findByText('Service ready')).toBeInTheDocument();
+    expect(await screen.findByText('Connected')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Check again' })).not.toBeInTheDocument();
   });
 
@@ -72,13 +72,13 @@ describe('service status', () => {
     try {
       mockControls.starting = true;
       start(`#/address/${ex.mainAddress}`);
-      expect(await screen.findByText('Service starting')).toBeInTheDocument();
+      expect(await screen.findByText('Starting up')).toBeInTheDocument();
       expect(await screen.findByText(/This page will load by itself/)).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /again/i })).not.toBeInTheDocument();
 
       mockControls.starting = false;
       await act(async () => vi.advanceTimersByTime(settings.web.requests.healthPollSeconds * 1000));
-      expect(await screen.findByText('Service ready')).toBeInTheDocument();
+      expect(await screen.findByText('Connected')).toBeInTheDocument();
       expect(await screen.findByRole('heading', { name: 'Transactions per day' })).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
@@ -88,50 +88,63 @@ describe('service status', () => {
   test('down: the page shows the network state, the dot turns to "not responding" with a next action', async () => {
     mockControls.offline = true;
     start(`#/address/${ex.mainAddress}`);
-    expect(await screen.findByText("Couldn't reach the explorer service")).toBeInTheDocument();
-    expect(await screen.findByText('Service not responding')).toBeInTheDocument();
+    expect(await screen.findByText("Can't reach the Explorer")).toBeInTheDocument();
+    expect(await screen.findByText('Not connected')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Check again' })).toBeInTheDocument();
-    expect(screen.getByText(/Pages reload by themselves when it is back/)).toBeInTheDocument();
-    expect(screen.getByText(/The limits shown are the built-in ones/)).toBeInTheDocument();
+    expect(screen.getByText(/Pages reload when it is back\./)).toBeInTheDocument();
+    expect(screen.queryByText(/built-in/)).not.toBeInTheDocument();
   });
 
   test('back again: "Check again" reloads the failed page by itself and says the service is back', async () => {
     mockControls.offline = true;
     const user = start(`#/address/${ex.mainAddress}`);
-    await screen.findByText('Service not responding');
+    await screen.findByText('Not connected');
 
     mockControls.offline = false;
     await user.click(screen.getByRole('button', { name: 'Check again' }));
 
-    expect(await screen.findByText('Service ready')).toBeInTheDocument();
+    expect(await screen.findByText('Connected')).toBeInTheDocument();
     // No click on the panel's own "Try again": the view reloaded when the service returned.
     expect(await screen.findByRole('heading', { name: 'Transactions per day' })).toBeInTheDocument();
-    expect(await within(screen.getByRole('region', { name: 'Notifications' })).findByText('The explorer service is back.')).toBeInTheDocument();
+    expect(await within(screen.getByRole('region', { name: 'Notifications' })).findByText('Connection restored.')).toBeInTheDocument();
   });
 
   test('a service that drops out while the user reads is announced', async () => {
     const user = start();
-    await screen.findByText('Service ready');
+    await screen.findByText('Connected');
     await screen.findByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) });
     mockControls.offline = true;
     // Opening an address fails; that failure triggers an immediate check, not a wait for the next poll.
     await user.click(screen.getByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) }));
-    expect(await screen.findByText('Service not responding')).toBeInTheDocument();
-    expect(await within(screen.getByRole('region', { name: 'Notifications' })).findByText('The explorer service stopped responding.')).toBeInTheDocument();
+    expect(await screen.findByText('Not connected')).toBeInTheDocument();
+    expect(await within(screen.getByRole('region', { name: 'Notifications' })).findByText('Lost the connection. Retrying.')).toBeInTheDocument();
   });
 });
 
 describe('settings from E2', () => {
   test('the header and footer show what the service says', async () => {
     start();
-    expect(await screen.findByText(/Snapshot of 22 Oct 2026 · Blockstream Esplora · days in UTC/)).toBeInTheDocument();
+    expect(await screen.findByTestId('header-meta')).toHaveTextContent(/^Snapshot of 22 Oct 2026 · Blockstream Esplora$/);
     expect(screen.getByRole('contentinfo')).toHaveTextContent(LIMITATION_LINE);
+  });
+
+  test('the footer is split: the help line, then the course credit apart and smaller; no "days and times are in UTC"', async () => {
+    start();
+    await screen.findByTestId('header-meta');
+    const footer = screen.getByRole('contentinfo');
+    const help = within(footer).getByText("Unusual means different from this address's own earlier activity.");
+    const credit = within(footer).getByText('COS30049 Computing Technology Innovation Project · group HCMC_COS30049.1_4');
+    expect(help).not.toBe(credit);
+    expect(help).not.toContainElement(credit);
+    expect(help.compareDocumentPosition(credit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(credit).toHaveClass('footer-credit');
+    expect(footer).not.toHaveTextContent(/Days and times are in UTC|same address/);
   });
 
   test('when the service is unreachable the bundled settings still supply the limitation line', async () => {
     mockControls.offline = true;
     start();
-    await screen.findByText('Service not responding');
+    await screen.findByText('Not connected');
     expect(screen.getByRole('contentinfo')).toHaveTextContent(LIMITATION_LINE);
     // The snapshot is known only to the service, so the line is simply absent.
     expect(screen.queryByText(/Snapshot of/)).not.toBeInTheDocument();
@@ -140,7 +153,7 @@ describe('settings from E2', () => {
   test('E2 is asked again when the service returns', async () => {
     mockControls.offline = true;
     const user = start();
-    await screen.findByText('Service not responding');
+    await screen.findByText('Not connected');
     mockControls.offline = false;
     await user.click(screen.getByRole('button', { name: 'Check again' }));
     expect(await screen.findByText(/Snapshot of 22 Oct 2026/)).toBeInTheDocument();
@@ -312,7 +325,7 @@ describe('error states for the new statuses', () => {
     const { rerender } = render(
       <ErrorState error={new ApiError(500, { status: 'server_error', message: 'Something unexpected happened.', requestId: '0f3c9a1e7b2d' })} onRetry={retry} />,
     );
-    expect(screen.getByRole('heading', { name: 'Something went wrong on our side' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Something went wrong' })).toBeInTheDocument();
     expect(screen.getByText('0f3c9a1e7b2d')).toBeInTheDocument();
 
     rerender(<ErrorState error={new ApiError(0, { status: 'timeout', message: 'x' })} onRetry={retry} />);
@@ -321,7 +334,7 @@ describe('error states for the new statuses', () => {
     expect(retry).toHaveBeenCalled();
 
     rerender(<ErrorState error={new ApiError(503, { status: 'unavailable', message: 'x' })} onRetry={retry} />);
-    expect(screen.getByRole('heading', { name: 'The service is starting' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'The Explorer is starting' })).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 });

@@ -53,10 +53,13 @@ CACHE_SIZE = 512
 DEFAULT_ANSWER_SECONDS = 10  # the plan's figure, until an answer has been timed
 LIBRARIES = ("torch", "tokenizers")
 
-OFF = "The Assistant is turned off on this computer (EXPLORER_ASSISTANT=off)."
-WEIGHTS_MISSING = "The Assistant's model file (610 MB) is not installed; the README says how to add it."
-LIBRARIES_MISSING = "PyTorch and tokenizers are not installed; backend/requirements-assistant.txt adds them."
-LOAD_FAILED = "The Assistant's model could not be loaded; the server log says why."
+# What the screen says (W120, W121): no variable, file or library name. The README says how to install the Assistant and the
+# server log says why a load failed, so the three "not installed" causes share one line.
+OFF = "The Assistant is turned off on this computer."
+NOT_INSTALLED = "The Assistant isn't installed on this computer."
+WEIGHTS_MISSING = NOT_INSTALLED
+LIBRARIES_MISSING = NOT_INSTALLED
+LOAD_FAILED = NOT_INSTALLED
 
 
 def libraries_installed() -> bool:
@@ -236,8 +239,7 @@ class AssistantService:
             RateLimited: Another answer is being written.
         """
         if not self._gate.acquire(blocking=False):
-            raise RateLimited("The Assistant is writing another answer.", self._wait_estimate(),
-                              "Wait a moment and ask again; the explanation above is the template.")
+            raise RateLimited("The Assistant is busy.", self._wait_estimate(), "Try again in a moment.")
         started = time.monotonic()
         self._busy_since = started
         try:
@@ -263,7 +265,8 @@ class AssistantService:
                 writers, skipped = self._loader()
                 self._writers = writers
                 if not writers:
-                    self._failure = "; ".join(skipped.values()) or LOAD_FAILED
+                    log.warning("The Explorer Assistant has no writer to run: %s", "; ".join(skipped.values()) or "no reason given")
+                    self._failure = LOAD_FAILED
                 else:
                     log.info("The Explorer Assistant is loaded (%.1f s)", time.perf_counter() - began)
             except Exception:  # the cause goes to the log; the response names no file or library error

@@ -8,8 +8,8 @@ import { PageHeading, useDocumentTitle } from '../components/PageHeading';
 import { Loading, StatePanel } from '../components/StatePanel';
 import { WatchStar } from '../components/WatchStar';
 import { KIND_LABEL, validateAddress } from '../lib/address';
-import { dayKey, formatDay, formatDayRange } from '../lib/dates';
-import { formatCount, plural, shortAddress } from '../lib/format';
+import { dayKey, formatDayRange } from '../lib/dates';
+import { formatCount, shortAddress } from '../lib/format';
 import { navigate, paths } from '../lib/router';
 import { isTransient, runRequest, useRequest } from '../hooks/useRequest';
 import { usePreferences } from '../hooks/usePreferences';
@@ -60,7 +60,8 @@ export function SelectScreen({ query }: { query: string | null }) {
       return;
     }
     const body = res.error.body;
-    if (body.status === 'invalid') setLookup({ status: 'invalid', message: body.message, hint: body.hint ?? '' });
+    // The address messages carry no hint (the helper line gives the format), so the server's general hint is not shown either.
+    if (body.status === 'invalid') setLookup({ status: 'invalid', message: body.message, hint: '' });
     else if (body.status === 'unsupported') setLookup({ status: 'unsupported', address: local.address, message: body.message, examples: body.examples, canLookupLive: body.canLookupLive });
     else {
       // Like a page's own request, a failure that says nothing about the address asks the status dot to look again at once.
@@ -98,14 +99,18 @@ export function SelectScreen({ query }: { query: string | null }) {
   const slowLookup = useSlow(lookup.status === 'checking');
   const snapshot = list.status === 'success' ? list.data.snapshot : null;
   const methods = useMethods();
+  // The panel's one line comes from the snapshot's own count (E3 or the settings); the 404's sentence is the API-facing
+  // reason and is the fallback when the count is not known yet.
+  const coveredCount = snapshot?.addressCount ?? settings.snapshot?.addressCount ?? null;
   const modelCount = methods.status === 'success' ? methods.data.methods.length : 0;
   // The hero's figures all come from E3 (and E11 for the models); null shows a calm placeholder.
   const stats: [string, string | null][] = [
     ['Addresses', snapshot ? formatCount(snapshot.addressCount) : null],
     ['Transactions', list.status === 'success' ? formatCount(list.data.addresses.reduce((n, a) => n + a.txCount, 0)) : null],
     ...(modelCount ? ([['Models', formatCount(modelCount)]] as [string, string][]) : []),
-    ['Snapshot', snapshot ? formatDay(snapshot.snapshotDate) : null],
   ];
+
+  const coveredLine = lookup.status === 'unsupported' && coveredCount === null ? lookup.message : `${formatCount(coveredCount ?? 0)} addresses are covered.`;
 
   return (
     <div className="page page-select">
@@ -122,10 +127,7 @@ export function SelectScreen({ query }: { query: string | null }) {
             Bitcoin address
           </label>
           <p id="address-help" className="field-help">
-            Addresses start with 1, 3 or bc1.{' '}
-            {settings.capabilities.liveLookup
-              ? 'Addresses in the snapshot open at once; any other address can be fetched from the public blockchain.'
-              : 'Only addresses in the snapshot have results.'}
+            Starts with 1, 3 or bc1.
           </p>
           <div className="input-row">
             <input
@@ -180,25 +182,22 @@ export function SelectScreen({ query }: { query: string | null }) {
             testId="state-unsupported"
             actions={
               <button type="button" className="btn btn-secondary" onClick={reset}>
-                Clear and try another address
+                Try another address
               </button>
             }
           >
-            <p>{lookup.message}</p>
             {lookup.canLookupLive ? (
               <>
-                <p>
-                  You can fetch its most recent confirmed transactions from the public blockchain service. Only the address is sent to it, and the result is marked as live data.
-                </p>
+                <p>{coveredLine}</p>
                 <p>
                   <button type="button" className="btn btn-primary" aria-haspopup="dialog" onClick={() => setFetching(true)}>
-                    Fetch this address's public history
+                    Fetch its public history
                   </button>
                 </p>
-                <p>Or open one of these snapshot addresses:</p>
+                <p>Or open one of these:</p>
               </>
             ) : (
-              <p>The explorer only covers a fixed set of addresses chosen before any analysis. Try one of these instead:</p>
+              <p>{coveredCount === null ? 'Only some addresses are covered.' : `Only ${formatCount(coveredCount)} addresses are covered.`} Try one of these:</p>
             )}
             <ul className="example-list">
               {lookup.examples.map((a) => (
@@ -247,18 +246,12 @@ export function SelectScreen({ query }: { query: string | null }) {
       <section className="snapshot-section" aria-labelledby="snapshot-title">
         <div className="section-head">
           <h2 id="snapshot-title">Addresses in the snapshot</h2>
-          {snapshot ? (
-            <p className="section-meta">
-              {plural(snapshot.addressCount, 'address', 'addresses')} · snapshot of {formatDay(snapshot.snapshotDate)} ·{' '}
-              {snapshot.source}
-            </p>
-          ) : null}
         </div>
         {list.status === 'loading' ? <Loading label="Loading the address list…" block /> : null}
         {list.status === 'error' ? <ErrorState error={list.error} onRetry={list.retry} /> : null}
         {list.status === 'success' && list.data.addresses.length === 0 ? (
-          <StatePanel tone="empty" title="The snapshot has no addresses yet">
-            <p>Build the snapshot first (see the README), then reload this page.</p>
+          <StatePanel tone="empty" title="No addresses to show">
+            <p>Reload the page. If it stays empty, tell the team.</p>
           </StatePanel>
         ) : null}
         {list.status === 'success' && list.data.addresses.length > 0 ? <AddressTable addresses={list.data.addresses} /> : null}
@@ -311,7 +304,7 @@ function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
                 </td>
                 <td data-label="Unusual" className="num">
                   {a.history === 'insufficient' ? (
-                    <span className="badge badge-not-scored">Short history, not scored</span>
+                    <span className="badge badge-not-scored">Short history</span>
                   ) : a.flaggedCount > 0 ? (
                     <span className="unusual-count">
                       <Icon name="flag" className="flag-icon" /> {formatCount(a.flaggedCount)}{' '}

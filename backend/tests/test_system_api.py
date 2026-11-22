@@ -41,6 +41,7 @@ def test_health_is_503_while_the_models_load_then_200(make_client: Callable[...,
     starting = client.get("/api/health")
     assert starting.status_code == 503
     assert starting.json()["status"] == "unavailable" and "requestId" in starting.json()
+    assert (starting.json()["message"], starting.json()["hint"]) == ("The Explorer is still starting.", "Try again in a few seconds.")
     assert client.get("/api/config").status_code == 503
     release.set()
     wait_until_ready(client)
@@ -58,8 +59,9 @@ def test_a_failed_load_keeps_answering_503_and_logs_the_cause(make_client: Calla
     while "could not be loaded" not in caplog.text and time.monotonic() < deadline:
         time.sleep(0.02)
     response = client.get("/api/health")
-    assert response.status_code == 503 and response.json()["message"] == "The explorer service could not load its models."
+    assert response.status_code == 503 and response.json()["message"] == "The Explorer could not start."
     assert "models/fusion.joblib" in caplog.text and "models/fusion.joblib" not in response.text
+    assert response.json()["hint"] == "Try again in a minute."
 
 
 def test_config_is_what_the_front_end_needs(client: TestClient, settings: Settings) -> None:

@@ -41,14 +41,14 @@ const VIEWS = [
 
 /** Each failure, the heading it must show and the next action it must offer ('none' where the plan says none is needed). */
 const FAILURES = [
-  { name: 'network failure', error: new ApiError(0, { status: 'network', message: 'The explorer service did not respond.' }), title: "Couldn't reach the explorer service", action: 'Try again' },
+  { name: 'network failure', error: new ApiError(0, { status: 'network', message: "Can't reach the Explorer." }), title: "Can't reach the Explorer", action: 'Try again' },
   { name: 'timeout', error: new ApiError(0, { status: 'timeout', message: 'x' }), title: 'This is taking longer than it should', action: 'Try again' },
-  { name: 'server error', error: new ApiError(500, { status: 'server_error', message: 'Something unexpected happened.', requestId: 'abc123def456' }), title: 'Something went wrong on our side', action: 'Try again' },
-  { name: 'service starting', error: new ApiError(503, { status: 'unavailable', message: 'x' }), title: 'The service is starting', action: 'none' },
-  { name: 'busy', error: new ApiError(429, { status: 'rate_limited', message: 'x', retryAfterSeconds: 30 }), title: 'The service is busy', action: 'Try again now' },
+  { name: 'server error', error: new ApiError(500, { status: 'server_error', message: 'Something unexpected happened.', requestId: 'abc123def456' }), title: 'Something went wrong', action: 'Try again' },
+  { name: 'service starting', error: new ApiError(503, { status: 'unavailable', message: 'x' }), title: 'The Explorer is starting', action: 'none' },
+  { name: 'busy', error: new ApiError(429, { status: 'rate_limited', message: 'x', retryAfterSeconds: 30 }), title: 'The Explorer is busy', action: 'Try again now' },
   { name: 'too large', error: new ApiError(413, { status: 'too_large', message: 'x', hint: 'y' }), title: 'That request was too large', action: 'Choose an address' },
   { name: 'not found', error: new ApiError(404, { status: 'not_found', message: 'x' }), title: "There's nothing at this link", action: 'Go to the address list' },
-  { name: 'upstream failure', error: new ApiError(504, { status: 'upstream_timeout', message: 'x' }), title: 'The public blockchain service did not answer', action: 'Try again' },
+  { name: 'upstream failure', error: new ApiError(504, { status: 'upstream_timeout', message: 'x' }), title: "The blockchain service didn't answer", action: 'Try again' },
 ] as const;
 
 describe('every view says what failed and what to do next', () => {
@@ -71,7 +71,8 @@ describe('every view says what failed and what to do next', () => {
     mockControls.offline = true;
     start('#/about');
     expect(await screen.findByRole('heading', { level: 1, name: 'About and help' })).toBeInTheDocument();
-    expect(await screen.findByText(/The limits shown are the built-in ones/)).toBeInTheDocument();
+    expect(await screen.findByText('Not connected')).toBeInTheDocument();
+    expect(screen.queryByText(/built-in/)).not.toBeInTheDocument();
     expect(within(screen.getByRole('contentinfo')).getByText(settings.limitationLine)).toBeInTheDocument();
   });
 
@@ -88,7 +89,7 @@ describe('every view says what failed and what to do next', () => {
     const field = await screen.findByLabelText('Bitcoin address');
     await user.type(field, `${ex.mainAddress}{Enter}`);
     const form = screen.getByRole('region', { name: 'Look up an address' });
-    expect(await within(form).findByText("Couldn't reach the explorer service")).toBeInTheDocument();
+    expect(await within(form).findByText("Can't reach the Explorer")).toBeInTheDocument();
     expect(field).toHaveValue(ex.mainAddress);
     mockControls.offline = false;
     await user.click(within(form).getByRole('button', { name: 'Try again' }));
@@ -102,7 +103,7 @@ describe('every view says what failed and what to do next', () => {
     start('#/');
     const field = await screen.findByLabelText('Bitcoin address');
     await user.type(field, `${ex.mainAddress}{Enter}`);
-    expect(await within(screen.getByRole('region', { name: 'Look up an address' })).findByText('The service is starting')).toBeInTheDocument();
+    expect(await within(screen.getByRole('region', { name: 'Look up an address' })).findByText('The Explorer is starting')).toBeInTheDocument();
     mockControls.starting = false;
     await act(async () => vi.advanceTimersByTime(settings.web.requests.healthPollSeconds * 1000));
     expect(await screen.findByRole('heading', { level: 1, name: ex.mainAddress })).toBeInTheDocument();
@@ -126,7 +127,7 @@ describe('offline: the browser reports no connection', () => {
 
   test('the banner goes when the connection returns, and the service is asked at once', async () => {
     start('#/about');
-    await screen.findByText('Service ready');
+    await screen.findByText('Connected');
     goOffline(false);
     const asked = vi.spyOn(mockApi, 'health');
     goOffline(true);
@@ -138,8 +139,9 @@ describe('offline: the browser reports no connection', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     mockControls.offline = true;
     start(`#/address/${ex.mainAddress}`);
-    expect(await screen.findByText(/Your browser is offline/)).toBeInTheDocument();
-    expect(screen.getAllByText(/when your connection returns/).length).toBeGreaterThanOrEqual(2);
+    expect(await screen.findByText("Can't reach the Explorer")).toBeInTheDocument();
+    expect(screen.getByText('Check your connection. This page retries by itself, or press Try again.')).toBeInTheDocument();
+    expect(screen.getByTestId('offline-banner')).toHaveTextContent("You're offline. Pages you opened still work; the rest load when you reconnect.");
   });
 });
 

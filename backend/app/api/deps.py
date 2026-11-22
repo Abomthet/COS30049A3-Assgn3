@@ -98,8 +98,7 @@ def get_live(runtime: Annotated[Runtime, Depends(get_runtime)]) -> LiveService:
         Unavailable: The models are still loading, or failed to load (503).
     """
     if not runtime.settings.live_lookup:
-        raise Disabled("Live lookup is switched off on this server.",
-                       "Start the server with EXPLORER_LIVE_LOOKUP=on to fetch addresses outside the snapshot, or pick a snapshot address.")
+        raise Disabled("Fetching new addresses is turned off. Pick an address from the list.")
     require_ready(runtime)
     assert runtime.live is not None  # built with the explorer whenever the setting is on
     return runtime.live

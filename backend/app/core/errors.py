@@ -15,7 +15,6 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
 from functools import partial
 from typing import Any
 
@@ -257,18 +256,12 @@ async def handle_http_exception(request: Request, exc: Exception) -> JSONRespons
     return await handle_unexpected(request, exc)
 
 
-def _long_date(iso_day: str) -> str:
-    """2026-10-22 as '22 October 2026'."""
-    day = datetime.strptime(iso_day, "%Y-%m-%d")
-    return f"{day.day} {day:%B %Y}"
-
-
 async def handle_unsupported(request: Request, exc: Exception) -> JSONResponse:
     """Assignment 2's `Unsupported`: a valid address that is not in the snapshot (404), with three that are."""
     runtime: Runtime = request.app.state.runtime
     facts = runtime.facts
     assert facts is not None  # the Predictor that raised this is loaded
-    message = f"This address is not among the {facts.address_count} addresses of the {_long_date(facts.date)} snapshot."
+    message = f"This address is not one of the {facts.address_count} in the snapshot."
     return error_response(request, 404, "unsupported", message, examples=list(facts.examples),
                           can_lookup_live=runtime.settings.live_lookup)
 
@@ -290,8 +283,7 @@ async def handle_value_error(request: Request, exc: Exception) -> JSONResponse:
 async def handle_missing_file(request: Request, exc: Exception) -> JSONResponse:
     """A model or table the service needs is missing (503)."""
     log.error("%s a required file is missing: %s", request_id_of(request), exc)
-    return error_response(request, 503, "unavailable", "A file the service needs is missing.",
-                          hint="Check the installation as the README describes, then try again.")
+    return error_response(request, 503, "unavailable", "A data file is missing.", hint="Try again, or tell the team.")
 
 
 async def handle_unexpected(request: Request, exc: Exception) -> JSONResponse:

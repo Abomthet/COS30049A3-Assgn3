@@ -20,27 +20,32 @@ export const KIND_LABEL: Record<AddressKind, string> = {
   segwit: 'SegWit (future version)',
 };
 
-const FORMAT_HINT = 'Bitcoin addresses start with 1, 3 or bc1. Check for a missing or extra character, or pick an address from the list.';
+// One sentence per fault. The lookup box's helper line already gives the format, so no message carries a hint
+// (`hint` stays in the verdict, empty, because shared/address_vectors.json and the server's error body have the field).
+const NOT_BITCOIN = "That isn't a Bitcoin address.";
+const TESTNET = 'That is a test-network address. Enter a main-network address.';
+const BAD_BC1 = "That isn't a valid bc1 address. Check it for a typo.";
+const TYPO = 'Check the address for a typo.';
 
-function invalid(message: string, hint = FORMAT_HINT): AddressCheck {
-  return { ok: false, message, hint };
+function invalid(message: string): AddressCheck {
+  return { ok: false, message, hint: '' };
 }
 
 /** Checks a typed Bitcoin address in the browser, format and checksum, and says what is wrong before any request is sent. */
 export function validateAddress(input: string): AddressCheck {
   const value = input.trim();
   if (value === '') {
-    return invalid('Enter a Bitcoin address.', 'Paste an address, or pick one from the list below.');
+    return invalid('Paste a Bitcoin address or pick one from the list.');
   }
   if (/\s/.test(value)) {
-    return invalid('Bitcoin addresses never contain spaces.');
+    return invalid('Remove the spaces.');
   }
   const lower = value.toLowerCase();
   if (/^0x[0-9a-f]{40}$/.test(lower)) {
-    return invalid('This looks like an Ethereum address.', 'The explorer only covers Bitcoin. Bitcoin addresses start with 1, 3 or bc1.');
+    return invalid('That looks like an Ethereum address. Enter a Bitcoin address.');
   }
   if (lower.startsWith('tb1') || lower.startsWith('bcrt1')) {
-    return invalid('This is a Bitcoin test-network address.', 'The explorer only covers the main Bitcoin network, whose addresses start with 1, 3 or bc1.');
+    return invalid(TESTNET);
   }
   if (lower.startsWith('bc1')) {
     return checkSegwit(value);
@@ -48,7 +53,7 @@ export function validateAddress(input: string): AddressCheck {
   if (value[0] === '1' || value[0] === '3' || value[0] === 'm' || value[0] === 'n' || value[0] === '2') {
     return checkBase58(value);
   }
-  return invalid('This is not a Bitcoin address.');
+  return invalid(NOT_BITCOIN);
 }
 
 // ---------------------------------------------------------------- Base58Check
@@ -107,26 +112,24 @@ export function base58CheckEncode(version: number, payload: Uint8Array): string 
 
 function checkBase58(value: string): AddressCheck {
   if (value.length < 26 || value.length > 35) {
-    return invalid(`This address has ${value.length} characters; legacy Bitcoin addresses have 26 to 35.`);
+    return invalid(`${value.length} characters; this kind has 26 to 35.`);
   }
   const bad = [...value].find((ch) => !BASE58.includes(ch));
   if (bad) {
-    const why = '0OIl'.includes(bad) ? ' (0, O, I and l are never used, to avoid confusion)' : '';
-    return invalid(`The character "${bad}" can't appear in this kind of address${why}.`);
+    return invalid(`"${bad}" isn't allowed. Remove it.`);
   }
   const bytes = base58Decode(value);
-  const typo = 'This address fails its checksum, so it probably contains a typo.';
   // A wrong decoded length is also what a single mistyped character usually produces.
-  if (!bytes || bytes.length !== 25) return invalid(typo);
+  if (!bytes || bytes.length !== 25) return invalid(TYPO);
   const body = bytes.slice(0, 21);
   const checksum = doubleSha(body).slice(0, 4);
-  if (!checksum.every((b, i) => b === bytes[21 + i])) return invalid(typo);
+  if (!checksum.every((b, i) => b === bytes[21 + i])) return invalid(TYPO);
   if (body[0] === 0x00) return { ok: true, address: value, kind: 'p2pkh' };
   if (body[0] === 0x05) return { ok: true, address: value, kind: 'p2sh' };
   if (body[0] === 0x6f || body[0] === 0xc4) {
-    return invalid('This is a Bitcoin test-network address.', 'The explorer only covers the main Bitcoin network, whose addresses start with 1, 3 or bc1.');
+    return invalid(TESTNET);
   }
-  return invalid('This is not a Bitcoin address.');
+  return invalid(NOT_BITCOIN);
 }
 
 // ------------------------------------------------------------- Bech32 / Bech32m
@@ -183,33 +186,32 @@ export function segwitEncode(version: number, program: Uint8Array, hrp = 'bc'): 
 
 function checkSegwit(value: string): AddressCheck {
   if (value !== value.toLowerCase() && value !== value.toUpperCase()) {
-    return invalid('This address mixes upper- and lower-case letters, which bc1 addresses never do.');
+    return invalid('bc1 addresses are all lower case.');
   }
   const address = value.toLowerCase();
   if (address.length < 14 || address.length > 90) {
-    return invalid(`This address has ${address.length} characters; bc1 addresses have 42 or 62.`);
+    return invalid(`${address.length} characters; bc1 addresses have 42 or 62.`);
   }
   const body = address.slice(3);
   const bad = [...body].find((ch) => !CHARSET.includes(ch));
   if (bad) {
-    const why = '1bio'.includes(bad) ? ' (after "bc1", the characters 1, b, i and o are never used)' : '';
-    return invalid(`The character "${bad}" can't appear in a bc1 address${why}.`);
+    return invalid(`"${bad}" isn't allowed. Remove it.`);
   }
   const data = [...body].map((ch) => CHARSET.indexOf(ch));
   const check = polymod([...hrpExpand('bc'), ...data]);
   const version = data[0];
   const expected = version === 0 ? BECH32_CONST : BECH32M_CONST;
   if (check !== expected) {
-    return invalid('This address fails its checksum, so it probably contains a typo.');
+    return invalid(TYPO);
   }
   const program = convertBits(data.slice(1, -6), 5, 8, false);
   if (!program || version > 16 || program.length < 2 || program.length > 40) {
-    return invalid('This bc1 address is not a valid SegWit address.');
+    return invalid(BAD_BC1);
   }
   if (version === 0) {
     if (program.length === 20) return { ok: true, address, kind: 'p2wpkh' };
     if (program.length === 32) return { ok: true, address, kind: 'p2wsh' };
-    return invalid('This bc1q address has the wrong length.');
+    return invalid(BAD_BC1);
   }
   if (version === 1 && program.length === 32) return { ok: true, address, kind: 'p2tr' };
   return { ok: true, address, kind: 'segwit' };

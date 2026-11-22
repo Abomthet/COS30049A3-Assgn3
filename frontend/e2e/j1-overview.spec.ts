@@ -8,8 +8,10 @@ test('J1: pick an address from the list and read its overview', async ({ page, g
   await expect(list.getByRole('row')).not.toHaveCount(1);
   await guard.noSidewaysScroll('on the address list');
 
-  // The address list names the snapshot's source and date.
-  await expect(page.getByText(/snapshot of \d+ \w+ \d{4}/).first()).toBeVisible();
+  // The header strip names the snapshot's date and source, once; the list repeats neither.
+  await expect(page.getByTestId('header-meta')).toHaveText(/^Snapshot of \d+ \w+ \d{4} · .+$/);
+  await expect(page.getByTestId('header-meta')).not.toContainText('days in UTC');
+  await expect(page.locator('.section-meta')).toHaveCount(0);
 
   await list.getByRole('link', { name: `full address ${examples.mainAddress}` }).click();
   await expect(page).toHaveURL(new RegExp(`#/address/${examples.mainAddress}`));

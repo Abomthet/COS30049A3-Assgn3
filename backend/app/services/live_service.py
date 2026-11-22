@@ -40,7 +40,7 @@ HOUR_SECONDS = 3600
 BUSY_RETRY_SECONDS = 10  # what a second lookup is told to wait while one is running: a fetch of 500 transactions takes about that long
 KEEP_JOBS = 50
 TERMINAL = ("done", "failed", "cancelled")
-SLOW_HINT = "Try again in a minute, or pick one of the snapshot addresses."
+SLOW_HINT = "Try again in a minute, or pick a snapshot address."
 EVENT_FOR_STATUS = {"done": "done", "failed": "failed"}
 
 
@@ -130,16 +130,15 @@ class LiveService:
                 self._emit(job, "done")
                 return job, True
             if any(j.address == address and not j.finished for j in self._jobs.values()):
-                raise Conflict("A lookup for this address is already running.", "Wait for it to finish, or cancel it first.")
+                raise Conflict("This address is already being fetched.", "Wait, or cancel it.")
             if self._running():
-                raise RateLimited("Another lookup is running; only one runs at a time.", BUSY_RETRY_SECONDS,
-                                  "Wait a few seconds and ask again.")
+                raise RateLimited("Another fetch is running.", BUSY_RETRY_SECONDS, "Try again in a few seconds.")
             while self._starts and now - self._starts[0] >= HOUR_SECONDS:
                 self._starts.popleft()
             if len(self._starts) >= self._limits.lookups_per_hour:
                 wait = max(1, math.ceil(self._starts[0] + HOUR_SECONDS - now))
-                raise RateLimited(f"At most {self._limits.lookups_per_hour} lookups an hour are allowed.", wait,
-                                  f"Try again in {math.ceil(wait / 60)} minutes, or pick one of the snapshot addresses.")
+                raise RateLimited(f"{self._limits.lookups_per_hour} fetches an hour are allowed.", wait,
+                                  f"Try again in {math.ceil(wait / 60)} minutes, or pick a snapshot address.")
             self._starts.append(now)
             job = self._new_job(address, max_tx, now)  # reserves the one place while the first request is made below
         client = self._esplora()
@@ -189,10 +188,9 @@ class LiveService:
             raise self._upstream(error) from error
         except (KeyError, TypeError, ValueError) as error:
             log.warning("The address reply of the public service has an unexpected shape (%s)", error.__class__.__name__)
-            raise UpstreamError("The public blockchain service sent an answer this service cannot read.", SLOW_HINT) from error
+            raise UpstreamError("It sent something we can't read.", SLOW_HINT) from error
         if total == 0:
-            raise NotFound("This address has no confirmed transactions yet, so there is nothing to fetch.",
-                           "Pick one of the snapshot addresses, or try an address that has been used.")
+            raise NotFound("This address has no confirmed transactions yet.")
         return total
 
     @staticmethod
@@ -238,7 +236,7 @@ class LiveService:
             self._fail(job, self._upstream(error))
         except ValueError as error:  # `build_transactions`: a value is missing, so the service's reply changed shape
             log.warning("Scoring %s failed on the reply's shape: %s", job.address, error)
-            self._fail(job, UpstreamError("The public blockchain service sent data this service cannot read.", SLOW_HINT))
+            self._fail(job, UpstreamError("It sent something we can't read.", SLOW_HINT))
         except Exception:
             log.exception("The lookup of %s failed unexpectedly", job.address)
             self._fail(job, None)

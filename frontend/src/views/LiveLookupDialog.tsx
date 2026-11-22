@@ -5,25 +5,25 @@ import { Dialog } from '../components/Dialog';
 import { ErrorState } from '../components/ErrorState';
 import { clearRequestCache } from '../hooks/useRequest';
 import { useToasts } from '../hooks/useToasts';
-import { formatCount, plural, shortAddress } from '../lib/format';
+import { formatCount } from '../lib/format';
 import { navigate, paths } from '../lib/router';
 
 // V8 — the live lookup (S-09, R8): a dialog over V1. It starts the lookup (E16), follows it as server-sent events (E18)
 // and, if the stream fails, polls E17 every two seconds; it shows the pages and transactions fetched against the cap, and
 // Cancel stops the fetch (E19). When the lookup is done the overview of the address opens, marked as live data.
-// It is fetched only when "Fetch this address's public history" is selected, so the first screen does not carry it.
+// It is fetched only when "Fetch its public history" is selected, so the first screen does not carry it.
 
 const POLL_MS = 2000;
 
 type View = { phase: 'starting' } | { phase: 'running'; lookup: LiveLookup; via: 'stream' | 'polling' } | { phase: 'error'; error: ApiError };
 
-const asError = (err: unknown) => (err instanceof ApiError ? err : new ApiError(0, { status: 'network', message: 'The explorer service did not respond.' }));
+const asError = (err: unknown) => (err instanceof ApiError ? err : new ApiError(0, { status: 'network', message: "Can't reach the Explorer." }));
 
 function describe(lookup: LiveLookup): string {
-  const { pages, transactions, cap } = lookup.progress;
-  if (lookup.status === 'scoring') return `Fetched ${plural(transactions, 'transaction')}. Scoring them against the address's own history…`;
-  if (lookup.status === 'queued' || transactions === 0) return 'Asking the public blockchain service for the history…';
-  return `Fetched ${formatCount(transactions)} of ${formatCount(cap)} transactions (${plural(pages, 'page')}).`;
+  const { transactions, cap } = lookup.progress;
+  if (lookup.status === 'scoring') return `Scoring ${formatCount(transactions)} transactions…`;
+  if (lookup.status === 'queued' || transactions === 0) return 'Contacting the blockchain service…';
+  return `${formatCount(transactions)} of ${formatCount(cap)} transactions`;
 }
 
 /** V8, the live lookup dialog: starts fetching an address's public history and follows its progress until it is done or cancelled. */
@@ -53,7 +53,7 @@ export default function LiveLookupDialog({ address, method, onClose }: { address
       stop();
       if (lookup.status === 'done') {
         clearRequestCache(); // the address list and any earlier answers for this address are out of date now
-        notify({ message: `Fetched ${plural(lookup.progress.transactions, 'transaction')} of ${shortAddress(address)}.`, tone: 'success' });
+        notify({ message: `Fetched ${formatCount(lookup.progress.transactions)} transactions.`, tone: 'success' });
         navigate(paths.timeline(address, method as never));
       } else if (lookup.status === 'failed') {
         const body = lookup.error;
@@ -108,11 +108,10 @@ export default function LiveLookupDialog({ address, method, onClose }: { address
   const plain = body && ['conflict', 'rate_limited', 'not_found', 'disabled'].includes(body.status);
 
   return (
-    <Dialog title="Fetching this address's public history" describedBy="live-help" onClose={close}>
+    <Dialog title="Fetching public history" describedBy="live-help" onClose={close}>
       <p className="dialog-address mono">{address}</p>
       <p id="live-help" className="field-help">
-        The most recent confirmed transactions are read from the public blockchain service. Only the address is sent to it. The result is kept on this
-        computer and marked as live data.
+        Only the address is sent. The result stays on this computer.
       </p>
       {view.phase === 'error' ? (
         plain ? (

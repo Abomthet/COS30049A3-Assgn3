@@ -127,7 +127,7 @@ function stepJob(job: MockJob): void {
   if (lookup.status === 'fetching') {
     const pages = lookup.progress.pages + 1;
     if (mockControls.liveFailAfterPages > 0 && pages > mockControls.liveFailAfterPages) {
-      publish(job, { status: 'failed', finishedAt: new Date().toISOString(), error: { status: 'upstream_error', message: 'The public blockchain service answered with an error.', hint: 'Try again in a minute, or pick one of the snapshot addresses.' } });
+      publish(job, { status: 'failed', finishedAt: new Date().toISOString(), error: { status: 'upstream_error', message: 'The public blockchain service answered with an error.', hint: 'Try again in a minute, or pick a snapshot address.' } });
       return;
     }
     publish(job, { progress: { pages, transactions: Math.min(pages * 25, cap), cap, total: MOCK_TOTAL } });
@@ -143,11 +143,11 @@ function stepJob(job: MockJob): void {
 function startJob(address: string): LiveLookup {
   const check = validateAddress(address);
   if (!check.ok) throw invalid(check.message, check.hint, 'address');
-  if (!mockControls.liveLookup) throw new ApiError(403, { status: 'disabled', message: 'Live lookup is switched off on this server.', hint: 'Start the server with EXPLORER_LIVE_LOOKUP=on.' });
+  if (!mockControls.liveLookup) throw new ApiError(403, { status: 'disabled', message: 'Fetching new addresses is turned off. Pick an address from the list.' });
   if (ADDRESSES.addresses.some((a) => a.address === check.address) && !fetchedWorld.has(check.address)) {
-    throw new ApiError(409, { status: 'conflict', message: 'This address is part of the snapshot.' });
+    throw new ApiError(409, { status: 'conflict', message: 'Snapshot addresses cannot be removed.' });
   }
-  if (mockControls.liveFailAfterPages < 0) throw new ApiError(502, { status: 'upstream_error', message: 'The public blockchain service answered with an error.', hint: 'Try again in a minute, or pick one of the snapshot addresses.' });
+  if (mockControls.liveFailAfterPages < 0) throw new ApiError(502, { status: 'upstream_error', message: 'The public blockchain service answered with an error.', hint: 'Try again in a minute, or pick a snapshot address.' });
   const now = new Date().toISOString().slice(0, 19) + 'Z';
   const id = `mock${++jobCounter}`;
   const cap = Math.min(WEB.live.defaultMaxTx, RECORDED[0].timeline.totals.txCount);
@@ -189,11 +189,11 @@ function respond<T>(work: () => T, opts?: RequestOptions): Promise<T> {
       if (timedOut) {
         reject(new ApiError(0, { status: 'timeout', message: 'This is taking longer than it should.' }));
       } else if (mockControls.offline) {
-        reject(new ApiError(0, { status: 'network', message: 'The explorer service did not respond.' }));
+        reject(new ApiError(0, { status: 'network', message: "Can't reach the Explorer." }));
       } else if (mockControls.starting) {
-        reject(new ApiError(503, { status: 'unavailable', message: 'The service is starting. This page will load by itself.' }));
+        reject(new ApiError(503, { status: 'unavailable', message: 'The Explorer is still starting.' }));
       } else if (mockControls.busyForSeconds > 0) {
-        reject(new ApiError(429, { status: 'rate_limited', message: 'The service is busy.', retryAfterSeconds: mockControls.busyForSeconds }));
+        reject(new ApiError(429, { status: 'rate_limited', message: 'The Explorer is busy.', retryAfterSeconds: mockControls.busyForSeconds }));
       } else {
         try {
           resolve(work());
@@ -240,8 +240,8 @@ function recordedFor(recorded: RecordedAddress, method: MethodId = DEFAULT_METHO
   if (method === 'txgpt_method' && recorded.timeline.live) {
     throw new ApiError(400, {
       status: 'invalid',
-      message: 'This method has no scores for a fetched address.',
-      hint: "TxGPT's scores are prepared in advance for the snapshot; choose another method.",
+      message: 'TxGPT has no scores for a fetched address.',
+      hint: 'Choose another model.',
       fields: [{ name: 'method', message: 'Not available for a fetched address.' }],
     });
   }
@@ -356,7 +356,7 @@ export const mockApi: ExplorerApi = {
       const recorded = recordedFor(requireAddress(address), opts?.method).details[txid.toLowerCase()];
       if (recorded?.status === 200) return recorded.body;
       if (recorded?.status === 422) throw new ApiError(422, recorded.body);
-      throw new ApiError(404, { status: 'not_found', message: "This transaction is not one of this address's transactions in the snapshot." });
+      throw new ApiError(404, { status: 'not_found', message: "This transaction isn't in the snapshot for this address.", hint: 'Pick one from the list.' });
     }, opts),
 
   whatIf: (address, body, opts) =>
@@ -433,9 +433,9 @@ export const mockApi: ExplorerApi = {
   forgetAddress: (address, opts) =>
     respond<void>(() => {
       const check = validateAddress(address);
-      if (!mockControls.liveLookup) throw new ApiError(403, { status: 'disabled', message: 'Live lookup is switched off on this server.' });
+      if (!mockControls.liveLookup) throw new ApiError(403, { status: 'disabled', message: 'Fetching new addresses is turned off. Pick an address from the list.' });
       if (!check.ok) throw invalid(check.message, check.hint, 'address');
-      if (ADDRESSES.addresses.some((a) => a.address === check.address)) throw new ApiError(409, { status: 'conflict', message: 'This address is part of the snapshot, which cannot be changed.' });
+      if (ADDRESSES.addresses.some((a) => a.address === check.address)) throw new ApiError(409, { status: 'conflict', message: 'Snapshot addresses cannot be removed.' });
       if (!fetchedWorld.delete(check.address)) throw new ApiError(404, { ...UNSUPPORTED, canLookupLive: true });
       watched = watched.filter((e) => e.address !== check.address);
     }, opts),

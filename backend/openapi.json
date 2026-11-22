@@ -2559,8 +2559,8 @@
               "name": "address"
             }
           ],
-          "hint": "Bitcoin addresses start with 1, 3 or bc1. Check for a missing or extra character, or pick an address from the list.",
-          "message": "This address fails its checksum, so it probably contains a typo.",
+          "hint": "Check the value and try again.",
+          "message": "Check the address for a typo.",
           "requestId": "0f3c9a1e7b2d",
           "status": "invalid"
         }

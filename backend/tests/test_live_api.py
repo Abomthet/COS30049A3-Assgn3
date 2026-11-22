@@ -124,6 +124,8 @@ def test_everything_answers_403_disabled_when_live_lookup_is_off(settings: Setti
         response = off.request(method, path, json=body)
         assert response.status_code == 403, path
         assert response.json()["status"] == "disabled" and response.json()["requestId"]
+        assert response.json()["message"] == "Fetching new addresses is turned off. Pick an address from the list."
+        assert "EXPLORER_" not in response.text and "hint" not in response.json()
     assert off.get("/api/health").json()["liveLookup"] is False
     missing = off.post("/api/lookup", json={"address": VALID_OUTSIDE_SNAPSHOT})
     assert missing.status_code == 404 and missing.json()["canLookupLive"] is False
@@ -240,6 +242,7 @@ def test_txgpt_has_no_scores_for_a_fetched_address(client: TestClient) -> None:
     for path in (f"/api/addresses/{A}/timeline", f"/api/addresses/{A}/transactions", f"/api/addresses/{A}/export"):
         response = client.get(path, params={"method": "txgpt_method"})
         assert response.status_code == 400 and response.json()["fields"][0]["name"] == "method", path
+        assert (response.json()["message"], response.json()["hint"]) == ("TxGPT has no scores for a fetched address.", "Choose another model.")
     assert client.get(f"/api/addresses/{RUNNING_EXAMPLE}/timeline", params={"method": "txgpt_method"}).status_code == 200
 
 
@@ -299,7 +302,7 @@ def test_max_tx_is_checked_against_the_settings(client: TestClient) -> None:
 
 def test_a_malformed_address_or_an_unknown_field_is_400(client: TestClient) -> None:
     bad = lookup(client, "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNb")
-    assert bad.status_code == 400 and "checksum" in bad.json()["message"].lower()
+    assert bad.status_code == 400 and bad.json()["message"] == "Check the address for a typo."
     assert client.post("/api/live/lookups", json={"address": A, "extra": 1}).status_code == 400
     assert client.post("/api/live/lookups", content=b"not json", headers={"content-type": "application/json"}).status_code == 400
     assert client.post("/api/live/lookups", json={}).status_code == 400
@@ -310,6 +313,7 @@ def test_a_malformed_address_or_an_unknown_field_is_400(client: TestClient) -> N
 def test_an_address_with_no_confirmed_transactions_is_404_not_found(client: TestClient, fake: FakeEsplora) -> None:
     response = lookup(client, "1111111111111111111114oLvT2")  # a valid address that nobody has used
     assert response.status_code == 404 and response.json()["status"] == "not_found"
+    assert response.json()["message"] == "This address has no confirmed transactions yet."
     assert lookup(client, A).status_code == 202  # the failed lookup freed the one place
 
 
@@ -349,6 +353,7 @@ def test_a_reply_that_cannot_be_read_ends_the_lookup_as_failed(client: TestClien
         tx["fee"] = None  # the service's reply changed shape
     ended = finish(client, lookup(client, A).json()["id"])
     assert ended["status"] == "failed" and ended["error"]["status"] == "upstream_error"
+    assert (ended["error"]["message"], ended["error"]["hint"]) == ("It sent something we can't read.", "Try again in a minute, or pick a snapshot address.")
 
 
 # ---------------------------------------------------------------- limits
@@ -359,8 +364,10 @@ def test_a_lookup_for_an_address_already_running_is_409_and_another_address_wait
     assert first.status_code == 202 and fake.waiting.wait(10)
     same = lookup(client, A)
     assert same.status_code == 409 and same.json()["status"] == "conflict"
+    assert (same.json()["message"], same.json()["hint"]) == ("This address is already being fetched.", "Wait, or cancel it.")
     other = lookup(client, B)
     assert other.status_code == 429 and other.json()["status"] == "rate_limited" and int(other.headers["retry-after"]) >= 1
+    assert (other.json()["message"], other.json()["hint"]) == ("Another fetch is running.", "Try again in a few seconds.")
     assert client.delete(f"/api/addresses/{A}").status_code == 409  # being fetched
     fake.gate.set()
     assert finish(client, first.json()["id"])["status"] == "done"
@@ -379,6 +386,9 @@ def test_six_lookups_an_hour_and_the_seventh_waits_with_retry_after(client: Test
     assert refused.status_code == 429 and refused.json()["status"] == "rate_limited"
     first_start = 1_000_060
     assert int(refused.headers["retry-after"]) == first_start + 3600 - int(now[0])
+    minutes = -(-int(refused.headers["retry-after"]) // 60)
+    assert refused.json()["message"] == "6 fetches an hour are allowed."
+    assert refused.json()["hint"] == f"Try again in {minutes} minutes, or pick a snapshot address."
     now[0] = first_start + 3600  # an hour after the first, one place is free
     assert lookup(client, ADDRESSES[6], maxTx=50).status_code == 202
 
@@ -524,6 +534,7 @@ def test_e20_forgets_a_fetched_address_and_its_file(start: Callable[..., TestCli
 def test_e20_refuses_a_snapshot_address_and_a_malformed_one(client: TestClient) -> None:
     refused = client.delete(f"/api/addresses/{RUNNING_EXAMPLE}")
     assert refused.status_code == 409 and refused.json()["status"] == "conflict"
+    assert refused.json()["message"] == "Snapshot addresses cannot be removed."
     assert client.get(f"/api/addresses/{RUNNING_EXAMPLE}/timeline").status_code == 200
     assert client.delete("/api/addresses/not-an-address").status_code == 400
     assert client.delete(f"/api/addresses/{VALID_OUTSIDE_SNAPSHOT}").status_code == 404

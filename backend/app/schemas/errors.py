@@ -50,8 +50,8 @@ class ErrorBody(CamelModel):
     model_config = ConfigDict(
         json_schema_extra={"example": {
             "status": "invalid",
-            "message": "This address fails its checksum, so it probably contains a typo.",
-            "hint": "Bitcoin addresses start with 1, 3 or bc1. Check for a missing or extra character, or pick an address from the list.",
+            "message": "Check the address for a typo.",
+            "hint": "Check the value and try again.",
             "fields": [{"name": "address", "message": "Checksum does not match."}],
             "requestId": "0f3c9a1e7b2d"}})
 

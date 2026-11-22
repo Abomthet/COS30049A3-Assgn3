@@ -30,7 +30,7 @@ function Entry({ entry, onEdit, onRemove }: { entry: WatchlistEntry; onEdit: () 
       <p className="watch-counts">
         {plural(summary.txCount, 'transaction')} · {formatCount(summary.scoredCount)} scored ·{' '}
         {summary.history === 'insufficient' ? (
-          <span className="badge badge-not-scored">Short history, not scored</span>
+          <span className="badge badge-not-scored">Short history</span>
         ) : summary.flaggedCount > 0 ? (
           <span className="unusual-count">
             <Icon name="flag" className="flag-icon" /> {formatCount(summary.flaggedCount)} unusual

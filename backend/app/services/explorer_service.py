@@ -25,6 +25,7 @@ from pydantic import TypeAdapter
 
 from ..core.config import ListLimits
 from ..core.errors import InvalidRequest, NotFound, needs_correcting
+from ..core.method_names import short_name
 from ..core.validation import is_day, passed, validate_address
 from ..schemas.addresses import (AddressesResponse, AddressSummary, LiveInfo, LookupResponse, PageSize, TimelineResponse,
                                  TransactionFilters, TransactionRow, TransactionsQuery, TransactionsResponse)
@@ -134,8 +135,7 @@ class ExplorerService:
         """
         data = self._store.get(address)
         if data.source == "live" and method in PRECOMPUTED_ONLY:
-            raise InvalidRequest("This method has no scores for a fetched address.",
-                                 "TxGPT's scores are prepared in advance for the snapshot; choose another method.",
+            raise InvalidRequest(f"{short_name(method)} has no scores for a fetched address.", "Choose another model.",
                                  [FieldError(name="method", message="Not available for a fetched address.")])
         return data
 
@@ -287,8 +287,7 @@ class ExplorerService:
         """
         data = self._data(address, method)
         if txid not in data.features.index:
-            raise NotFound("This transaction is not one of this address's transactions in the snapshot.",
-                           "Check the link, or pick a transaction from the address's list.")
+            raise NotFound("This transaction isn't in the snapshot for this address.", "Pick one from the list.")
         method = method or self._default
         view = self._cached(method, address)
         transaction = view.transactions[txid]

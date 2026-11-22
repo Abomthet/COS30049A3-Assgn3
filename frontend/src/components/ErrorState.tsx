@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import type { ApiError } from '../api/types';
-import { useOnline } from '../hooks/useOnline';
 import { DEFAULT_METHOD, refusesMethod, withMethod } from '../lib/methods';
 import { navigate, paths } from '../lib/router';
 import { useMethodLabels } from '../hooks/useMethods';
@@ -37,7 +36,7 @@ function BusyPanel({ seconds, onRetry, headingLevel }: { seconds: number; onRetr
   return (
     <StatePanel
       tone="warning"
-      title="The service is busy"
+      title="The Explorer is busy"
       headingLevel={headingLevel}
       testId="state-rate-limited"
       actions={
@@ -48,7 +47,7 @@ function BusyPanel({ seconds, onRetry, headingLevel }: { seconds: number; onRetr
     >
       <p>Too many requests came in at once. This page tries again in <strong aria-hidden="true">{formatWait(left)}</strong>.</p>
       <p className="sr-only" role="status">
-        The service is busy. This page tries again by itself in {formatWait(seconds)}.
+        The Explorer is busy. This page tries again by itself in {formatWait(seconds)}.
       </p>
     </StatePanel>
   );
@@ -57,7 +56,6 @@ function BusyPanel({ seconds, onRetry, headingLevel }: { seconds: number; onRetr
 /** The feedback panel for an API error: it says what happened and offers a next action, such as Try again; used across the screens and dialogs. */
 export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiError; onRetry: () => void; headingLevel?: 2 | 3 }) {
   const body = error.body;
-  const online = useOnline();
   const labels = useMethodLabels();
   const retry = (
     <button type="button" className="btn btn-secondary" onClick={onRetry}>
@@ -139,10 +137,8 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
       );
     case 'network':
       return (
-        <StatePanel tone="error" title="Couldn't reach the explorer service" headingLevel={headingLevel} live="alert" actions={retry}>
-          <p>
-            {online ? body.message : "Your browser is offline."} This page reloads by itself when {online ? 'the service is back' : 'your connection returns'}, or you can try again now.
-          </p>
+        <StatePanel tone="error" title="Can't reach the Explorer" headingLevel={headingLevel} live="alert" actions={retry}>
+          <p>Check your connection. This page retries by itself, or press Try again.</p>
         </StatePanel>
       );
     case 'insufficient_history':
@@ -165,7 +161,7 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
       return (
         <StatePanel
           tone="error"
-          title="The public blockchain service did not answer"
+          title="The blockchain service didn't answer"
           headingLevel={headingLevel}
           live="alert"
           actions={
@@ -175,7 +171,9 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
             </>
           }
         >
-          <p>{body.message}</p>
+          <p>
+            {body.message} {'hint' in body ? body.hint : ''}
+          </p>
         </StatePanel>
       );
     case 'too_large':
@@ -210,19 +208,19 @@ export function ErrorState({ error, onRetry, headingLevel = 2 }: { error: ApiErr
     case 'timeout':
       return (
         <StatePanel tone="error" title="This is taking longer than it should" headingLevel={headingLevel} live="alert" actions={retry}>
-          <p>The explorer service did not answer in time. Try again in a moment.</p>
+          <p>The Explorer took too long. Try again.</p>
         </StatePanel>
       );
     case 'unavailable':
       return (
-        <StatePanel tone="warning" title="The service is starting" headingLevel={headingLevel} live="status">
-          <p>This page will load by itself as soon as the service is ready. Nothing else is needed.</p>
+        <StatePanel tone="warning" title="The Explorer is starting" headingLevel={headingLevel} live="status">
+          <p>This page will load by itself when it is ready.</p>
         </StatePanel>
       );
     case 'server_error':
       return (
-        <StatePanel tone="error" title="Something went wrong on our side" headingLevel={headingLevel} live="alert" actions={retry}>
-          <p>{body.message}</p>
+        <StatePanel tone="error" title="Something went wrong" headingLevel={headingLevel} live="alert" actions={retry}>
+          <p>Try again.</p>
           {body.requestId ? (
             <p className="small">
               Reference: <span className="mono">{body.requestId}</span> <CopyButton value={body.requestId} label="the reference" />
