@@ -3474,6 +3474,21 @@ select.text-input {
   .tx-row.is-selected:hover {
     box-shadow: inset 0 0 0 2px var(--series-1), 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
   }
+  /* Flagged items: the ring takes the flag orange, and the fill turns a little redder. */
+  .day-link:hover,
+  .tx-row.is-flagged:hover {
+    box-shadow: 0 0 0 1.5px var(--series-2), var(--hover-shadow);
+  }
+  .day-link:hover {
+    background: color-mix(in srgb, var(--flag-bg) 72%, var(--series-2));
+  }
+  /* A selected flagged row keeps its own fill (the :not stops this rule from taking it). */
+  .tx-row.is-flagged:not(.is-selected):hover {
+    background: color-mix(in srgb, var(--hover-bg) 82%, var(--series-2));
+  }
+  .tx-row.is-selected.is-flagged:hover {
+    box-shadow: inset 0 0 0 2px var(--series-1), 0 0 0 1.5px var(--series-2), var(--hover-shadow);
+  }
   .day-link:hover {
     border-color: transparent;
   }
@@ -3546,6 +3561,14 @@ select.text-input {
 }
 .tx-row.is-selected:focus-visible {
   box-shadow: inset 0 0 0 2px var(--series-1), 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
+}
+/* Flagged items: the keyboard ring is the flag orange too. */
+.day-link:focus-visible,
+.tx-row.is-flagged:focus-visible {
+  box-shadow: 0 0 0 1.5px var(--series-2), var(--hover-shadow);
+}
+.tx-row.is-selected.is-flagged:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--series-1), 0 0 0 1.5px var(--series-2), var(--hover-shadow);
 }
 .chip:focus-visible,
 .tabs a:focus-visible {
