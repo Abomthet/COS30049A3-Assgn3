@@ -112,3 +112,30 @@ into this branch first). In short:
 | Decision | Pending: keep or drop with the `ui-remake-apple` vote (by Fri 27 Nov). If dropped, `main` keeps A2's line. |
 | Changed artefacts | `backend/MODIFICATIONS.md` (Mod-19); the plan's quoted line (s08 "Always show", b-json examples) to be updated if approved |
 
+
+## Polish, logo and coin backdrop (25–26 Nov 2026)
+
+**Hover rules, as they now stand.** Hovers lift or tint. A coloured ring marks only a flagged item or a field with an error.
+
+- **Cards** (`46a2652`): a faint blue tint and a deeper shadow; no ring.
+- **Lookup box** (`255f4b5`, `d10180b`, `6caa64e`): lifts 4 px with the same tint and shadow; no ring on hover or while typing. The field shows the blue edge.
+- **Fields** (`03d63c8`): a clean 2 px blue edge while typing, not a 3 px outline. **Errors** (`5658568`): one red edge while focused (2 px thickening to 3 px).
+- **Segmented controls** (tabs, filter chips, chart period chips; `054622b`): grey on hover, no ring.
+- **Flagged items** (`633ea0a`): an orange ring on hover and focus, and a redder fill. The flagged row fill is based on the flag tint (88 %) (`4f34fca`), which keeps the dark-theme txid at 4.66:1, up from 3.48:1.
+- **Table rows** (`ce496eb`): a 12 % blue tint on hover (was 7 %); the light-theme grey text is darker (`#58585d`) so it keeps 6:1 on the tint.
+- **Chart cards** take no hover at all (`b145ebf`, so the charts stay readable); their own controls keep their hover.
+- **Table boxes** (snapshot table, transactions table) take no hover of their own (`cb63589`); the rows keep theirs.
+
+**Snapshot pager** (`0ff24d0`). The snapshot table shows 10 addresses a page, with a pager under it. When the page changes, focus moves to the table heading. Tests are in `frontend/tests/snapshotPages.test.tsx` (new) and the existing tests were updated.
+
+**Logo and favicon removed** (`324eb4c`). The header logo mark and the tab icon are gone (the user's call).
+
+**Coin backdrop, option 14b** (`5692d2c`). A fixed neon-coin backdrop on the home screen only.
+
+- **Where:** `frontend/src/styles/backdrop.css` (imported in `frontend/src/main.tsx`); the photo is `frontend/src/assets/bg-coins-neon.jpg`. It applies only while the hero is on the page (`:has(.hero)`). The dev-only playground and the other variants were deleted in the same commit.
+- **How it behaves:** two fixed layers at `z-index: -1`, a right cluster and a left accent with a soft radial fade. Both float out of phase (about 10 px and 1.5°, over 7 s and 8.5 s), with scroll-linked drift where `animation-timeline: scroll()` is supported. Both are overscanned so the rotation never shows an edge. On phones (600 px and under) the left accent is hidden and the whole backdrop is fainter. It is hidden under forced colours and in print.
+- **Accessibility:**
+  - Under reduced motion the coins stay still: no float, no drift.
+  - **No pause control.** The user decided not to add one, so the float does not meet WCAG 2.2.2 (Pause, Stop, Hide), which applies to automatic motion that lasts more than five seconds. A pause toggle is small to add later; it would stop both float animations and the scroll drift.
+  - Hero text contrast stays at or above 4.5:1 in both themes at 1280 and 390 px (worst case: the stat label, 5.97 dark and 4.94 light at 390 px).
+- **Photo credit:** Pexels, https://www.pexels.com/photo/bitcoins-on-black-surface-7267491/, under the Pexels licence (https://www.pexels.com/license/). A resized and recompressed copy. Also in `frontend/src/assets/PHOTO_CREDITS.md`.

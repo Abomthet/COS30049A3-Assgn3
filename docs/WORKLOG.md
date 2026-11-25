@@ -1312,3 +1312,30 @@ G1 sets its count scale and whole-number tick step itself, the replay draws it t
 the replay's charts do not animate, and the layout carries a `transition` only when animating. Checked with the
 owner's fetched address at 20 a second, light and dark. Commits `f4e6b46`, `eee47fe`, `76a7e49` (a draw queue tried in
 between was taken out again).
+
+## 2026-11-25/26 — Remake polish: hovers, snapshot pages, logo removal, coin backdrop (Sonnet 5.5 and Haiku 5.5; lead Opus 5.5)
+
+Polish on branch `ui-remake-apple` (not on `main`), one subagent task at a time, each reviewed by the lead in a browser before its commit.
+
+- **Hovers.**
+  - `46a2652`: cards lift with a faint blue tint and a deeper shadow instead of a ring.
+  - `054622b`: segmented controls (tabs, chips) go grey on hover with no ring.
+  - `633ea0a`: flagged items get an orange ring and a redder fill.
+  - `4f34fca`: the flagged row fill is based on the flag tint, which keeps the dark-theme txid contrast at 4.66:1, up from 3.48:1.
+  - `b145ebf`: chart cards take no hover (user: keep charts readable).
+  - `cb63589`: the big table boxes (snapshot table, transactions table) take no hover of their own; rows keep their tint.
+  - Also on 25–26 Nov, with the same rules: `ce496eb` (hovered table rows 12% blue tint, was 7%; light-theme grey text darkened so it keeps 6:1 on the tint); `255f4b5` (lookup box lifts 4px with a faint blue tint and a deeper shadow); `d10180b` and `6caa64e` (lookup box shows no ring, on hover or while typing; the field shows the blue edge instead); `03d63c8` (fields get a clean 2px blue edge while typing, not a 3px outline over the border); `5658568` (a field with an error shows one red edge while focused, 2px thickening to 3px).
+- **Snapshot table pages.** `0ff24d0`: 10 addresses a page with a pager; focus moves to the heading on a page change; tests updated plus new `snapshotPages.test.tsx`.
+- **Logo removal.** `324eb4c`: the header logo mark and the favicon are removed (the user's call).
+- **Background.**
+  - A dev-only playground (`9499f68`, `4283ad9`, `6206ae2`, `781efcd`, `2a7e619`, `e138c45`, `e98f300`) let the user try faint backgrounds 2, 5, 7, 9, 10 and 12, then photo variants 13 (silver coins) and 14 (neon teal/pink coins, Pexels licence).
+  - The user chose 14b: a fixed neon-coin backdrop on the home screen. A right cluster plus a left accent with a soft radial fade; both float out of phase (about 10px and 1.5°, over 7 s and 8.5 s); scroll-linked drift where supported (`animation-timeline: scroll()`); overscan so the rotation never shows an edge; faint on phones (the left accent is hidden at 600px and under); static under reduced motion; hidden under forced colours and print.
+  - `5692d2c` ships it as `frontend/src/styles/backdrop.css`, with the photo in `frontend/src/assets/` (credit in `frontend/src/assets/PHOTO_CREDITS.md`). It deletes the playground, the silver photo and the other variants.
+  - **Decision:** the user decided NOT to add a pause control. WCAG 2.2.2 (pause, stop, hide) is therefore not met for the float. Reduced-motion users get still coins. Adding a pause toggle later is small.
+- **Checks.**
+  - Hero text contrast is at or above 4.5:1 in both themes at 1280 and 390. The worst case is the stat label: 7.07 dark and 5.87 light at 1280; 5.97 dark and 4.94 light at 390.
+  - No sideways scroll at 1280 or 390.
+  - Front-end tests 773 passed; `npm run e2e:quick` 168 passed and 6 skipped.
+  - First-screen JS is 146.3 of 150 kB gzip; all budgets pass.
+- **Also.** The animation-principles skills (github.com/dylantarre/animation-principles, 144 skills) were installed in the local Claude Code setup (outside the repo).
+- **State.** Pushed to `assgn3/ui-remake-apple` only after the full clean-worktree suites passed. `main` is untouched; the merge into main awaits the team vote (Fri 27 Nov).
