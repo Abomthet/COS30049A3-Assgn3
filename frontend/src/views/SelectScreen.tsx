@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState, type FormEvent } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState, type FormEvent, type RefObject } from 'react';
 import { api } from '../api/client';
 import type { AddressSummary, ApiError } from '../api/types';
 import { AddressLink } from '../components/AddressLink';
@@ -43,6 +43,7 @@ export function SelectScreen({ query }: { query: string | null }) {
   const [fetching, setFetching] = useState(false);
   const { settings } = useSettings();
   const inputRef = useRef<HTMLInputElement>(null);
+  const snapshotHeading = useRef<HTMLHeadingElement>(null);
   // An address opens with the method the user chose last (V2's method menu remembers it).
   const [{ method, recent }] = usePreferences();
 
@@ -245,7 +246,10 @@ export function SelectScreen({ query }: { query: string | null }) {
 
       <section className="snapshot-section" aria-labelledby="snapshot-title">
         <div className="section-head">
-          <h2 id="snapshot-title">Addresses in the snapshot</h2>
+          {/* Focusable only by script: after a page change the focus moves here, so the new rows are read from the top. */}
+          <h2 id="snapshot-title" ref={snapshotHeading} tabIndex={-1}>
+            Addresses in the snapshot
+          </h2>
         </div>
         {list.status === 'loading' ? <Loading label="Loading the address list…" block /> : null}
         {list.status === 'error' ? <ErrorState error={list.error} onRetry={list.retry} /> : null}
@@ -254,14 +258,34 @@ export function SelectScreen({ query }: { query: string | null }) {
             <p>Reload the page. If it stays empty, tell the team.</p>
           </StatePanel>
         ) : null}
-        {list.status === 'success' && list.data.addresses.length > 0 ? <AddressTable addresses={list.data.addresses} /> : null}
+        {list.status === 'success' && list.data.addresses.length > 0 ? <AddressTable addresses={list.data.addresses} headingRef={snapshotHeading} /> : null}
       </section>
     </div>
   );
 }
 
-function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
+const PAGE_SIZE = 10;
+
+function AddressTable({ addresses, headingRef }: { addresses: AddressSummary[]; headingRef: RefObject<HTMLHeadingElement | null> }) {
   const [{ method }] = usePreferences();
+  // The list is not sorted or filtered here, so paging just cuts the list in order. A shorter list keeps the page in range.
+  const [page, setPage] = useState(0);
+  const pageCount = Math.ceil(addresses.length / PAGE_SIZE);
+  const current = Math.min(page, pageCount - 1);
+  const start = current * PAGE_SIZE;
+  const shown = addresses.slice(start, start + PAGE_SIZE);
+  // Focus moves to the section heading only after a click on the pager, never on first load.
+  const movedByUser = useRef(false);
+  useEffect(() => {
+    if (!movedByUser.current) return;
+    movedByUser.current = false;
+    headingRef.current?.focus();
+  }, [current]);
+  function goTo(next: number) {
+    if (next === current) return;
+    movedByUser.current = true;
+    setPage(next);
+  }
   return (
     <div className="card table-card">
       <table className="address-table">
@@ -282,7 +306,7 @@ function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
           </tr>
         </thead>
         <tbody>
-          {addresses.map((a) => {
+          {shown.map((a) => {
             const pct = a.scoredCount ? Math.round((a.flaggedCount / a.scoredCount) * 100) : 0;
             return (
               <tr key={a.address}>
@@ -319,6 +343,33 @@ function AddressTable({ addresses }: { addresses: AddressSummary[] }) {
           })}
         </tbody>
       </table>
+      {pageCount > 1 ? (
+        <nav className="snap-pager" aria-label="Snapshot pages">
+          <span className="snap-pager-count">{`${formatCount(start + 1)}–${formatCount(start + shown.length)} of ${formatCount(addresses.length)}`}</span>
+          <div className="snap-pager-controls">
+            <button type="button" className="btn btn-ghost" disabled={current === 0} onClick={() => goTo(current - 1)}>
+              Previous
+            </button>
+            <div className="snap-pager-pages">
+              {Array.from({ length: pageCount }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="snap-pager-page"
+                  aria-label={`Page ${i + 1}`}
+                  aria-current={i === current ? 'page' : undefined}
+                  onClick={() => goTo(i)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <button type="button" className="btn btn-ghost" disabled={current === pageCount - 1} onClick={() => goTo(current + 1)}>
+              Next
+            </button>
+          </div>
+        </nav>
+      ) : null}
     </div>
   );
 }

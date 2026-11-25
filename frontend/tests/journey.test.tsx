@@ -81,16 +81,27 @@ describe('usability walkthrough tasks', () => {
 
 describe('the address list (V1)', () => {
   test('every address has its type, counts and unusual count; a short history says so', async () => {
-    start();
+    // The list pages ten at a time (28 addresses: three pages), so every page is walked and the rows are counted across them.
+    const user = start();
     const table = await screen.findByRole('table');
-    const rows = within(table).getAllByRole('row').slice(1);
-    expect(rows).toHaveLength(28);
-    const main = rows.find((r) => within(r).queryByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) }))!;
-    expect(main).toHaveTextContent('Legacy (P2PKH)');
-    expect(within(main).getByText('377')).toBeInTheDocument();
-    expect(within(main).getByText('367')).toBeInTheDocument();
-    expect(main).toHaveTextContent('3 (1% of scored)');
-    expect(within(table).getAllByText('Short history')).toHaveLength(3);
+    const pager = screen.getByRole('navigation', { name: 'Snapshot pages' });
+    let rowCount = 0;
+    let shortHistory = 0;
+    for (const page of [1, 2, 3]) {
+      if (page > 1) await user.click(within(pager).getByRole('button', { name: `Page ${page}` }));
+      const rows = within(table).getAllByRole('row').slice(1);
+      rowCount += rows.length;
+      shortHistory += rows.filter((r) => within(r).queryByText('Short history')).length;
+      if (page === 1) {
+        const main = rows.find((r) => within(r).queryByRole('link', { name: new RegExp(`full address ${ex.mainAddress}`) }))!;
+        expect(main).toHaveTextContent('Legacy (P2PKH)');
+        expect(within(main).getByText('377')).toBeInTheDocument();
+        expect(within(main).getByText('367')).toBeInTheDocument();
+        expect(main).toHaveTextContent('3 (1% of scored)');
+      }
+    }
+    expect(rowCount).toBe(28);
+    expect(shortHistory).toBe(3);
   });
 });
 

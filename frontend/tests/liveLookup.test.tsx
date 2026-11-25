@@ -134,13 +134,18 @@ describe('a fetched address', () => {
   }
 
   test('is listed on V1 as live data, and opens like any address (the what-if tab included)', async () => {
-    await fetched();
+    const user = await fetched();
     expect(screen.getByRole('link', { name: 'Transactions' })).toBeInTheDocument();
     window.location.hash = '#/';
-    await waitFor(() => {
-      const row = screen.getAllByRole('link', { name: new RegExp(`full address ${OUTSIDE}`) }).map((link) => link.closest('tr')).find((tr) => tr !== null);
-      expect(row).toHaveTextContent('live data');
-    });
+    // The list pages ten at a time, so the pager is walked until the address's row is on screen.
+    const table = await screen.findByRole('table', { name: /Addresses in the snapshot/ });
+    let row: HTMLElement | null = null;
+    for (let i = 0; i < 5 && !row; i++) {
+      row = within(table).queryByRole('link', { name: new RegExp(`full address ${OUTSIDE}`) })?.closest('tr') ?? null;
+      if (row) break;
+      await user.click(within(screen.getByRole('navigation', { name: 'Snapshot pages' })).getByRole('button', { name: 'Next' }));
+    }
+    expect(row).toHaveTextContent('live data');
     window.location.hash = `#/address/${OUTSIDE}/what-if`;
     expect(await screen.findByRole('link', { name: 'What-if', current: 'page' })).toBeInTheDocument();
     expect(screen.getByTestId('live-banner')).toBeInTheDocument();
