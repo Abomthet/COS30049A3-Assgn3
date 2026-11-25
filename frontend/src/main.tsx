@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './styles/base.css';
 import './styles/shell.css';
+import './styles/backdrop.css';
 
 // Switches in the page URL (before the #), for the screenshot script: ?theme=dark or light always,
 // and, when the app runs on the mock, ?latency=8000, ?offline=1, ?starting=1 and ?busy=8 (a wait of 8
@@ -20,14 +21,6 @@ if (import.meta.env.VITE_API_MODE === 'mock') {  // a build-time literal, so pro
   if (params.get('live') === '1') mockControls.liveLookup = true;
   if (params.has('livestep')) mockControls.liveStepMs = Math.max(0, Number(params.get('livestep')) || 0);
   if (params.has('busy')) mockControls.busyForSeconds = Math.max(0, Number(params.get('busy')) || 0);
-}
-
-if (import.meta.env.DEV) {  // background playground: dev server only, never in a production build
-  void import('./dev/BgPlayground').then(({ BgPlayground }) => {
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-    createRoot(host).render(<BgPlayground />);
-  });
 }
 
 createRoot(document.getElementById('root')!).render(

@@ -1,0 +1,98 @@
+/* Home-screen backdrop: neon coins photo, a right cluster and a left accent, both fixed behind the page.
+   Home screen only: every rule is scoped by :root:has(.hero). Decorative.
+   The float is a transform and the scroll drift a separate translate, so the two never overwrite each other.
+   Fixed pseudo-elements (never background-attachment: fixed, which iOS Safari ignores), at z-index -1:
+   above the page colour, below all content. Cards are solid. Credit: src/assets/PHOTO_CREDITS.md. */
+
+/* Right cluster: body::before. Overscan: 8vw past the right edge and 4vh above and below, so the float's rotation
+   never shows the layer edge; the positions, origin and mask stops are shifted by that overshoot. */
+:root:has(.hero) body::before {
+  content: '';
+  position: fixed;
+  inset: -4vh -8vw -4vh 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("../assets/bg-coins-neon.jpg");
+  background-repeat: no-repeat;
+  /* the cluster's centre lands near (92vw, 63vh), in the page margin right of the text column */
+  background-size: auto 80vh;
+  background-position: calc(92vw - 58vh) 26vh;
+  transform-origin: 92vw 67vh;
+  mask-image: linear-gradient(to right, transparent 74vw, #000 90vw), linear-gradient(to bottom, transparent 0, transparent 34vh, #000 52vh, #000 89vh, transparent 104vh);
+  -webkit-mask-image: linear-gradient(to right, transparent 74vw, #000 90vw), linear-gradient(to bottom, transparent 0, transparent 34vh, #000 52vh, #000 89vh, transparent 104vh);
+  mask-composite: intersect;
+  -webkit-mask-composite: source-in;
+  filter: invert(1) hue-rotate(180deg) saturate(0.7);
+  opacity: 0.4;
+}
+@media (max-width: 600px) {
+  :root:has(.hero) body::before {
+    background-size: auto 46vh; background-position: calc(86vw - 33vh) 60vh; transform-origin: 86vw 74vh;
+    mask-image: linear-gradient(to right, transparent 40vw, #000 75vw), linear-gradient(to bottom, transparent 0, #000 44vh, #000 94vh, transparent 104vh);
+    -webkit-mask-image: linear-gradient(to right, transparent 40vw, #000 75vw), linear-gradient(to bottom, transparent 0, #000 44vh, #000 94vh, transparent 104vh);
+    opacity: 0.17;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):has(.hero) body::before { filter: none; opacity: 0.7; }
+}
+:root[data-theme="dark"]:has(.hero) body::before { filter: none; opacity: 0.7; }
+@media (max-width: 600px) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):has(.hero) body::before { opacity: 0.2; }
+}
+@media (max-width: 600px) {
+  :root[data-theme="dark"]:has(.hero) body::before { opacity: 0.2; }
+}
+
+/* Left accent: html::after, the teal and gold stack from the same photo. Its coins bleed off the left edge and the
+   fade is a radial vignette centred off-screen, so there are no straight cut lines. The layer is 8vw / 4vh larger than
+   the viewport on the left, top and bottom so the float's rotation never shows its edge. Hidden at 600px and under. */
+:root:has(.hero)::after {
+  content: '';
+  position: fixed;
+  inset: -4vh 0 -4vh -8vw;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("../assets/bg-coins-neon.jpg");
+  background-repeat: no-repeat;
+  background-size: auto 110vh;
+  background-position: calc(6vw - 91vh + 8vw) calc(-17vh + 4vh);
+  transform-origin: 6% 35%;
+  mask-image: radial-gradient(ellipse 24vw 36vh at 3vw 38vh, #000 30%, rgba(0,0,0,0.45) 62%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 24vw 36vh at 3vw 38vh, #000 30%, rgba(0,0,0,0.45) 62%, transparent 100%);
+  mask-composite: add;
+  -webkit-mask-composite: source-over;
+  filter: invert(1) hue-rotate(180deg) saturate(0.7);
+  opacity: 0.3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):has(.hero)::after { filter: none; opacity: 0.42; }
+}
+:root[data-theme="dark"]:has(.hero)::after { filter: none; opacity: 0.42; }
+@media (max-width: 600px) {
+  :root:has(.hero)::after { display: none; }
+}
+
+/* Motion: the layers float (transform) and, where scroll-driven animation exists, drift with the page scroll (translate).
+   Reduced motion means still. */
+@media (prefers-reduced-motion: no-preference) {
+  :root:has(.hero) body::before { animation: backdrop-float-a 7s ease-in-out infinite alternate; }
+  :root:has(.hero)::after { animation: backdrop-float-b 8.5s ease-in-out -3s infinite alternate; }
+  @supports (animation-timeline: scroll()) {
+    :root:has(.hero) body::before {
+      animation: backdrop-float-a 7s ease-in-out infinite alternate, backdrop-drift-a linear both;
+      animation-timeline: auto, scroll(root);
+    }
+    :root:has(.hero)::after {
+      animation: backdrop-float-b 8.5s ease-in-out -3s infinite alternate, backdrop-drift-b linear both;
+      animation-timeline: auto, scroll(root);
+    }
+  }
+}
+@keyframes backdrop-float-a { from { transform: translateY(10px) rotate(-1.5deg); } to { transform: translateY(-10px) rotate(1.5deg); } }
+@keyframes backdrop-float-b { from { transform: translateY(-9px) rotate(1.5deg); } to { transform: translateY(9px) rotate(-1.5deg); } }
+@keyframes backdrop-drift-a { from { translate: 0 0; } to { translate: 0 -15vh; } }
+@keyframes backdrop-drift-b { from { translate: 0 0; } to { translate: 0 6vh; } }
+@media (forced-colors: active), print {
+  :root:has(.hero) body::before, :root:has(.hero)::after { display: none !important; }
+}
