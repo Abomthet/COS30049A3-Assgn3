@@ -3513,13 +3513,11 @@ select.text-input {
 }
 /* A phone-width table row is a stacked card: for a fine pointer it reacts as a list item, not as a table row. */
 @media (max-width: 639px) and (hover: hover) and (pointer: fine) {
-  .tx-table tbody tr:hover > *,
-  .address-table tbody tr:hover > * {
+  .tx-table tbody tr:hover > * {
     background: transparent;
     box-shadow: none !important;
   }
-  .tx-table tbody tr:hover,
-  .address-table tbody tr:hover {
+  .tx-table tbody tr:hover {
     background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
     box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
   }
@@ -3569,12 +3567,34 @@ select:focus-visible:not([aria-invalid='true']) {
   box-shadow: inset -4px 0 0 var(--hover-ring);
 }
 @media (max-width: 639px) {
-  .tx-table tbody tr:has(.row-link:focus-visible) > *,
+  .tx-table tbody tr:has(.row-link:focus-visible) > * {
+    background: transparent;
+    box-shadow: none !important;
+  }
+  .tx-table tbody tr:has(.row-link:focus-visible) {
+    background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+    box-shadow: 0 0 0 1.5px var(--hover-ring);
+  }
+  .tx-table tbody tr.is-flagged:has(.row-link:focus-visible) {
+    box-shadow: inset 3px 0 0 var(--series-2), 0 0 0 1.5px var(--hover-ring);
+  }
+}
+/* The address table stacks into cards below 720px (see the Screen 1 rules), so its row reacts as a card from there. */
+@media (max-width: 719px) and (hover: hover) and (pointer: fine) {
+  .address-table tbody tr:hover > * {
+    background: transparent;
+    box-shadow: none !important;
+  }
+  .address-table tbody tr:hover {
+    background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+    box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
+  }
+}
+@media (max-width: 719px) {
   .address-table tbody tr:has(.address-link:focus-visible) > * {
     background: transparent;
     box-shadow: none !important;
   }
-  .tx-table tbody tr:has(.row-link:focus-visible),
   .address-table tbody tr:has(.address-link:focus-visible) {
     background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
     box-shadow: 0 0 0 1.5px var(--hover-ring);
