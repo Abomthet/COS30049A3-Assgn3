@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import '../styles/bg-playground.css';
 
-const OPTIONS = ['', '2', '5', '7', '9', '10', '12', '13', '14'];
-const PHOTOS = ['13', '14'];
+const OPTIONS = ['', '2', '5', '7', '9', '10', '12', '13', '14', '14b'];
+const PHOTOS = ['13', '14', '14b'];
 
 function readQuery(): string {
   const v = new URLSearchParams(window.location.search).get('bg') ?? '';

@@ -171,7 +171,7 @@
 /* ---- 14. Neon coins: a fixed backdrop on the first screen, so it stays while the page scrolls.
    A fixed pseudo-element on body (never background-attachment: fixed, which iOS Safari ignores).
    It sits at z-index -1: above the page colour, below all content. Cards are solid. */
-:root[data-bg="14"]:has(.hero) body::before {
+:root:is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -191,7 +191,7 @@
   opacity: 0.4;
 }
 @media (max-width: 600px) {
-  :root[data-bg="14"]:has(.hero) body::before {
+  :root:is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before {
     background-size: auto 46vh; background-position: calc(86vw - 33vh) 56vh; transform-origin: 86% 70%;
     mask-image: linear-gradient(to right, transparent 40%, #000 75%), linear-gradient(to bottom, transparent 0%, #000 40%, #000 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, transparent 40%, #000 75%), linear-gradient(to bottom, transparent 0%, #000 40%, #000 90%, transparent 100%);
@@ -199,19 +199,19 @@
   }
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"])[data-bg="14"]:has(.hero) body::before { filter: none; opacity: 0.7; }
+  :root:not([data-theme="light"]):is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before { filter: none; opacity: 0.7; }
 }
-:root[data-theme="dark"][data-bg="14"]:has(.hero) body::before { filter: none; opacity: 0.7; }
+:root[data-theme="dark"]:is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before { filter: none; opacity: 0.7; }
 
 @media (max-width: 600px) and (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"])[data-bg="14"]:has(.hero) body::before { opacity: 0.2; }
+  :root:not([data-theme="light"]):is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before { opacity: 0.2; }
 }
 @media (max-width: 600px) {
-  :root[data-theme="dark"][data-bg="14"]:has(.hero) body::before { opacity: 0.2; }
+  :root[data-theme="dark"]:is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before { opacity: 0.2; }
 }
 /* ---- 14, left accent: the teal and gold stack from the same photo, peeking in at the left edge.
    html::after, fixed like the right cluster, hidden at 600px and under. */
-:root[data-bg="14"]:has(.hero)::after {
+:root:is([data-bg="14"], [data-bg="14b"]):has(.hero)::after {
   content: '';
   position: fixed;
   inset: 0;
@@ -230,11 +230,11 @@
   opacity: 0.3;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"])[data-bg="14"]:has(.hero)::after { filter: none; opacity: 0.42; }
+  :root:not([data-theme="light"]):is([data-bg="14"], [data-bg="14b"]):has(.hero)::after { filter: none; opacity: 0.42; }
 }
-:root[data-theme="dark"][data-bg="14"]:has(.hero)::after { filter: none; opacity: 0.42; }
+:root[data-theme="dark"]:is([data-bg="14"], [data-bg="14b"]):has(.hero)::after { filter: none; opacity: 0.42; }
 @media (max-width: 600px) {
-  :root[data-bg="14"]:has(.hero)::after { display: none; }
+  :root:is([data-bg="14"], [data-bg="14b"]):has(.hero)::after { display: none; }
 }
 
 /* Motion. Variant 13 keeps its slow zoom. Variant 14 floats (transform) and, where scroll-driven
@@ -243,23 +243,23 @@
   :root[data-bg="13"] .hero::before {
     animation: bg-kenburns 40s ease-in-out infinite alternate;
   }
-  :root[data-bg="14"]:has(.hero) body::before { animation: bg-float-a 7s ease-in-out infinite alternate; }
-  :root[data-bg="14"]:has(.hero)::after { animation: bg-float-b 8.5s ease-in-out -3s infinite alternate; }
+  :root:is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before { animation: bg-float-a 7s ease-in-out infinite alternate; }
+  :root:is([data-bg="14"], [data-bg="14b"]):has(.hero)::after { animation: bg-float-b 8.5s ease-in-out -3s infinite alternate; }
   :root[data-bg-paused="true"] .hero::before { animation-play-state: paused !important; }
-  :root[data-bg-paused="true"][data-bg="14"]:has(.hero) body::before,
-  :root[data-bg-paused="true"][data-bg="14"]:has(.hero)::after { animation-play-state: paused !important; }
+  :root[data-bg-paused="true"]:is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before,
+  :root[data-bg-paused="true"]:is([data-bg="14"], [data-bg="14b"]):has(.hero)::after { animation-play-state: paused !important; }
   @supports (animation-timeline: scroll()) {
-    :root[data-bg="14"]:has(.hero) body::before {
+    :root:is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before {
       animation: bg-float-a 7s ease-in-out infinite alternate, bg-drift-a linear both;
       animation-timeline: auto, scroll(root);
     }
-    :root[data-bg="14"]:has(.hero)::after {
+    :root:is([data-bg="14"], [data-bg="14b"]):has(.hero)::after {
       animation: bg-float-b 8.5s ease-in-out -3s infinite alternate, bg-drift-b linear both;
       animation-timeline: auto, scroll(root);
     }
     /* pause stops the float only; the scroll-linked drift is the user's own motion */
-    :root[data-bg-paused="true"][data-bg="14"]:has(.hero) body::before,
-    :root[data-bg-paused="true"][data-bg="14"]:has(.hero)::after { animation-play-state: paused, running !important; }
+    :root[data-bg-paused="true"]:is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before,
+    :root[data-bg-paused="true"]:is([data-bg="14"], [data-bg="14b"]):has(.hero)::after { animation-play-state: paused, running !important; }
   }
 }
 @keyframes bg-float-a { from { transform: translateY(10px) rotate(-1.5deg); } to { transform: translateY(-10px) rotate(1.5deg); } }
@@ -272,5 +272,29 @@
 }
 @media (forced-colors: active), print {
   :root[data-bg="13"] .hero::before, :root[data-bg="13"] .hero::after,
-  :root[data-bg="14"] body::before, :root[data-bg="14"]::after { display: none !important; }
+  :root:is([data-bg="14"], [data-bg="14b"]) body::before, :root:is([data-bg="14"], [data-bg="14b"])::after { display: none !important; }
+}
+
+/* ---- 14 (option A, whole coins) and 14b (option B, soft bleed): two takes on the left accent.
+   Both override only the left layer; the right cluster is shared and unchanged. */
+:root[data-bg="14"]:has(.hero)::after {
+  /* the teal and gold pair, whole, inset from the edge, in a soft elliptical fade */
+  background-size: min(60vw, 86vh) auto;
+  background-position: calc(10.5vw - 0.52 * min(60vw, 86vh)) calc(28vh - 0.25 * min(60vw, 86vh));
+  transform-origin: 10% 27%;
+  mask-image: radial-gradient(ellipse 12vw 19vh at 10.5vw 28vh, #000 35%, rgba(0,0,0,0.5) 65%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 12vw 19vh at 10.5vw 28vh, #000 35%, rgba(0,0,0,0.5) 65%, transparent 100%);
+  mask-composite: add;
+  -webkit-mask-composite: source-over;
+}
+:root[data-bg="14b"]:has(.hero)::after {
+  /* coins bleed off the left edge; the fade is a radial vignette centred off-screen, so no straight cut lines */
+  /* the layer is 8vw / 4vh larger than the viewport on the left, top and bottom so the float's rotation never shows its edge;
+     positions below are the original ones shifted by that overshoot */
+  inset: -4vh 0 -4vh -8vw;
+  background-position: calc(6vw - 91vh + 8vw) calc(-17vh + 4vh);
+  mask-image: radial-gradient(ellipse 24vw 36vh at 3vw 38vh, #000 30%, rgba(0,0,0,0.45) 62%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 24vw 36vh at 3vw 38vh, #000 30%, rgba(0,0,0,0.45) 62%, transparent 100%);
+  mask-composite: add;
+  -webkit-mask-composite: source-over;
 }
