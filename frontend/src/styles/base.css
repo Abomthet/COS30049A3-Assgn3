@@ -603,6 +603,8 @@ main.container {
 }
 .field-label {
   font-weight: 600;
+  /* Only as wide as its words: hovering a label also hovers its field, so a full-width label lit the field from across the box. */
+  width: fit-content;
 }
 .field-help {
   margin: 2px 0 8px;
@@ -3378,7 +3380,8 @@ select.text-input {
   }
   /* The lookup box only holds the form: it lifts with a soft shadow but takes no ring; the input inside shows the blue. */
   .lookup-card:hover {
-    box-shadow: var(--hover-shadow);
+    background: color-mix(in srgb, var(--hover-ring) 5%, var(--surface));
+    box-shadow: var(--hover-shadow), 0 18px 40px rgba(0, 0, 0, 0.12);
   }
   /* Pills, buttons, links styled as pills: ring + soft shadow. */
   .example-list a:hover,
@@ -3438,7 +3441,6 @@ select.text-input {
   .about-tile:hover,
   .about-measure:hover,
   .state-panel:hover,
-  .lookup-card:hover,
   .example-list a:hover,
   .nav-link:hover,
   .btn:not(:disabled):hover,
@@ -3446,6 +3448,10 @@ select.text-input {
   .status-button:hover,
   .star-button.has-text:hover {
     transform: var(--hover-lift);
+  }
+  /* The lookup box is the page's main action: it rises further than a tile. */
+  .lookup-card:hover {
+    transform: translateY(-4px);
   }
   .card:not(.chart-card):not(.replay-card):not(:has(.pchart)):has(:is(.stat, .about-tile, .about-measure, .state-panel):hover) {
     transform: none;
