@@ -103,11 +103,11 @@
 }
 
 /* ---- 10. Dot grid */
-:root[data-bg="10"] { --bgk: 0.16; }
+:root[data-bg="10"] { --bgk: 0.22; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"])[data-bg="10"] { --bgk: 0.22; }
+  :root:not([data-theme="light"])[data-bg="10"] { --bgk: 0.30; }
 }
-:root[data-theme="dark"][data-bg="10"] { --bgk: 0.22; }
+:root[data-theme="dark"][data-bg="10"] { --bgk: 0.30; }
 :root[data-bg="10"] .hero::before {
   content: '';
   background-image: radial-gradient(circle at center, var(--series-1) 1.4px, transparent 1.9px);
