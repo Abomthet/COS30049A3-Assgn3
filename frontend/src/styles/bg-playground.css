@@ -174,17 +174,19 @@
 :root:is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before {
   content: '';
   position: fixed;
-  inset: 0;
+  /* overscan: 8vw past the right edge and 4vh above and below, so the float's rotation never shows the layer edge;
+     the positions, origin and mask stops below are the original ones shifted by that overshoot */
+  inset: -4vh -8vw -4vh 0;
   z-index: -1;
   pointer-events: none;
   background-image: url("../dev/bg-coins-neon.jpg");
   background-repeat: no-repeat;
   /* the cluster's centre lands near (92vw, 63vh), in the page margin right of the text column */
   background-size: auto 80vh;
-  background-position: calc(92vw - 58vh) 22vh;
-  transform-origin: 92% 63%;
-  mask-image: linear-gradient(to right, transparent 74%, #000 90%), linear-gradient(to bottom, transparent 0%, transparent 30%, #000 48%, #000 85%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 74%, #000 90%), linear-gradient(to bottom, transparent 0%, transparent 30%, #000 48%, #000 85%, transparent 100%);
+  background-position: calc(92vw - 58vh) 26vh;
+  transform-origin: 92vw 67vh;
+  mask-image: linear-gradient(to right, transparent 74vw, #000 90vw), linear-gradient(to bottom, transparent 0, transparent 34vh, #000 52vh, #000 89vh, transparent 104vh);
+  -webkit-mask-image: linear-gradient(to right, transparent 74vw, #000 90vw), linear-gradient(to bottom, transparent 0, transparent 34vh, #000 52vh, #000 89vh, transparent 104vh);
   mask-composite: intersect;
   -webkit-mask-composite: source-in;
   filter: invert(1) hue-rotate(180deg) saturate(0.7);
@@ -192,9 +194,9 @@
 }
 @media (max-width: 600px) {
   :root:is([data-bg="14"], [data-bg="14b"]):has(.hero) body::before {
-    background-size: auto 46vh; background-position: calc(86vw - 33vh) 56vh; transform-origin: 86% 70%;
-    mask-image: linear-gradient(to right, transparent 40%, #000 75%), linear-gradient(to bottom, transparent 0%, #000 40%, #000 90%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 40%, #000 75%), linear-gradient(to bottom, transparent 0%, #000 40%, #000 90%, transparent 100%);
+    background-size: auto 46vh; background-position: calc(86vw - 33vh) 60vh; transform-origin: 86vw 74vh;
+    mask-image: linear-gradient(to right, transparent 40vw, #000 75vw), linear-gradient(to bottom, transparent 0, #000 44vh, #000 94vh, transparent 104vh);
+    -webkit-mask-image: linear-gradient(to right, transparent 40vw, #000 75vw), linear-gradient(to bottom, transparent 0, #000 44vh, #000 94vh, transparent 104vh);
     opacity: 0.17;
   }
 }
