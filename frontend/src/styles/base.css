@@ -3608,3 +3608,14 @@ select:focus-visible:not([aria-invalid='true']) {
 .lookup-card:has(.text-input:focus) {
   box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
 }
+
+/* Typing in a field: one clean 2px blue edge (the blue border plus a 1px ring) in place of the thick 3px focus
+   outline, which drew a double ring with the blue border. Still a solid indicator above 3:1 in both themes; the
+   transparent outline keeps a visible edge in forced-colours mode. A field with an error keeps the standard outline. */
+.text-input:focus-visible:not([aria-invalid='true']),
+.text-area:focus-visible:not([aria-invalid='true']) {
+  outline: 2px solid transparent;
+  outline-offset: 0;
+  border-color: var(--hover-ring);
+  box-shadow: 0 0 0 1px var(--hover-ring);
+}
