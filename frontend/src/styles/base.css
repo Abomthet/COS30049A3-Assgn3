@@ -3448,3 +3448,135 @@ select.text-input {
     transform: none;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Hover: list items, table rows and keyboard focus
+   List items (clickable cards) get the same ring and lift as cards. Table
+   rows cannot lift or carry an outer ring, so they get a clear blue tint and
+   a blue edge bar drawn inside the first cell (right-most cell on a flagged
+   row, so the orange left cue survives). Non-clickable tables get nothing.
+   Keyboard focus shows the same ring and tint without the lift; it is not
+   behind the hover query (keyboards exist on touch devices too) and it comes
+   on top of the global focus outline, never in place of it.
+   -------------------------------------------------------------------------- */
+@media (hover: hover) and (pointer: fine) {
+  .day-link:hover,
+  .tx-row:hover {
+    box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
+  }
+  /* The selected row keeps its own inner blue frame under the ring. */
+  .tx-row.is-selected:hover {
+    box-shadow: inset 0 0 0 2px var(--series-1), 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
+  }
+  .day-link:hover {
+    border-color: transparent;
+  }
+  /* One ring at a time: over a list item or table row the card around it stays still. */
+  .card:has(:is(.day-link, .tx-row, .address-table tbody tr, .tx-table tbody tr):hover) {
+    box-shadow: var(--shadow);
+  }
+  /* Tables: tint every cell, bar on the first cell's left edge. */
+  .address-table tbody tr:hover > *,
+  .tx-table tbody tr:hover > * {
+    background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+  }
+  .address-table tbody tr:hover > :first-child,
+  .tx-table tbody tr:not(.is-flagged):hover > :first-child {
+    box-shadow: inset 4px 0 0 var(--hover-ring);
+  }
+  /* Flagged rows keep the orange left edge; the blue bar goes to the right edge. */
+  .tx-table tbody tr.is-flagged:hover > :first-child {
+    box-shadow: inset 3px 0 0 var(--series-2);
+  }
+  .tx-table tbody tr.is-flagged:hover > :last-child {
+    box-shadow: inset -4px 0 0 var(--hover-ring);
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .day-link,
+  .tx-row {
+    transition: transform 160ms ease-out, box-shadow 160ms ease-out, background-color 120ms ease;
+  }
+  .address-table tbody td,
+  .address-table tbody th,
+  .tx-table tbody td,
+  .tx-table tbody th {
+    transition: background-color 120ms ease, box-shadow 120ms ease;
+  }
+  .day-link:hover,
+  .tx-row:hover {
+    transform: var(--hover-lift);
+  }
+  .card:not(.chart-card):not(.replay-card):not(:has(.pchart)):has(:is(.day-link, .tx-row, .address-table tbody tr, .tx-table tbody tr):hover) {
+    transform: none;
+  }
+}
+/* A phone-width table row is a stacked card: for a fine pointer it reacts as a list item, not as a table row. */
+@media (max-width: 639px) and (hover: hover) and (pointer: fine) {
+  .tx-table tbody tr:hover > *,
+  .address-table tbody tr:hover > * {
+    background: transparent;
+    box-shadow: none !important;
+  }
+  .tx-table tbody tr:hover,
+  .address-table tbody tr:hover {
+    background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+    box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
+  }
+  .tx-table tbody tr.is-flagged:hover {
+    box-shadow: inset 3px 0 0 var(--series-2), 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
+  }
+}
+
+/* Keyboard focus: the same ring, no lift. */
+.day-link:focus-visible,
+.tx-row:focus-visible,
+.example-list a:focus-visible,
+.nav-link:focus-visible,
+.btn:focus-visible,
+.icon-button:focus-visible,
+.status-button:focus-visible,
+.star-button.has-text:focus-visible {
+  box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
+}
+.tx-row.is-selected:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--series-1), 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
+}
+.chip:focus-visible,
+.tabs a:focus-visible {
+  box-shadow: inset 0 0 0 1.5px var(--hover-ring);
+}
+.text-input:focus-visible:not([aria-invalid='true']),
+.text-area:focus-visible,
+input[type='date']:focus-visible,
+input[type='number']:focus-visible,
+select:focus-visible:not([aria-invalid='true']) {
+  border-color: var(--hover-ring);
+}
+/* Whole-row links: the row takes the tint and edge bar while its link has focus. */
+.address-table tbody tr:has(.address-link:focus-visible) > *,
+.tx-table tbody tr:has(.row-link:focus-visible) > * {
+  background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+}
+.address-table tbody tr:has(.address-link:focus-visible) > :first-child,
+.tx-table tbody tr:not(.is-flagged):has(.row-link:focus-visible) > :first-child {
+  box-shadow: inset 4px 0 0 var(--hover-ring);
+}
+.tx-table tbody tr.is-flagged:has(.row-link:focus-visible) > :first-child {
+  box-shadow: inset 3px 0 0 var(--series-2);
+}
+.tx-table tbody tr.is-flagged:has(.row-link:focus-visible) > :last-child {
+  box-shadow: inset -4px 0 0 var(--hover-ring);
+}
+@media (max-width: 639px) {
+  .tx-table tbody tr:has(.row-link:focus-visible) > *,
+  .address-table tbody tr:has(.address-link:focus-visible) > * {
+    background: transparent;
+    box-shadow: none !important;
+  }
+  .tx-table tbody tr:has(.row-link:focus-visible),
+  .address-table tbody tr:has(.address-link:focus-visible) {
+    background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+    box-shadow: 0 0 0 1.5px var(--hover-ring);
+  }
+}
