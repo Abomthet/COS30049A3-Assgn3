@@ -3373,9 +3373,12 @@ select.text-input {
   .stat:hover,
   .about-tile:hover,
   .about-measure:hover,
-  .state-panel:hover,
-  .lookup-card:hover {
+  .state-panel:hover {
     box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
+  }
+  /* The lookup box only holds the form: it lifts with a soft shadow but takes no ring; the input inside shows the blue. */
+  .lookup-card:hover {
+    box-shadow: var(--hover-shadow);
   }
   /* Pills, buttons, links styled as pills: ring + soft shadow. */
   .example-list a:hover,
@@ -3599,4 +3602,9 @@ select:focus-visible:not([aria-invalid='true']) {
     background: color-mix(in srgb, var(--hover-ring) 12%, var(--surface));
     box-shadow: 0 0 0 1.5px var(--hover-ring);
   }
+}
+
+/* While the address is being typed, the lookup box takes the ring (any device: typing matters on a phone too). */
+.lookup-card:has(.text-input:focus) {
+  box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
 }
