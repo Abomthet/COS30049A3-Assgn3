@@ -76,12 +76,6 @@ function ShellFrame({ children }: { children: ReactNode }) {
       <header className="app-header">
         <div className="container header-inner">
           <a className="brand" href={paths.select()}>
-            <svg className="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-              <rect width="32" height="32" rx="7" />
-              <rect x="6" y="16" width="4" height="10" rx="1" className="brand-bar" />
-              <rect x="14" y="10" width="4" height="16" rx="1" className="brand-bar" />
-              <rect x="22" y="6" width="4" height="20" rx="1" className="brand-bar brand-bar-flag" />
-            </svg>
             <span>Bitcoin Address Activity Explorer</span>
           </a>
           <button

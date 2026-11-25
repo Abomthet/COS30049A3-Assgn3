@@ -354,10 +354,6 @@
   font-weight: 600;
   letter-spacing: -0.015em;
 }
-.brand-mark {
-  width: 24px;
-  height: 24px;
-}
 .header-bar {
   background: transparent;
   border-top: 1px solid var(--border);
