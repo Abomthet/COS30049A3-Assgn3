@@ -3367,8 +3367,9 @@ select.text-input {
   }
   /* Cards and the lookup box hold controls of their own, so a ring would double the one on the control under the
      pointer: they lift with a faint blue tint and a deeper shadow instead, and take no ring. A card that holds a chart
-     (chart, replay or plotly card) takes no tint or shadow at all: its controls keep their own hover. */
-  .card:not(.chart-card):not(.replay-card):not(:has(.pchart)):hover,
+     (chart, replay or plotly card) takes no tint or shadow at all: its controls keep their own hover. Table cards
+     (.table-card) take no tint, shadow or lift either, because their rows have their own hover. */
+  .card:not(.chart-card):not(.replay-card):not(.table-card):not(:has(.pchart)):hover,
   .lookup-card:hover {
     background: color-mix(in srgb, var(--hover-ring) 5%, var(--surface));
     box-shadow: var(--hover-shadow), 0 18px 40px rgba(0, 0, 0, 0.12);
@@ -3422,7 +3423,7 @@ select.text-input {
     transition: transform 160ms ease-out, box-shadow 160ms ease-out, border-color 160ms ease-out,
       background-color 120ms ease, filter 160ms ease-out;
   }
-  .card:not(.chart-card):not(.replay-card):not(:has(.pchart)):hover,
+  .card:not(.chart-card):not(.replay-card):not(.table-card):not(:has(.pchart)):hover,
   .stat:hover,
   .about-tile:hover,
   .about-measure:hover,
@@ -3439,7 +3440,7 @@ select.text-input {
   .lookup-card:hover {
     transform: translateY(-4px);
   }
-  .card:not(.chart-card):not(.replay-card):not(:has(.pchart)):has(:is(.stat, .about-tile, .about-measure, .state-panel):hover) {
+  .card:not(.chart-card):not(.replay-card):not(.table-card):not(:has(.pchart)):has(:is(.stat, .about-tile, .about-measure, .state-panel):hover) {
     transform: none;
   }
 }
