@@ -3370,15 +3370,16 @@ select.text-input {
    Tokens: --hover-ring, --hover-lift, --hover-shadow (top of this file).
    ========================================================================== */
 @media (hover: hover) and (pointer: fine) {
-  /* Surfaces and tiles: ring + soft shadow. */
-  .card:hover,
+  /* Tiles: ring + soft shadow. */
   .stat:hover,
   .about-tile:hover,
   .about-measure:hover,
   .state-panel:hover {
     box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
   }
-  /* The lookup box only holds the form: it lifts with a soft shadow but takes no ring; the input inside shows the blue. */
+  /* Cards and the lookup box hold controls of their own, so a ring would double the one on the control under the
+     pointer: they lift with a faint blue tint and a deeper shadow instead, and take no ring. */
+  .card:hover,
   .lookup-card:hover {
     background: color-mix(in srgb, var(--hover-ring) 5%, var(--surface));
     box-shadow: var(--hover-shadow), 0 18px 40px rgba(0, 0, 0, 0.12);
@@ -3402,6 +3403,7 @@ select.text-input {
   }
   /* One ring at a time: over a tile inside a card, the tile reacts and the card stays still. */
   .card:has(:is(.stat, .about-tile, .about-measure, .state-panel):hover) {
+    background: var(--surface);
     box-shadow: var(--shadow);
   }
   /* Inputs and selects: blue border; focus keeps its outline. */
@@ -3482,6 +3484,7 @@ select.text-input {
   }
   /* One ring at a time: over a list item or table row the card around it stays still. */
   .card:has(:is(.day-link, .tx-row, .address-table tbody tr, .tx-table tbody tr):hover) {
+    background: var(--surface);
     box-shadow: var(--shadow);
   }
   /* Tables: tint every cell, bar on the first cell's left edge. */
