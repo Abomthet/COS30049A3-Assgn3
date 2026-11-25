@@ -209,17 +209,68 @@
 @media (max-width: 600px) {
   :root[data-theme="dark"][data-bg="14"]:has(.hero) body::before { opacity: 0.2; }
 }
+/* ---- 14, left accent: the teal and gold stack from the same photo, peeking in at the left edge.
+   html::after, fixed like the right cluster, hidden at 600px and under. */
+:root[data-bg="14"]:has(.hero)::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("../dev/bg-coins-neon.jpg");
+  background-repeat: no-repeat;
+  background-size: auto 110vh;
+  background-position: calc(6vw - 91vh) -17vh;
+  transform-origin: 6% 35%;
+  mask-image: linear-gradient(to right, #000 4vw, rgba(0,0,0,0.55) 9vw, rgba(0,0,0,0.15) 14vw, transparent 18vw), linear-gradient(to bottom, transparent 0%, #000 18%, #000 38%, transparent 56%);
+  -webkit-mask-image: linear-gradient(to right, #000 4vw, rgba(0,0,0,0.55) 9vw, rgba(0,0,0,0.15) 14vw, transparent 18vw), linear-gradient(to bottom, transparent 0%, #000 18%, #000 38%, transparent 56%);
+  mask-composite: intersect;
+  -webkit-mask-composite: source-in;
+  filter: invert(1) hue-rotate(180deg) saturate(0.7);
+  opacity: 0.3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-bg="14"]:has(.hero)::after { filter: none; opacity: 0.42; }
+}
+:root[data-theme="dark"][data-bg="14"]:has(.hero)::after { filter: none; opacity: 0.42; }
+@media (max-width: 600px) {
+  :root[data-bg="14"]:has(.hero)::after { display: none; }
+}
+
+/* Motion. Variant 13 keeps its slow zoom. Variant 14 floats (transform) and, where scroll-driven
+   animation exists, drifts with the page scroll (translate), so the two never overwrite each other. */
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-bg="13"] .hero::before, :root[data-bg="14"]:has(.hero) body::before {
+  :root[data-bg="13"] .hero::before {
     animation: bg-kenburns 40s ease-in-out infinite alternate;
   }
-  :root[data-bg-paused="true"] .hero::before, :root[data-bg-paused="true"] body::before { animation-play-state: paused !important; }
+  :root[data-bg="14"]:has(.hero) body::before { animation: bg-float-a 7s ease-in-out infinite alternate; }
+  :root[data-bg="14"]:has(.hero)::after { animation: bg-float-b 8.5s ease-in-out -3s infinite alternate; }
+  :root[data-bg-paused="true"] .hero::before { animation-play-state: paused !important; }
+  :root[data-bg-paused="true"][data-bg="14"]:has(.hero) body::before,
+  :root[data-bg-paused="true"][data-bg="14"]:has(.hero)::after { animation-play-state: paused !important; }
+  @supports (animation-timeline: scroll()) {
+    :root[data-bg="14"]:has(.hero) body::before {
+      animation: bg-float-a 7s ease-in-out infinite alternate, bg-drift-a linear both;
+      animation-timeline: auto, scroll(root);
+    }
+    :root[data-bg="14"]:has(.hero)::after {
+      animation: bg-float-b 8.5s ease-in-out -3s infinite alternate, bg-drift-b linear both;
+      animation-timeline: auto, scroll(root);
+    }
+    /* pause stops the float only; the scroll-linked drift is the user's own motion */
+    :root[data-bg-paused="true"][data-bg="14"]:has(.hero) body::before,
+    :root[data-bg-paused="true"][data-bg="14"]:has(.hero)::after { animation-play-state: paused, running !important; }
+  }
 }
+@keyframes bg-float-a { from { transform: translateY(10px) rotate(-1.5deg); } to { transform: translateY(-10px) rotate(1.5deg); } }
+@keyframes bg-float-b { from { transform: translateY(-9px) rotate(1.5deg); } to { transform: translateY(9px) rotate(-1.5deg); } }
+@keyframes bg-drift-a { from { translate: 0 0; } to { translate: 0 -15vh; } }
+@keyframes bg-drift-b { from { translate: 0 0; } to { translate: 0 6vh; } }
 @keyframes bg-kenburns {
   from { transform: scale(1); }
   to { transform: scale(1.08) translate(-1.5%, -1%); }
 }
 @media (forced-colors: active), print {
   :root[data-bg="13"] .hero::before, :root[data-bg="13"] .hero::after,
-  :root[data-bg="14"] body::before { display: none !important; }
+  :root[data-bg="14"] body::before, :root[data-bg="14"]::after { display: none !important; }
 }
