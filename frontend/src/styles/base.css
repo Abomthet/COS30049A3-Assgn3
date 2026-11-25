@@ -3394,6 +3394,10 @@ select.text-input {
   .btn-primary:not(:disabled):hover {
     filter: brightness(1.08);
   }
+  /* One ring at a time: over a tile inside a card, the tile reacts and the card stays still. */
+  .card:has(:is(.stat, .about-tile, .about-measure, .state-panel):hover) {
+    box-shadow: var(--shadow);
+  }
   /* Inputs and selects: blue border; focus keeps its outline. */
   .text-input:hover:not([aria-invalid='true']),
   .text-area:hover,
@@ -3417,8 +3421,11 @@ select.text-input {
   .star-button.has-text,
   .chip,
   .tabs a,
+  .lookup-card,
   .text-input,
-  select.text-input,
+  select,
+  input[type='date'],
+  input[type='number'],
   .text-area {
     transition: transform 160ms ease-out, box-shadow 160ms ease-out, border-color 160ms ease-out,
       background-color 120ms ease, filter 160ms ease-out;
@@ -3428,6 +3435,7 @@ select.text-input {
   .about-tile:hover,
   .about-measure:hover,
   .state-panel:hover,
+  .lookup-card:hover,
   .example-list a:hover,
   .nav-link:hover,
   .btn:not(:disabled):hover,
@@ -3435,5 +3443,8 @@ select.text-input {
   .status-button:hover,
   .star-button.has-text:hover {
     transform: var(--hover-lift);
+  }
+  .card:not(.chart-card):not(.replay-card):not(:has(.pchart)):has(:is(.stat, .about-tile, .about-measure, .state-panel):hover) {
+    transform: none;
   }
 }
