@@ -22,6 +22,14 @@ if (import.meta.env.VITE_API_MODE === 'mock') {  // a build-time literal, so pro
   if (params.has('busy')) mockControls.busyForSeconds = Math.max(0, Number(params.get('busy')) || 0);
 }
 
+if (import.meta.env.DEV) {  // background playground: dev server only, never in a production build
+  void import('./dev/BgPlayground').then(({ BgPlayground }) => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    createRoot(host).render(<BgPlayground />);
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
