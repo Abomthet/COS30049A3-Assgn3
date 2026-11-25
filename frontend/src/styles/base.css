@@ -3612,11 +3612,20 @@ select:focus-visible:not([aria-invalid='true']) {
 
 /* Typing in a field: one clean 2px blue edge (the blue border plus a 1px ring) in place of the thick 3px focus
    outline, which drew a double ring with the blue border. Still a solid indicator above 3:1 in both themes; the
-   transparent outline keeps a visible edge in forced-colours mode. A field with an error keeps the standard outline. */
-.text-input:focus-visible:not([aria-invalid='true']),
-.text-area:focus-visible:not([aria-invalid='true']) {
+   transparent outline keeps a visible edge in forced-colours mode. A field with an error stays red: its 2px red edge
+   thickens to 3px while it has focus, so focus still shows, in one colour. */
+.text-input:focus-visible,
+.text-area:focus-visible {
   outline: 2px solid transparent;
   outline-offset: 0;
+}
+.text-input:focus-visible:not([aria-invalid='true']),
+.text-area:focus-visible:not([aria-invalid='true']) {
   border-color: var(--hover-ring);
   box-shadow: 0 0 0 1px var(--hover-ring);
+}
+.text-input[aria-invalid='true']:focus-visible,
+.text-area[aria-invalid='true']:focus-visible {
+  border-color: var(--error-ink);
+  box-shadow: 0 0 0 2px var(--error-ink);
 }
