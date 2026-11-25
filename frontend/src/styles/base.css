@@ -3393,11 +3393,6 @@ select.text-input {
   .star-button.has-text:hover {
     box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
   }
-  /* Segmented items sit inside one track: ring only, no shadow. */
-  .chip:not([aria-pressed='true']):hover,
-  .tabs a:not([aria-current='page']):hover {
-    box-shadow: inset 0 0 0 1.5px var(--hover-ring);
-  }
   .btn-primary:not(:disabled):hover {
     filter: brightness(1.08);
   }
