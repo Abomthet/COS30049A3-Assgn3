@@ -17,7 +17,7 @@
   --control-border: #86868b;
   --text: #1d1d1f;
   --text-2: #424245;
-  --text-muted: #6e6e73;
+  --text-muted: #58585d;
   --axis-ink: #6e6e73;
   --grid: #e5e5ea;
   --axis: #d2d2d7;
@@ -3478,7 +3478,7 @@ select.text-input {
   /* Tables: tint every cell, bar on the first cell's left edge. */
   .address-table tbody tr:hover > *,
   .tx-table tbody tr:hover > * {
-    background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+    background: color-mix(in srgb, var(--hover-ring) 12%, var(--surface));
   }
   .address-table tbody tr:hover > :first-child,
   .tx-table tbody tr:not(.is-flagged):hover > :first-child {
@@ -3518,7 +3518,7 @@ select.text-input {
     box-shadow: none !important;
   }
   .tx-table tbody tr:hover {
-    background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+    background: color-mix(in srgb, var(--hover-ring) 12%, var(--surface));
     box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
   }
   .tx-table tbody tr.is-flagged:hover {
@@ -3554,7 +3554,7 @@ select:focus-visible:not([aria-invalid='true']) {
 /* Whole-row links: the row takes the tint and edge bar while its link has focus. */
 .address-table tbody tr:has(.address-link:focus-visible) > *,
 .tx-table tbody tr:has(.row-link:focus-visible) > * {
-  background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+  background: color-mix(in srgb, var(--hover-ring) 12%, var(--surface));
 }
 .address-table tbody tr:has(.address-link:focus-visible) > :first-child,
 .tx-table tbody tr:not(.is-flagged):has(.row-link:focus-visible) > :first-child {
@@ -3572,7 +3572,7 @@ select:focus-visible:not([aria-invalid='true']) {
     box-shadow: none !important;
   }
   .tx-table tbody tr:has(.row-link:focus-visible) {
-    background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+    background: color-mix(in srgb, var(--hover-ring) 12%, var(--surface));
     box-shadow: 0 0 0 1.5px var(--hover-ring);
   }
   .tx-table tbody tr.is-flagged:has(.row-link:focus-visible) {
@@ -3586,7 +3586,7 @@ select:focus-visible:not([aria-invalid='true']) {
     box-shadow: none !important;
   }
   .address-table tbody tr:hover {
-    background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+    background: color-mix(in srgb, var(--hover-ring) 12%, var(--surface));
     box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
   }
 }
@@ -3596,7 +3596,7 @@ select:focus-visible:not([aria-invalid='true']) {
     box-shadow: none !important;
   }
   .address-table tbody tr:has(.address-link:focus-visible) {
-    background: color-mix(in srgb, var(--hover-ring) 7%, var(--surface));
+    background: color-mix(in srgb, var(--hover-ring) 12%, var(--surface));
     box-shadow: 0 0 0 1.5px var(--hover-ring);
   }
 }
