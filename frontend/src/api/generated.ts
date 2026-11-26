@@ -513,7 +513,7 @@ export interface components {
          *         "minSpanDays": 14,
          *         "minTx": 10
          *       },
-         *       "limitationLine": "Worth investigating, not proof of wrongdoing.",
+         *       "limitationLine": "Flagged as unusual for this address, not proof of wrongdoing.",
          *       "snapshot": {
          *         "addressCount": 28,
          *         "dayTimeZone": "UTC",
@@ -732,9 +732,9 @@ export interface components {
          *         }
          *       ],
          *       "cached": false,
-         *       "explanation": "- Larger amount than usual: 0.05000000 BTC (usual 0.00063694 BTC)\nWorth investigating, not proof of wrongdoing.",
+         *       "explanation": "- Larger amount than usual: 0.05000000 BTC (usual 0.00063694 BTC)\nFlagged as unusual for this address, not proof of wrongdoing.",
          *       "flagged": true,
-         *       "limitation": "Worth investigating, not proof of wrongdoing.",
+         *       "limitation": "Flagged as unusual for this address, not proof of wrongdoing.",
          *       "seconds": 2.6,
          *       "skippedWriters": {},
          *       "source": "text150m",

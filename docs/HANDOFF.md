@@ -164,7 +164,7 @@ planning, gates and review, and the cheapest on mechanical work.
 - **Wording rule.** Never use the words in `backend/config/settings.json` → `bannedWords` (fraud,
   criminal, illicit, guilty, suspicious) in any UI string, API message, test name, document or commit
   message. Say "unusual", "flag", "worth a look". Every flagged item carries the limitation line:
-  *"Worth investigating, not proof of wrongdoing."* (Mod-19, from `shared/wording.json`; CR-09, approved
+  *"Flagged as unusual for this address, not proof of wrongdoing."* (Mod-19, from `shared/wording.json`; CR-09, approved
   with the remake on 26 Nov), and so does every export (CSV: every row; JSON: at the top).
 - **A2's numbers are frozen** (scope W-06). Never retrain, re-tune or regenerate any model or data file.
 - **The vendored A2 code is never edited**: `backend/explorer/`, `backend/lm/`, `backend/models/`,

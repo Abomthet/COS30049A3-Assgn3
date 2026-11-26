@@ -381,7 +381,7 @@ def test_e7_the_plans_example_transaction(client: TestClient) -> None:
                                                                ("F3", "within-usual"), ("F4", "flag")]
     assert body["features"][3]["z"] == pytest.approx(-5.6071, abs=1e-4)
     assert [c["features"] for c in body["comparison"]] == [["F1", "F4"], ["F2", "F3"]]
-    assert body["limitation"] == "Worth investigating, not proof of wrongdoing."
+    assert body["limitation"] == "Flagged as unusual for this address, not proof of wrongdoing."
     assert body["flags"]["baseline"] is True and not any(v for k, v in body["flags"].items() if k != "baseline")
     assert set(body["scores"]) == set(body["flags"]) and len(body["scores"]) == 9
     assert body["explanation"].startswith("- Small for a received amount: 0.4\u00d7 its usual size\n") and body["source"] == "snapshot"

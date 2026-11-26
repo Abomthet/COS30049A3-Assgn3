@@ -38,7 +38,7 @@ test('J2: from a flagged day to one transaction and its reasons', async ({ page,
   await expect(why.getByRole('heading', { name: 'Compared with' })).toBeVisible();
   await expect(why.getByRole('listitem').filter({ hasText: /\(\d+ \w+ \d{4}/ }).first()).toBeVisible();
   await expect(why.getByTestId('limitation-line')).toHaveText(limitationLine);
-  // Once per screen: the box carries the line, so the footer leaves its copy out.
+  // The box carries the line, once; the footer has only the course credit.
   await expect(page.getByText(limitationLine, { exact: true })).toHaveCount(1);
   await expect(page.getByRole('contentinfo')).not.toContainText(limitationLine);
 

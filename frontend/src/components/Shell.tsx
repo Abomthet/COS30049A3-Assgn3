@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { LimitationProvider, useLimitationElsewhere } from '../hooks/useLimitationShown';
 import { useServiceStatus } from '../hooks/useServiceStatus';
 import { useSettings } from '../hooks/useSettings';
 import { useToasts } from '../hooks/useToasts';
@@ -28,19 +27,9 @@ function useStatusToasts(): void {
   }, [state, notify]);
 }
 
-/** The footer's copy of the limitation line, left out (not just hidden) while a flag box or the replay's flagged line shows it. */
-function FooterLimitation() {
-  const { settings } = useSettings();
-  return useLimitationElsewhere() ? null : <p className="footer-limitation">{settings.limitationLine}</p>;
-}
-
 /** The frame around every view: skip link, header, main region, footer (plan section 8). */
 export function Shell({ children }: { children: ReactNode }) {
-  return (
-    <LimitationProvider>
-      <ShellFrame>{children}</ShellFrame>
-    </LimitationProvider>
-  );
+  return <ShellFrame>{children}</ShellFrame>;
 }
 
 function ShellFrame({ children }: { children: ReactNode }) {
@@ -109,8 +98,6 @@ function ShellFrame({ children }: { children: ReactNode }) {
 
       <footer className="app-footer">
         <div className="container footer-inner">
-          <FooterLimitation />
-          <p className="footer-help">Unusual means different from this address's own earlier activity.</p>
           <p className="footer-credit">COS30049 Computing Technology Innovation Project · group HCMC_COS30049.1_4</p>
         </div>
       </footer>

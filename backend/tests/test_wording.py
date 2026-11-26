@@ -19,7 +19,7 @@ from app.core.config import Settings
 
 from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY, VALID_OUTSIDE_SNAPSHOT
 
-LIMITATION = "Worth investigating, not proof of wrongdoing."  # Mod-19, shared/wording.json
+LIMITATION = "Flagged as unusual for this address, not proof of wrongdoing."  # Mod-19, shared/wording.json
 SETTINGS = json.loads((Path(__file__).resolve().parents[1] / "config" / "settings.json").read_text(encoding="utf-8"))
 BANNED = re.compile("|".join(map(re.escape, SETTINGS["bannedWords"])), re.IGNORECASE)
 ONE_PAGE = 200

@@ -1,4 +1,4 @@
-"""Mod-19: the limitation line the web application shows is "Worth investigating, not proof of wrongdoing.", read from
+"""Mod-19: the limitation line the web application shows is "Flagged as unusual for this address, not proof of wrongdoing.", read from
 shared/wording.json; Assignment 2's line leaves the service nowhere, and A2's guardrail still checks A2's line first."""
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from app.services.reasons import reword, reword_limitation
 
 from .conftest import LARGEST, RUNNING_EXAMPLE
 
-NEW = "Worth investigating, not proof of wrongdoing."
+NEW = "Flagged as unusual for this address, not proof of wrongdoing."
 OLD = "Unusual activity requires investigation; it does not indicate wrongdoing."
 WHAT_IF = {"amountBtc": 0.05, "direction": "out", "time": "2026-10-20T12:00:00Z"}
 SHARED = Path(__file__).resolve().parents[2] / "shared" / "wording.json"

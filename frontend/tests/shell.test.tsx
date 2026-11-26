@@ -122,30 +122,26 @@ describe('service status', () => {
 });
 
 describe('settings from E2', () => {
-  test('the header and footer show what the service says', async () => {
+  test('the header shows what the service says', async () => {
     start();
     expect(await screen.findByTestId('header-meta')).toHaveTextContent(/^Snapshot of 22 Oct 2026 · Blockstream Esplora$/);
-    expect(screen.getByRole('contentinfo')).toHaveTextContent(LIMITATION_LINE);
   });
 
-  test('the footer is split: the help line, then the course credit apart and smaller; no "days and times are in UTC"', async () => {
+  test('the footer carries the course credit alone: no limitation line, no help line', async () => {
     start();
     await screen.findByTestId('header-meta');
     const footer = screen.getByRole('contentinfo');
-    const help = within(footer).getByText("Unusual means different from this address's own earlier activity.");
     const credit = within(footer).getByText('COS30049 Computing Technology Innovation Project · group HCMC_COS30049.1_4');
-    expect(help).not.toBe(credit);
-    expect(help).not.toContainElement(credit);
-    expect(help.compareDocumentPosition(credit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(credit).toHaveClass('footer-credit');
-    expect(footer).not.toHaveTextContent(/Days and times are in UTC|same address/);
+    expect(footer).toHaveTextContent(/^COS30049 Computing Technology Innovation Project · group HCMC_COS30049\.1_4$/);
+    expect(footer).not.toHaveTextContent(LIMITATION_LINE);
+    expect(footer).not.toHaveTextContent(/Unusual means|Days and times are in UTC/);
   });
 
-  test('when the service is unreachable the bundled settings still supply the limitation line', async () => {
+  test('when the service is unreachable the page still renders with the bundled settings', async () => {
     mockControls.offline = true;
     start();
     await screen.findByText('Not connected');
-    expect(screen.getByRole('contentinfo')).toHaveTextContent(LIMITATION_LINE);
     // The snapshot is known only to the service, so the line is simply absent.
     expect(screen.queryByText(/Snapshot of/)).not.toBeInTheDocument();
   });

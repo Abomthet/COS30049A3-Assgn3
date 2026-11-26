@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import type { ExplanationRequest, TransactionDetail } from '../api/types';
-import { useLimitationShown } from '../hooks/useLimitationShown';
 import { dayKey, formatDayRange } from '../lib/dates';
 import { F4_UNIT } from '../lib/reasons';
 import { Explanation, ReasonLines } from './Explanation';
@@ -14,7 +13,6 @@ import { StatBlock } from './StatBlock';
  * lines stand alone.
  */
 export function FlagCallout({ tx, title, request }: { tx: Pick<TransactionDetail, 'reasons' | 'comparison' | 'limitation'>; title: string; request?: ExplanationRequest }) {
-  useLimitationShown(); // this box carries the line, so the footer leaves its copy out
   const [first, ...others] = tx.reasons;
 
   const body = (lines: ReactNode, control: ReactNode) => (
@@ -39,6 +37,7 @@ export function FlagCallout({ tx, title, request }: { tx: Pick<TransactionDetail
         ))}
       </ul>
       <p className="limitation" data-testid="limitation-line">
+        <Icon name="flag" className="limitation-icon" />
         <span>{tx.limitation}</span>
       </p>
       {control}

@@ -6,7 +6,6 @@ import { DirectionBadge, StatusBadge } from '../components/Badges';
 import { ErrorState } from '../components/ErrorState';
 import { Loading } from '../components/StatePanel';
 import { useAllTransactions } from '../hooks/useAllTransactions';
-import { useLimitationShown } from '../hooks/useLimitationShown';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useReplay } from '../hooks/useReplay';
 import { useSettings } from '../hooks/useSettings';
@@ -49,7 +48,6 @@ function Player({ timeline, method, rows }: { timeline: TimelineResponse; method
   // The busiest day of the whole history: G1 is drawn to it from the first step, so the bars grow against one scale.
   const busiestDay = useMemo(() => Math.max(1, ...timeline.days.map((d) => d.txCount)), [timeline]);
   const flaggedNow = latest?.status === 'flagged';
-  useLimitationShown(flaggedNow); // the line shows here while a flag is the latest transaction, so the footer leaves its copy out
 
   // What a screen reader hears: a change of state, never each step (at 20 a second that would be speech without end).
   const announcement = playing

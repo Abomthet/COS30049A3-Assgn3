@@ -73,7 +73,7 @@ describe('every view says what failed and what to do next', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'About and help' })).toBeInTheDocument();
     expect(await screen.findByText('Not connected')).toBeInTheDocument();
     expect(screen.queryByText(/built-in/)).not.toBeInTheDocument();
-    expect(within(screen.getByRole('contentinfo')).getByText(settings.limitationLine)).toBeInTheDocument();
+    expect(within(screen.getByRole('contentinfo')).queryByText(settings.limitationLine)).not.toBeInTheDocument();
   });
 
   test('a server error names its reference, which can be copied', async () => {

@@ -69,7 +69,7 @@ def test_config_is_what_the_front_end_needs(client: TestClient, settings: Settin
     assert set(body) == {"snapshot", "limitationLine", "features", "history", "thresholds", "defaultMethod", "web", "whatIf",
                          "capabilities"}
     assert body["snapshot"]["addressCount"] == 28 and body["snapshot"]["method"]["id"] == "baseline"
-    assert body["limitationLine"] == "Worth investigating, not proof of wrongdoing."
+    assert body["limitationLine"] == "Flagged as unusual for this address, not proof of wrongdoing."
     assert [(f["id"], f["name"], f["unit"]) for f in body["features"]] == [
         ("F1", "Size", "BTC"), ("F2", "Burst", "count"), ("F3", "Gap", "hours"), ("F4", "Relative size", "ratio")]
     assert body["history"] == {"minTx": 10, "minSpanDays": 14}

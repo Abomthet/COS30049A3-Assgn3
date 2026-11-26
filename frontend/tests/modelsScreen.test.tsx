@@ -99,7 +99,7 @@ describe('the page head and the long names', () => {
 });
 
 describe('the limits', () => {
-  test('"What a flag means" has three short points, the snapshot\'s size and date from E2, and the limitation line only in the footer', async () => {
+  test('"What a flag means" has three short points, the snapshot\'s size and date from E2, and no limitation line (a flag box carries it)', async () => {
     start();
     const section = (await screen.findByRole('heading', { name: 'What a flag means' })).closest('section')!;
     await within(section).findByText(new RegExp(`${CONFIG.snapshot.addressCount} addresses on one date`));
@@ -110,8 +110,8 @@ describe('the limits', () => {
       `The snapshot covers ${CONFIG.snapshot.addressCount} addresses on one date, 22 Oct 2026.`,
     ]);
     expect(section.textContent ?? '').not.toMatch(/planted|recall|accuracy is claimed/i);
-    expect(section).not.toHaveTextContent(LIMITATION_LINE); // once per screen: the footer has it
-    expect(screen.getByRole('contentinfo')).toHaveTextContent(LIMITATION_LINE);
+    expect(section).not.toHaveTextContent(LIMITATION_LINE);
+    expect(screen.getByRole('contentinfo')).not.toHaveTextContent(LIMITATION_LINE);
   });
 
   test('"Why the test numbers are not accuracy" is a closed disclosure that holds the detail', async () => {

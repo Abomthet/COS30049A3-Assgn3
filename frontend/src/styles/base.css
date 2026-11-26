@@ -322,13 +322,6 @@ main.container {
   margin-top: 12px;
   font-size: 0.75rem;
 }
-.footer-limitation {
-  color: var(--text-2);
-  font-weight: 560;
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-}
 
 /* ------------------------------------------------------------------ building blocks */
 
@@ -1346,16 +1339,25 @@ main.container {
 .bases {
   font-size: 0.9rem;
 }
+/* The limitation line sits inside the flag box, so it takes the flag colours: a soft orange tint of the box's own fill, text in
+   the flag ink (6.3:1 light, 7.1:1 dark), and the flag triangle in front. */
 .limitation {
   display: flex;
   gap: 8px;
   align-items: flex-start;
   margin: 14px 0 0;
   padding: 10px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
+  background: color-mix(in srgb, var(--series-2) 16%, var(--flag-bg));
+  color: var(--flag-ink);
+  border: 1px solid var(--flag-border);
   border-radius: var(--radius-sm);
   font-weight: 600;
+}
+.limitation-icon {
+  flex: none;
+  /* The orange of the flag, deepened toward the ink so the triangle stays at 3:1 against the tint in the light theme. */
+  color: color-mix(in srgb, var(--series-2) 60%, var(--flag-ink));
+  margin-top: 0.28em;
 }
 /* The selection above the transaction table (views/SelectionBar.tsx). */
 .selection-bar {
@@ -1831,10 +1833,6 @@ main.container {
 }
 .prose li + li {
   margin-top: 6px;
-}
-.prose .limitation {
-  margin-top: 0;
-  max-width: 72ch;
 }
 .about-features,
 .key-list {
@@ -2939,8 +2937,15 @@ select.text-input {
   border: 0;
   border-radius: var(--radius-sm);
 }
-.limitation {
-  background: var(--surface);
+/* In forced-colors mode the system paints the fills away; the line keeps a visible edge. */
+@media (forced-colors: active) {
+  .limitation {
+    border: 1px solid CanvasText;
+  }
+  .limitation-icon {
+    forced-color-adjust: none;
+    color: CanvasText;
+  }
 }
 
 /* ================================================================== Hero on the first screen (V1) */

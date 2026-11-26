@@ -17,7 +17,7 @@ from app.services.export_service import csv_cells, csv_header, guard_formula
 
 from .conftest import LARGEST, RUNNING_EXAMPLE, SHORT_HISTORY, VALID_OUTSIDE_SNAPSHOT
 
-LIMITATION = "Worth investigating, not proof of wrongdoing."
+LIMITATION = "Flagged as unusual for this address, not proof of wrongdoing."
 TABLES = Path(__file__).resolve().parents[1] / "reports" / "tables"
 
 

@@ -21,7 +21,7 @@ from .test_whatif_parity import agree
 VECTORS = json.loads((Path(__file__).resolve().parents[2] / "shared" / "whatif_vectors.json").read_text(encoding="utf-8"))
 PLAN_TIME = "2026-10-20T12:00:00Z"
 BODY = {"amountBtc": 0.05, "direction": "out", "time": PLAN_TIME}
-LIMITATION = "Worth investigating, not proof of wrongdoing."
+LIMITATION = "Flagged as unusual for this address, not proof of wrongdoing."
 USABLE = ["baseline", "isolation_forest", "lof", "kmeans", "dbscan", "regression", "regression_interval", "fusion"]
 
 

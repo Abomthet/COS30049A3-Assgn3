@@ -71,7 +71,7 @@ The old intro paragraph is replaced by an Apple-style hero in `frontend/src/view
 - **Subhead**: "Each transaction is compared with the address's own history, by nine models." The number is E11's `methods.length` (cached request `useMethods`, also used by V4), written as a word up to twelve; until E11 answers, or if it fails, the line says "by several models".
 - **Lookup** is the hero's main action: the same form, field ("Bitcoin address"), help text, validation, errors, unsupported and live-lookup panels, now on a large white card (radius 24) with a pill input and a large blue pill "Look up". The "Look up an address" h2 is visually hidden (`sr-only`) and still labels the section.
 - **Stats strip**: Addresses (E3 `snapshot.addressCount`), Transactions (sum of E3 `txCount`), Models (E11, omitted without it), Snapshot (E3 `snapshot.snapshotDate`, via `formatCount` / `formatDay`). Calm grey placeholders while E3 loads; the strip disappears if E3 fails. On phones it is a 2x2 grid and the page does not scroll sideways.
-- The **limitation line** (from settings, not a copy) shows once in small muted text under the strip; the footer still carries it.
+- The **limitation line** (from settings, not a copy) shows once in small muted text under the strip; the footer no longer carries it (26 Nov).
 
 ## Two polish fixes
 
@@ -88,8 +88,8 @@ it and a study of how Apple shows extra information (footnotes, disclaimers, "le
 Each change is its own commit, so the wording can be copied onto `main` if the remake itself is dropped (`main` was merged
 into this branch first). In short:
 
-- **Limitation line** "Worth investigating, not proof of wrongdoing." (Mod-19, `shared/wording.json` for both tiers), once per
-  screen: in the flag box where a flagged item shows, otherwise in the footer; in every CSV row, chart downloads included.
+- **Limitation line** "Flagged as unusual for this address, not proof of wrongdoing." (Mod-19, `shared/wording.json` for both tiers), only
+  where a flag shows (the flag box, tinted orange with the flag icon, and the replay's flagged line; the footer has the course credit alone); in every CSV row, chart downloads included.
 - **Why it stands out**: the strongest reason as a big figure ("0.4× its usual size"), one short line per other reason,
   "Compared with its last 10 received"; reasons come from the API as data (Mod-20); short model names (Mod-21).
 - **Charts**: title, one-line subtitle, a source footnote under each chart (the chart contract keeps source and date on every
@@ -105,10 +105,10 @@ into this branch first). In short:
 |---|---|
 | ID | CR-09 |
 | Requestor | Cao Tri Tran (Data/ML Lead), from the usability feedback of 22 Nov |
-| Proposal | (1) The limitation line becomes "Worth investigating, not proof of wrongdoing." on screens and in exports (A2's settings stay untouched; the web layer replaces the line, Mod-19). (2) It is shown once per screen: on the flagged item when one is on the screen, otherwise in the footer (plan s08 says "in the footer" and "on every flagged item"; the footer leaves out its copy while a flagged item shows it). (3) Chart CSV downloads carry it on every row too ("in every export"). |
+| Proposal | (1) The limitation line becomes "Flagged as unusual for this address, not proof of wrongdoing." on screens and in exports (A2's settings stay untouched; the web layer replaces the line, Mod-19). (2) It is shown once per screen: on the flagged item when one is on the screen, otherwise in the footer (plan s08 says "in the footer" and "on every flagged item"; the footer leaves out its copy while a flagged item shows it). (3) Chart CSV downloads carry it on every row too ("in every export"). |
 | Reason | The owner's walkthrough found the line long and repeated up to four times on one screen; the shorter line keeps both halves (worth a look; not wrongdoing), so a flag still reads as "needs investigation" (NFR-01 condition 4). |
 | Impact on scope | None: wording and placement only; every flagged item and every export row still carries the line. |
-| Impact on quality | Tests on both tiers check the new line on every flag, once per screen, and on every CSV row (`backend/tests/test_limitation_line.py`, `frontend/tests/limitationOnce.test.tsx`). |
+| Impact on quality | Tests on both tiers check the new line on every flag, in the flag box, and on every CSV row (`backend/tests/test_limitation_line.py`, `frontend/tests/limitationLine.test.tsx`). |
 | Decision | Approved 26 Nov 2026 with the remake (the team kept `ui-remake-apple`; merged into `main`). |
 | Changed artefacts | `backend/MODIFICATIONS.md` (Mod-19); the plan's quoted line (s08 "Always show", b-json examples) to be updated if approved |
 

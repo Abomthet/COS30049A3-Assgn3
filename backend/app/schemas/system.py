@@ -67,7 +67,7 @@ CONFIG_EXAMPLE = {
                  "illustrative": False, "dayTimeZone": "UTC", "addressCount": 28,
                  "method": {"id": "baseline", "name": "Baseline", "flagAbsZ": 5.0, "contributingAbsZ": 2.0,
                             "note": "Flags mean unusual for this address's own history, nothing more."}},
-    "limitationLine": "Worth investigating, not proof of wrongdoing.",
+    "limitationLine": "Flagged as unusual for this address, not proof of wrongdoing.",
     "features": [{"id": "F1", "name": "Size", "unit": "BTC",
                   "description": "How much the address received or sent in this transaction (BTC)."}],
     "history": {"minTx": 10, "minSpanDays": 14},
