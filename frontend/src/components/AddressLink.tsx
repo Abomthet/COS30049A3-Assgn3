@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { shortAddress } from '../lib/format';
 
 /**
@@ -5,14 +6,20 @@ import { shortAddress } from '../lib/format';
  * ("36V7afbhZnvp…2vtHDB6L, full address 36V7…"), so a voice-control user who says what they see can activate it
  * (WCAG 2.5.3 Label in Name), and a screen-reader user still hears the whole address. The old `aria-label` held only
  * the full address, which did not contain the visible text. The extra words are a visually hidden span, so nothing
- * changes on screen.
+ * changes on screen. `detail` is a quiet second part (a count) after the address, read out after a comma.
  */
-export function AddressLink({ address, href, head = 12, tail = 8, className }: { address: string; href: string; head?: number; tail?: number; className?: string }) {
+export function AddressLink({ address, href, head = 12, tail = 8, className, detail }: { address: string; href: string; head?: number; tail?: number; className?: string; detail?: ReactNode }) {
   const short = shortAddress(address, head, tail);
   return (
     <a className={className} href={href}>
       {short}
       {short === address ? null : <span className="sr-only">, full address {address}</span>}
+      {detail ? (
+        <>
+          <span className="sr-only">, </span>
+          <span className="nav-detail">{detail}</span>
+        </>
+      ) : null}
     </a>
   );
 }

@@ -74,20 +74,22 @@ function ShellFrame({ children }: { children: ReactNode }) {
       </a>
       <OfflineBanner />
       <header className="app-header">
-        <div className="container header-inner">
-          <a className="brand" href={paths.select()}>
-            <span>Bitcoin Address Activity Explorer</span>
-          </a>
-          <button
-            type="button"
-            className="nav-toggle"
-            aria-expanded={menuOpen}
-            aria-controls="main-nav"
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            Menu
-          </button>
-          <MainNav id="main-nav" route={route} open={menuOpen} />
+        <div className="header-main">
+          <div className="container header-inner">
+            <a className="brand" href={paths.select()}>
+              <span>Bitcoin Address Activity Explorer</span>
+            </a>
+            <button
+              type="button"
+              className="nav-toggle"
+              aria-expanded={menuOpen}
+              aria-controls="main-nav"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              Menu
+            </button>
+            <MainNav id="main-nav" route={route} open={menuOpen} />
+          </div>
         </div>
         <div className="header-bar">
           <div className="container header-bar-inner">

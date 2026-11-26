@@ -1,14 +1,12 @@
-import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
-import { entryName, loadWatchlist, useWatchlistState } from '../hooks/useWatchlist';
-import { usePreferences } from '../hooks/usePreferences';
+import { lazy, Suspense, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react';
 import type { Route } from '../lib/router';
-import { PAGE_SECTIONS, paths } from '../lib/router';
-import { AddressLink } from './AddressLink';
+import { paths } from '../lib/router';
 
-// The four sections of the application (plan section 8, "The shell around every view"). Each
-// section owns the routes listed, so a day or a transaction keeps "Addresses" marked as current.
-// Each also has a menu of places inside it (the disclosure-navigation pattern: the label stays a link, a small
-// button beside it shows the list), so the long pages can be opened at a section.
+// The four sections of the application (plan section 8, "The shell around every view"). Each section owns the
+// routes listed, so a day or a transaction keeps "Addresses" marked as current. Each also has a menu (the
+// disclosure-navigation pattern: the label stays a link, a small button beside it shows the menu). On a wide
+// screen the menu is one full-width flyout under the header, shared by the four tabs, with the page dimmed behind
+// it; on a phone it opens in place under its tab. What the menus hold is in NavPanels, loaded on first use.
 type Key = 'addresses' | 'models' | 'watchlist' | 'about';
 const SECTIONS: Array<{ key: Key; label: string; href: string; screens: Route['screen'][] }> = [
   { key: 'addresses', label: 'Addresses', href: paths.select(), screens: ['select', 'timeline', 'transactions', 'day'] },
@@ -17,85 +15,47 @@ const SECTIONS: Array<{ key: Key; label: string; href: string; screens: Route['s
   { key: 'about', label: 'About', href: paths.about(), screens: ['about'] },
 ];
 
+// The menus' contents stay out of the first screen's script: fetched when the pointer or focus first reaches the
+// bar (so the first opening is not empty), or at the latest when a menu opens.
+let panelsModule: Promise<typeof import('./NavPanels')> | null = null;
+const loadPanels = () => (panelsModule ??= import('./NavPanels'));
+const NavPanel = lazy(loadPanels);
+const Flyout = lazy(() => loadPanels().then((m) => ({ default: m.Flyout })));
+
 const CLOSE_DELAY_MS = 150;
-const RECENT_SHOWN = 3;
-const WATCHED_SHOWN = 5;
 // Hovering opens a menu only where the bar is a row and the pointer is a mouse.
 const HOVER_QUERY = '(min-width: 720px) and (hover: hover) and (pointer: fine)';
 const canHover = () => window.matchMedia(HOVER_QUERY).matches;
 
-const link = (href: string, text: ReactNode) => (
-  <li key={href}>
-    <a href={href}>{text}</a>
-  </li>
-);
-
-const sectionLinks = (screen: 'select' | 'models' | 'about') =>
-  PAGE_SECTIONS[screen]
-    // "Recently opened" has its own group below, and only when there is something in it.
-    .filter((s) => s.id !== 'recent')
-    .map((s) => link(paths[screen](s.id), s.label));
-
-function AddressesEntries() {
-  const [{ recent, method }] = usePreferences();
-  return (
-    <>
-      {sectionLinks('select')}
-      {recent.length > 0 ? (
-        <>
-          <li className="nav-panel-label">Recently opened</li>
-          {recent.slice(0, RECENT_SHOWN).map((a) => (
-            <li key={a}>
-              <AddressLink className="mono" address={a} href={paths.timeline(a, method ?? undefined)} head={8} tail={6} />
-            </li>
-          ))}
-        </>
-      ) : null}
-    </>
+// From 720 px the bar is a row and the menus are the shared flyout; below it they open in place.
+const WIDE_QUERY = '(min-width: 720px)';
+function useWide(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const media = window.matchMedia(WIDE_QUERY);
+      media.addEventListener('change', onChange);
+      return () => media.removeEventListener('change', onChange);
+    },
+    () => window.matchMedia(WIDE_QUERY).matches,
+    () => false,
   );
 }
 
-function WatchlistEntries() {
-  const state = useWatchlistState();
-  // Nothing is asked of the service until this menu is opened.
-  useEffect(() => {
-    if (state.status === 'idle' || state.status === 'error') void loadWatchlist();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const entries = state.status === 'ready' ? state.entries : [];
-  return (
-    <>
-      {link(paths.watchlist(), 'Open the watchlist')}
-      {state.status === 'ready' && entries.length === 0 ? <li className="nav-panel-note">Nothing watched yet</li> : null}
-      {state.status === 'idle' || state.status === 'loading' ? <li className="nav-panel-note">Loading…</li> : null}
-      {entries.slice(0, WATCHED_SHOWN).map((e, i) => (
-        <li key={e.address} className={i === 0 ? 'nav-panel-first' : undefined}>
-          <a href={paths.timeline(e.address)} title={e.address}>
-            {entryName(e)}
-          </a>
-        </li>
-      ))}
-      {entries.length > WATCHED_SHOWN ? (
-        <li key="all">
-          <a href={paths.watchlist()}>All {entries.length} on the watchlist</a>
-        </li>
-      ) : null}
-    </>
-  );
-}
-
-function Entries({ section }: { section: Key }) {
-  if (section === 'addresses') return <AddressesEntries />;
-  if (section === 'watchlist') return <WatchlistEntries />;
-  return <>{sectionLinks(section)}</>;
-}
+const firstEntry = (key: Key) => document.querySelector<HTMLElement>(`#nav-panel-${key} a`);
 
 /** The main navigation links (Addresses, Models, Watchlist, About), with the current section marked, each with a menu of its parts; used in the shell. */
 export function MainNav({ route, id, open }: { route: Route; id: string; open: boolean }) {
   // `how` tells a menu the pointer opened (it closes again when the pointer leaves) from one a button opened (it stays).
   const [shown, setShown] = useState<{ key: Key; how: 'hover' | 'pin' } | null>(null);
   const timer = useRef(0);
-  const focusFirst = useRef(false);
+  const focusFirst = useRef<Key | null>(null);
+  const wide = useWide();
+  // The flyout's code comes the first time the pointer or focus reaches the bar, or a menu opens.
+  const [wanted, setWanted] = useState(false);
+  const want = () => {
+    void loadPanels();
+    setWanted(true);
+  };
 
   // Following a link, or any other change of the address, closes the menu.
   useEffect(() => {
@@ -104,48 +64,47 @@ export function MainNav({ route, id, open }: { route: Route; id: string; open: b
     return () => window.removeEventListener('hashchange', close);
   }, []);
 
-  // A click or touch outside the open menu closes it.
-  useEffect(() => {
-    if (!shown) return;
-    const away = (event: Event) => {
-      if ((event.target as Element).closest('[data-nav-item]')?.getAttribute('data-nav-item') !== shown.key) setShown(null);
-    };
-    document.addEventListener('pointerdown', away);
-    return () => document.removeEventListener('pointerdown', away);
-  }, [shown]);
-
-  // After ArrowDown on the button, the first entry takes focus once the list is on screen.
-  useEffect(() => {
-    if (shown && focusFirst.current) document.querySelector<HTMLElement>(`#nav-panel-${shown.key} a`)?.focus();
-    focusFirst.current = false;
-  }, [shown]);
-
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key !== 'Escape' || !shown) return;
-    const inside = (event.target as Element).closest('[data-nav-item]');
-    setShown(null);
-    if (inside) document.getElementById(`nav-toggle-${shown.key}`)?.focus();
+  // Called when a menu's content has appeared: a move of focus that was waiting for it happens now.
+  const contentReady = (key: Key) => {
+    if (focusFirst.current !== key) return;
+    focusFirst.current = null;
+    firstEntry(key)?.focus({ preventScroll: true });
   };
 
+  const hoverEnd = (key: Key) => {
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setShown((was) => (was?.key === key && was.how === 'hover' ? null : was)), CLOSE_DELAY_MS);
+  };
+
+  const panel = (key: Key) => (
+    <Suspense fallback={null}>
+      <NavPanel section={key} onReady={() => contentReady(key)} onClose={() => setShown(null)} />
+    </Suspense>
+  );
+
   return (
-    <nav id={id} className={`main-nav${open ? ' is-open' : ''}`} aria-label="Main" onKeyDown={onKeyDown}>
+    <nav id={id} className={`main-nav${open ? ' is-open' : ''}`} aria-label="Main" onPointerEnter={want} onFocus={want}>
       <ul className="nav-list">
         {SECTIONS.map((s) => {
           const isOpen = shown?.key === s.key;
           const hover = (event: PointerEvent, entering: boolean) => {
             if (event.pointerType !== 'mouse' || !canHover()) return;
-            window.clearTimeout(timer.current);
-            if (entering) setShown((was) => (was?.key === s.key ? was : { key: s.key, how: 'hover' }));
-            else timer.current = window.setTimeout(() => setShown((was) => (was?.key === s.key && was.how === 'hover' ? null : was)), CLOSE_DELAY_MS);
-          };
-          // Tabbing out of the item closes it. A blur with no target (a click on a spot that cannot take focus) is left to the click handler.
-          const onBlur = (event: FocusEvent<HTMLLIElement>) => {
-            if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) setShown((was) => (was?.key === s.key ? null : was));
+            if (entering) {
+              window.clearTimeout(timer.current);
+              setShown((was) => (was?.key === s.key ? was : { key: s.key, how: 'hover' }));
+            } else hoverEnd(s.key);
           };
           return (
-            <li key={s.key} className="nav-item" data-nav-item={s.key} data-open={isOpen || undefined} onPointerEnter={(e) => hover(e, true)} onPointerLeave={(e) => hover(e, false)} onBlur={onBlur}>
+            <li
+              key={s.key}
+              className="nav-item"
+              data-nav-item={s.key}
+              data-open={isOpen || undefined}
+              onPointerEnter={(e) => hover(e, true)}
+              onPointerLeave={(e) => hover(e, false)}
+            >
               <div className="nav-row">
                 <a href={s.href} aria-current={s.screens.includes(route.screen) ? 'page' : undefined} onClick={() => setShown(null)}>
                   {s.label}
@@ -159,9 +118,12 @@ export function MainNav({ route, id, open }: { route: Route; id: string; open: b
                   aria-controls={`nav-panel-${s.key}`}
                   onClick={() => setShown(isOpen && shown?.how === 'pin' ? null : { key: s.key, how: 'pin' })}
                   onKeyDown={(e) => {
-                    if (e.key === 'ArrowDown') {
-                      e.preventDefault();
-                      focusFirst.current = true;
+                    if (e.key !== 'ArrowDown') return;
+                    e.preventDefault();
+                    const present = isOpen ? firstEntry(s.key) : null;
+                    if (present) present.focus({ preventScroll: true });
+                    else {
+                      focusFirst.current = s.key;
                       setShown({ key: s.key, how: 'pin' });
                     }
                   }}
@@ -171,14 +133,27 @@ export function MainNav({ route, id, open }: { route: Route; id: string; open: b
                   </svg>
                 </button>
               </div>
-              {/* The entries exist only while the list is open, so a closed menu adds nothing to the page's text. */}
-              <ul id={`nav-panel-${s.key}`} className="nav-panel" hidden={!isOpen} onClick={(e) => (e.target as Element).closest('a') && setShown(null)}>
-                {isOpen ? <Entries section={s.key} /> : null}
-              </ul>
+              {/* On a phone the menu opens here, in place; it exists only while open, so a closed menu adds nothing to the page's text. */}
+              {wide ? null : (
+                <div id={`nav-panel-${s.key}`} className="nav-panel" hidden={!isOpen} onClick={(e) => (e.target as Element).closest('a') && setShown(null)}>
+                  {isOpen ? panel(s.key) : null}
+                </div>
+              )}
             </li>
           );
         })}
       </ul>
+      {wide && (wanted || shown) ? (
+        <Suspense fallback={null}>
+          <Flyout
+            shown={shown?.key ?? null}
+            onReady={contentReady}
+            onClose={() => setShown(null)}
+            onEnter={() => window.clearTimeout(timer.current)}
+            onLeave={() => shown?.how === 'hover' && hoverEnd(shown.key)}
+          />
+        </Suspense>
+      ) : null}
     </nav>
   );
 }

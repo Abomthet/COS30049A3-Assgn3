@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { AboutScreen } from '../src/views/AboutScreen';
+import { ModelsScreen } from '../src/views/ModelsScreen';
 import { SelectScreen } from '../src/views/SelectScreen';
 import { PAGE_SECTIONS, parseRoute, paths } from '../src/lib/router';
 
@@ -51,6 +52,16 @@ describe('opening a section', () => {
   it('focuses the address box for the lookup section', async () => {
     render(<SelectScreen query={null} section="lookup" />);
     await waitFor(() => expect(document.getElementById('address-input')).toHaveFocus());
+  });
+
+  it("scrolls to one model's card and focuses its name", async () => {
+    const scroll = vi.spyOn(Element.prototype, 'scrollIntoView');
+    render(<ModelsScreen section="model-lof" />);
+    const card = await screen.findByTestId('method-lof');
+    expect(card).toHaveAttribute('id', 'model-lof');
+    expect(card).toHaveAttribute('data-section');
+    await waitFor(() => expect(card.querySelector('h3')).toHaveFocus());
+    expect(scroll.mock.contexts).toContain(card);
   });
 
   it('does nothing when the section is not on the page', () => {

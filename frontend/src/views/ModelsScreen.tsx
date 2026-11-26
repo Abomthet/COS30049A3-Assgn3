@@ -1,5 +1,5 @@
 import type { MethodDescription } from '../api/types';
-import { useScrollToSection } from '../hooks/useScrollToSection';
+import { useScrollToSection, type SectionTarget } from '../hooks/useScrollToSection';
 import { G6PlantedRecall, PATTERNS } from '../charts/G6PlantedRecall';
 import { ErrorState } from '../components/ErrorState';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
@@ -8,6 +8,7 @@ import { useMethods } from '../hooks/useMethods';
 import { useSettings } from '../hooks/useSettings';
 import { formatDay } from '../lib/dates';
 import { capitalised, formatInterval, formatShare, plural } from '../lib/format';
+import { METHODS } from '../lib/methods';
 
 // V5, models and limits (plan section 8): a card for each of the nine models, then what a flag means
 // and what it does not. Every figure on the page is E11's (or E2's, for the snapshot); none is typed
@@ -16,9 +17,9 @@ import { capitalised, formatInterval, formatShare, plural } from '../lib/format'
 function MethodCard({ method }: { method: MethodDescription }) {
   const { evaluation } = method;
   return (
-    <li className="card method-card" data-testid={`method-${method.id}`}>
+    <li className="card method-card" id={`model-${method.id}`} data-section data-testid={`method-${method.id}`}>
       <header>
-        <h3>{method.name}</h3>
+        <h3 id={`model-${method.id}-title`}>{method.name}</h3>
         {method.longName !== method.name ? (
           <p className="method-long-name" data-testid="long-name">
             {method.longName}
@@ -60,7 +61,13 @@ function MethodCard({ method }: { method: MethodDescription }) {
   );
 }
 
-const SECTION_IDS = { models: 'models-title', test: 'test-card', flag: 'limits-title' };
+// Each model's card can be linked to (?section=model-<id>): the page scrolls to the card and focus goes to its name.
+const SECTION_IDS: Record<string, SectionTarget> = {
+  models: 'models-title',
+  test: 'test-card',
+  flag: 'limits-title',
+  ...Object.fromEntries(METHODS.map((m) => [`model-${m.id}`, { scroll: `model-${m.id}`, focus: `model-${m.id}-title` }])),
+};
 
 /** V5, the models and limits screen: a card for each of the nine models, and what a flag does and does not mean. */
 export function ModelsScreen({ section }: { section?: string }) {
