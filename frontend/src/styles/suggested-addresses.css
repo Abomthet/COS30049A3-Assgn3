@@ -1,0 +1,69 @@
+/* "Try one of these" on the empty watchlist. Rows are quiet surfaces, not bordered boxes. */
+.suggest {
+  width: 100%;
+  max-width: 560px;
+  margin: 24px auto 0;
+  text-align: left;
+}
+.suggest-title {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.suggest-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.suggest-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-height: 56px;
+  padding: 6px 8px 6px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.suggest-address {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.suggest-count {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+.suggest-watch {
+  margin-left: auto;
+  background: var(--surface);
+  border-color: transparent;
+}
+.suggest-watch:hover:not(:disabled) {
+  background: var(--border);
+}
+.suggest-more {
+  margin: 8px 0 0 14px;
+  font-size: 0.9rem;
+}
+.suggest-more a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+@media (forced-colors: active) {
+  .suggest-row {
+    border: 1px solid CanvasText;
+  }
+  .suggest-watch {
+    border-color: ButtonText;
+  }
+}
