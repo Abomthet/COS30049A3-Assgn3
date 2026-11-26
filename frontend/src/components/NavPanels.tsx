@@ -43,11 +43,27 @@ function Col({ label, start = 0, wide, stacked, id, children }: { label: string;
   );
 }
 
-const Primary = ({ href, children }: { href: string; children: ReactNode }) => (
-  <a className="nav-primary" href={href}>
-    {children}
-  </a>
+/** A small right-pointing chevron drawn as a shape (not a font glyph); it takes the text colour. */
+const Chevron = ({ className }: { className: string }) => (
+  <svg className={className} viewBox="0 0 8 12" width="8" height="12" aria-hidden="true" focusable="false">
+    <path d="M1.5 1.5 6 6l-4.5 4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
 );
+
+/** A main link: its chevron stays attached to the last word, so a long label never leaves it alone on a line. */
+const Primary = ({ href, children }: { href: string; children: ReactNode }) => {
+  const text = Children.toArray(children).join('');
+  const cut = text.lastIndexOf(' ') + 1;
+  return (
+    <a className="nav-primary" href={href}>
+      {text.slice(0, cut)}
+      <span className="nav-last">
+        {text.slice(cut)}
+        <Chevron className="nav-chev" />
+      </span>
+    </a>
+  );
+};
 
 /** A small link with an optional quiet part after it (read out after a comma). */
 const Secondary = ({ href, title, detail, mono, children }: { href: string; title?: string; detail?: ReactNode; mono?: boolean; children: ReactNode }) => (
@@ -205,6 +221,9 @@ function AboutPanel() {
         </Col>
         <button type="button" className="nav-more" aria-expanded={more} aria-controls={moreId} onClick={() => setMore((m) => !m)} style={rise(4)}>
           {more ? 'See less' : 'See more'}
+          <svg className="nav-more-chev" viewBox="0 0 12 8" width="10" height="7" aria-hidden="true" focusable="false">
+            <path d="M1.5 1.5 6 6l4.5-4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       </div>
       {more ? (

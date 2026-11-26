@@ -533,6 +533,75 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.nav-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-more-chev {
+  flex: none;
+  transition: transform 150ms ease-out;
+}
+.nav-more[aria-expanded='true'] .nav-more-chev {
+  transform: rotate(180deg);
+}
+
+/* Cues that these are links: a small chevron after each main link, and on a small link a soft tint and a chevron on hover or focus. */
+.nav-last {
+  white-space: nowrap;
+}
+.nav-chev {
+  width: 0.4em;
+  height: 0.6em;
+  margin-left: 0.32em;
+  vertical-align: 0.02em;
+  color: var(--text-2);
+  transition:
+    transform 150ms ease-out,
+    color 150ms ease-out;
+}
+.main-nav .nav-primary:focus-visible .nav-chev {
+  transform: translateX(4px);
+}
+.main-nav .nav-primary:focus-visible {
+  color: var(--link);
+}
+.main-nav .nav-primary:focus-visible .nav-chev {
+  color: var(--link);
+}
+.main-nav .nav-secondary {
+  position: relative;
+  border-radius: 8px;
+  color: var(--text);
+  transition: background-color 150ms ease-out;
+}
+.main-nav .nav-secondary.mono {
+  color: var(--link);
+}
+.main-nav .nav-secondary::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 7px;
+  height: 11px;
+  margin-top: -5.5px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3E%3Cpath d='M1.5 1.5 6 6l-4.5 4.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3E%3Cpath d='M1.5 1.5 6 6l-4.5 4.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms ease-out;
+}
+.main-nav .nav-secondary:focus-visible {
+  background: color-mix(in srgb, var(--hover-ring) 10%, transparent);
+}
+.main-nav .nav-secondary:focus-visible::after {
+  opacity: 0.7;
+  transform: none;
+}
 
 /* On a phone the menu opens in place under its tab, indented, inside the "Menu". */
 @media (max-width: 719px) {
@@ -547,6 +616,25 @@
   .main-nav .nav-primary:hover,
   .main-nav .nav-secondary:hover {
     background: var(--surface-2);
+  }
+  .main-nav .nav-secondary {
+    padding-right: 28px;
+  }
+  .main-nav .nav-secondary:hover {
+    background: transparent;
+  }
+  .main-nav .nav-secondary:active {
+    background: color-mix(in srgb, var(--hover-ring) 10%, transparent);
+  }
+  .main-nav .nav-secondary:active::after {
+    opacity: 0.7;
+    transform: none;
+  }
+  .main-nav .nav-primary:hover {
+    background: transparent;
+  }
+  .nav-chev {
+    transition: none;
   }
 }
 
@@ -646,28 +734,36 @@
   }
   .main-nav .nav-primary:hover {
     background: transparent;
-    color: var(--accent);
+    color: var(--link);
   }
+  .main-nav .nav-primary:hover .nav-chev {
+    transform: translateX(4px);
+    color: var(--link);
+  }
+  /* The tint reaches past the text (padding), the negative margin keeps the text where it was. */
   .main-nav .nav-secondary {
     flex-direction: row;
     align-items: baseline;
     justify-content: space-between;
     gap: 16px;
     min-height: 32px;
-    padding: 0;
+    padding: 0 26px 0 8px;
+    margin: 0 -26px 0 -8px;
+    color: var(--text);
   }
   .main-nav .nav-secondary:hover {
-    background: transparent;
-    color: var(--text);
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    background: color-mix(in srgb, var(--hover-ring) 10%, transparent);
+  }
+  .main-nav .nav-secondary:hover::after {
+    opacity: 0.7;
+    transform: none;
   }
   .nav-col-stacked .nav-secondary {
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
     gap: 0;
-    padding: 3px 0;
+    padding: 3px 26px 3px 8px;
   }
   .nav-note {
     padding: 0;
@@ -735,8 +831,17 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-sub-toggle svg,
-  .main-nav .nav-primary {
+  .main-nav .nav-primary,
+  .nav-chev,
+  .nav-more-chev,
+  .main-nav .nav-secondary,
+  .main-nav .nav-secondary::after {
     transition: none;
+  }
+  .main-nav .nav-primary:hover .nav-chev,
+  .main-nav .nav-primary:focus-visible .nav-chev,
+  .main-nav .nav-secondary::after {
+    transform: none;
   }
   .nav-flyout,
   .nav-flyout[data-open],
@@ -746,6 +851,10 @@
   }
 }
 @media (forced-colors: active) {
+  .main-nav .nav-secondary::after {
+    forced-color-adjust: none;
+    background-color: LinkText;
+  }
   .nav-flyout {
     border-bottom-color: CanvasText;
   }
