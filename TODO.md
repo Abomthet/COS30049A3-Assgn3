@@ -4,8 +4,9 @@
 >
 > **Status Sat 21 Nov (evening): MS3 passed.** Last full check on `ed4ad0c` (pushed to the team repo, CI green): Back end 750 passed + 2 skipped, front end 665, browser tests 462 passed.
 > Next: MS4 on Sun 29 Nov (tag `v1.0-rc`, after the Windows clean install and the real-phone check).
-> Branch `ui-remake-apple` is pushed but NOT merged; the team votes keep or drop by Fri 27 Nov. Since 22 Nov it also holds
-> the owner's wording pass and CR-09 (the new limitation line), see `docs/ui-remake-apple.md`. The order of work is the wrap-up plan below.
+> **26 Nov: the team approved the remake; `ui-remake-apple` is merged into `main`** (fast-forward to `2cb03d6`; CR-09 approved
+> with it), see `docs/ui-remake-apple.md`. Still to do after the merge: re-take the screenshots, update the plan's quoted
+> limitation line (s08, b-json). The order of work is the wrap-up plan below.
 
 ## Wrap-up plan (from 19 Nov): who does what
 

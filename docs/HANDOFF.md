@@ -72,7 +72,7 @@ fixed by `7820c5e`).
 
 **Cooks work in git worktrees inside the repo, at `.claude/worktrees/<task>` (git-ignored).** The lead creates each one from `main` (`git worktree add -b <branch> .claude/worktrees/<task> main`) and removes it after merging. Do not let a tool create a worktree on its own: one did on 21 Nov and was based on the old `origin/main` (52 commits behind). In a worktree, run `npm ci` in `frontend/`: a symlinked `node_modules` lacks the `tools/typegen` workspace, so two tests and typecheck fail.
 
-**Branch `ui-remake-apple`** (21 Nov): an Apple-inspired restyle plus a hero on V1, pushed to the team repo as its own branch. **Not merged into `main`.** The team votes keep or drop by Fri 27 Nov. Its notes: `docs/ui-remake-apple.md` on that branch.
+**The Apple-inspired remake** (branch `ui-remake-apple`, 21–26 Nov) was approved by the team and fast-forwarded into `main` on 26 Nov (`2cb03d6`). Its notes: `docs/ui-remake-apple.md`.
 
 ## 3. Where everything is
 
@@ -164,9 +164,8 @@ planning, gates and review, and the cheapest on mechanical work.
 - **Wording rule.** Never use the words in `backend/config/settings.json` → `bannedWords` (fraud,
   criminal, illicit, guilty, suspicious) in any UI string, API message, test name, document or commit
   message. Say "unusual", "flag", "worth a look". Every flagged item carries the limitation line:
-  *"Worth investigating, not proof of wrongdoing."* (Mod-19, from `shared/wording.json`; on branch
-  `ui-remake-apple` until the team's vote, CR-09; `main` still shows A2's *"Unusual activity requires
-  investigation; it does not indicate wrongdoing."*), and so does every export (CSV: every row; JSON: at the top).
+  *"Worth investigating, not proof of wrongdoing."* (Mod-19, from `shared/wording.json`; CR-09, approved
+  with the remake on 26 Nov), and so does every export (CSV: every row; JSON: at the top).
 - **A2's numbers are frozen** (scope W-06). Never retrain, re-tune or regenerate any model or data file.
 - **The vendored A2 code is never edited**: `backend/explorer/`, `backend/lm/`, `backend/models/`,
   `backend/data/` (hashes in `backend/A2_VENDOR.json`). Web changes go in `backend/app/` and get a
@@ -261,7 +260,7 @@ several in parallel.
 - **Push A2's `v1.0` tag** if wanted (`git -C ~/Desktop/COS30049/COS30049A2 push origin v1.0`; that repo is public).
 - **Usability sessions, the Windows clean install, the video (recording and narration), report writing,
   minutes, the contribution form, the Canvas upload.**
-- **Vote on `ui-remake-apple`** (the Apple-inspired restyle, not merged): the team votes keep or drop by Fri 27 Nov. Merge only if kept.
+- ~~**Vote on `ui-remake-apple`**~~: kept by the team; merged into `main` on 26 Nov.
 - **Bibliography style:** the plan says "Harvard style, numbered", but Harvard is author-date. The report outline
   (`docs/report-material/report-outline.md`) flags this as a team decision.
 

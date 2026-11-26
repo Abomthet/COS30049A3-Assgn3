@@ -1,6 +1,6 @@
 # Apple-inspired visual remake (branch `ui-remake-apple`)
 
-A proposal for the team, **not merged**. The first pass (21 Nov) was visual only: the design tokens, the stylesheet and one chart
+Approved by the team and **merged into `main` on 26 Nov 2026** (fast-forward to `2cb03d6`). The first pass (21 Nov) was visual only: the design tokens, the stylesheet and one chart
 helper changed; no behaviour, wording, ARIA role or accessible name changed. The second pass (22 Nov) is a wording pass from the
 owner's feedback: see "Wording pass" and "CR-09" at the end. Study material: `design-ref/apple-2026-11-21/NOTES.md`
 (Apple's screenshots are not in the repo). We borrow principles, not Apple's fonts, images or branding.
@@ -99,7 +99,7 @@ into this branch first). In short:
   with no setup words on screen (both tiers, shared vectors); Models and Watchlist in short lines; About reordered to start
   with what the Explorer does, with "What unusual means" as status tiles, the flag level and the four measures.
 
-## CR-09 (raised 22 Nov 2026; decision pending, with the remake vote)
+## CR-09 (raised 22 Nov 2026; approved 26 Nov with the remake)
 
 | Field | Entry |
 |---|---|
@@ -109,7 +109,7 @@ into this branch first). In short:
 | Reason | The owner's walkthrough found the line long and repeated up to four times on one screen; the shorter line keeps both halves (worth a look; not wrongdoing), so a flag still reads as "needs investigation" (NFR-01 condition 4). |
 | Impact on scope | None: wording and placement only; every flagged item and every export row still carries the line. |
 | Impact on quality | Tests on both tiers check the new line on every flag, once per screen, and on every CSV row (`backend/tests/test_limitation_line.py`, `frontend/tests/limitationOnce.test.tsx`). |
-| Decision | Pending: keep or drop with the `ui-remake-apple` vote (by Fri 27 Nov). If dropped, `main` keeps A2's line. |
+| Decision | Approved 26 Nov 2026 with the remake (the team kept `ui-remake-apple`; merged into `main`). |
 | Changed artefacts | `backend/MODIFICATIONS.md` (Mod-19); the plan's quoted line (s08 "Always show", b-json examples) to be updated if approved |
 
 

@@ -1358,3 +1358,13 @@ Work on branch `ui-remake-apple` (not on `main`), one subagent task at a time. E
 - **Known, not fixed.** The offline banner is also sticky at the top, so on wide screens it may overlap the sticky header. Not tested yet.
 - **Checks.** Front-end unit tests grew from 773 to 811; typecheck and build are clean; `npm run e2e:quick` gave 168 passed and 6 skipped on each step. One unit-test run on `8bdf86e` had one failure that did not come back in 11 reruns. It was not identified and is noted as a timing flake.
 - **State.** Nothing is on `main`. The team vote on the remake is Fri 27 Nov.
+
+## 2026-11-26 — The remake merged into `main` (lead, Opus 5.5)
+
+The team approved the remake (reported by the user, 26 Nov), so `ui-remake-apple` was fast-forwarded into `main`
+(`9f54339` → `2cb03d6`, 60 commits); CR-09 (the shorter limitation line, once per screen, chart CSVs) is approved with
+it. Before the merge, uncommitted edits left in the main checkout since 24 Nov (an earlier copy of the remake's V1 hero
+in `SelectScreen.tsx`, `base.css`, the J1 browser test and `tests/heroSelect.test.tsx`) were discarded at the user's
+request; the branch already holds that hero. Status lines updated in `CLAUDE.md`, `TODO.md`, `docs/HANDOFF.md` and
+`docs/ui-remake-apple.md`. Still open: re-take the screenshots on the remake, update the plan's quoted limitation line
+(s08 "Always show", b-json examples), and the offline banner over the sticky header (not tested).
