@@ -1,4 +1,4 @@
-/* Empty watchlist looks (temporary playground; delete with views/watchlist-empty). */
+/* The empty watchlist: centred, with an unDraw picture recoloured to the app's tokens (credit: src/assets/PHOTO_CREDITS.md). */
 .ew {
   display: grid;
   gap: 8px;
@@ -6,18 +6,10 @@
   justify-items: center;
   text-align: center;
 }
-.ew-left {
-  justify-items: start;
-  text-align: left;
-}
-.ew-s { --ew-w: 96px; }
-.ew-m { --ew-w: 160px; }
-.ew-l { --ew-w: 240px; }
 .ew-art {
-  width: min(var(--ew-w), 62vw);
+  width: min(220px, 62vw);
   height: auto;
   margin-bottom: 8px;
-  overflow: visible;
 }
 .ew-title {
   font-size: 1.35rem;
@@ -31,88 +23,23 @@
 .ew-actions {
   margin-top: 10px;
 }
-.ew-card {
-  fill: var(--surface);
-  stroke: var(--border-strong);
-  stroke-width: 1.5;
-}
-.ew-back { fill: var(--surface-2); }
-.ew-front { fill: var(--surface); }
-.ew-tag {
-  fill: var(--surface);
-  stroke: var(--border-strong);
-  stroke-width: 1.5;
-}
-.ew-dot,
-.ew-bar {
-  fill: var(--track);
-}
-.ew-rule {
-  stroke: var(--border);
-  stroke-width: 1.5;
-}
-.ew-star {
-  fill: var(--tint);
-  stroke: var(--accent);
-  stroke-width: 3;
-  stroke-linejoin: round;
-  transform-box: fill-box;
-  transform-origin: center;
+/* Picture colours. Skin tones keep their own fill; everything else follows the theme. */
+.ew-art .a { fill: var(--accent); }
+.ew-art .k { fill: var(--text-muted); }
+.ew-art .b { fill: var(--grid); }
+.ew-art .p { fill: var(--surface); }
+.ew-art .l { fill: var(--track); }
+.ew-art .r { fill: var(--track); }
+.ew-art .g { fill: var(--axis); }
+.ew-art .w { fill: var(--on-accent); }
+/* The picture is only decoration; in forced colours it is hidden so no system colour clashes with it. */
+@media (forced-colors: active) {
+  .ew-art { display: none; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .ew-star {
-    animation: ew-settle 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  }
+  .ew-art { animation: ew-fade 0.5s ease-out both; }
 }
-@keyframes ew-settle {
-  from {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.92);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@media (forced-colors: active) {
-  .ew-card, .ew-tag, .ew-back, .ew-front {
-    fill: Canvas;
-    stroke: CanvasText;
-  }
-  .ew-bar, .ew-dot {
-    fill: GrayText;
-  }
-  .ew-rule {
-    stroke: GrayText;
-  }
-  .ew-star {
-    fill: Canvas;
-    stroke: CanvasText;
-    stroke-width: 3;
-  }
-}
-
-/* The corner panel. */
-.ew-play {
-  position: fixed;
-  right: 12px;
-  bottom: 12px;
-  z-index: 60;
-  display: grid;
-  gap: 6px;
-  padding: 10px 12px;
-  font-size: 0.8125rem;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
-}
-.ew-play label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.ew-play .ew-play-check {
-  justify-content: flex-start;
+@keyframes ew-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

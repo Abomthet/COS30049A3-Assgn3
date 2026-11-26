@@ -6,6 +6,8 @@
 
 **Data.** The snapshot is public blockchain data for 28 addresses, fetched on 22 October 2026 from the Blockstream Esplora public API (`https://blockstream.info/api`). The optional live lookup reads the same service (and, if it limits the rate, `mempool.space/api`). The application stores no personal data.
 
+**Illustration.** The picture on the empty Watchlist screen is "Save to bookmarks" by Katerina Limpitsouni, from unDraw (`https://undraw.co/search/bookmark`), used under the unDraw licence (`https://undraw.co/license`, read 26 November 2026): "All images, assets and vectors published on unDraw can be used for free", for non-commercial and commercial purposes, with no permission or credit needed. The licence does not allow compiling the assets "to replicate a similar or competing service" or distributing them "in packs or otherwise", and it prohibits using them to train or develop AI or machine learning models. Here one illustration is simplified (coordinates rounded, metadata removed) and recoloured to the app's colours; credit is given anyway (`frontend/src/assets/PHOTO_CREDITS.md`).
+
 **Libraries.** Each version and licence below was read from the installed package's own metadata (Python: `importlib.metadata`, npm: `package.json` after `npm ci`) on 21 November 2026. Versions are the pins in `backend/requirements.txt`, `backend/requirements-assistant.txt`, `frontend/package.json` (ranges such as `^19.3.0` show the version installed from `package-lock.json`) and `frontend/tools/typegen/package.json`.
 
 ## Python, back end (`backend/requirements.txt`)

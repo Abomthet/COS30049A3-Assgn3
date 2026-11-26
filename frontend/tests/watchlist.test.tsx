@@ -167,8 +167,8 @@ describe('V6', () => {
   test('an empty list says so and points to the star', async () => {
     start('#/watchlist');
     const panel = await screen.findByTestId('state-empty-watchlist');
-    expect(panel).toHaveTextContent('No saved addresses yet');
-    expect(panel).toHaveTextContent('Select the star on an address to save it.');
+    expect(panel).toHaveTextContent('Nothing on your watchlist yet');
+    expect(panel).toHaveTextContent('Press the star on an address to keep it here with a note.');
     expect(within(panel).getByRole('link', { name: 'Choose an address' })).toBeInTheDocument();
     expect(document.querySelector('.lede')!.textContent).toBe('Saved addresses with your notes.');
     expect(screen.getByRole('heading', { level: 1, name: 'Watchlist' })).toBeInTheDocument();
