@@ -3,7 +3,10 @@ import type { WatchlistEntry } from '../api/types';
 import { AddressLink } from '../components/AddressLink';
 import { ErrorState } from '../components/ErrorState';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
-import { Loading, StatePanel } from '../components/StatePanel';
+import { Loading } from '../components/StatePanel';
+import { EmptyPlayground } from './watchlist-empty/EmptyPlayground';
+import { EmptyWatchlist } from './watchlist-empty/EmptyWatchlist';
+import { usePlaySettings } from './watchlist-empty/playSettings';
 import WatchDialog from '../components/WatchDialog';
 import { KIND_LABEL } from '../lib/address';
 import { dayKey, formatDay } from '../lib/dates';
@@ -64,6 +67,9 @@ export default function WatchlistScreen() {
   const { settings } = useSettings();
   const removeWithUndo = useRemoveWithUndo();
   const [editing, setEditing] = useState<WatchlistEntry | null>(null);
+  const play = usePlaySettings();
+  // "Pretend it is empty" only changes what is drawn; no entry is touched.
+  const showEmpty = state.status === 'ready' && (state.entries.length === 0 || (play.enabled && play.settings.empty));
 
   return (
     <div className="page page-watchlist">
@@ -73,21 +79,15 @@ export default function WatchlistScreen() {
       </p>
       {state.status === 'loading' || state.status === 'idle' ? <Loading label="Loading the watchlist…" block /> : null}
       {state.status === 'error' ? <ErrorState error={state.error} onRetry={reload} /> : null}
-      {state.status === 'ready' && state.entries.length === 0 ? (
-        <StatePanel
-          tone="empty"
-          title="No saved addresses yet"
-          testId="state-empty-watchlist"
-          actions={
-            <a className="btn btn-secondary" href={paths.select()}>
-              Choose an address
-            </a>
-          }
-        >
-          <p>Select the star on an address to save it.</p>
-        </StatePanel>
+      {state.status === 'ready' && showEmpty ? (
+        <EmptyWatchlist
+          art={play.settings.art}
+          align={play.settings.align}
+          size={play.settings.size}
+          suggestions={null /* TODO(lead): render <SuggestedAddresses count={...}/> here (play.settings.suggest) */}
+        />
       ) : null}
-      {state.status === 'ready' && state.entries.length > 0 ? (
+      {state.status === 'ready' && !showEmpty ? (
         <>
           <p className="section-meta watch-meta" role="status">
             <span>{formatCount(state.entries.length)} saved</span>
@@ -105,6 +105,7 @@ export default function WatchlistScreen() {
           </ul>
         </>
       ) : null}
+      {play.enabled ? <EmptyPlayground settings={play.settings} update={play.update} /> : null}
       {editing ? <WatchDialog address={editing.address} entry={editing} onClose={() => setEditing(null)} /> : null}
     </div>
   );
