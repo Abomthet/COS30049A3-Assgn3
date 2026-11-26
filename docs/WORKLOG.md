@@ -1368,3 +1368,21 @@ in `SelectScreen.tsx`, `base.css`, the J1 browser test and `tests/heroSelect.tes
 request; the branch already holds that hero. Status lines updated in `CLAUDE.md`, `TODO.md`, `docs/HANDOFF.md` and
 `docs/ui-remake-apple.md`. Still open: re-take the screenshots on the remake, update the plan's quoted limitation line
 (s08 "Always show", b-json examples), and the offline banner over the sticky header (not tested).
+
+## 2026-11-26 — `tools/host.sh`: hosting from a Mac through a tunnel (lead, Opus 5.5)
+
+The user wants friends elsewhere to try the Explorer, hosted on an M1 MacBook Pro (8 GB). `tools/host.sh` builds the
+front end, starts Uvicorn and `vite preview` on 127.0.0.1 only, opens a Cloudflare quick tunnel (default) or ngrok
+(`--tunnel ngrok`, `--tunnel none`), waits for each part, prints the link, keeps the Mac awake with `caffeinate`, and
+stops every part on Ctrl+C or when one part dies; `--live` switches the live lookup on. Vite 8 refuses an unknown Host
+header (checked: `Host: x.trycloudflare.com` → 403, `Host: localhost` → 200), so the tunnels pass
+`--http-host-header localhost` / `--host-header=localhost` and no Vite setting is changed. README section "Sharing it
+with people elsewhere".
+
+**Checked here** with `--tunnel none --live`: page 200, `/api/health` through the page server, a live lookup's event
+stream arriving step by step through the preview proxy (status, two progress events, scoring, done over 5 s; both test
+addresses forgotten afterwards), Ctrl+C leaving no process or port behind, and the failure messages (no cloudflared,
+wrong Python, port in use, bad option). Memory: the back end used about 390 MB with the Assistant ready.
+
+**Not checked:** a real public tunnel; opening one from this Mac was refused by the session's permission check. The
+user tries it on the M1 (whether Cloudflare's quick tunnel passes the live lookup's event stream is open; ngrok does).

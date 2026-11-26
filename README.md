@@ -317,6 +317,26 @@ minute, or use a snapshot address; nothing else in the application needs the con
 `LIVE_NETWORK=1 python -m pytest -q tests/test_live_api.py -m slow` makes one real request.
 
 
+## Sharing it with people elsewhere (macOS, optional)
+
+`tools/host.sh` builds the front end, starts the back end and the built page on this computer only (127.0.0.1), and
+opens a public HTTPS link to the page through a tunnel. It keeps the Mac awake while it runs, and Ctrl+C stops every
+part together.
+
+```bash
+brew install cloudflared                # once (or: brew install ngrok, then ngrok config add-authtoken <token>)
+conda activate cos30049-a3              # or set HOST_PYTHON=/path/to/the/environment's/python
+tools/host.sh                           # prints "Share this link: https://<random>.trycloudflare.com"
+tools/host.sh --tunnel ngrok            # the same through ngrok
+tools/host.sh --live                    # with the live lookup on (6 fetches an hour, shared by every visitor)
+tools/host.sh --tunnel none             # this computer only, on http://127.0.0.1:4173
+```
+
+Run `npm ci` in `frontend/` once first. Anyone with the link can use the Explorer, and every visitor shares one
+watchlist. The Cloudflare link changes each time the script starts. The page server accepts only its own host name,
+so the script tells the tunnel to present itself as `localhost` (without that, every request through the tunnel gets
+403). About 0.4 GB of memory is used, more once the Assistant has answered.
+
 ## Tests
 
 Back end, from `backend/` with the environment active. Warnings are errors in every run.
