@@ -3367,8 +3367,6 @@ select.text-input {
 @media (hover: hover) and (pointer: fine) {
   /* Tiles: ring + soft shadow. */
   .stat:hover,
-  .about-tile:hover,
-  .about-measure:hover,
   .state-panel:hover {
     box-shadow: 0 0 0 1.5px var(--hover-ring), var(--hover-shadow);
   }
@@ -3393,7 +3391,7 @@ select.text-input {
     filter: brightness(1.08);
   }
   /* One ring at a time: over a tile inside a card, the tile reacts and the card stays still. */
-  .card:has(:is(.stat, .about-tile, .about-measure, .state-panel):hover) {
+  .card:has(:is(.stat, .state-panel):hover) {
     background: var(--surface);
     box-shadow: var(--shadow);
   }
@@ -3409,8 +3407,6 @@ select.text-input {
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .card,
   .stat,
-  .about-tile,
-  .about-measure,
   .state-panel,
   .example-list a,
   .nav-link,
@@ -3431,8 +3427,6 @@ select.text-input {
   }
   .card:not(.chart-card):not(.replay-card):not(.table-card):not(:has(.pchart)):hover,
   .stat:hover,
-  .about-tile:hover,
-  .about-measure:hover,
   .state-panel:hover,
   .example-list a:hover,
   .nav-link:not(.nav-link-disabled):hover,
@@ -3446,7 +3440,7 @@ select.text-input {
   .lookup-card:hover {
     transform: translateY(-4px);
   }
-  .card:not(.chart-card):not(.replay-card):not(.table-card):not(:has(.pchart)):has(:is(.stat, .about-tile, .about-measure, .state-panel):hover) {
+  .card:not(.chart-card):not(.replay-card):not(.table-card):not(:has(.pchart)):has(:is(.stat, .state-panel):hover) {
     transform: none;
   }
 }
