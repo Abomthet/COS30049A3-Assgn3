@@ -18,6 +18,11 @@
 
 /* ------------------------------------------------------------------ header and navigation */
 
+/* The header's height where it sticks (set on a wider screen below); 0 where it scrolls away. Sticky things clear it. */
+:root {
+  --header-h: 0px;
+}
+
 .header-inner {
   flex-wrap: wrap;
   justify-content: space-between;
@@ -334,11 +339,14 @@
     backdrop-filter: saturate(180%) blur(20px);
   }
 }
-/* On a wider screen the header sticks, but the service line scrolls away: only the navigation row stays. */
+/* On a wider screen the whole header (navigation and service line) stays at the top of the window. */
 @media (min-width: 720px) {
+  :root {
+    --header-h: 98px;
+  }
   .app-header {
     position: sticky;
-    top: -45px;
+    top: 0;
   }
   .header-bar {
     height: 45px;
@@ -393,7 +401,7 @@
 
 /* A section reached from the navigation lands below the sticky header instead of under it. */
 [data-section] {
-  scroll-margin-top: 72px;
+  scroll-margin-top: calc(var(--header-h) + 16px);
 }
 
 /* ------------------------------------------------------------------ navigation menus (disclosure navigation) */

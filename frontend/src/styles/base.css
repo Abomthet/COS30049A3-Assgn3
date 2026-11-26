@@ -1153,8 +1153,8 @@ main.container {
   }
   .tx-list-card {
     position: sticky;
-    top: 16px;
-    max-height: calc(100vh - 32px);
+    top: calc(var(--header-h) + 16px);
+    max-height: calc(100vh - var(--header-h) - 32px);
     overflow: auto;
   }
 }
@@ -1890,7 +1890,7 @@ main.container {
   }
   .whatif-form {
     position: sticky;
-    top: 16px;
+    top: calc(var(--header-h) + 16px);
   }
 }
 .whatif-form {
