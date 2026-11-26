@@ -1386,3 +1386,14 @@ wrong Python, port in use, bad option). Memory: the back end used about 390 MB w
 
 **Not checked:** a real public tunnel; opening one from this Mac was refused by the session's permission check. The
 user tries it on the M1 (whether Cloudflare's quick tunnel passes the live lookup's event stream is open; ngrok does).
+
+## 2026-11-26 — Flagged day links: orange hover instead of blue (Sonnet 5.5; lead Opus 5.5)
+
+The owner, using the app live, found a blue ring on the orange "Previous unusual day" pill on hover. Cause: the
+pill rule gave every `.nav-link` the blue hover ring, and `.nav-link:hover` (grey) outranked `.nav-link-flag`. Now
+(`d107231`, CSS only) the flagged day links take the flagged-item rule (orange ring, redder fill, as `.day-link` and
+flagged rows since `633ea0a`); the plain day links go grey with no ring; the disabled "none" state takes no hover; the
+date on the redder fill uses `--text-2` (5.88:1 dark, 6.86:1 light; the muted tone would have been 3.48:1 in dark).
+Keyboard focus keeps the app-wide blue outline outside the orange ring, as flagged rows do: an orange outline would be
+about 2.9:1 on the light page, under the 3:1 a focus indicator needs. Lead review: diff, attribution and the hover and
+focus screenshots in both themes checked. The other pills (buttons, examples, star) keep their blue hover ring.
