@@ -1339,3 +1339,22 @@ Polish on branch `ui-remake-apple` (not on `main`), one subagent task at a time,
   - First-screen JS is 146.3 of 150 kB gzip; all budgets pass.
 - **Also.** The animation-principles skills (github.com/dylantarre/animation-principles, 144 skills) were installed in the local Claude Code setup (outside the repo).
 - **State.** Pushed to `assgn3/ui-remake-apple` only after the full clean-worktree suites passed. `main` is untouched; the merge into main awaits the team vote (Fri 27 Nov).
+
+## 2026-11-26 — Navigation menus and a sticky header (Sonnet 5.5 and Haiku 5.5; lead Opus 5.5)
+
+Work on branch `ui-remake-apple` (not on `main`), one subagent task at a time. Each change was reviewed from screenshots and on the live dev server before it was committed to the branch.
+
+- **Section links** (`6750df9`): the hash routes take a `?section=` value, for example `#/about?section=limits`, `#/models?section=flag` and `#/?section=snapshot`. `PAGE_SECTIONS` in `lib/router.ts` lists the valid names. `useScrollToSection` scrolls to the section and focuses it once it exists; it waits up to 2 s for content that loads late.
+- **First menus** (`0a88cbe`, `6a0cc39`): a small box under each tab. The tab stays a link, and a chevron button beside it opens the list (disclosure navigation). On a mouse, hover opens the list, with a 150 ms delay before it closes. Escape, a click outside, Tab away from the list and following a link all close it. On a phone the lists sit inline inside "Menu". The watchlist is fetched only when its menu is first opened. The lead fixed a duplicate React key on the "All N" link.
+- **Review of the first menus.** The user liked the motion but found the look and the content weak: the boxes jumped sideways and covered the headline, every row looked the same, and the content repeated the page.
+- **Full-width flyout** (`8bdf86e`): the menus became one full-width flyout under the header, shared by the four tabs. The page behind dims and blurs. The surface stays put and only its height changes when moving between tabs. Items rise in with a short stagger (none under reduced motion).
+  - Addresses: Look up an address, Browse all N addresses, Most flagged (top 3 by flags), Recently opened.
+  - Models: Compare the nine models, Test-pattern results, What a flag means, then each of the nine models linking to its card (`?section=model-<id>`).
+  - Watchlist: Open the watchlist, then each watched address as label, short address and flag count.
+  - About: the three most important items (How a flag is decided, What "unusual" means, Limits), then "See more" for the other four.
+  - The menu content is a lazily loaded module, so first-screen JS stayed at 148.3 kB gzip of 150.
+- **Link cues** (`ad493ed`): at rest nothing in the flyout looked clickable (the user's feedback). Large links get a chevron that slides on hover, addresses use link blue, small rows get a soft tint and a chevron on hover, and the "See more" chevron rotates. Hover text uses `--link` (about 5.7:1 on dark, 5.6:1 on light).
+- **Sticky header** (`3f4356e`, `14a5f08`): on wide screens the header was set to `top: -45px`, meant to let the service line scroll away. But the service line sits below the nav row, so the nav row scrolled off instead (found during the flyout work). The user chose to keep the whole header sticky. `--header-h` is 98 px on wide screens and 0 on phones. It is used for section scroll margins, the day page's transaction list card and the what-if form (`3f4356e`). The lead added the same clearance for the top of the transactions table and the open transaction's heading (`14a5f08`).
+- **Known, not fixed.** The offline banner is also sticky at the top, so on wide screens it may overlap the sticky header. Not tested yet.
+- **Checks.** Front-end unit tests grew from 773 to 811; typecheck and build are clean; `npm run e2e:quick` gave 168 passed and 6 skipped on each step. One unit-test run on `8bdf86e` had one failure that did not come back in 11 reruns. It was not identified and is noted as a timing flake.
+- **State.** Nothing is on `main`. The team vote on the remake is Fri 27 Nov.

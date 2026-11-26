@@ -139,3 +139,25 @@ into this branch first). In short:
   - **No pause control.** The user decided not to add one, so the float does not meet WCAG 2.2.2 (Pause, Stop, Hide), which applies to automatic motion that lasts more than five seconds. A pause toggle is small to add later; it would stop both float animations and the scroll drift.
   - Hero text contrast stays at or above 4.5:1 in both themes at 1280 and 390 px (worst case: the stat label, 5.97 dark and 4.94 light at 390 px).
 - **Photo credit:** Pexels, https://www.pexels.com/photo/bitcoins-on-black-surface-7267491/, under the Pexels licence (https://www.pexels.com/license/). A resized and recompressed copy. Also in `frontend/src/assets/PHOTO_CREDITS.md`.
+
+## Navigation menus and sticky header (26 Nov 2026)
+
+**What.** Each of the four tabs (Addresses, Models, Watchlist, About) opens a full-width flyout under the header. The page behind it dims and blurs. The surface stays in place when moving between tabs; only its height changes. Items rise in with a short stagger, and none move under reduced motion.
+
+**Why.** The first version put small boxes under each tab. The owner found the look and the content weak: the boxes jumped sideways and covered the headline, every row looked the same, and the content repeated the page. The flyout gives each tab a short list of places to go next.
+
+**Content.**
+- Addresses: look up an address, browse all addresses, the three most flagged, and recently opened.
+- Models: compare the nine models, test-pattern results, what a flag means, and a link to each model's card (`?section=model-<id>`).
+- Watchlist: open the watchlist, then each watched address with its flag count.
+- About: the three most important lines, then "See more" for the other four.
+
+**Link cues.** At rest nothing in the flyout looked clickable, so large links get a chevron that slides on hover, addresses use link blue, and small rows get a soft tint and a chevron on hover. Hover text uses `--link` (about 5.7:1 on dark, 5.6:1 on light).
+
+**Section links.** The hash routes accept `?section=` (for example `#/about?section=limits`). The page scrolls to the named section and moves focus to it once it exists. The valid names are in `PAGE_SECTIONS` in `lib/router.ts`.
+
+**Sticky header.** On wide screens the header had been set to `top: -45px`, meant to let the service line scroll away. The service line sits below the nav row, so the nav row scrolled off instead. The owner chose to keep the whole header sticky. `--header-h` (98 px on wide screens, 0 on phones) gives the section scroll margins, the day page's transaction list, the what-if form and the transactions table room under the header.
+
+**Open.** The offline banner is also sticky at the top and may overlap the header on wide screens. Not tested yet.
+
+**Status.** On `ui-remake-apple` only; nothing is on `main`. Each change was checked from screenshots and on the live dev server before it was committed. The team vote on the remake is Fri 27 Nov.
