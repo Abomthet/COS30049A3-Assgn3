@@ -7,6 +7,7 @@ import { Loading } from '../components/StatePanel';
 import { EmptyPlayground } from './watchlist-empty/EmptyPlayground';
 import { EmptyWatchlist } from './watchlist-empty/EmptyWatchlist';
 import { usePlaySettings } from './watchlist-empty/playSettings';
+import { SuggestedAddresses } from './watchlist-empty/SuggestedAddresses';
 import WatchDialog from '../components/WatchDialog';
 import { KIND_LABEL } from '../lib/address';
 import { dayKey, formatDay } from '../lib/dates';
@@ -84,7 +85,7 @@ export default function WatchlistScreen() {
           art={play.settings.art}
           align={play.settings.align}
           size={play.settings.size}
-          suggestions={null /* TODO(lead): render <SuggestedAddresses count={...}/> here (play.settings.suggest) */}
+          suggestions={play.settings.suggest === 'off' ? null : <SuggestedAddresses count={play.settings.suggest === '5' ? 5 : 3} />}
         />
       ) : null}
       {state.status === 'ready' && !showEmpty ? (

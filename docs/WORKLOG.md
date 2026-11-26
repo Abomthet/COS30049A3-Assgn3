@@ -1397,3 +1397,21 @@ date on the redder fill uses `--text-2` (5.88:1 dark, 6.86:1 light; the muted to
 Keyboard focus keeps the app-wide blue outline outside the orange ring, as flagged rows do: an orange outline would be
 about 2.9:1 on the light page, under the 3:1 a focus indicator needs. Lead review: diff, attribution and the hover and
 focus screenshots in both themes checked. The other pills (buttons, examples, star) keep their blue hover ring.
+
+## 2026-11-26 — Empty watchlist playground and suggested addresses (Sonnet 5.5 ×2 in parallel; lead Opus 5.5)
+
+The owner found the empty Watchlist bare and asked for options to play with (a footer-at-the-bottom goal was dropped by
+the owner). Two cooks in parallel, separate files and ports (the user allowed two at a time on 26 Nov):
+- **Playground** (`e9e60fe`): `views/watchlist-empty/` (`playSettings.ts`, `illustrations.tsx`, `EmptyWatchlist.tsx`,
+  `EmptyPlayground.tsx`) and `styles/empty-watchlist.css`. Corner panel on the Watchlist only; in development always, in a
+  production build only with `play` in the hash query (`#/watchlist?play&art=1`). Keys: `art` 0–3 (0 = the current
+  panel, unchanged and the default; 1 stacked cards with a star, 2 empty list with a star, 3 tray with a star tag; original
+  inline SVG, 0.7–1.1 kB, `aria-hidden`, forced-colours rules, a one-time star settle only without reduced motion), `align`,
+  `size`, `empty=1` (pretend empty: drawing only, nothing deleted), `suggest` off/3/5. Hash beats `localStorage`.
+- **Suggested addresses** (`fc0bbf0`, `d3b45e1`): `SuggestedAddresses.tsx` + CSS: "Try one of these", the most flagged
+  snapshot addresses (the nav flyout's order), each with a Watch button through the star's store call and toast; watched
+  ones drop out; nothing on loading or error.
+- **Lead:** wired `suggest` to the component in `WatchlistScreen.tsx`, added two tests. Reviewed both diffs and the
+  screenshots; the playground cook's report wrongly said its commit carried an attribution line (it did not). Both cooks
+  saw load timeouts in full runs while the two ran together; the full check was re-run on a quiet machine before the push.
+  Open: the art 3 star is dim in dark; the owner picks a variant, then the playground is removed (Goal 5).

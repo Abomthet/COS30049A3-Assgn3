@@ -80,4 +80,21 @@ describe('the screen', () => {
     expect((await mockApi.watchlist()).entries).toHaveLength(1);
     await mockApi.deleteWatchlist(ex.mainAddress);
   });
+
+  test.each([
+    ['3', 3],
+    ['5', 5],
+  ])('suggest=%s lists that many addresses to watch under the empty state; off lists none', async (suggest, n) => {
+    start(`#/watchlist?art=1&suggest=${suggest}`);
+    const panel = await screen.findByTestId('state-empty-watchlist');
+    await within(panel).findByRole('heading', { level: 3, name: 'Try one of these' }, { timeout: 3000 });
+    expect(within(panel).getAllByRole('button', { name: /^Watch / })).toHaveLength(n);
+  });
+
+  test('without suggest there is no list', async () => {
+    start('#/watchlist?art=1');
+    const panel = await screen.findByTestId('state-empty-watchlist');
+    await screen.findByRole('heading', { level: 2, name: 'Nothing on your watchlist yet' });
+    expect(within(panel).queryByRole('heading', { name: 'Try one of these' })).toBeNull();
+  });
 });
