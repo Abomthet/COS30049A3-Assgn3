@@ -75,7 +75,11 @@ function WatchlistEntries() {
           </a>
         </li>
       ))}
-      {entries.length > WATCHED_SHOWN ? link(paths.watchlist(), `All ${entries.length} on the watchlist`) : null}
+      {entries.length > WATCHED_SHOWN ? (
+        <li key="all">
+          <a href={paths.watchlist()}>All {entries.length} on the watchlist</a>
+        </li>
+      ) : null}
     </>
   );
 }
