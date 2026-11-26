@@ -141,7 +141,7 @@ export function TransactionsTab({ timeline, search }: { timeline: TimelineRespon
             <SelectionBar rows={chart.rows} selected={selectedRows} onSelect={select} onClear={() => select(null)} />
           </Suspense>
         ) : null}
-        <div ref={tableTop}>
+        <div ref={tableTop} className="scroll-clear">
           <TransactionTable page={selectedRows ? selectionPage(address, selectedRows, filters.sort) : page} method={filters.method} pageHref={(n) => paths.transactions(address, filtersToSearch({ ...filters, page: n }))} />
         </div>
       </>

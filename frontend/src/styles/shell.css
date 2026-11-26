@@ -400,7 +400,9 @@
 }
 
 /* A section reached from the navigation lands below the sticky header instead of under it. */
-[data-section] {
+[data-section],
+.scroll-clear,
+#detail-title {
   scroll-margin-top: calc(var(--header-h) + 16px);
 }
 
