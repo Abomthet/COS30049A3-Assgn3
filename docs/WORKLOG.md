@@ -1430,3 +1430,17 @@ ignored (tested). Licence in `LICENSES.md` and `PHOTO_CREDITS.md`, quoted from u
 its clauses on packs/competing services, automated downloading without consent, and AI training (not applicable: the
 picture is only displayed). Alternatives "Bookmarks" and "Favorite" were screenshotted, not committed. Lead review:
 diff, SVG content, attribution, screenshots (light, dark, phone).
+
+## 2026-11-26 — Polish: new limitation line, orange line in the flag box, footer credit only, still About tiles (Sonnet 5.5 ×2 in parallel; lead Opus 5.5)
+
+The owner's calls after using the hosted build. (1) The limitation line is now "Flagged as unusual for this address,
+not proof of wrongdoing." (owner's pick of three; Mod-19's `shared/wording.json`, so screens, the API and every CSV/JSON
+export row change together; OpenAPI examples, generated types, fixtures by exact replace, since a fresh recording also
+changed unrelated request ids and float noise). (2) Inside the flag box the line was a grey surface box; it now takes the
+flag colours (orange tint of the box fill, flag ink text 6.1:1 light, 6.9:1 dark) with the flag triangle; forced colours
+keep an edge. (3) The footer keeps only the course credit: the footer copy of the line and "Unusual means different from
+this address's own earlier activity." are gone, with the once-per-screen registry (`useLimitationShown`). Decision: the
+line now shows with each flag box, the replay's flagged line and every export, but not on screens without a flag box
+(the owner's choice; this departs from Mod-19's "once per screen"). (4) About: the state tiles and the four measures are
+not clickable, so they lose their own hover ring and lift; the outer card reacts across its whole area. `db4f047`,
+`8c0efd9`. Lead review: diffs, banned words, screenshots (both themes), clean-worktree suites.
