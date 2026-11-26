@@ -2917,11 +2917,18 @@ select.text-input {
   background: var(--surface);
   padding: 4px 16px;
 }
-.nav-link:hover {
+.nav-link:not(.nav-link-disabled):hover {
   background: var(--hover-bg);
 }
 .nav-link-flag {
   background: var(--flag-bg);
+}
+.nav-link.nav-link-flag:hover {
+  background: color-mix(in srgb, var(--flag-bg) 72%, var(--series-2));
+}
+/* On the redder hover fill the muted date would drop under 4.5:1 in the dark theme, so it takes the second text tone. */
+.nav-link-flag:hover .nav-date {
+  color: var(--text-2);
 }
 .nav-link-disabled {
   background: transparent;
@@ -3376,7 +3383,6 @@ select.text-input {
   }
   /* Pills, buttons, links styled as pills: ring + soft shadow. */
   .example-list a:hover,
-  .nav-link:hover,
   .btn:not(:disabled):hover,
   .icon-button:hover,
   .status-button:hover,
@@ -3429,7 +3435,7 @@ select.text-input {
   .about-measure:hover,
   .state-panel:hover,
   .example-list a:hover,
-  .nav-link:hover,
+  .nav-link:not(.nav-link-disabled):hover,
   .btn:not(:disabled):hover,
   .icon-button:hover,
   .status-button:hover,
@@ -3468,6 +3474,9 @@ select.text-input {
   .day-link:hover,
   .tx-row.is-flagged:hover {
     box-shadow: 0 0 0 1.5px var(--series-2), var(--hover-shadow);
+  }
+  .nav-link-flag:hover {
+    box-shadow: 0 0 0 1.5px var(--series-2), 0 6px 20px color-mix(in srgb, var(--series-2) 18%, transparent), 0 2px 6px rgba(0, 0, 0, 0.1);
   }
   .day-link:hover {
     background: color-mix(in srgb, var(--flag-bg) 72%, var(--series-2));
@@ -3556,6 +3565,9 @@ select.text-input {
 .day-link:focus-visible,
 .tx-row.is-flagged:focus-visible {
   box-shadow: 0 0 0 1.5px var(--series-2), var(--hover-shadow);
+}
+.nav-link-flag:focus-visible {
+  box-shadow: 0 0 0 1.5px var(--series-2), 0 6px 20px color-mix(in srgb, var(--series-2) 18%, transparent), 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 .tx-row.is-selected.is-flagged:focus-visible {
   box-shadow: inset 0 0 0 2px var(--series-1), 0 0 0 1.5px var(--series-2), var(--hover-shadow);
