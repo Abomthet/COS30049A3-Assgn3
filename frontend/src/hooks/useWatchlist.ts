@@ -68,6 +68,9 @@ export async function removeWatchlistEntry(entry: WatchlistEntry): Promise<Outco
   return res;
 }
 
+/** The store as it stands, without loading it (the navigation's Watchlist menu loads it only when opened). */
+export const useWatchlistState = (): WatchlistState => useSyncExternalStore(subscribe, () => state);
+
 /** The list, loaded the first time any screen asks for it. */
 export function useWatchlist(): { state: WatchlistState; entryFor: (address: string) => WatchlistEntry | undefined; reload: () => void } {
   const current = useSyncExternalStore(subscribe, () => state);

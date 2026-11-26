@@ -73,7 +73,7 @@ export const PAGE_SECTIONS = {
   ],
   models: [
     { id: 'models', label: 'The models' },
-    { id: 'test', label: 'Planted-spike test' },
+    { id: 'test', label: 'Test-pattern results' },
     { id: 'flag', label: 'What a flag means' },
   ],
   about: [

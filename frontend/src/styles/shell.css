@@ -42,7 +42,7 @@
 .main-nav.is-open {
   display: block;
 }
-.main-nav ul {
+.nav-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -84,7 +84,7 @@
     flex-basis: auto;
     margin-left: 16px;
   }
-  .main-nav ul {
+  .nav-list {
     flex-direction: row;
     gap: 4px;
   }
@@ -394,4 +394,169 @@
 /* A section reached from the navigation lands below the sticky header instead of under it. */
 [data-section] {
   scroll-margin-top: 72px;
+}
+
+/* ------------------------------------------------------------------ navigation menus (disclosure navigation) */
+
+/* Each item is its link and a small button beside it; the button opens the list of places inside the section. */
+.nav-row {
+  display: flex;
+  align-items: center;
+}
+.nav-row > a {
+  flex: 1 1 auto;
+}
+.nav-sub-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.nav-sub-toggle:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.nav-sub-toggle svg {
+  transition: transform 150ms ease;
+}
+.nav-sub-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+.nav-panel {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nav-panel[hidden] {
+  display: none;
+}
+.nav-panel li {
+  list-style: none;
+}
+.nav-panel a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-panel a:hover {
+  background: var(--surface-2);
+}
+.nav-panel-label,
+.nav-panel-note {
+  padding: 8px 12px 2px;
+  color: var(--text-2);
+  font-size: 0.75rem;
+  letter-spacing: 0.01em;
+}
+.nav-panel-label {
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  font-weight: 600;
+  text-transform: none;
+}
+.nav-panel-note {
+  padding-bottom: 8px;
+  font-size: 0.8125rem;
+}
+.nav-panel-first {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+/* On a phone the list opens in place under its item, indented. */
+@media (max-width: 719px) {
+  .nav-panel {
+    margin: 0 0 6px 16px;
+    padding-left: 8px;
+    border-left: 1px solid var(--border);
+  }
+}
+
+/* On a wider screen it drops below the item as a solid card (a blur here would only see the header, so none is used). */
+@media (min-width: 720px) {
+  .nav-item {
+    position: relative;
+  }
+  .nav-sub-toggle {
+    width: 24px;
+    margin-left: -6px;
+  }
+  .nav-row > a {
+    padding-right: 10px;
+  }
+  .nav-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 30;
+    min-width: 240px;
+    max-width: min(320px, calc(100vw - 32px));
+    margin-top: 2px;
+    padding: 6px;
+    background: var(--header-solid);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+  /* Keeps the pointer inside the item while it crosses the gap between the item and its card. */
+  .nav-panel::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -6px;
+    height: 6px;
+  }
+}
+/* Where the pointer is a finger, the button keeps the full touch size. */
+@media (min-width: 720px) and (any-pointer: coarse) {
+  .nav-sub-toggle {
+    width: 44px;
+    margin-left: -10px;
+  }
+}
+@media (min-width: 720px) and (prefers-reduced-motion: no-preference) {
+  .nav-panel:not([hidden]) {
+    animation: nav-panel-in 120ms ease-out;
+  }
+}
+@keyframes nav-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-sub-toggle svg {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .nav-panel {
+    border-color: CanvasText;
+  }
+}
+@media print {
+  .nav-sub-toggle,
+  .nav-panel {
+    display: none;
+  }
 }
