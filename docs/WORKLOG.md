@@ -1415,3 +1415,18 @@ the owner). Two cooks in parallel, separate files and ports (the user allowed tw
   screenshots; the playground cook's report wrongly said its commit carried an attribution line (it did not). Both cooks
   saw load timeouts in full runs while the two ran together; the full check was re-run on a quiet machine before the push.
   Open: the art 3 star is dim in dark; the owner picks a variant, then the playground is removed (Goal 5).
+
+## 2026-11-26 — Empty watchlist shipped with an unDraw illustration; playground removed (Sonnet 5.5; lead Opus 5.5)
+
+The owner chose centred, medium, three suggestions, then asked for a real illustration instead of the self-drawn shapes,
+from unDraw. `01a5517`: "Save to bookmarks" (Katerina Limpitsouni, unDraw), fetched from unDraw's CDN, checked for
+scripts and external references (none), metadata removed, coordinates rounded to 2 decimals (1 decimal broke shapes),
+recoloured to tokens (accent → `--accent`, darks → `--text-muted`, light greys → `--grid`/`--track`/`--axis`, paper →
+`--surface`; skin unchanged), so the dark theme shows dark surfaces, not a white sticker; hidden in forced colours;
+a 0.5 s fade only without reduced motion; `min(220px, 62vw)`; 6.7 kB raw, 2.4 kB gzip, in the lazy Watchlist chunk.
+The empty state: picture, "Nothing on your watchlist yet", the line, "Choose an address", "Try one of these" (3). The
+playground (settings, panel, the three self-drawn pictures, their CSS and tests) is deleted; old `?play` links are
+ignored (tested). Licence in `LICENSES.md` and `PHOTO_CREDITS.md`, quoted from undraw.co/license on 26 Nov, including
+its clauses on packs/competing services, automated downloading without consent, and AI training (not applicable: the
+picture is only displayed). Alternatives "Bookmarks" and "Favorite" were screenshotted, not committed. Lead review:
+diff, SVG content, attribution, screenshots (light, dark, phone).
