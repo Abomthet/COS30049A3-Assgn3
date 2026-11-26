@@ -15,14 +15,14 @@ import type { MethodId } from '../api/types';
 import { methodSearch, parseMethod } from './methods';
 
 export type Route =
-  | { screen: 'select'; query: string | null }
+  | { screen: 'select'; query: string | null; section?: string }
   | { screen: 'timeline'; address: string; method: MethodId }
   | { screen: 'transactions'; address: string; search: string; method: MethodId }
   | { screen: 'what-if'; address: string; search: string; method: MethodId }
   | { screen: 'day'; address: string; date: string; txid: string | null; method: MethodId }
-  | { screen: 'models' }
+  | { screen: 'models'; section?: string }
   | { screen: 'watchlist' }
-  | { screen: 'about' }
+  | { screen: 'about'; section?: string }
   | { screen: 'not-found'; path: string };
 
 /** Reads an address bar hash (such as '#/address/…/transactions') into its screen and parts; anything unknown becomes the not-found screen. */
@@ -32,7 +32,9 @@ export function parseRoute(hash: string): Route {
   const parts = path.split('/').filter(Boolean).map(decodeURIComponent);
 
   if (parts.length === 0) {
-    return { screen: 'select', query: new URLSearchParams(search).get('q') };
+    const params = new URLSearchParams(search);
+    const section = params.get('section');
+    return { screen: 'select', query: params.get('q'), ...(section ? { section } : {}) };
   }
   if (parts[0] === 'address' && parts.length === 2) {
     return { screen: 'timeline', address: parts[1], method: parseMethod(search) };
@@ -46,8 +48,12 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'address' && parts[2] === 'day' && (parts.length === 4 || (parts.length === 6 && parts[4] === 'tx'))) {
     return { screen: 'day', address: parts[1], date: parts[3], txid: parts[5] ?? null, method: parseMethod(search) };
   }
-  if (parts.length === 1 && (parts[0] === 'models' || parts[0] === 'watchlist' || parts[0] === 'about')) {
-    return { screen: parts[0] };
+  if (parts.length === 1 && parts[0] === 'watchlist') {
+    return { screen: 'watchlist' };
+  }
+  if (parts.length === 1 && (parts[0] === 'models' || parts[0] === 'about')) {
+    const section = new URLSearchParams(search).get('section');
+    return { screen: parts[0], ...(section ? { section } : {}) };
   }
   return { screen: 'not-found', path };
 }
@@ -58,12 +64,37 @@ const query = (...parts: string[]) => {
   return search ? `?${search}` : '';
 };
 
+/** The jump-to sections of the three long pages: `id` goes in `?section=`, `label` is the menu entry. */
+export const PAGE_SECTIONS = {
+  select: [
+    { id: 'lookup', label: 'Look up an address' },
+    { id: 'recent', label: 'Recently opened' },
+    { id: 'snapshot', label: 'Addresses in the snapshot' },
+  ],
+  models: [
+    { id: 'models', label: 'The models' },
+    { id: 'test', label: 'Planted-spike test' },
+    { id: 'flag', label: 'What a flag means' },
+  ],
+  about: [
+    { id: 'shows', label: 'What it shows' },
+    { id: 'unusual', label: 'What "unusual" means' },
+    { id: 'decided', label: 'How a flag is decided' },
+    { id: 'charts', label: 'How to read the charts' },
+    { id: 'limits', label: 'Limits' },
+    { id: 'data', label: 'Where the data comes from' },
+    { id: 'keys', label: 'Keyboard' },
+  ],
+} as const;
+
+const sectionQuery = (section?: string) => query(section ? `section=${encodeURIComponent(section)}` : '');
+
 // `method` is the deciding method the link keeps; the default is left out.
 export const paths = {
-  select: () => '#/',
-  models: () => '#/models',
+  select: (section?: string) => `#/${sectionQuery(section)}`,
+  models: (section?: string) => `#/models${sectionQuery(section)}`,
   watchlist: () => '#/watchlist',
-  about: () => '#/about',
+  about: (section?: string) => `#/about${sectionQuery(section)}`,
   timeline: (address: string, method?: MethodId) => `#/address/${encodeURIComponent(address)}${query(method ? methodSearch(method) : '')}`,
   /** `search` is the filters' query string, without the `?`; it carries the method itself. */
   transactions: (address: string, search = '') => `#/address/${encodeURIComponent(address)}/transactions${query(search)}`,

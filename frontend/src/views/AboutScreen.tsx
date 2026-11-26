@@ -3,9 +3,11 @@ import { StatusBadge } from '../components/Badges';
 import { StatBlock } from '../components/StatBlock';
 import { useMethodLabels, useMethods } from '../hooks/useMethods';
 import { useServiceStatus } from '../hooks/useServiceStatus';
+import { useScrollToSection } from '../hooks/useScrollToSection';
 import { useSettings } from '../hooks/useSettings';
 import { formatDay } from '../lib/dates';
 import { formatCount } from '../lib/format';
+import { PAGE_SECTIONS } from '../lib/router';
 import { METHODS } from '../lib/methods';
 import { settings as bundled } from '../lib/settings';
 
@@ -22,9 +24,12 @@ const KEYS: Array<{ keys: string; does: string }> = [
   { keys: 'Enter or Space on a chart', does: 'Open the day or the transaction the arrow keys have reached.' },
 ];
 
+const SECTION_IDS = Object.fromEntries(PAGE_SECTIONS.about.map(({ id }) => [id, `${id}-title`]));
+
 /** V7, the about and help screen: what the explorer shows, what "unusual" means, how a flag is decided, the charts, the limits, the data and the keyboard. */
-export function AboutScreen() {
+export function AboutScreen({ section }: { section?: string }) {
   useDocumentTitle('About and help');
+  useScrollToSection(section, SECTION_IDS);
   const { settings } = useSettings();
   const { health } = useServiceStatus();
   const { snapshot, thresholds, features, history } = settings;
@@ -41,7 +46,7 @@ export function AboutScreen() {
       </header>
 
       <section className="card prose" aria-labelledby="shows-title">
-        <h2 id="shows-title">What it shows</h2>
+        <h2 id="shows-title" data-section>What it shows</h2>
         <ul>
           <li>Daily activity of an address.</li>
           <li>Unusual transactions, with the reason and what each was compared with.</li>
@@ -50,7 +55,7 @@ export function AboutScreen() {
       </section>
 
       <section className="card about-unusual" aria-labelledby="unusual-title">
-        <h2 id="unusual-title">What "unusual" means</h2>
+        <h2 id="unusual-title" data-section>What "unusual" means</h2>
         {/* The definition and the one number that decides a flag, side by side on a wide screen. */}
         <div className="about-hero">
           <div className="about-intro">
@@ -95,7 +100,7 @@ export function AboutScreen() {
       </section>
 
       <section className="card prose" aria-labelledby="decided-title">
-        <h2 id="decided-title">How a flag is decided</h2>
+        <h2 id="decided-title" data-section>How a flag is decided</h2>
         <ol className="about-steps">
           <li>
             <h3>Compare with its own past.</h3>
@@ -117,7 +122,7 @@ export function AboutScreen() {
       </section>
 
       <section className="card prose" aria-labelledby="charts-title">
-        <h2 id="charts-title">How to read the charts</h2>
+        <h2 id="charts-title" data-section>How to read the charts</h2>
         <ul>
           <li>Each chart has a "How to read this chart" note.</li>
           <li>Every chart can be viewed as a table and downloaded as a picture.</li>
@@ -125,7 +130,7 @@ export function AboutScreen() {
       </section>
 
       <section className="card prose" aria-labelledby="limits-title">
-        <h2 id="limits-title">Limits</h2>
+        <h2 id="limits-title" data-section>Limits</h2>
         <ul>
           <li>A flag says nothing about who is behind an address or why a payment was made.</li>
           <li>An address is compared only with its own past.</li>
@@ -134,7 +139,7 @@ export function AboutScreen() {
       </section>
 
       <section className="card prose" aria-labelledby="data-title">
-        <h2 id="data-title">Where the data comes from</h2>
+        <h2 id="data-title" data-section>Where the data comes from</h2>
         <p>Everything here is public blockchain data from a fixed snapshot.</p>
         {snapshot ? (
           <dl className="facts about-facts">
@@ -176,7 +181,7 @@ export function AboutScreen() {
       </section>
 
       <section className="card prose" aria-labelledby="keys-title">
-        <h2 id="keys-title">Keyboard</h2>
+        <h2 id="keys-title" data-section>Keyboard</h2>
         <dl className="key-list">
           {KEYS.map((k) => (
             <div key={k.keys}>

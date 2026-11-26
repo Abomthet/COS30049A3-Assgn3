@@ -40,7 +40,7 @@ function Views() {
 
   return (
     <ErrorBoundary resetKey={key}>
-      {route.screen === 'select' ? <SelectScreen query={route.query} /> : null}
+      {route.screen === 'select' ? <SelectScreen query={route.query} section={route.section} /> : null}
       {route.screen === 'timeline' ? <TimelineScreen key={route.address} address={route.address} method={route.method} tab={{ name: 'overview' }} /> : null}
       {route.screen === 'transactions' ? (
         <TimelineScreen key={route.address} address={route.address} method={route.method} tab={{ name: 'transactions', search: route.search }} />
@@ -51,13 +51,13 @@ function Views() {
       {route.screen === 'day' ? (
         <DayScreen key={`${route.address}|${route.date}`} address={route.address} date={route.date} txid={route.txid} method={route.method} />
       ) : null}
-      {route.screen === 'models' ? <ModelsScreen /> : null}
+      {route.screen === 'models' ? <ModelsScreen section={route.section} /> : null}
       {route.screen === 'watchlist' ? (
         <Suspense fallback={<Loading label="Loading the watchlist…" block />}>
           <WatchlistScreen />
         </Suspense>
       ) : null}
-      {route.screen === 'about' ? <AboutScreen /> : null}
+      {route.screen === 'about' ? <AboutScreen section={route.section} /> : null}
       {route.screen === 'not-found' ? (
         <div className="page">
           <PageHeading>Page not found</PageHeading>

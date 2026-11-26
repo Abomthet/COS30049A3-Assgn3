@@ -1,4 +1,5 @@
 import type { MethodDescription } from '../api/types';
+import { useScrollToSection } from '../hooks/useScrollToSection';
 import { G6PlantedRecall, PATTERNS } from '../charts/G6PlantedRecall';
 import { ErrorState } from '../components/ErrorState';
 import { PageHeading, useDocumentTitle } from '../components/PageHeading';
@@ -59,9 +60,12 @@ function MethodCard({ method }: { method: MethodDescription }) {
   );
 }
 
+const SECTION_IDS = { models: 'models-title', test: 'test-card', flag: 'limits-title' };
+
 /** V5, the models and limits screen: a card for each of the nine models, and what a flag does and does not mean. */
-export function ModelsScreen() {
+export function ModelsScreen({ section }: { section?: string }) {
   useDocumentTitle('Models and limits');
+  useScrollToSection(section, SECTION_IDS);
   const methods = useMethods();
   const { settings } = useSettings();
   const { snapshot } = settings;
@@ -76,20 +80,23 @@ export function ModelsScreen() {
       {methods.status === 'loading' ? <Loading label="Loading the models…" block /> : null}
       {methods.status === 'error' ? <ErrorState error={methods.error} onRetry={methods.retry} /> : null}
       {methods.status === 'success' ? (
-        <ul className="method-grid" aria-label="The models">
-          {methods.data.methods.map((m) => (
-            <MethodCard key={m.id} method={m} />
-          ))}
-        </ul>
+        <>
+          <h2 id="models-title" data-section className="sr-only">The models</h2>
+          <ul className="method-grid" aria-label="The models">
+            {methods.data.methods.map((m) => (
+              <MethodCard key={m.id} method={m} />
+            ))}
+          </ul>
+        </>
       ) : null}
       {methods.status === 'success' ? (
-        <div className="card chart-card">
+        <div className="card chart-card" id="test-card" data-section>
           <G6PlantedRecall methods={methods.data.methods} />
         </div>
       ) : null}
 
       <section className="card prose" aria-labelledby="limits-title">
-        <h2 id="limits-title">What a flag means</h2>
+        <h2 id="limits-title" data-section>What a flag means</h2>
         <ul>
           <li>A flag means different from this address's own past.</li>
           <li>Real transactions have no labels, so we cannot say how often a flag is right.</li>

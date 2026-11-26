@@ -16,6 +16,7 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useServiceStatus } from '../hooks/useServiceStatus';
 import { useMethods } from '../hooks/useMethods';
 import { useSettings } from '../hooks/useSettings';
+import { useScrollToSection } from '../hooks/useScrollToSection';
 import { useSlow } from '../hooks/useSlow';
 
 // The live lookup's dialog (V8) is fetched only when the user asks for it.
@@ -34,9 +35,17 @@ type Lookup =
   | { status: 'unsupported'; address: string; message: string; examples: string[]; canLookupLive: boolean }
   | { status: 'failed'; error: ApiError };
 
+// The lookup section focuses the address box itself (more useful than its hidden heading); the others focus their headings.
+const SECTION_TARGETS = {
+  lookup: { scroll: 'lookup-title', focus: 'address-input' },
+  recent: 'recent-title',
+  snapshot: 'snapshot-title',
+};
+
 /** Screen 1, choose an address: a lookup box and the list of addresses in the snapshot. */
-export function SelectScreen({ query }: { query: string | null }) {
+export function SelectScreen({ query, section }: { query: string | null; section?: string }) {
   useDocumentTitle('');
+  useScrollToSection(section, SECTION_TARGETS);
   const list = useRequest('addresses', (signal) => api.listAddresses({ signal }));
   const [value, setValue] = useState(query ?? '');
   const [lookup, setLookup] = useState<Lookup>({ status: 'idle' });
@@ -122,7 +131,7 @@ export function SelectScreen({ query }: { query: string | null }) {
         </p>
 
         <section className="lookup-card hero-lookup" aria-labelledby="lookup-title">
-        <h2 id="lookup-title" className="sr-only">Look up an address</h2>
+        <h2 id="lookup-title" data-section className="sr-only">Look up an address</h2>
         <form onSubmit={onSubmit} noValidate className="lookup-form">
           <label htmlFor="address-input" className="field-label">
             Bitcoin address
@@ -233,7 +242,7 @@ export function SelectScreen({ query }: { query: string | null }) {
 
       {recent.length > 0 ? (
         <section className="recent-section" aria-labelledby="recent-title">
-          <h2 id="recent-title">Recently opened</h2>
+          <h2 id="recent-title" data-section>Recently opened</h2>
           <ul className="example-list">
             {recent.map((a) => (
               <li key={a}>
@@ -247,7 +256,7 @@ export function SelectScreen({ query }: { query: string | null }) {
       <section className="snapshot-section" aria-labelledby="snapshot-title">
         <div className="section-head">
           {/* Focusable only by script: after a page change the focus moves here, so the new rows are read from the top. */}
-          <h2 id="snapshot-title" ref={snapshotHeading} tabIndex={-1}>
+          <h2 id="snapshot-title" data-section ref={snapshotHeading} tabIndex={-1}>
             Addresses in the snapshot
           </h2>
         </div>

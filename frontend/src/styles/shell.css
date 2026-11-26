@@ -390,3 +390,8 @@
 .offline-banner {
   border-bottom: 0;
 }
+
+/* A section reached from the navigation lands below the sticky header instead of under it. */
+[data-section] {
+  scroll-margin-top: 72px;
+}
