@@ -583,6 +583,49 @@ def test_an_expired_or_damaged_cache_file_is_removed_at_start(start: Callable[..
     assert not (live / f"{B}.json.gz").exists() and len(client.get("/api/addresses").json()["addresses"]) == 28
 
 
+def _delete_file(path: Path) -> None:
+    path.unlink()
+
+
+def _truncate_file(path: Path) -> None:
+    path.write_bytes(path.read_bytes()[:40])
+
+
+@pytest.mark.parametrize("damage", [_delete_file, _truncate_file], ids=["deleted", "truncated"])
+def test_a_cache_file_lost_while_running_only_hides_its_own_address(start: Callable[..., TestClient], tmp_path: Path,
+                                                                     damage: Callable[[Path], None]) -> None:
+    database = tmp_path / "explorer.db"
+    first = start(database)
+    fetch(first, A)
+    first.put(f"/api/watchlist/{A}", json={})
+    first.put(f"/api/watchlist/{RUNNING_EXAMPLE}", json={})
+    first.__exit__(None, None, None)
+    client = start(database)  # the index names A, but nothing is scored yet
+    damage(tmp_path / "live" / f"{A}.json.gz")
+    listed = client.get("/api/addresses")
+    assert listed.status_code == 200
+    assert A not in [row["address"] for row in listed.json()["addresses"]] and len(listed.json()["addresses"]) == 28
+    watch = client.get("/api/watchlist")
+    assert watch.status_code == 200
+    assert [e["address"] for e in watch.json()["entries"]] == [RUNNING_EXAMPLE]
+    opened = client.post("/api/lookup", json={"address": A})
+    assert opened.status_code == 404 and opened.json()["status"] == "unsupported"
+    assert client.get(f"/api/addresses/{RUNNING_EXAMPLE}/timeline").status_code == 200
+
+
+def test_a_cache_file_cut_before_a_restart_is_removed_at_start(start: Callable[..., TestClient], tmp_path: Path) -> None:
+    database = tmp_path / "explorer.db"
+    first = start(database)
+    fetch(first, A)
+    first.__exit__(None, None, None)
+    path = tmp_path / "live" / f"{A}.json.gz"
+    _truncate_file(path)  # cut inside the gzip stream: gzip raises EOFError, which is not an OSError
+    client = start(database)
+    assert not path.exists()
+    listed = client.get("/api/addresses")
+    assert listed.status_code == 200 and A not in [row["address"] for row in listed.json()["addresses"]]
+
+
 def test_a_new_fetch_of_an_address_is_not_served_from_the_older_cache_entry(client: TestClient, fake: FakeEsplora) -> None:
     now = [3_000_000.0]
     live = client.app.state.runtime.live

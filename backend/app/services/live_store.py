@@ -14,6 +14,7 @@ import logging
 import os
 import threading
 import time
+import zlib
 from collections.abc import Callable, Sequence
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -64,7 +65,7 @@ class LiveStore:
             try:
                 header = self._read(path)
                 fetch = LiveFetch(**header["fetch"])
-            except (OSError, ValueError, KeyError, TypeError) as error:
+            except (OSError, EOFError, zlib.error, ValueError, KeyError, TypeError) as error:
                 log.warning("Removing the unreadable live cache file %s (%s)", path.name, error.__class__.__name__)
                 path.unlink(missing_ok=True)
                 continue
@@ -104,7 +105,14 @@ class LiveStore:
                 raise Unsupported(f"{address} was fetched too long ago")
             data = self._data.get(address)
         if data is None:  # scored outside the lock: a second request for the same cold address may score it too, with the same result
-            data = score_history(self._predictor, address, self._read(self._path(address))["transactions"], fetch)
+            try:
+                data = score_history(self._predictor, address, self._read(self._path(address))["transactions"], fetch)
+            except (OSError, EOFError, zlib.error, ValueError, KeyError, TypeError) as error:  # the file vanished or was cut while running
+                log.warning("Dropping the unreadable live cache file for %s (%s)", address, error.__class__.__name__)
+                with self._lock:
+                    if self._fetches.get(address) is fetch:
+                        self._drop(address)
+                raise Unsupported(f"{address} has no readable cache file") from error
             with self._lock:
                 self._data[address] = data
         return data

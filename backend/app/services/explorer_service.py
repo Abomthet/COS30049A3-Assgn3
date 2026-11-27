@@ -20,7 +20,7 @@ from functools import lru_cache
 from typing import Any, cast
 
 from explorer.explain import reasons_for
-from explorer.predict import PRECOMPUTED_ONLY, InsufficientHistory, Predictor, iso
+from explorer.predict import PRECOMPUTED_ONLY, InsufficientHistory, Predictor, Unsupported, iso
 from pydantic import TypeAdapter
 
 from ..core.config import ListLimits
@@ -218,7 +218,13 @@ class ExplorerService:
     def addresses(self, method: str | None = None) -> AddressesResponse:
         """E3: every address with its counts. Addresses with enough history come first, busiest first."""
         method = method or self._default
-        summaries = [self._summary(self._store.get(address), method) for address in self._store.addresses()]
+        summaries = []
+        for address in self._store.addresses():
+            try:
+                data = self._store.get(address)
+            except Unsupported:  # a fetched address whose cache file went bad since it was listed
+                continue
+            summaries.append(self._summary(data, method))
         summaries.sort(key=lambda s: (s.history != "sufficient", -s.tx_count))
         return AddressesResponse(snapshot=self._snapshots[method], addresses=summaries)
 
