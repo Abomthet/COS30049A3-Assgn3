@@ -377,6 +377,16 @@ describe('the wording pass (R6)', () => {
     expect(labText()).not.toMatch(POSITION);
   });
 
+  test('a 400 that names no amount or time field shows the server\'s message and hint in the invalid panel', async () => {
+    vi.spyOn(mockApi, 'whatIf').mockRejectedValue(
+      new (await import('../src/api/types')).ApiError(400, { status: 'invalid', message: 'Pick a direction.', hint: 'Choose received or sent.', fields: [{ name: 'direction', message: 'Not a direction.' }] }),
+    );
+    const user = openLab();
+    await typeAmount(user, '0.05');
+    const panel = await screen.findByTestId('state-whatif-invalid', undefined, LATE);
+    expect(within(panel).getByTestId('whatif-invalid-message')).toHaveTextContent('Pick a direction. Choose received or sent.');
+  });
+
   describe('the history panel lead', () => {
     /** E8's real 422 for a too early time, with the counts replaced. */
     async function tooLittle(earlierTx: number, spanDays: number) {

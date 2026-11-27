@@ -1,3 +1,4 @@
+import { LimitationNote } from '../components/LimitationNote';
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { api } from '../api/client';
 import type { MethodId, TimelineDay, TimelineResponse } from '../api/types';
@@ -238,6 +239,7 @@ function FlaggedDays({ address, days, period, method }: { address: string; days:
               </li>
             ))}
           </ul>
+          <LimitationNote />
           {days.length > DAYS_SHOWN ? (
             <button type="button" className="btn btn-secondary show-all" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>
               {showAll ? 'Show fewer days' : `Show all ${days.length} days`}

@@ -145,7 +145,7 @@ function startJob(address: string): LiveLookup {
   if (!check.ok) throw invalid(check.message, check.hint, 'address');
   if (!mockControls.liveLookup) throw new ApiError(403, { status: 'disabled', message: 'Fetching new addresses is turned off. Pick an address from the list.' });
   if (ADDRESSES.addresses.some((a) => a.address === check.address) && !fetchedWorld.has(check.address)) {
-    throw new ApiError(409, { status: 'conflict', message: 'Snapshot addresses cannot be removed.' });
+    throw new ApiError(409, { status: 'conflict', message: 'This address is already part of the snapshot.', hint: 'Open it directly; a live lookup is only for addresses outside the snapshot.' });
   }
   if (mockControls.liveFailAfterPages < 0) throw new ApiError(502, { status: 'upstream_error', message: 'The public blockchain service answered with an error.', hint: 'Try again in a minute, or pick a snapshot address.' });
   const now = new Date().toISOString().slice(0, 19) + 'Z';

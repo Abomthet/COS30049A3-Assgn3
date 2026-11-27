@@ -392,7 +392,13 @@ function Verdict({ view, insufficient, onUseDate, pending }: { view: VerdictView
     const body = view.error.body;
     // The browser has checked the fields, so a 400 here means the two tiers disagree; the server's words are under the field.
     return body.status === 'invalid' ? (
-      <StatePanel tone="warning" title="Check the amount and time" live="alert" testId="state-whatif-invalid" />
+      <StatePanel tone="warning" title="Check the amount and time" live="alert" testId="state-whatif-invalid">
+        {body.fields?.some((f) => f.name === 'amountBtc' || f.name === 'time') ? null : (
+          <p data-testid="whatif-invalid-message">
+            {body.message} {body.hint}
+          </p>
+        )}
+      </StatePanel>
     ) : (
       <ErrorState error={view.error} onRetry={view.retry} />
     );
