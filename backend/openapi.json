@@ -1571,7 +1571,7 @@
           "live"
         ],
         "summary": "Starts a live lookup of an address outside the snapshot",
-        "description": "Reads the address's most recent confirmed transactions (`maxTx`, 50 to 1,000; default 500) from the public blockchain\nservice in the background and scores them. Answers 202 with the lookup, whose `links` give E17 and E18, and a `Location`\nheader; 200 with a `done` lookup when a fetch under `web.live.cacheDays` old is held. 400 names each field at fault; 403\nwhen live lookup is off; 404 `not_found` for an address with no confirmed transactions; 409 while a lookup for this address\nruns; 429 with `Retry-After` while another lookup runs or the hour's allowance is spent; 502 and 504 when the public\nservice answers with an error or not at all. Only the address is sent to it.",
+        "description": "Reads the address's most recent confirmed transactions (`maxTx`, 50 to 1,000; default 500) from the public blockchain\nservice in the background and scores them. Answers 202 with the lookup, whose `links` give E17 and E18, and a `Location`\nheader; 200 with a `done` lookup when a fetch under `web.live.cacheDays` old is held. 400 names each field at fault; 403\nwhen live lookup is off; 404 `not_found` for an address with no confirmed transactions; 409 for a snapshot address (it is\nalready held, so nothing is fetched or counted against the allowance) and while a lookup for this address runs; 429 with\n`Retry-After` while another lookup runs or the hour's allowance is spent; 502 and 504 when the public service answers with\nan error or not at all. Only the address is sent to it.",
         "operationId": "start_lookup_api_live_lookups_post",
         "requestBody": {
           "content": {

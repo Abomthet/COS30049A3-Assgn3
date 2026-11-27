@@ -351,9 +351,10 @@ export interface paths {
          * @description Reads the address's most recent confirmed transactions (`maxTx`, 50 to 1,000; default 500) from the public blockchain
          *     service in the background and scores them. Answers 202 with the lookup, whose `links` give E17 and E18, and a `Location`
          *     header; 200 with a `done` lookup when a fetch under `web.live.cacheDays` old is held. 400 names each field at fault; 403
-         *     when live lookup is off; 404 `not_found` for an address with no confirmed transactions; 409 while a lookup for this address
-         *     runs; 429 with `Retry-After` while another lookup runs or the hour's allowance is spent; 502 and 504 when the public
-         *     service answers with an error or not at all. Only the address is sent to it.
+         *     when live lookup is off; 404 `not_found` for an address with no confirmed transactions; 409 for a snapshot address (it is
+         *     already held, so nothing is fetched or counted against the allowance) and while a lookup for this address runs; 429 with
+         *     `Retry-After` while another lookup runs or the hour's allowance is spent; 502 and 504 when the public service answers with
+         *     an error or not at all. Only the address is sent to it.
          */
         post: operations["start_lookup_api_live_lookups_post"];
         delete?: never;

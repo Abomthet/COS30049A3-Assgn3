@@ -531,6 +531,28 @@ def test_e20_forgets_a_fetched_address_and_its_file(start: Callable[..., TestCli
     assert again.status_code == 404 and again.json()["status"] == "unsupported"
 
 
+def test_e16_refuses_a_snapshot_address_before_any_request_or_file(start: Callable[..., TestClient], fake: FakeEsplora,
+                                                                  tmp_path: Path) -> None:
+    client = start(tmp_path / "explorer.db")
+    refused = lookup(client, RUNNING_EXAMPLE)
+    assert refused.status_code == 409 and refused.json()["status"] == "conflict"
+    assert refused.json()["message"] and refused.json()["hint"]
+    assert fake.requests == []  # the public service was never asked
+    assert list((tmp_path / "live").glob("*.json.gz")) == []
+    listed = [row["address"] for row in client.get("/api/addresses").json()["addresses"]]
+    assert len(listed) == 28 and len(set(listed)) == 28
+    fetch(client, A)  # the refused request did not use the hour's allowance
+    assert client.delete(f"/api/addresses/{RUNNING_EXAMPLE}").status_code == 409
+
+
+def test_the_hourly_allowance_is_not_spent_by_a_snapshot_address(live_settings: Settings, start: Callable[..., TestClient]) -> None:
+    limit = live_settings.web.live.lookups_per_hour
+    client = start()
+    for _ in range(limit + 2):
+        assert lookup(client, RUNNING_EXAMPLE).status_code == 409
+    assert lookup(client, A).status_code == 202
+
+
 def test_e20_refuses_a_snapshot_address_and_a_malformed_one(client: TestClient) -> None:
     refused = client.delete(f"/api/addresses/{RUNNING_EXAMPLE}")
     assert refused.status_code == 409 and refused.json()["status"] == "conflict"

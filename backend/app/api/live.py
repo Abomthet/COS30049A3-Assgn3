@@ -11,15 +11,18 @@ import time
 from collections.abc import AsyncIterator
 from typing import Annotated, Any
 
+from explorer.predict import Unsupported
 from fastapi import APIRouter, Depends, Response
 from fastapi.responses import StreamingResponse
 
+from ..core.errors import Conflict
 from ..core.runtime import Runtime
 from ..core.validation import require_address
 from ..schemas.errors import error_responses
 from ..schemas.live import LiveLookup, LiveLookupRequest
+from ..services.explorer_service import ExplorerService
 from ..services.live_service import Job, LiveService
-from .deps import get_live, get_runtime
+from .deps import get_explorer, get_live, get_runtime
 
 router = APIRouter(prefix="/api/live", tags=["live"])
 
@@ -33,14 +36,22 @@ EVENT_STREAM = {"description": "Server-sent events named `status`, `progress`, `
 @router.post("/lookups", response_model=LiveLookup, status_code=202, summary="Starts a live lookup of an address outside the snapshot",
              responses={200: {"model": LiveLookup, "description": "A fresh fetch of this address was already held: the lookup is `done` at once."},
                         **error_responses(400, 403, 404, 409, 413, 415, 429, 502, 503, 504)})
-def start_lookup(body: LiveLookupRequest, live: Live, runtime: Annotated[Runtime, Depends(get_runtime)], response: Response) -> LiveLookup:
+def start_lookup(body: LiveLookupRequest, live: Live, runtime: Annotated[Runtime, Depends(get_runtime)], response: Response,
+                 explorer: Annotated[ExplorerService, Depends(get_explorer)]) -> LiveLookup:
     """Reads the address's most recent confirmed transactions (`maxTx`, 50 to 1,000; default 500) from the public blockchain
     service in the background and scores them. Answers 202 with the lookup, whose `links` give E17 and E18, and a `Location`
     header; 200 with a `done` lookup when a fetch under `web.live.cacheDays` old is held. 400 names each field at fault; 403
-    when live lookup is off; 404 `not_found` for an address with no confirmed transactions; 409 while a lookup for this address
-    runs; 429 with `Retry-After` while another lookup runs or the hour's allowance is spent; 502 and 504 when the public
-    service answers with an error or not at all. Only the address is sent to it."""
+    when live lookup is off; 404 `not_found` for an address with no confirmed transactions; 409 for a snapshot address (it is
+    already held, so nothing is fetched or counted against the allowance) and while a lookup for this address runs; 429 with
+    `Retry-After` while another lookup runs or the hour's allowance is spent; 502 and 504 when the public service answers with
+    an error or not at all. Only the address is sent to it."""
     address = require_address(body.address, runtime.settings.web.limits.max_address_chars)
+    try:
+        source = explorer.source_of(address)
+    except Unsupported:  # not held yet: a live lookup may fetch it
+        source = None
+    if source == "snapshot":
+        raise Conflict("This address is already part of the snapshot.", "Open it directly; a live lookup is only for addresses outside the snapshot.")
     job, cached = live.start(address, body.max_tx)
     state = live.state(job)
     response.status_code = 200 if cached else 202
