@@ -348,6 +348,18 @@ describe('the wide flyout', () => {
     expect(toggle('Models')).toHaveAttribute('aria-expanded', 'false');
   });
 
+  test("Shift+Tab from the next tab goes to the open menu's last entry, mirroring the forward order", async () => {
+    const user = await showWide();
+    await user.click(toggle('Models'));
+    const last = await screen.findByRole('link', { name: /^TxGPT/ });
+    const entries = Array.from(panel('models').querySelectorAll<HTMLElement>('a[href], button:not([disabled])'));
+    expect(entries[entries.length - 1]).toBe(last);
+    const next = screen.getByRole('link', { name: 'Watchlist' });
+    // The menu was opened by the pointer while the keyboard sits on the next tab's link (focusing it would close the menu).
+    fireEvent.keyDown(next, { key: 'Tab', shiftKey: true });
+    expect(last).toHaveFocus();
+  });
+
   test('Escape closes it and returns to the button; ArrowDown goes in', async () => {
     const user = await showWide();
     toggle('Models').focus();

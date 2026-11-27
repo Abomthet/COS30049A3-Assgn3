@@ -283,12 +283,11 @@ function steerTab(event: globalThis.KeyboardEvent, key: NavKey): void {
     event.preventDefault();
     el?.focus({ preventScroll: true });
   };
+  const next = toggle?.closest('li')?.nextElementSibling?.querySelector<HTMLElement>('a');
   if (!event.shiftKey && target === toggle && entries.length > 0) go(entries[0]);
   else if (event.shiftKey && target === entries[0]) go(toggle);
-  else if (!event.shiftKey && target === entries[entries.length - 1]) {
-    const next = toggle?.closest('li')?.nextElementSibling?.querySelector<HTMLElement>('a');
-    if (next) go(next);
-  }
+  else if (event.shiftKey && next && target === next && entries.length > 0) go(entries[entries.length - 1]);
+  else if (!event.shiftKey && target === entries[entries.length - 1] && next) go(next);
 }
 
 const SECTION_KEYS: NavKey[] = ['addresses', 'models', 'watchlist', 'about'];
