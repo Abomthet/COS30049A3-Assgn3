@@ -38,8 +38,10 @@ test('J2: from a flagged day to one transaction and its reasons', async ({ page,
   await expect(why.getByRole('heading', { name: 'Compared with' })).toBeVisible();
   await expect(why.getByRole('listitem').filter({ hasText: /\(\d+ \w+ \d{4}/ }).first()).toBeVisible();
   await expect(why.getByTestId('limitation-line')).toHaveText(limitationLine);
-  // The box carries the line, once; the footer has only the course credit.
-  await expect(page.getByText(limitationLine, { exact: true })).toHaveCount(1);
+  // The box carries the line, once, and the day's list of flags carries the quiet copy, once; the footer has only the course credit.
+  await expect(why.getByText(limitationLine, { exact: true })).toHaveCount(1);
+  await expect(page.getByTestId('list-limitation-line')).toHaveCount(1);
+  await expect(page.getByText(limitationLine, { exact: true })).toHaveCount(2);
   await expect(page.getByRole('contentinfo')).not.toContainText(limitationLine);
 
   // Pressing the button brings the prepared answer, tagged, in place of the reason lines; the figure and the limitation line stay.
@@ -47,7 +49,7 @@ test('J2: from a flagged day to one transaction and its reasons', async ({ page,
   await expect(why.getByText('Written by the Assistant. Checked by code before it is shown.')).toBeVisible();
   await expect(why.getByTestId('reason-lines')).toHaveCount(0);
   await expect(why.getByTestId('flag-figure')).toBeVisible();
-  await expect(page.getByText(limitationLine, { exact: true })).toHaveCount(1);
+  await expect(why.getByText(limitationLine, { exact: true })).toHaveCount(1);
 
   // The feature chart, and every model's verdict.
   await drawnChart(page, 'How this transaction compares with usual');
