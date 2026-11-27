@@ -29,7 +29,7 @@ describe('the limitation line', () => {
     expect(LIMITATION_LINE).toBe('Flagged as unusual for this address, not proof of wrongdoing.');
   });
 
-  test.each([['the address overview', `#/address/${ex.mainAddress}`], ['Models', '#/models'], ['About', '#/about'], ['the first screen', '#/']])(
+  test.each([['Models', '#/models'], ['About', '#/about'], ['the first screen', '#/']])(
     '%s has no copy of it, and the footer is the course credit alone',
     async (_name, hash) => {
       start(hash);
@@ -45,7 +45,9 @@ describe('the limitation line', () => {
     const line = within(why).getByTestId('limitation-line');
     expect(line).toHaveTextContent(LIMITATION_LINE);
     expect(line.querySelector('svg.limitation-icon')).not.toBeNull();
-    expect(copies()).toHaveLength(1);
+    // The day's list above has its own quiet line; the flag box has the only styled one.
+    expect(screen.getAllByTestId('limitation-line')).toHaveLength(1);
+    expect(screen.getAllByTestId('list-limitation-line')).toHaveLength(1);
     expect(footer()).not.toHaveTextContent(LIMITATION_LINE);
   });
 
@@ -65,6 +67,47 @@ describe('the limitation line', () => {
     await user.clear(amount);
     await user.type(amount, '0.0005');
     await waitFor(() => expect(screen.queryByTestId('flag-explanation')).toBeNull(), { timeout: 4000 });
+    expect(copies()).toHaveLength(0);
+  });
+});
+
+describe('the quiet line above a list that holds a flag', () => {
+  const noteCount = () => screen.queryAllByTestId('list-limitation-line');
+
+  test('the address overview: once, under the flagged days; the flag box is not there', async () => {
+    start(`#/address/${ex.mainAddress}`);
+    await screen.findByTestId('flagged-headline');
+    expect(copies()).toHaveLength(1);
+    expect(noteCount()).toHaveLength(1);
+    expect(noteCount()[0]).toHaveTextContent(LIMITATION_LINE);
+    expect(screen.queryByTestId('limitation-line')).toBeNull();
+    expect(footer()).not.toHaveTextContent(LIMITATION_LINE);
+  });
+
+  test('the day screen: once for a day that lists a flag, none for a day that lists none', async () => {
+    start(`#/address/${ex.flagged.address}/day/${ex.flagged.date}`);
+    await screen.findByText(/unusual$/);
+    expect(copies()).toHaveLength(1);
+    expect(noteCount()).toHaveLength(1);
+  });
+
+  test('the day screen: none for a day with nothing unusual', async () => {
+    start(`#/address/${ex.scored.address}/day/${ex.scored.date}`);
+    await screen.findByText('None unusual on this day');
+    expect(copies()).toHaveLength(0);
+  });
+
+  test('the transactions tab: once for a page with a flag, none when the page lists none', async () => {
+    start(`#/address/${ex.mainAddress}/transactions`);
+    await screen.findByRole('table', { name: /Transactions of this address/ });
+    await waitFor(() => expect(noteCount()).toHaveLength(1));
+    expect(copies()).toHaveLength(1);
+  });
+
+  test('the transactions tab: none when the filter leaves only rows that are not flagged', async () => {
+    start(`#/address/${ex.mainAddress}/transactions?status=not-flagged`);
+    await screen.findByRole('table', { name: /Transactions of this address/ });
+    expect(within(screen.getByRole('table', { name: /Transactions of this address/ })).queryAllByText('Unusual')).toHaveLength(0);
     expect(copies()).toHaveLength(0);
   });
 });

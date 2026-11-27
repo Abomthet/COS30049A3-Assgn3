@@ -1,3 +1,4 @@
+import { LimitationNote } from '../components/LimitationNote';
 import { api } from '../api/client';
 import type { MethodId, TimelineResponse, TransactionsResponse } from '../api/types';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
@@ -131,6 +132,7 @@ function DayBody({ day, date, txid, method, updating }: { day: TransactionsRespo
         <h2 id="tx-list-title">{plural(day.total, 'transaction')}</h2>
         <p className="card-sub">{flagged ? `${flagged} unusual` : 'None unusual on this day'}</p>
         {day.total > day.transactions.length ? <p className="card-sub">First {day.transactions.length} shown, oldest first.</p> : null}
+        {flagged ? <LimitationNote /> : null}
         <ul className="tx-list">
           {day.transactions.map((t) => {
             const selected = t.txid === txid;

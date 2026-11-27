@@ -21,7 +21,7 @@ export function StatusBadge({ status }: { status: ScoreStatus }) {
   );
 }
 
-/** The badge for a transaction's direction ('Received', 'Sent' or 'No net change'), with an icon when there is a direction. */
+/** The badge for a transaction's direction ('Received', 'Sent' or 'No net change'). */
 export function DirectionBadge({ direction }: { direction: Direction }) {
   return (
     <span className={`direction direction-${direction}`}>

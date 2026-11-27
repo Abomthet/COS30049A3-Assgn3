@@ -1,5 +1,6 @@
 import type { MethodId, TransactionsResponse } from '../api/types';
 import { DirectionBadge, StatusBadge } from '../components/Badges';
+import { LimitationNote } from '../components/LimitationNote';
 import { formatDateTime, dayKey } from '../lib/dates';
 import { formatBtc, formatCount } from '../lib/format';
 import { METHODS } from '../lib/methods';
@@ -29,6 +30,7 @@ export function TransactionTable({ page, method, pageHref }: Props) {
         <p className="card-sub">
           Select a row to open it.
         </p>
+        {page.transactions.some((t) => t.status === 'flagged') ? <LimitationNote /> : null}
       </div>
       <table className="tx-table">
         <caption className="sr-only">Transactions of this address, with their direction, amount, score, status and strongest reason</caption>

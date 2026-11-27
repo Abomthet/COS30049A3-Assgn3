@@ -1,3 +1,4 @@
+import ex from '../src/api/mock/fixtures/examples.json';
 // The live lookup (S-09, V8): the offer on V1's unsupported panel, the dialog with its progress (stream, then polling when the
 // stream fails), Cancel, the failures, the overview marked as live data, and "Forget this address". The mock plays the job.
 import { render, screen, waitFor, within } from '@testing-library/react';
@@ -164,5 +165,18 @@ describe('a fetched address', () => {
     window.location.hash = '#/';
     const lookup = await mockApi.startLiveLookup(OUTSIDE);
     expect(lookup).toMatchObject({ status: 'done', cached: true });
+  });
+});
+
+describe('the mock E16 for a snapshot address', () => {
+  test('409 with the real service\'s words', async () => {
+    mockControls.liveLookup = true;
+    const err = await mockApi.startLiveLookup(ex.mainAddress).catch((e) => e);
+    expect(err.status).toBe(409);
+    expect(err.body).toMatchObject({
+      status: 'conflict',
+      message: 'This address is already part of the snapshot.',
+      hint: 'Open it directly; a live lookup is only for addresses outside the snapshot.',
+    });
   });
 });

@@ -69,7 +69,7 @@ describe('the flag box', () => {
     expect(why).not.toHaveTextContent(/Template|Flagged by|What stands out/);
     const control = await within(why).findByRole('button', { name: 'Ask the Assistant to explain' }, LATE);
     inOrder(why.querySelector('h3'), figure, reasons, within(why).getByRole('heading', { name: 'Compared with' }), within(why).getByTestId('limitation-line'), control);
-    expect(screen.getAllByText(LIMITATION_LINE)).toHaveLength(1);
+    expect(within(why).getAllByText(LIMITATION_LINE)).toHaveLength(1);
   });
 
   test('F1 first: the big figure has the usual value as its qualifier, and F4 as another line reads "its usual size"', async () => {
@@ -88,7 +88,7 @@ describe('the flag box', () => {
       'Longer gap than usual: 6 days (usual 10 hours)',
     ]);
     expect(within(why).getByTestId('limitation-line')).toHaveTextContent(LIMITATION_LINE);
-    expect(screen.getAllByText(LIMITATION_LINE)).toHaveLength(1);
+    expect(within(why).getAllByText(LIMITATION_LINE)).toHaveLength(1);
   });
 
   test('a flag with one reason has a big figure and no list of other reasons', async () => {
